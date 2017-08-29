@@ -12,9 +12,9 @@
                             <GlobalE2node-ID>
                                 <ng-eNB>
                                     <global-ng-eNB-ID>
-                                        <plmn-id>131014</plmn-id>
+                                        <plmn-id>13 10 14</plmn-id>
                                         <gnb-id>
-                                            <gnb-ID>10110101110001100111011110001000</gnb-ID>
+                                            <gnb-ID>10011001101010101011</gnb-ID>
                                         </gnb-id>
                                     </global-ng-eNB-ID>
                                 </ng-eNB>
