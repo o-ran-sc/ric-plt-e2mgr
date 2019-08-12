@@ -112,15 +112,29 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 	if err != nil {
 		return common.NewInternalError(err)
 	}
-	if isNotEmptyIdentity {
-		nbIdData, err := proto.Marshal(nbIdentity)
+
+	ranNameIdentity := &entities.NbIdentity{InventoryName: nbIdentity.InventoryName}
+
+	if isNotEmptyIdentity{
+		nbIdData, err := proto.Marshal(ranNameIdentity)
 		if err != nil {
 			return common.NewInternalError(err)
 		}
-		err = (*w.sdl).AddMember(entity.GetNodeType().String(), nbIdData)
+		err = (*w.sdl).RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
 		if err != nil {
 			return common.NewInternalError(err)
 		}
+	} else {
+		nbIdentity = ranNameIdentity
+	}
+
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+	err = (*w.sdl).AddMember(entity.GetNodeType().String(), nbIdData)
+	if err != nil {
+		return common.NewInternalError(err)
 	}
 	return nil
 }

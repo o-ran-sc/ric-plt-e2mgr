@@ -1,5 +1,5 @@
 logging:
-  logLevel: debug
+  logLevel: info
 http:
   port: 3800
 rmr:
