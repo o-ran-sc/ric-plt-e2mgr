@@ -83,10 +83,10 @@ func TestSaveEnb(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{CellId: "aaff", Pci: 3}
-	cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
+	cell := &entities.ServedCellInfo{CellId:"aaff", Pci:3}
+	cellEntity := entities.Cell{Type:entities.Cell_LTE_CELL, Cell:&entities.Cell_ServedCellInfo{ServedCellInfo:cell}}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
@@ -104,12 +104,20 @@ func TestSaveEnb(t *testing.T) {
 	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", name, cell.GetPci()), cellData)
 
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
-	nbIdData, err := proto.Marshal(nbIdentity)
+
+	nbIdData, err := proto.Marshal(&entities.NbIdentity{InventoryName: name})
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal nbIdentity entity. Error: %v", err)
+	}
+	sdlInstanceMock.On("RemoveMember", entities.Node_UNKNOWN.String(), []interface{}{nbIdData}).Return(e)
+
+	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdData, err = proto.Marshal(nbIdentity)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB Identity entity. Error: %v", err)
 	}
 	sdlInstanceMock.On("AddMember", "ENB", []interface{}{nbIdData}).Return(e)
+
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.Nil(t, rNibErr)
 }
@@ -125,11 +133,11 @@ func TestSaveEnbCellIdValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{Pci: 3}
+	cell := &entities.ServedCellInfo{Pci:3}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -146,11 +154,11 @@ func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{CellId: "aaa", Pci: 3}
+	cell := &entities.ServedCellInfo{CellId:"aaa",Pci:3}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName: "", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName:"", GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -168,7 +176,7 @@ func TestSaveEnbOnClosedPool(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnbOnClosedPool - Failed to marshal NodeB entity. Error: %v", err)
@@ -178,7 +186,7 @@ func TestSaveEnbOnClosedPool(t *testing.T) {
 	sdlInstanceMock.On("Set", setExpected).Return(e)
 	writerPool.Close()
 	nbIdentity := &entities.NbIdentity{}
-	assert.Panics(t, func() { w.SaveNodeb(nbIdentity, &nb) })
+	assert.Panics(t, func(){w.SaveNodeb(nbIdentity, &nb)})
 }
 
 func TestSaveGnbCellIdValidationFailure(t *testing.T) {
@@ -192,12 +200,12 @@ func TestSaveGnbCellIdValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	gnb := entities.Gnb{}
-	cellInfo := &entities.ServedNRCellInformation{NrPci: 2}
-	cell := &entities.ServedNRCell{ServedNrCellInformation: cellInfo}
+	cellInfo:= &entities.ServedNRCellInformation{NrPci:2}
+	cell := &entities.ServedNRCell{ServedNrCellInformation:cellInfo}
 	gnb.ServedNrCells = []*entities.ServedNRCell{cell}
-	nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &gnb}
+	nb.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -216,16 +224,17 @@ func TestSaveGnb(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	gnb := entities.Gnb{}
-	cellInfo := &entities.ServedNRCellInformation{NrPci: 2, CellId: "ccdd"}
-	cell := &entities.ServedNRCell{ServedNrCellInformation: cellInfo}
-	cellEntity := entities.Cell{Type: entities.Cell_NR_CELL, Cell: &entities.Cell_ServedNrCell{ServedNrCell: cell}}
+	cellInfo:= &entities.ServedNRCellInformation{NrPci:2,CellId:"ccdd"}
+	cell := &entities.ServedNRCell{ServedNrCellInformation:cellInfo}
+	cellEntity := entities.Cell{Type:entities.Cell_NR_CELL, Cell:&entities.Cell_ServedNrCell{ServedNrCell:cell}}
 	gnb.ServedNrCells = []*entities.ServedNRCell{cell}
-	nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &gnb}
+	nb.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveGnb - Failed to marshal NodeB entity. Error: %v", err)
 	}
 	var e error
+
 
 	cellData, err := proto.Marshal(&cellEntity)
 	if err != nil {
@@ -238,12 +247,18 @@ func TestSaveGnb(t *testing.T) {
 	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", name, cell.GetServedNrCellInformation().GetNrPci()), cellData)
 
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
 	nbIdData, err := proto.Marshal(nbIdentity)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveGnb - Failed to marshal NodeB Identity entity. Error: %v", err)
 	}
 	sdlInstanceMock.On("AddMember", "GNB", []interface{}{nbIdData}).Return(e)
+
+	nbIdData, err = proto.Marshal(&entities.NbIdentity{InventoryName: name})
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal nbIdentity entity. Error: %v", err)
+	}
+	sdlInstanceMock.On("RemoveMember", entities.Node_UNKNOWN.String(), []interface{}{nbIdData}).Return(e)
 
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.Nil(t, rNibErr)
@@ -261,6 +276,7 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 
+
 	ranLoadInformation := generateRanLoadInformation()
 	data, err := proto.Marshal(ranLoadInformation)
 
@@ -273,6 +289,7 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 	setExpected = append(setExpected, loadKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
 
+
 	rNibErr := w.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 	assert.Nil(t, rNibErr)
 }
@@ -284,7 +301,7 @@ func TestSaveRanLoadInformationMarshalNilFailure(t *testing.T) {
 	w := GetRNibWriter()
 
 	expectedErr := common.NewInternalError(errors.New("proto: Marshal called with nil"))
-	err := w.SaveRanLoadInformation(inventoryName, nil)
+	err:= w.SaveRanLoadInformation(inventoryName, nil)
 	assert.Equal(t, expectedErr, err)
 }
 
@@ -294,7 +311,7 @@ func TestSaveRanLoadInformationEmptyInventoryNameFailure(t *testing.T) {
 	initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 
-	err := w.SaveRanLoadInformation(inventoryName, nil)
+	err:= w.SaveRanLoadInformation(inventoryName, nil)
 	assert.NotNil(t, err)
 	assert.Equal(t, common.VALIDATION_ERROR, err.GetCode())
 }
@@ -308,6 +325,7 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationSuccess - Failed to build ran load infromation key. Error: %v", validationErr)
 	}
 
+
 	writerPool = nil
 	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
@@ -319,10 +337,12 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformation - Failed to marshal RanLoadInformation entity. Error: %v", err)
 	}
 
+
 	expectedErr := errors.New("expected error")
 	var setExpected []interface{}
 	setExpected = append(setExpected, loadKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
+
 
 	rNibErr := w.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 	assert.NotNil(t, rNibErr)
@@ -339,54 +359,54 @@ func generateCellLoadInformation() *entities.CellLoadInformation {
 	cellLoadInformation.UlInterferenceOverloadIndications = []entities.UlInterferenceOverloadIndication{ulInterferenceOverloadIndication}
 
 	ulHighInterferenceInformation := entities.UlHighInterferenceInformation{
-		TargetCellId:                 "456",
-		UlHighInterferenceIndication: "xxx",
+		TargetCellId:"456",
+		UlHighInterferenceIndication:"xxx",
 	}
 
-	cellLoadInformation.UlHighInterferenceInfos = []*entities.UlHighInterferenceInformation{&ulHighInterferenceInformation}
+	cellLoadInformation.UlHighInterferenceInfos = []*entities.UlHighInterferenceInformation{&ulHighInterferenceInformation }
 
 	cellLoadInformation.RelativeNarrowbandTxPower = &entities.RelativeNarrowbandTxPower{
-		RntpPerPrb:                       "xxx",
-		RntpThreshold:                    entities.RntpThreshold_NEG_4,
+		RntpPerPrb:"xxx",
+		RntpThreshold:entities.RntpThreshold_NEG_4,
 		NumberOfCellSpecificAntennaPorts: entities.NumberOfCellSpecificAntennaPorts_V1_ANT_PRT,
-		PB:                               1,
-		PdcchInterferenceImpact:          2,
+		PB: 1,
+		PdcchInterferenceImpact:2,
 		EnhancedRntp: &entities.EnhancedRntp{
-			EnhancedRntpBitmap:     "xxx",
-			RntpHighPowerThreshold: entities.RntpThreshold_NEG_2,
-			EnhancedRntpStartTime:  &entities.StartTime{StartSfn: 500, StartSubframeNumber: 5},
+			EnhancedRntpBitmap:"xxx",
+			RntpHighPowerThreshold:entities.RntpThreshold_NEG_2,
+			EnhancedRntpStartTime: &entities.StartTime{StartSfn:500,StartSubframeNumber:5},
 		},
 	}
 
 	cellLoadInformation.AbsInformation = &entities.AbsInformation{
-		Mode:                             entities.AbsInformationMode_ABS_INFO_FDD,
-		AbsPatternInfo:                   "xxx",
-		NumberOfCellSpecificAntennaPorts: entities.NumberOfCellSpecificAntennaPorts_V2_ANT_PRT,
-		MeasurementSubset:                "xxx",
+		Mode: entities.AbsInformationMode_ABS_INFO_FDD,
+		AbsPatternInfo:"xxx",
+		NumberOfCellSpecificAntennaPorts:entities.NumberOfCellSpecificAntennaPorts_V2_ANT_PRT,
+		MeasurementSubset:"xxx",
 	}
 
 	cellLoadInformation.InvokeIndication = entities.InvokeIndication_ABS_INFORMATION
 
 	cellLoadInformation.ExtendedUlInterferenceOverloadInfo = &entities.ExtendedUlInterferenceOverloadInfo{
-		AssociatedSubframes:                       "xxx",
-		ExtendedUlInterferenceOverloadIndications: cellLoadInformation.UlInterferenceOverloadIndications,
+		AssociatedSubframes:"xxx",
+		ExtendedUlInterferenceOverloadIndications:cellLoadInformation.UlInterferenceOverloadIndications,
 	}
 
 	compInformationItem := &entities.CompInformationItem{
-		CompHypothesisSets: []*entities.CompHypothesisSet{&entities.CompHypothesisSet{CellId: "789", CompHypothesis: "xxx"}},
-		BenefitMetric:      50,
+		CompHypothesisSets: []*entities.CompHypothesisSet{&entities.CompHypothesisSet{CellId: "789", CompHypothesis:"xxx"}},
+		BenefitMetric:50,
 	}
 
 	cellLoadInformation.CompInformation = &entities.CompInformation{
-		CompInformationItems:     []*entities.CompInformationItem{compInformationItem},
-		CompInformationStartTime: &entities.StartTime{StartSfn: 123, StartSubframeNumber: 456},
+		CompInformationItems:[]*entities.CompInformationItem{compInformationItem},
+		CompInformationStartTime:&entities.StartTime{StartSfn:123,StartSubframeNumber:456},
 	}
 
 	cellLoadInformation.DynamicDlTransmissionInformation = &entities.DynamicDlTransmissionInformation{
-		State:             entities.NaicsState_NAICS_ACTIVE,
-		TransmissionModes: "xxx",
-		PB:                2,
-		PAList:            []entities.PA{entities.PA_DB_NEG_3},
+		State: entities.NaicsState_NAICS_ACTIVE,
+		TransmissionModes:"xxx",
+		PB: 2,
+		PAList:[]entities.PA{entities.PA_DB_NEG_3},
 	}
 
 	return &cellLoadInformation
@@ -396,6 +416,7 @@ func generateRanLoadInformation() *entities.RanLoadInformation {
 	ranLoadInformation := entities.RanLoadInformation{}
 
 	ranLoadInformation.LoadTimestamp = uint64(time.Now().UnixNano())
+
 
 	cellLoadInformation := generateCellLoadInformation()
 	ranLoadInformation.CellLoadInfos = []*entities.CellLoadInformation{cellLoadInformation}
@@ -418,7 +439,7 @@ func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 	expectedErr := common.NewValidationError(errors.New("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 "))
-	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName:"name", GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
 	nb := &entities.NodebInfo{}
 	nb.Port = 5656
 	nb.Ip = "localhost"
@@ -440,9 +461,9 @@ func TestSaveEntityFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEntityFailure - Failed to marshal NodeB entity. Error: %v", err)
 	}
-	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}}
+	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:plmnId, NbId:nbId}}
 	setExpected := []interface{}{"RAN:" + name, data}
-	setExpected = append(setExpected, "GNB:"+plmnId+":"+nbId, data)
+	setExpected = append(setExpected,"GNB:" + plmnId + ":" + nbId, data)
 	expectedErr := errors.New("expected error")
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
 	rNibErr := w.SaveNodeb(nbIdentity, &gnb)
@@ -451,7 +472,7 @@ func TestSaveEntityFailure(t *testing.T) {
 
 func TestGetRNibWriterPoolNotInitializedFailure(t *testing.T) {
 	writerPool = nil
-	assert.Panics(t, func() { GetRNibWriter() })
+	assert.Panics(t, func(){GetRNibWriter()})
 }
 
 func TestGetRNibWriter(t *testing.T) {
@@ -494,7 +515,7 @@ func TestCloseOnClosedPoolFailure(t *testing.T) {
 	var e error
 	instanceMock.On("Close").Return(e)
 	Close()
-	assert.Panics(t, func() { Close() })
+	assert.Panics(t, func(){Close()})
 }
 
 func TestCloseFailure(t *testing.T) {
@@ -526,48 +547,64 @@ func TestInit(t *testing.T) {
 
 //Integration tests
 //
-//func TestSaveEnbInteg(t *testing.T){
-//	for i := 0; i<10; i++{
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		nb := entities.NodebInfo{}
-//		nb.NodeType = entities.Node_ENB
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb.Ip = "localhost"
-//		nb.Port = uint32(5656 + i)
-//		enb := entities.Enb{}
-//		cell1 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",111 + i), Pci:uint32(11 + i)}
-//		cell2 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",222 + i), Pci:uint32(22 + i)}
-//		cell3 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",333 + i), Pci:uint32(33 + i)}
-//		enb.ServedCells = []*entities.ServedCellInfo{cell1, cell2, cell3}
-//		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
-//		plmnId := 0x02f828
-//		nbId := 0x4a952a0a
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
-//		err := w.SaveNodeb(nbIdentity, &nb)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//
-//		nb1 := entities.NodebInfo{}
-//		nb1.NodeType = entities.Node_GNB
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb1.Ip = "localhost"
-//		nb1.Port =  uint32(6565 + i)
-//		gnb := entities.Gnb{}
-//		gCell1 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",1111 + i), NrPci:uint32(1 + i)}}
-//		gCell2 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",2222 + i), NrPci:uint32(2 + i)}}
-//		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
-//		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
-//		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
-//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
-//		err = w.SaveNodeb(nbIdentity, &nb1)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//	}
-//}
+func TestSaveEnbGnbInteg(t *testing.T){
+	for i := 0; i<10; i++{
+		Init("e2Manager", 1)
+		w := GetRNibWriter()
+		nb := entities.NodebInfo{}
+		nb.NodeType = entities.Node_ENB
+		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+		nb.Ip = "localhost"
+		nb.Port = uint32(5656 + i)
+		enb := entities.Enb{}
+		cell1 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",111 + i), Pci:uint32(11 + i)}
+		cell2 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",222 + i), Pci:uint32(22 + i)}
+		cell3 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",333 + i), Pci:uint32(33 + i)}
+		enb.ServedCells = []*entities.ServedCellInfo{cell1, cell2, cell3}
+		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+		plmnId := 0x02f828
+		nbId := 0x4a952a0a
+		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
+		err := w.SaveNodeb(nbIdentity, &nb)
+		if err != nil{
+			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+		}
 
+		nb1 := entities.NodebInfo{}
+		nb1.NodeType = entities.Node_GNB
+		nb1.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+		nb1.Ip = "localhost"
+		nb1.Port =  uint32(6565 + i)
+		gnb := entities.Gnb{}
+		gCell1 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",1111 + i), NrPci:uint32(1 + i)}}
+		gCell2 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",2222 + i), NrPci:uint32(2 + i)}}
+		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
+		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
+		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
+		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
+		err = w.SaveNodeb(nbIdentity, &nb1)
+		if err != nil{
+			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+		}
+	}
+}
+
+func TestSaveNbRanNamesInteg(t *testing.T){
+	for i := 0; i<10; i++{
+		Init("e2Manager", 1)
+		w := GetRNibWriter()
+		nb := entities.NodebInfo{}
+		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+		nb.Ip = "localhost"
+		nb.Port = uint32(5656 + i)
+		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameOnly%d" ,i)}
+		err := w.SaveNodeb(nbIdentity, &nb)
+		if err != nil{
+			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+		}
+	}
+}
+//
 //func TestSaveRanLoadInformationInteg(t *testing.T){
 //		Init("e2Manager", 1)
 //		w := GetRNibWriter()

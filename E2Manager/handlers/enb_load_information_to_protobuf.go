@@ -406,7 +406,7 @@ func extractPaListFromDynamicNaicsInformation(cellId string, dynamicNAICSInforma
 	extendedUlInterferenceOverLoadIndicationList := (*[1 << 30]*C.long)(unsafe.Pointer(dynamicNAICSInformation.pA_list.list.array))[:int(paListCount):int(paListCount)]
 
 	if (extendedUlInterferenceOverLoadIndicationList == nil) {
-		return nil, fmt.Errorf("#extractPaListFromDynamicNaicsInformation - cellId: %s - Extended Ul Interference OverLoad Indication List is nil")
+		return nil, fmt.Errorf("#extractPaListFromDynamicNaicsInformation - cellId: %s - Extended Ul Interference OverLoad Indication List is nil", cellId)
 	}
 
 	return extendedUlInterferenceOverLoadIndicationList, nil
@@ -496,7 +496,7 @@ func buildCompHypothesisSets(cellId string, pduCompInformationItemMember *C.CoMP
 	pduCompHypothesisSetItemsListCount := pduCompInformationItemMember.coMPHypothesisSet.list.count
 
 	if pduCompHypothesisSetItemsListCount == 0 || pduCompHypothesisSetItemsListCount > NaxNoOfCompCells {
-		return nil, fmt.Errorf("#buildCompHypothesisSets - cellId: %s - Invalid Comp Hypothesis Set Items list count")
+		return nil, fmt.Errorf("#buildCompHypothesisSets - cellId: %s - Invalid Comp Hypothesis Set Items list count", cellId)
 	}
 
 	pduCompHypothesisSetItems := (*[1 << 30]*C.CoMPHypothesisSetItem_t)(unsafe.Pointer(pduCompInformationItemMember.coMPHypothesisSet.list.array))[:int(pduCompHypothesisSetItemsListCount):int(pduCompHypothesisSetItemsListCount)]

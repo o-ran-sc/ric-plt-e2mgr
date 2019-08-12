@@ -136,3 +136,15 @@ func (m *RnibReaderMock) GetListNodebIds()([]*entities.NbIdentity, common.IRNibE
 
 	return args.Get(0).([]*entities.NbIdentity), nil
 }
+
+func (m *RnibReaderMock) GetRanLoadInformation(inventoryName string) (*entities.RanLoadInformation, common.IRNibError){
+	args := m.Called()
+
+	errArg := args.Get(1)
+
+	if errArg != nil {
+		return args.Get(0).(*entities.RanLoadInformation), errArg.(common.IRNibError)
+	}
+
+	return args.Get(0).(*entities.RanLoadInformation), nil
+}
