@@ -31,7 +31,7 @@ import (
 
 func convertToMBuf(logger *logger.Logger, m *C.rmr_mbuf_t) *MBuf {
 	payloadArr := C.GoBytes(unsafe.Pointer(m.payload),C.int(m.len))
-	xActionArr := C.GoBytes(unsafe.Pointer(m.xaction),RMR_MAX_XACTION_LEN)
+	xActionArr := C.GoBytes(unsafe.Pointer(m.xaction),C.int(RMR_MAX_XACTION_LEN))
 
 	// Trim padding (space and 0)
 	xActionStr :=  strings.TrimRight(string(xActionArr),"\040\000")
