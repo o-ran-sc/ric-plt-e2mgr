@@ -1,0 +1,13 @@
+/.idea/e2mgr.iml
+/.idea/encodings.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
+.vscode/launch.json
+/.idea/sonarIssues.xml
+*.o
+*.a
+E2Manager/asn1codec/e2ap_engine/converter-example
+E2Manager/asn1codec/tests/
+
