@@ -50,6 +50,7 @@ func initNotificationHandlersMap(rnibReaderProvider func() reader.RNibReader, rn
 		rmrCgo.RIC_ENB_LOAD_INFORMATION:    handlers.RicEnbLoadInformationNotificationHandler{},
 		rmrCgo.RIC_ENB_CONF_UPDATE:    		handlers.X2EnbConfigurationUpdateHandler{},
 		rmrCgo.RIC_ENDC_CONF_UPDATE:    	handlers.EndcConfigurationUpdateHandler{},
+		rmrCgo.RIC_X2_RESET_RESP:			handlers.NewX2ResetResponseHandler(rnibReaderProvider),
 	}
 }
 
