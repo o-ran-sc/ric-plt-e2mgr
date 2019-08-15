@@ -51,14 +51,13 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	var messageChannel chan<- *models.NotificationResponse
 
 	rnibErr := &common.RNibError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
 	writer := httptest.NewRecorder()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 	controller.ShutdownHandler(writer, tests.GetHttpRequest(), nil)
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
@@ -80,11 +79,10 @@ func TestHeaderValidationFailed(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	var messageChannel chan<- *models.NotificationResponse
 
 	writer := httptest.NewRecorder()
 
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 
 	header := &http.Header{}
 
@@ -111,14 +109,13 @@ func TestShutdownStatusNoContent(t *testing.T){
 		return writerMock
 	}
 	config := configuration.ParseConfiguration()
-	var messageChannel chan<- *models.NotificationResponse
 
 	var rnibError common.IRNibError
 	nbIdentityList := []*entities.NbIdentity{}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
 
 	writer := httptest.NewRecorder()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 	controller.ShutdownHandler(writer, tests.GetHttpRequest(), nil)
 
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
@@ -137,10 +134,9 @@ func TestHandleInternalError(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	var messageChannel chan<- *models.NotificationResponse
 
 	writer := httptest.NewRecorder()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 	err := e2managererrors.NewInternalError()
 
 	controller.handleErrorResponse(err, writer)
@@ -164,9 +160,8 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	var messageChannel chan<- *models.NotificationResponse
 	writer := httptest.NewRecorder()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 	err := e2managererrors.NewCommandAlreadyInProgressError()
 
 	controller.handleErrorResponse(err, writer)
@@ -190,9 +185,8 @@ func TestValidateHeaders(t *testing.T){
 		return writerMock
 	}
 	config := configuration.ParseConfiguration()
-	var messageChannel chan<- *models.NotificationResponse
 
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, messageChannel)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")

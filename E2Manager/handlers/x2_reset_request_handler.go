@@ -134,7 +134,7 @@ func NewX2ResetRequestHandler(rmrService *services.RmrService, config *configura
 	}
 }
 
-func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error {
+func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request models.Request) error {
 	resetRequest := request.(models.ResetRequest)
 	nodeb, err  := handler.readerProvider().GetNodeb(resetRequest.RanName)
 	if err != nil {

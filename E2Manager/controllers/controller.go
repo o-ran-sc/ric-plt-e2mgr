@@ -39,17 +39,15 @@ const (
 type Controller struct {
 	logger         *logger.Logger
 	handlerProvider *providers.IncomingRequestHandlerProvider
-	rmrResponseChannel chan<- *models.NotificationResponse
 }
 
 func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibReaderProvider func() reader.RNibReader, rNibWriterProvider func() rNibWriter.RNibWriter,
-	config *configuration.Configuration, rmrResponseChannel chan<- *models.NotificationResponse) *Controller {
+	config *configuration.Configuration) *Controller {
 
 	provider := providers.NewIncomingRequestHandlerProvider(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider)
 	return &Controller{
 		logger: logger,
 		handlerProvider: provider,
-		rmrResponseChannel: rmrResponseChannel,
 	}
 }
 
@@ -102,7 +100,7 @@ func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Head
 		return
 	}
 
-	err = handler.Handle(c.logger, request, c.rmrResponseChannel)
+	err = handler.Handle(c.logger, request)
 
 	if err != nil {
 		c.handleErrorResponse(err, writer)
