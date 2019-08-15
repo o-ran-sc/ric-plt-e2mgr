@@ -24,12 +24,11 @@ LIBOBJ=$(addprefix $(OBJDIR)/,$(LIBSRC:.c=.o))
 TESTX2SETUPREQUEST=tests/x2setup_request_wrapper_test
 TESTCONFUPDATE=tests/configuration_update_wrapper_test
 TESTX2RESETREQUEST=tests/x2reset_request_wrapper_test
-
+TESTUNPACKXER=tests/unpack_xer
 
 .PHONY: all clean e2ap_engine
 
-all: $(LIB) $(TESTX2SETUPREQUEST) $(TESTCONFUPDATE)  $(TESTX2RESETREQUEST)
-
+all: $(LIB) $(TESTX2SETUPREQUEST) $(TESTCONFUPDATE)  $(TESTX2RESETREQUEST) $(TESTUNPACKXER)
 
 e2ap_engine/libasncodec.a:
 	cd e2ap_engine/ && make -f converter-example.mk
@@ -49,11 +48,13 @@ $(TESTCONFUPDATE): % : $(LIB) src/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) src/$@.c -o $@ $(LIB)  e2ap_engine/libasncodec.a
 
-$(TESTX2RESETREQUEST): % : $(LIB) src/%.c 
+$(TESTX2RESETREQUEST): % : $(LIB) src/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) src/$@.c -o $@ $(LIB)  e2ap_engine/libasncodec.a
 
-
+$(TESTUNPACKXER): % : $(LIB) src/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) src/$@.c -o $@ $(LIB)  e2ap_engine/libasncodec.a
 
 clean:
 	rm -rf $(OBJDIR) tests 

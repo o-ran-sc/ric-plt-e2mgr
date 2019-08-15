@@ -28,27 +28,7 @@ import (
 	"github.com/pkg/errors"
 	"unsafe"
 )
-func unpackX2apPduUPer(logger *logger.Logger, allocationBufferSize int, packedBufferSize int, packedBuf []byte, maxMessageBufferSize int) (*C.E2AP_PDU_t, error) {
-	pdu := C.new_pdu(C.ulong(allocationBufferSize))
 
-	if pdu == nil {
-		return nil, errors.New("allocation failure (pdu)")
-	}
-
-	logger.Debugf("#x2apPdu_asn1_unpacker.unpackX2apPduUPer - Packed pdu(%d):%x", packedBufferSize, packedBuf)
-
-	errBuf := make([]C.char, maxMessageBufferSize)
-	if !C.unpack_pdu_aux(pdu, C.ulong(packedBufferSize), (*C.uchar)(unsafe.Pointer(&packedBuf[0])), C.ulong(len(errBuf)), &errBuf[0], C.ATS_UNALIGNED_BASIC_PER) {
-		return nil, errors.New(fmt.Sprintf("unpacking error: %s", C.GoString(&errBuf[0])))
-	}
-
-	if logger.DebugEnabled() {
-		C.asn1_pdu_printer(pdu, C.size_t(len(errBuf)), &errBuf[0])
-		logger.Debugf("#x2apPdu_asn1_unpacker.unpackX2apPduUPer - PDU: %v  packed size:%d", C.GoString(&errBuf[0]), packedBufferSize)
-	}
-
-	return pdu, nil
-}
 type X2PduRefinedResponse struct {
 	pduPrint string
 }

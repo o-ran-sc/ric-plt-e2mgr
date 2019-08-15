@@ -29,7 +29,7 @@ import (
 	"time"
 )
 
-type NotificationManager struct{
+type NotificationManager struct {
 	rnibReaderProvider func() reader.RNibReader
 	rnibWriterProvider func() rNibWriter.RNibWriter
 }
@@ -40,8 +40,9 @@ func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWri
 		rnibWriterProvider: rnibWriterProvider,
 	}
 }
+
 //TODO add NEWHandler with log
-func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions sessions.E2Sessions, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse){
+func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions sessions.E2Sessions, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse) {
 
 	provider := providers.NewNotificationHandlerProvider(m.rnibReaderProvider, m.rnibWriterProvider)
 	notificationHandler, err := provider.GetNotificationHandler(mbuf.MType)
@@ -51,8 +52,6 @@ func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions ses
 		return
 	}
 
-	notificationRequest := models.NotificationRequest{RanName: mbuf.Meid, Len: mbuf.Len, Payload: *mbuf.Payload,
-		StartTime: time.Now(), TransactionId: string(*mbuf.XAction)}
-
-	go notificationHandler.Handle(logger, e2Sessions, &notificationRequest, responseChannel)
+	notificationRequest := models.NewNotificationRequest(mbuf.Meid, *mbuf.Payload, time.Now(), string(*mbuf.XAction))
+	go notificationHandler.Handle(logger, e2Sessions, notificationRequest, responseChannel)
 }

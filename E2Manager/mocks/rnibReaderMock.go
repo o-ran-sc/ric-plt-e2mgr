@@ -17,8 +17,8 @@
 package mocks
 
 import (
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -28,7 +28,6 @@ type RnibReaderMock struct {
 
 func (m *RnibReaderMock) GetNodeb(inventoryName string) (*entities.NodebInfo, common.IRNibError) {
 	args := m.Called(inventoryName)
-
 
 	errArg := args.Get(1);
 
@@ -51,7 +50,7 @@ func (m *RnibReaderMock) GetNodebByGlobalNbId(nodeType entities.Node_Type, globa
 	return args.Get(0).(*entities.NodebInfo), nil
 }
 
-func (m *RnibReaderMock)  GetCellList(inventoryName string) (*entities.Cells, common.IRNibError) {
+func (m *RnibReaderMock) GetCellList(inventoryName string) (*entities.Cells, common.IRNibError) {
 	args := m.Called(inventoryName)
 
 	errArg := args.Get(1);
@@ -63,7 +62,7 @@ func (m *RnibReaderMock)  GetCellList(inventoryName string) (*entities.Cells, co
 	return args.Get(0).(*entities.Cells), nil
 }
 
-func (m *RnibReaderMock) GetListGnbIds()(*[]*entities.NbIdentity, common.IRNibError) {
+func (m *RnibReaderMock) GetListGnbIds() (*[]*entities.NbIdentity, common.IRNibError) {
 	args := m.Called()
 
 	errArg := args.Get(1);
@@ -75,7 +74,7 @@ func (m *RnibReaderMock) GetListGnbIds()(*[]*entities.NbIdentity, common.IRNibEr
 	return args.Get(0).(*[]*entities.NbIdentity), nil
 }
 
-func (m *RnibReaderMock) GetListEnbIds()(*[]*entities.NbIdentity, common.IRNibError) {
+func (m *RnibReaderMock) GetListEnbIds() (*[]*entities.NbIdentity, common.IRNibError) {
 	args := m.Called()
 
 	errArg := args.Get(1);
@@ -88,7 +87,7 @@ func (m *RnibReaderMock) GetListEnbIds()(*[]*entities.NbIdentity, common.IRNibEr
 
 }
 
-func (m *RnibReaderMock) GetCountGnbList()(int, common.IRNibError) {
+func (m *RnibReaderMock) GetCountGnbList() (int, common.IRNibError) {
 	args := m.Called()
 
 	errArg := args.Get(1);
@@ -125,7 +124,7 @@ func (m *RnibReaderMock) GetCellById(cellType entities.Cell_Type, cellId string)
 	return args.Get(0).(*entities.Cell), nil
 }
 
-func (m *RnibReaderMock) GetListNodebIds()([]*entities.NbIdentity, common.IRNibError){
+func (m *RnibReaderMock) GetListNodebIds() ([]*entities.NbIdentity, common.IRNibError) {
 	args := m.Called()
 
 	errArg := args.Get(1)
@@ -137,7 +136,7 @@ func (m *RnibReaderMock) GetListNodebIds()([]*entities.NbIdentity, common.IRNibE
 	return args.Get(0).([]*entities.NbIdentity), nil
 }
 
-func (m *RnibReaderMock) GetRanLoadInformation(inventoryName string) (*entities.RanLoadInformation, common.IRNibError){
+func (m *RnibReaderMock) GetRanLoadInformation(inventoryName string) (*entities.RanLoadInformation, common.IRNibError) {
 	args := m.Called()
 
 	errArg := args.Get(1)

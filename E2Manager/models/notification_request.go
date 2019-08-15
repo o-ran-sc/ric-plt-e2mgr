@@ -21,8 +21,18 @@ import "time"
 
 type NotificationRequest struct {
 	RanName       string
-	Len    		  int
+	Len           int
 	Payload       []byte
-	StartTime 	  time.Time
+	StartTime     time.Time
 	TransactionId string
+}
+
+func NewNotificationRequest(ranName string, payload []byte, startTime time.Time, transactionId string) *NotificationRequest {
+	return &NotificationRequest{
+		ranName,
+		len(payload),
+		payload,
+		startTime,
+		transactionId,
+	}
 }

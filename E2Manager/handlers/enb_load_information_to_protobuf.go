@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MaxCellineNb             = 256
+	MaxCellsInEnb            = 256
 	MaxNoOfPrbs              = 110
 	NaxNoOfCompHypothesisSet = 256
 	NaxNoOfCompCells         = 32
@@ -64,7 +64,7 @@ func extractPduCellInformationItemIEs(pdu *C.E2AP_PDU_t) ([]*C.CellInformation_I
 
 	loadInformationCellListCount := loadInformationCellList.list.count
 
-	if loadInformationCellListCount == 0 || loadInformationCellListCount > MaxCellineNb {
+	if loadInformationCellListCount == 0 || loadInformationCellListCount > MaxCellsInEnb {
 		return nil, fmt.Errorf("#extractPduCellInformationItemIEs - Invalid CellInformation list count")
 	}
 
@@ -265,7 +265,7 @@ func extractPduUlHighInterferenceIndicationInfoItems(cellId string, cellInformat
 
 	pduUlHighInterferenceIndicationInfoListCount := pduUlHighInterferenceIndicationInfo.list.count
 
-	if pduUlHighInterferenceIndicationInfoListCount == 0 || pduUlHighInterferenceIndicationInfoListCount > MaxCellineNb {
+	if pduUlHighInterferenceIndicationInfoListCount == 0 || pduUlHighInterferenceIndicationInfoListCount > MaxCellsInEnb {
 		return nil, fmt.Errorf("#extractPduUlHighInterferenceIndicationInfoItems - cellId: %s - Invalid UL High Interference Indication info list count", cellId)
 	}
 

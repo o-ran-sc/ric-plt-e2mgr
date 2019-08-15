@@ -34,7 +34,7 @@ import (
  */
 
 func TestGetNotificationHandlerSuccess(t *testing.T) {
-	readerMock :=&mocks.RnibReaderMock{}
+	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
 		return readerMock
 	}
@@ -48,10 +48,10 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	}{
 		{rmrCgo.RIC_X2_SETUP_RESP /*successful x2 setup response*/, handlers.X2SetupResponseNotificationHandler{}},
 		{rmrCgo.RIC_X2_SETUP_FAILURE /*unsuccessful x2 setup response*/, handlers.X2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/,handlers.EndcX2SetupResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/,handlers.EndcX2SetupFailureResponseNotificationHandler{}},
+		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/, handlers.EndcX2SetupResponseNotificationHandler{}},
+		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/, handlers.EndcX2SetupFailureResponseNotificationHandler{}},
 		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, handlers.NewRanLostConnectionHandler(rnibReaderProvider, rnibWriterProvider)},
-		{rmrCgo.RIC_ENB_LOAD_INFORMATION, handlers.RicEnbLoadInformationNotificationHandler{}},
+		{rmrCgo.RIC_ENB_LOAD_INFORMATION, handlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, handlers.X2EnbConfigurationUpdateHandler{}},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, handlers.EndcConfigurationUpdateHandler{}},
 	}
@@ -66,7 +66,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 			//Note struct is empty, so it will match any other empty struct.
 			// https://golang.org/ref/spec#Comparison_operators: Struct values are comparable if all their fields are comparable. Two struct values are equal if their corresponding non-blank fields are equal.
 			if /*handler != tc.handler &&*/ strings.Compare(fmt.Sprintf("%T", handler), fmt.Sprintf("%T", tc.handler)) != 0 {
-				t.Errorf("want: handler %T for message type %d, got: %T", tc.handler,tc.msgType, handler)
+				t.Errorf("want: handler %T for message type %d, got: %T", tc.handler, tc.msgType, handler)
 			}
 		})
 	}
@@ -84,7 +84,7 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 		{9999 /*unknown*/, "notification handler not found"},
 	}
 	for _, tc := range testCases {
-		readerMock :=&mocks.RnibReaderMock{}
+		readerMock := &mocks.RnibReaderMock{}
 		rnibReaderProvider := func() reader.RNibReader {
 			return readerMock
 		}
