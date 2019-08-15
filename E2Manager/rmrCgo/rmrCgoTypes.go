@@ -46,25 +46,27 @@ func NewContext(maxMsgSize int, flags int, ctx unsafe.Pointer, logger *logger.Lo
 		Logger:     logger,
 	}
 }
+
 //TODO: consider declaring using its own type
 const (
 	// messages
-	RIC_X2_SETUP_REQ            = C.RIC_X2_SETUP_REQ
-	RIC_X2_SETUP_RESP           = C.RIC_X2_SETUP_RESP
-	RIC_X2_SETUP_FAILURE        = C.RIC_X2_SETUP_FAILURE
-	RIC_ENDC_X2_SETUP_REQ       = C.RIC_ENDC_X2_SETUP_REQ
-	RIC_ENDC_X2_SETUP_RESP      =C.RIC_ENDC_X2_SETUP_RESP
-	RIC_ENDC_X2_SETUP_FAILURE   = C.RIC_ENDC_X2_SETUP_FAILURE
-	RIC_SCTP_CONNECTION_FAILURE = C.RIC_SCTP_CONNECTION_FAILURE
-	RIC_ENB_LOAD_INFORMATION    = C.RIC_ENB_LOAD_INFORMATION
-	RIC_ENB_CONF_UPDATE 		= C.RIC_ENB_CONF_UPDATE
-	RIC_ENB_CONFIGURATION_UPDATE_ACK = C.RIC_ENB_CONF_UPDATE_ACK
+	RIC_X2_SETUP_REQ                     = C.RIC_X2_SETUP_REQ
+	RIC_X2_SETUP_RESP                    = C.RIC_X2_SETUP_RESP
+	RIC_X2_SETUP_FAILURE                 = C.RIC_X2_SETUP_FAILURE
+	RIC_ENDC_X2_SETUP_REQ                = C.RIC_ENDC_X2_SETUP_REQ
+	RIC_ENDC_X2_SETUP_RESP               = C.RIC_ENDC_X2_SETUP_RESP
+	RIC_ENDC_X2_SETUP_FAILURE            = C.RIC_ENDC_X2_SETUP_FAILURE
+	RIC_SCTP_CONNECTION_FAILURE          = C.RIC_SCTP_CONNECTION_FAILURE
+	RIC_ENB_LOAD_INFORMATION             = C.RIC_ENB_LOAD_INFORMATION
+	RIC_ENB_CONF_UPDATE                  = C.RIC_ENB_CONF_UPDATE
+	RIC_ENB_CONFIGURATION_UPDATE_ACK     = C.RIC_ENB_CONF_UPDATE_ACK
 	RIC_ENB_CONFIGURATION_UPDATE_FAILURE = C.RIC_ENB_CONF_UPDATE_FAILURE
-	RIC_ENDC_CONF_UPDATE 		= C.RIC_ENDC_CONF_UPDATE
-	RIC_ENDC_CONF_UPDATE_ACK = C.RIC_ENDC_CONF_UPDATE_ACK
-	RIC_ENDC_CONF_UPDATE_FAILURE = C.RIC_ENDC_CONF_UPDATE_FAILURE
-	RIC_SCTP_CLEAR_ALL 			= C.RIC_SCTP_CLEAR_ALL
-	RIC_X2_RESET_RESP			= C.RIC_X2_RESET_RESP
+	RIC_ENDC_CONF_UPDATE                 = C.RIC_ENDC_CONF_UPDATE
+	RIC_ENDC_CONF_UPDATE_ACK             = C.RIC_ENDC_CONF_UPDATE_ACK
+	RIC_ENDC_CONF_UPDATE_FAILURE         = C.RIC_ENDC_CONF_UPDATE_FAILURE
+	RIC_SCTP_CLEAR_ALL                   = C.RIC_SCTP_CLEAR_ALL
+	RIC_X2_RESET_RESP                    = C.RIC_X2_RESET_RESP
+	RIC_X2_RESET                         = C.RIC_X2_RESET
 )
 
 const (
@@ -72,41 +74,41 @@ const (
 	RMR_MAX_MEID_LEN    = int(C.RMR_MAX_MEID)
 
 	//states
-    RMR_OK				= C.RMR_OK
-    RMR_ERR_BADARG		= C.RMR_ERR_BADARG
-    RMR_ERR_NOENDPT		= C.RMR_ERR_NOENDPT
-    RMR_ERR_EMPTY		= C.RMR_ERR_EMPTY
-    RMR_ERR_NOHDR		= C.RMR_ERR_NOHDR
-    RMR_ERR_SENDFAILED	= C.RMR_ERR_SENDFAILED
-    RMR_ERR_CALLFAILED	= C.RMR_ERR_CALLFAILED
-    RMR_ERR_NOWHOPEN	= C.RMR_ERR_NOWHOPEN
-    RMR_ERR_WHID		= C.RMR_ERR_WHID
-    RMR_ERR_OVERFLOW	= C.RMR_ERR_OVERFLOW
-    RMR_ERR_RETRY		= C.RMR_ERR_RETRY
-    RMR_ERR_RCVFAILED	= C.RMR_ERR_RCVFAILED
-    RMR_ERR_TIMEOUT		= C.RMR_ERR_TIMEOUT
-    RMR_ERR_UNSET       = C.RMR_ERR_UNSET
-    RMR_ERR_TRUNC       = C.RMR_ERR_TRUNC
-    RMR_ERR_INITFAILED  = C.RMR_ERR_INITFAILED
+	RMR_OK             = C.RMR_OK
+	RMR_ERR_BADARG     = C.RMR_ERR_BADARG
+	RMR_ERR_NOENDPT    = C.RMR_ERR_NOENDPT
+	RMR_ERR_EMPTY      = C.RMR_ERR_EMPTY
+	RMR_ERR_NOHDR      = C.RMR_ERR_NOHDR
+	RMR_ERR_SENDFAILED = C.RMR_ERR_SENDFAILED
+	RMR_ERR_CALLFAILED = C.RMR_ERR_CALLFAILED
+	RMR_ERR_NOWHOPEN   = C.RMR_ERR_NOWHOPEN
+	RMR_ERR_WHID       = C.RMR_ERR_WHID
+	RMR_ERR_OVERFLOW   = C.RMR_ERR_OVERFLOW
+	RMR_ERR_RETRY      = C.RMR_ERR_RETRY
+	RMR_ERR_RCVFAILED  = C.RMR_ERR_RCVFAILED
+	RMR_ERR_TIMEOUT    = C.RMR_ERR_TIMEOUT
+	RMR_ERR_UNSET      = C.RMR_ERR_UNSET
+	RMR_ERR_TRUNC      = C.RMR_ERR_TRUNC
+	RMR_ERR_INITFAILED = C.RMR_ERR_INITFAILED
 )
 
-var states = map[int]string {
-	RMR_OK				:	"state is good",
-	RMR_ERR_BADARG		:	"argument passd to function was unusable",
-	RMR_ERR_NOENDPT		:	"send/call could not find an endpoint based on msg type",
-	RMR_ERR_EMPTY		:	"msg received had no payload; attempt to send an empty message",
-	RMR_ERR_NOHDR		:	"message didn't contain a valid header",
-	RMR_ERR_SENDFAILED	:	"send failed; errno has nano reason",
-	RMR_ERR_CALLFAILED	:	"unable to send call() message",
-	RMR_ERR_NOWHOPEN	:	"no wormholes are open",
-	RMR_ERR_WHID		:	"wormhole id was invalid",
-	RMR_ERR_OVERFLOW	:	"operation would have busted through a buffer/field size",
-	RMR_ERR_RETRY		:	"request (send/call/rts) failed, but caller should retry (EAGAIN for wrappers)",
-	RMR_ERR_RCVFAILED	:	"receive failed (hard error)",
-	RMR_ERR_TIMEOUT		:	"message processing call timed out",
-	RMR_ERR_UNSET       :   "the message hasn't been populated with a transport buffer",
-	RMR_ERR_TRUNC       :   "received message likely truncated",
-	RMR_ERR_INITFAILED  :   "initialisation of something (probably message) failed",
+var states = map[int]string{
+	RMR_OK:             "state is good",
+	RMR_ERR_BADARG:     "argument passd to function was unusable",
+	RMR_ERR_NOENDPT:    "send/call could not find an endpoint based on msg type",
+	RMR_ERR_EMPTY:      "msg received had no payload; attempt to send an empty message",
+	RMR_ERR_NOHDR:      "message didn't contain a valid header",
+	RMR_ERR_SENDFAILED: "send failed; errno has nano reason",
+	RMR_ERR_CALLFAILED: "unable to send call() message",
+	RMR_ERR_NOWHOPEN:   "no wormholes are open",
+	RMR_ERR_WHID:       "wormhole id was invalid",
+	RMR_ERR_OVERFLOW:   "operation would have busted through a buffer/field size",
+	RMR_ERR_RETRY:      "request (send/call/rts) failed, but caller should retry (EAGAIN for wrappers)",
+	RMR_ERR_RCVFAILED:  "receive failed (hard error)",
+	RMR_ERR_TIMEOUT:    "message processing call timed out",
+	RMR_ERR_UNSET:      "the message hasn't been populated with a transport buffer",
+	RMR_ERR_TRUNC:      "received message likely truncated",
+	RMR_ERR_INITFAILED: "initialisation of something (probably message) failed",
 }
 
 type MBuf struct {
@@ -117,15 +119,15 @@ type MBuf struct {
 	XAction *[]byte
 }
 
-func (m MBuf) String () string {
+func (m MBuf) String() string {
 	return fmt.Sprintf("{ MType: %d, Len: %d, Meid: %q, Xaction: %q, Payload: [%x] }", m.MType, m.Len, m.Meid, m.XAction, m.Payload)
 }
 
 type Context struct {
-	MaxMsgSize     int
-	Flags          int
-	RmrCtx         unsafe.Pointer
-	Logger         *logger.Logger
+	MaxMsgSize int
+	Flags      int
+	RmrCtx     unsafe.Pointer
+	Logger     *logger.Logger
 }
 
 type RmrMessenger interface {

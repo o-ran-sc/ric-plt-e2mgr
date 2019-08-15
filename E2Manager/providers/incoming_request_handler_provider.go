@@ -23,6 +23,7 @@ import (
 	"e2mgr/handlers"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
@@ -30,6 +31,7 @@ type IncomingRequest string
 
 const(
 	ShutdownRequest IncomingRequest = "Shutdown"
+	ResetRequest IncomingRequest = "Reset"
 )
 
 type IncomingRequestHandlerProvider struct{
@@ -37,20 +39,21 @@ type IncomingRequestHandlerProvider struct{
 	logger *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
 	rNibReaderProvider func() reader.RNibReader) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap:	initRequestHandlerMap(config, rNibWriterProvider, rNibReaderProvider),
+		requestMap:	initRequestHandlerMap(rmrService, config,  rNibWriterProvider, rNibReaderProvider),
 		logger: logger,
 	}
 }
 
-func initRequestHandlerMap(config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
+func initRequestHandlerMap(rmrService *services.RmrService,config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
 	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]handlers.RequestHandler {
 
 	return map[IncomingRequest]handlers.RequestHandler{
 		ShutdownRequest: handlers.NewDeleteAllRequestHandler(config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
+		ResetRequest: handlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),      //TODO change to pointer
 	}
 }
 

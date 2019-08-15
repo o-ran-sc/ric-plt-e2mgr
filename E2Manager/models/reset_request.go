@@ -15,13 +15,12 @@
 // limitations under the License.
 //
 
-package handlers
+package models
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-)
+import "time"
 
-type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+type ResetRequest struct {
+	StartTime time.Time
+	RanName string
+	Cause   string `json:"cause"`
 }

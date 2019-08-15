@@ -23,15 +23,27 @@ import (
 	"e2mgr/handlers"
 	"e2mgr/logger"
 	"e2mgr/mocks"
+	"e2mgr/models"
 	"e2mgr/rNibWriter"
+	"e2mgr/rmrCgo"
+	"e2mgr/services"
+	"e2mgr/sessions"
+	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
 
+func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	messageChannel := make(chan *models.NotificationResponse)
+	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
+}
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
 
 	log := initLog(t)
 	readerProvider := func() reader.RNibReader {
@@ -41,7 +53,7 @@ func TestNewIncomingRequestHandlerProvider(t *testing.T) {
 		return &mocks.RnibWriterMock{}
 	}
 
-	provider := NewIncomingRequestHandlerProvider(log, configuration.ParseConfiguration(), writerProvider, readerProvider)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
 	/*if provider == nil {
 		t.Errorf("want: provider, got: nil")
 	}*/
@@ -50,6 +62,7 @@ func TestNewIncomingRequestHandlerProvider(t *testing.T) {
 }
 
 func TestShutdownRequestHandler(t *testing.T) {
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
 
 	log := initLog(t)
 	readerProvider := func() reader.RNibReader {
@@ -59,7 +72,7 @@ func TestShutdownRequestHandler(t *testing.T) {
 		return &mocks.RnibWriterMock{}
 	}
 
-	provider := NewIncomingRequestHandlerProvider(log, configuration.ParseConfiguration(), writerProvider, readerProvider)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
 
 	handler, err := provider.GetHandler(ShutdownRequest)
 
@@ -78,7 +91,7 @@ func TestShutdownRequestHandler(t *testing.T) {
 }
 
 func TestGetShutdownHandlerFailure(t *testing.T) {
-
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	log := initLog(t)
 	readerProvider := func() reader.RNibReader {
 		return &mocks.RnibReaderMock{}
@@ -87,7 +100,7 @@ func TestGetShutdownHandlerFailure(t *testing.T) {
 		return &mocks.RnibWriterMock{}
 	}
 
-	provider := NewIncomingRequestHandlerProvider(log, configuration.ParseConfiguration(), writerProvider, readerProvider)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
 
 	_, actual := provider.GetHandler("test")
 	expected := &e2managererrors.InternalError{}

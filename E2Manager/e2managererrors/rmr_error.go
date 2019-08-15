@@ -15,13 +15,21 @@
 // limitations under the License.
 //
 
-package handlers
+package e2managererrors
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-)
+type RmrError struct {
+	Err BaseError
+}
 
-type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+func NewRmrError() *RmrError {
+	return &RmrError{
+		BaseError{
+			Code:    502,
+			Message: "RMR error",
+		},
+	}
+}
+
+func (e *RmrError) Error() string {
+	return e.Err.Message
 }

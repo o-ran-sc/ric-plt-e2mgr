@@ -46,7 +46,7 @@ func NewDeleteAllRequestHandler(config *configuration.Configuration, writerProvi
 	}
 }
 
-func (handler *DeleteAllRequestHandler) Handle(logger *logger.Logger, request *models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error {
+func (handler *DeleteAllRequestHandler) Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error {
 
 	err, continueFlow := handler.updateNodebStates(logger, false)
 	if err != nil {

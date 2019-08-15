@@ -15,13 +15,21 @@
 // limitations under the License.
 //
 
-package handlers
+package e2managererrors
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-)
+type RequestValidationError struct {
+	Err BaseError
+}
 
-type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+func NewRequestValidationError() *RequestValidationError {
+	return &RequestValidationError{
+		BaseError{
+			Code:    402,
+			Message: "Validation error",
+		},
+	}
+}
+
+func (e *RequestValidationError) Error() string {
+	return e.Err.Message
 }

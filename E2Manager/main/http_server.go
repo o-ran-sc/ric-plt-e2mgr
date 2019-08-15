@@ -26,6 +26,7 @@ import (
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/receivers"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/julienschmidt/httprouter"
@@ -53,9 +54,10 @@ func main() {
 	var nManager = managers.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter)
 
 	rmrResponseChannel := make(chan *models.NotificationResponse, config.NotificationResponseBuffer)
-	rmrService := services.NewRmrService(rmrConfig, msgImpl, controllers.E2Sessions, nManager, rmrResponseChannel)
+	rmrService := services.NewRmrService(rmrConfig, msgImpl, controllers.E2Sessions, rmrResponseChannel)
+	rmrServiceReceiver := receivers.NewRmrServiceReceiver(*rmrService, nManager)
 	defer rmrService.CloseContext()
-	go rmrService.ListenAndHandle()
+	go rmrServiceReceiver.ListenAndHandle()
 	go rmrService.SendResponse()
 	runServer(rmrService, logger, config, rmrResponseChannel)
 }
@@ -64,13 +66,14 @@ func runServer(rmrService *services.RmrService, logger *logger.Logger, config *c
 
 	router := httprouter.New()
 	controller := controllers.NewNodebController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
-	newController := controllers.NewController(logger, reader.GetRNibReader, rNibWriter.GetRNibWriter, config, rmrResponseChannel)
+	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config, rmrResponseChannel)
 
 	router.POST("/v1/nodeb/:messageType", controller.HandleRequest)
 	router.GET("/v1/nodeb-ids", controller.GetNodebIdList)
 	router.GET("/v1/nodeb/:ranName", controller.GetNodeb)
 	router.GET("/v1/health", controller.HandleHealthCheckRequest)
 	router.PUT("/v1/nodeb/shutdown", newController.ShutdownHandler)
+	//router.PUT("/v1/nodeb-reset/:ranName", newController.X2ResetHandler)
 
 	port := fmt.Sprintf(":%d", config.Http.Port)
 	if err := http.ListenAndServe(port, router); err != nil {

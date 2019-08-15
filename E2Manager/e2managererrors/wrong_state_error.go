@@ -15,13 +15,21 @@
 // limitations under the License.
 //
 
-package handlers
+package e2managererrors
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-)
+type WrongStateError struct {
+	Err BaseError
+}
 
-type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+func NewWrongStateError() *RnibDbError {
+	return &RnibDbError{
+		BaseError{
+			Code:    403,
+			Message: "RAN in wrong state",
+		},
+	}
+}
+
+func (e *WrongStateError) Error() string {
+	return e.Err.Message
 }

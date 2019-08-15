@@ -20,21 +20,23 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <asn1codec_utils.h>
 
-#ifndef INC_CONFIGURATION_UPDATE_WRAPPER_H_
-#define INC_CONFIGURATION_UPDATE_WRAPPER_H_
+#ifndef INC_X2RESET_REQUEST_WRAPPER_H
+#define INC_X2RESET_REQUEST_WRAPPER_H
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-bool  build_pack_x2enb_configuration_update_ack(size_t* packed_buf_size, unsigned char* packed_buf, size_t err_buf_size, char* err_buf);
-bool  build_pack_x2enb_configuration_update_failure(size_t* packed_buf_size, unsigned char* packed_buf, size_t err_buf_size, char* err_buf);
-bool  build_pack_endc_configuration_update_ack(size_t* packed_buf_size, unsigned char* packed_buf, size_t err_buf_size, char* err_buf);
-bool  build_pack_endc_configuration_update_failure(size_t* packed_buf_size, unsigned char* packed_buf, size_t err_buf_size, char* err_buf);
+bool
+build_pack_x2reset_request(enum Cause_PR cause_group, int cause_value, size_t* packed_buf_size, unsigned char* packed_buf,size_t err_buf_size, char* err_buf);
+bool
+build_pack_x2reset_request_aux(enum Cause_PR cause_group, int cause_value, size_t* packed_buf_size, unsigned char* packed_buf,size_t err_buf_size, char* err_buf,enum asn_transfer_syntax syntax);
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* INC_CONFIGURATION_UPDATE_WRAPPER_H_ */
+#endif /* INC_RESET_REQUEST_WRAPPER_H */
+ 

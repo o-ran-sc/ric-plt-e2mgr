@@ -19,12 +19,12 @@ package controllers
 
 import (
 	"e2mgr/logger"
-	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/sessions"
 	"e2mgr/tests"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -143,18 +143,11 @@ func handleRequest(writer *httptest.ResponseRecorder, log *logger.Logger, rmrMes
 
 func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	rnibReaderProvider := func() reader.RNibReader {
-		return &mocks.RnibReaderMock{}
-	}
-
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return &mocks.RnibWriterMock{}
-	}
-	nManager := managers.NewNotificationManager(rnibReaderProvider, rnibWriterProvider)
-	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
 	messageChannel := make(chan *models.NotificationResponse)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, E2Sessions, nManager, messageChannel)
+	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
 }
+
 
 func executeGetNodeb(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibReaderProvider func() reader.RNibReader) {
 	req, _ := http.NewRequest("GET", "/nodeb", nil)

@@ -19,15 +19,12 @@ package services
 
 import (
 	"e2mgr/logger"
-	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/sessions"
 	"e2mgr/tests"
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"sync"
@@ -60,22 +57,6 @@ func TestSendMessage(t *testing.T){
 	assert.Empty (t, errorChannel)
 }
 
-func TestListenAndHandle(t *testing.T){
-	log, err := logger.InitLogger(logger.DebugLevel)
-	if err!=nil{
-		t.Errorf("#rmr_service_test.TestListenAndHandle - failed to initialize logger, error: %s", err)
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-
-	var buf *rmrCgo.MBuf
-	e := fmt.Errorf("test error")
-	rmrMessengerMock.On("RecvMsg").Return(buf, e)
-
-	go  getRmrService(rmrMessengerMock,log).ListenAndHandle()
-
-	time.Sleep(time.Microsecond*10)
-}
-
 func TestCloseContext(t *testing.T){
 	log, err := logger.InitLogger(logger.DebugLevel)
 	if err!=nil{
@@ -92,16 +73,7 @@ func TestCloseContext(t *testing.T){
 
 func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *RmrService {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	readerMock :=&mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	nManager := managers.NewNotificationManager(rnibReaderProvider, rnibWriterProvider)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return NewRmrService(NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), nManager, messageChannel)
+	return NewRmrService(NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
 }

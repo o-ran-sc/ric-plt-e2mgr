@@ -32,7 +32,7 @@ func (m *RnibReaderMock) GetNodeb(inventoryName string) (*entities.NodebInfo, co
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*entities.NodebInfo), errArg.(common.IRNibError);
 	}
 
@@ -44,7 +44,7 @@ func (m *RnibReaderMock) GetNodebByGlobalNbId(nodeType entities.Node_Type, globa
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*entities.NodebInfo), errArg.(common.IRNibError);
 	}
 
@@ -56,7 +56,7 @@ func (m *RnibReaderMock)  GetCellList(inventoryName string) (*entities.Cells, co
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*entities.Cells), errArg.(common.IRNibError);
 	}
 
@@ -68,7 +68,7 @@ func (m *RnibReaderMock) GetListGnbIds()(*[]*entities.NbIdentity, common.IRNibEr
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*[]*entities.NbIdentity), errArg.(common.IRNibError);
 	}
 
@@ -80,7 +80,7 @@ func (m *RnibReaderMock) GetListEnbIds()(*[]*entities.NbIdentity, common.IRNibEr
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*[]*entities.NbIdentity), errArg.(common.IRNibError);
 	}
 
@@ -93,7 +93,7 @@ func (m *RnibReaderMock) GetCountGnbList()(int, common.IRNibError) {
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Int(0), errArg.(common.IRNibError);
 	}
 
@@ -106,7 +106,7 @@ func (m *RnibReaderMock) GetCell(inventoryName string, pci uint32) (*entities.Ce
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*entities.Cell), errArg.(common.IRNibError);
 	}
 
@@ -118,7 +118,7 @@ func (m *RnibReaderMock) GetCellById(cellType entities.Cell_Type, cellId string)
 
 	errArg := args.Get(1);
 
-	if (errArg != nil) {
+	if errArg != nil {
 		return args.Get(0).(*entities.Cell), errArg.(common.IRNibError);
 	}
 

@@ -15,13 +15,21 @@
 // limitations under the License.
 //
 
-package handlers
+package e2managererrors
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-)
+type ResourceNotFoundError struct {
+	Err BaseError
+}
 
-type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+func NewResourceNotFoundError() *ResourceNotFoundError {
+	return &ResourceNotFoundError{
+		BaseError{
+			Code:    404,
+			Message: "Resource not found",
+		},
+	}
+}
+
+func (e *ResourceNotFoundError) Error() string {
+	return e.Err.Message
 }
