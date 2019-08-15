@@ -24,7 +24,6 @@ import (
 	"e2mgr/rmrCgo"
 	"e2mgr/sessions"
 	"e2mgr/tests"
-	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
@@ -49,7 +48,8 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 
 	h := NewX2ResetResponseHandler(rnibReaderProvider)
 	e2Sessions := make(sessions.E2Sessions)
-	xaction := []byte(fmt.Sprintf("%32s", "1234"))
+	//xaction := []byte(fmt.Sprintf("%32s", "1234"))
+	xaction := []byte("RanName")
 	e2Sessions[string(xaction)] = sessions.E2SessionDetails{SessionStart: time.Now()}
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
@@ -80,7 +80,8 @@ func TestX2ResetResponseReaderFailure(t *testing.T) {
 
 	h := NewX2ResetResponseHandler(rnibReaderProvider)
 	e2Sessions := make(sessions.E2Sessions)
-	xaction := []byte(fmt.Sprintf("%32s", "1234"))
+	//xaction = []byte(fmt.Sprintf("%32s", "1234"))
+	xaction := []byte("RanName")
 	e2Sessions[string(xaction)] = sessions.E2SessionDetails{SessionStart: time.Now()}
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
@@ -111,7 +112,8 @@ func TestX2ResetResponseUnpackFailure(t *testing.T) {
 
 	h := NewX2ResetResponseHandler(rnibReaderProvider)
 	e2Sessions := make(sessions.E2Sessions)
-	xaction := []byte(fmt.Sprintf("%32s", "1234"))
+	//xaction := []byte(fmt.Sprintf("%32s", "1234"))
+	xaction := []byte("RanName")
 	e2Sessions[string(xaction)] = sessions.E2SessionDetails{SessionStart: time.Now()}
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,

@@ -73,7 +73,7 @@ func runServer(rmrService *services.RmrService, logger *logger.Logger, config *c
 	router.GET("/v1/nodeb/:ranName", controller.GetNodeb)
 	router.GET("/v1/health", controller.HandleHealthCheckRequest)
 	router.PUT("/v1/nodeb/shutdown", newController.ShutdownHandler)
-	//router.PUT("/v1/nodeb-reset/:ranName", newController.X2ResetHandler)
+	router.PUT("/v1/nodeb-reset/:ranName", newController.X2ResetHandler)
 
 	port := fmt.Sprintf(":%d", config.Http.Port)
 	if err := http.ListenAndServe(port, router); err != nil {

@@ -41,13 +41,14 @@ func NewX2ResetResponseHandler(rnibReaderProvider func() reader.RNibReader) X2Re
 
 func (src X2ResetResponseHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions,
 	request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
-
+	request.TransactionId = request.RanName
 		logger.Debugf("#x2ResetResponseHandler.Handle - transactionId %s: received reset response. Payload: %s", request.TransactionId, request.Payload)
 
 		if nb, rNibErr := src.rnibReaderProvider().GetNodeb(request.RanName); rNibErr != nil {
 			logger.Errorf("#x2ResetResponseHandler.Handle - transactionId %s: failed to retrieve nb entity. RanName: %s. Error: %s", request.TransactionId, request.RanName, rNibErr.Error())
 		} else {
 			logger.Debugf("#x2ResetResponseHandler.Handle - transactionId %s: nb entity retrieved. RanName %s, ConnectionStatus %s", request.TransactionId, nb.RanName, nb.ConnectionStatus)
+			//TODO: only returned in debug mode
 			refinedMessage, err := unpackX2apPduAndRefine(logger, MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, request.Len, request.Payload, MaxAsn1CodecMessageBufferSize /*message buffer*/)
 			if err != nil {
 				logger.Errorf("#x2ResetResponseHandler.Handle - transactionId %s: failed to unpack reset response message. RanName %s, Payload: %s", request.TransactionId , request.RanName, request.Payload)

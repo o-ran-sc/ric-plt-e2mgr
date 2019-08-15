@@ -17,15 +17,17 @@
 
 package e2managererrors
 
+import "fmt"
+
 type WrongStateError struct {
 	Err BaseError
 }
 
-func NewWrongStateError() *RnibDbError {
-	return &RnibDbError{
+func NewWrongStateError(state string) *WrongStateError {
+	return &WrongStateError{
 		BaseError{
 			Code:    403,
-			Message: "RAN in wrong state",
+			Message: fmt.Sprintf("The RAN state <%s> isn’t in the appropriate state.", state) ,
 		},
 	}
 }

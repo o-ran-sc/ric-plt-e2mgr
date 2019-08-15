@@ -136,6 +136,16 @@ func NewX2ResetRequestHandler(rmrService *services.RmrService, config *configura
 
 func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error {
 	resetRequest := request.(models.ResetRequest)
+
+	if len(resetRequest.Cause) == 0 {
+		resetRequest.Cause = "misc:om-intervention"
+	}
+	cause, ok:= knownCauses[resetRequest.Cause]
+	if !ok {
+		logger.Errorf("#reset_request_handler.Handle - Unknown cause (%s)", resetRequest.Cause)
+		return e2managererrors.NewRequestValidationError()
+	}
+
 	nodeb, err  := handler.readerProvider().GetNodeb(resetRequest.RanName)
 	if err != nil {
 		logger.Errorf("#reset_request_handler.Handle - failed to get status of RAN: %s from RNIB. Error: %s", resetRequest.RanName,  err.Error())
@@ -147,17 +157,7 @@ func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request mode
 
 	if nodeb.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
 		logger.Errorf("#reset_request_handler.Handle - RAN: %s in wrong state (%s)", resetRequest.RanName, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
-		return e2managererrors.NewWrongStateError()
-	}
-
-
-	if len(resetRequest.Cause) == 0 {
-		resetRequest.Cause = "misc:om-intervention"
-	}
-	cause, ok:= knownCauses[resetRequest.Cause]
-	if !ok {
-		logger.Errorf("#reset_request_handler.Handle - Unknown cause (%s)", resetRequest.Cause)
-		return e2managererrors.NewRequestValidationError()
+		return e2managererrors.NewWrongStateError(entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
 	}
 
 	var payloadSize  = C.ulong(MaxAsn1PackedBufferSize)

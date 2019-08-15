@@ -154,6 +154,10 @@ func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter){
 			e2Error, _ := err.(*e2managererrors.RmrError)
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
 			httpError = http.StatusInternalServerError
+		case *e2managererrors.ResourceNotFoundError:
+			e2Error, _ := err.(*e2managererrors.ResourceNotFoundError)
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			httpError = http.StatusNotFound
 
 		default:
 			e2Error, _ := err.(*e2managererrors.InternalError)
