@@ -16,21 +16,47 @@
 #
 ##############################################################################
 
+
 *** Settings ***
 Suite Setup     Start dockers
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     REST      ${url}
 
-*** Test Cases ***
-Get Request node b gnb - DB down - 500
-    Run   docker stop redis
-    GET      /v1/nodeb/test5
-    Integer  response status   500
 
+*** Variables ***
+${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT
+${Save_e2_log}      docker logs --tail 200 gnbe2_simu > gnb.log
+${Save_e2mgr_log}   docker logs --tail 200 e2mgr > e2mgr.log
+
+*** Test Cases ***
+X2 - Setup and Get
+    Post Request setup node b x-2
+    Get Request node b enb
+
+
+Run Configuration update
+    Run    ${Run_Config}
+    Sleep   1s
+
+Remove log files
+    Remove File  ${EXECDIR}/gnb.log
+    Remove File  ${EXECDIR}/e2mgr.log
+
+Save logs
+    Sleep   1s
+    Run     ${Save_e2_log}
+    Run     ${Save_e2mgr_log}
 
 *** Keywords ***
 Start dockers
      Run And Return Rc And Output    ${run_script}
      ${result}=  Run And Return Rc And Output     ${docker_command}
      Should Be Equal As Integers    ${result[1]}    5
+
+
+
+
+
+

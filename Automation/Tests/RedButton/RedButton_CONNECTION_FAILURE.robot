@@ -19,18 +19,35 @@
 *** Settings ***
 Suite Setup     Start dockers
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
 
+
 *** Test Cases ***
-Get Request node b gnb - DB down - 500
-    Run   docker stop redis
-    GET      /v1/nodeb/test5
-    Integer  response status   500
+
+Prepare Ran in CONNECTION FAILURE connectionStatus
+    Set Headers     ${header}
+    POST        /v1/nodeb/x2-setup   ${json}
+    Sleep    1s
+    POST        /v1/nodeb/x2-setup   ${json}
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer    response status       200
+    String     response body connectionStatus     CONNECTED_SETUP_FAILED
+
+Disconnect Ran
+    PUT    /v1/nodeb/shutdown
+    Integer   response status   204
 
 
-*** Keywords ***
-Start dockers
-     Run And Return Rc And Output    ${run_script}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    5
+
+Verfiy Shutdown ConnectionStatus
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    SHUT_DOWN
+
+

@@ -17,4 +17,36 @@
 ##############################################################################
 
 *** Settings ***
-Documentation    X2-Setup ENB
+Documentation   Keywords file
+Resource   ../Resource/resource.robot
+Library     OperatingSystem
+
+
+
+
+
+*** Keywords ***
+Post Request setup node b x-2
+    Set Headers     ${header}
+    POST        /v1/nodeb/x2-setup    ${json}
+
+
+
+Get Request node b enb
+    Sleep    1s
+    GET      /v1/nodeb/test1
+
+
+
+Post Request setup node b endc-setup
+    Set Headers     ${header}
+    POST        /v1/nodeb/endc-setup    ${endcjson}
+
+
+
+
+Start dockers
+     Run And Return Rc And Output    ${run_script}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    5
+

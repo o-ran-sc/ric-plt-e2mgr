@@ -15,25 +15,46 @@
 #   limitations under the License.
 #
 ##############################################################################
-
 *** Settings ***
 Suite Setup     Start dockers
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
+
+*** Variables ***
+${stop_docker_e2}      docker stop e2
 
 
 
 *** Test Cases ***
-Get Health
-    GET     /v1/health
+
+Pre Condition for Connecting - no E2
+    Run And Return Rc And Output    ${stop_docker_e2}
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    4
+
+
+Prepare Ran in Connecting connectionStatus
+    Sleep  1s
+    Post Request setup node b x-2
     Integer     response status       200
+    Sleep  1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTING
+
+Disconnect Ran
+   PUT    /v1/nodeb/shutdown
+   Integer   response status   204
 
 
-*** Keywords ***
-Start dockers
-     Run And Return Rc And Output    ${run_script}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    4
-
+Verfiy Shutdown ConnectionStatus
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    SHUT_DOWN
 

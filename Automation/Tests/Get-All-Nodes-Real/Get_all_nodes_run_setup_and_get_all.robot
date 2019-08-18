@@ -17,40 +17,46 @@
 ##############################################################################
 
 *** Settings ***
-Suite Setup  Flush Redis
+#Suite Setup  Start Dockers
 Library      Process
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     REST      ${url}
 
 
-*** Variables ***
-${file}     ${CURDIR}/addtoredis.py
-${flush_file}     ${CURDIR}/flush.py
-
 *** Test Cases ***
-Add nodes to redis db
-    ${result}=  Run Process    python3.6    ${file}
-    Should Be Equal As Strings      ${result.stdout}        Insert successfully to Redis
+Run x2 setup
+    Post Request setup node b x-2
+    Integer     response status       200
+    Get Request node b enb
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body ip    10.0.2.15
+    Integer  response body port     5577
+    String   response body connectionStatus    CONNECTED
+
+Run endc setup
+    Post Request setup node b endc-setup
+    Integer     response status       200
+    Get Request node b enb
+    Integer  response status  200
+    String   response body ranName    test2
+    String   response body ip    10.0.2.15
+    String   response body connectionStatus    CONNECTED
 
 
 Get all node ids
     GET     v1/nodeb-ids
-    #Output
+    Output
     Integer  response status   200
     String   response body 0 inventoryName  test1
     String   response body 0 globalNbId plmnId   02f829
-    String   response body 0 globalNbId nbId     007a80
+    String   response body 0 globalNbId nbId     007ab0
     String   response body 1 inventoryName  test2
-    String   response body 1 globalNbId plmnId   03f829
-    String   response body 1 globalNbId nbId     001234
+    String   response body 1 globalNbId plmnId   42f490
+    String   response body 1 globalNbId nbId     000004
 
-
-
-*** Keywords ***
-Flush Redis
-    ${result}=  Run Process    python3.6    ${flush_file}
-    Should Be Equal As Strings      ${result.stdout}        Flush Success
 
 
 
