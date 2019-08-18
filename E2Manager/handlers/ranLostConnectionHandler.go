@@ -55,9 +55,7 @@ func (src RanLostConnectionHandler) Handle(logger *logger.Logger, e2Sessions ses
 		if rNibErr = src.rnibWriterProvider().SaveNodeb(nbIdentity, nb); rNibErr != nil {
 			logger.Errorf("#ranLostConnectionHandler.Handle - transactionId %s: rNibWriter failed to save nb entity %s. Error: %s", request.TransactionId, nb.RanName, rNibErr.Error())
 		} else {
-			logger.Infof("#ranLostConnectionHandler.Handle - transactionId %s: saved to rNib", request.TransactionId)
-			logger.Debugf("#ranLostConnectionHandler.Handle - transactionId %s: saved to rNib. RanName %s, ConnectionStatus %v", request.TransactionId, nb.RanName, nb.ConnectionStatus)
-
+			logger.Infof("#ranLostConnectionHandler.Handle - transactionId %s: saved to rNib. RanName %s, ConnectionStatus %v", request.TransactionId, nb.RanName, nb.ConnectionStatus)
 		}
 	}
 	e2session, ok := e2Sessions[request.TransactionId]

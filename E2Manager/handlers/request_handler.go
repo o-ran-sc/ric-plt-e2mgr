@@ -23,5 +23,5 @@ import (
 )
 
 type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request, rmrResponseChannel chan<- *models.NotificationResponse) error
+	Handle(logger *logger.Logger, request models.Request) error
 }

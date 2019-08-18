@@ -59,14 +59,14 @@ func main() {
 	defer rmrService.CloseContext()
 	go rmrServiceReceiver.ListenAndHandle()
 	go rmrService.SendResponse()
-	runServer(rmrService, logger, config, rmrResponseChannel)
+	runServer(rmrService, logger, config)
 }
 
-func runServer(rmrService *services.RmrService, logger *logger.Logger, config *configuration.Configuration, rmrResponseChannel chan *models.NotificationResponse) {
+func runServer(rmrService *services.RmrService, logger *logger.Logger, config *configuration.Configuration) {
 
 	router := httprouter.New()
 	controller := controllers.NewNodebController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
-	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config, rmrResponseChannel)
+	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config)
 
 	router.POST("/v1/nodeb/:messageType", controller.HandleRequest)
 	router.GET("/v1/nodeb-ids", controller.GetNodebIdList)

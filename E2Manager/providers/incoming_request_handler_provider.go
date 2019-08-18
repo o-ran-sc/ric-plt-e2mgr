@@ -52,7 +52,7 @@ func initRequestHandlerMap(rmrService *services.RmrService,config *configuration
 	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]handlers.RequestHandler {
 
 	return map[IncomingRequest]handlers.RequestHandler{
-		ShutdownRequest: handlers.NewDeleteAllRequestHandler(config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
+		ShutdownRequest: handlers.NewDeleteAllRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
 		ResetRequest: handlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),      //TODO change to pointer
 	}
 }
