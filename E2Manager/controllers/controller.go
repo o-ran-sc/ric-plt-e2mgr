@@ -28,7 +28,6 @@ import (
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/julienschmidt/httprouter"
-	"io"
 	"net/http"
 	"time"
 )
@@ -52,15 +51,17 @@ func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibR
 }
 
 func (c *Controller)ShutdownHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
-
+	c.logger.Infof("[Client -> E2 Manager] #controller.ShutdownHandler - request: %v", prettifyRequest(r))
 	c.handleRequest(writer, &r.Header, providers.ShutdownRequest,nil, false, http.StatusNoContent)
 }
 
 func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
 	startTime := time.Now()
+	c.logger.Infof("[Client -> E2 Manager] #controller.X2ResetHandler - request: %v", prettifyRequest(r))
 	request:= models.ResetRequest{}
 	ranName:= params.ByName(ParamRanName)
-	if !c.extractJsonBody(r.Body, &request, writer){
+
+	if !c.extractJsonBody(r, &request, writer){
 		return
 	}
 	request.RanName = ranName
@@ -68,15 +69,20 @@ func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request,
 	c.handleRequest(writer, &r.Header, providers.ResetRequest, request, false, http.StatusNoContent)
 }
 
-func (c *Controller) extractJsonBody(body io.Reader, request models.Request, writer http.ResponseWriter) bool{
-	decoder := json.NewDecoder(body)
-	if err:= decoder.Decode(request); err != nil {
+func (c *Controller) extractJsonBody(r *http.Request, request models.Request, writer http.ResponseWriter) bool{
+	if r.ContentLength <= 0 {
+		return true
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(request); err != nil {
 		if err != nil {
 			c.logger.Errorf("[Client -> E2 Manager] #controller.extractJsonBody - unable to extract json body - error: %s", err)
 			c.handleErrorResponse(e2managererrors.NewRequestValidationError(), writer)
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -158,7 +164,7 @@ func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter){
 			httpError = http.StatusNotFound
 
 		default:
-			e2Error, _ := err.(*e2managererrors.InternalError)
+			e2Error := e2managererrors.NewInternalError()
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
 			httpError = http.StatusInternalServerError
 		}
