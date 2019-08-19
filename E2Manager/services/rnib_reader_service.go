@@ -24,27 +24,25 @@ import (
 )
 
 type RnibReaderService struct {
-	rnibReaderInstance reader.RNibReader
+	rnibReaderProvider func() reader.RNibReader
 }
 
-func NewRnibReaderService(rnibReaderInstance reader.RNibReader) *RnibReaderService{
-	return &RnibReaderService{rnibReaderInstance}
+func NewRnibReaderService(rnibReaderProvider func() reader.RNibReader) *RnibReaderService{
+	return &RnibReaderService{rnibReaderProvider}
 }
-
-
 
 func (s RnibReaderService) GetNodeb(ranName string) (*entities.NodebInfo, common.IRNibError) {
-	return s.rnibReaderInstance.GetNodeb(ranName)
+	return s.rnibReaderProvider().GetNodeb(ranName)
 }
 
 func (s  RnibReaderService) GetNodebIdList()(*[]*entities.NbIdentity, common.IRNibError) {
-	enbIdList, err := s.rnibReaderInstance.GetListEnbIds()
+	enbIdList, err := s.rnibReaderProvider().GetListEnbIds()
 
 	if (err != nil) {
 		return nil, err
 	}
 
-	gnbIdList, err := s.rnibReaderInstance.GetListGnbIds()
+	gnbIdList, err := s.rnibReaderProvider().GetListGnbIds()
 
 	if (err != nil) {
 		return nil, err

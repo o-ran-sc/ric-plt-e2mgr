@@ -141,7 +141,7 @@ func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *htt
 
 func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	startTime := time.Now()
-	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider())
+	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
 	nodebIdList, rnibError := rnibReaderService.GetNodebIdList()
 
 	if rnibError != nil {
@@ -169,7 +169,7 @@ func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Req
 	startTime := time.Now()
 	ranName := params.ByName("ranName")
 	// WAS: respondingNode, rnibError := reader.GetRNibReader().GetNodeb(ranName)
-	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider());
+	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider);
 	respondingNode, rnibError := rnibReaderService.GetNodeb(ranName)
 	if rnibError != nil {
 		rc.Logger.Errorf("%v", rnibError)
