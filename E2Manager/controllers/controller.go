@@ -52,12 +52,13 @@ func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibR
 }
 
 func (c *Controller)ShutdownHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
-
+	c.logger.Infof("[Client -> E2 Manager] #controller.ShutdownHandler - request: %v", prettifyRequest(r))
 	c.handleRequest(writer, &r.Header, providers.ShutdownRequest,nil, false, http.StatusNoContent)
 }
 
 func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
 	startTime := time.Now()
+	c.logger.Infof("[Client -> E2 Manager] #controller.X2ResetHandler - request: %v", prettifyRequest(r))
 	request:= models.ResetRequest{}
 	ranName:= params.ByName(ParamRanName)
 	if !c.extractJsonBody(r.Body, &request, writer){
@@ -158,8 +159,13 @@ func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter){
 			httpError = http.StatusNotFound
 
 		default:
-			e2Error, _ := err.(*e2managererrors.InternalError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			e2Error, ok := err.(*e2managererrors.InternalError)
+			if ok {
+				errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			} else {
+				errorResponseDetails.Code = -1
+				errorResponseDetails.Message = err.Error()
+			}
 			httpError = http.StatusInternalServerError
 		}
 	}
