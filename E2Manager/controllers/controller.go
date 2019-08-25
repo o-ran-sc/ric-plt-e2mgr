@@ -29,7 +29,6 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
-	"time"
 )
 
 const (
@@ -56,7 +55,6 @@ func (c *Controller)ShutdownHandler(writer http.ResponseWriter, r *http.Request,
 }
 
 func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
-	startTime := time.Now()
 	c.logger.Infof("[Client -> E2 Manager] #controller.X2ResetHandler - request: %v", prettifyRequest(r))
 	request:= models.ResetRequest{}
 	ranName:= params.ByName(ParamRanName)
@@ -65,7 +63,6 @@ func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request,
 		return
 	}
 	request.RanName = ranName
-	request.StartTime = startTime
 	c.handleRequest(writer, &r.Header, providers.ResetRequest, request, false, http.StatusNoContent)
 }
 
@@ -78,7 +75,7 @@ func (c *Controller) extractJsonBody(r *http.Request, request models.Request, wr
 	if err := decoder.Decode(request); err != nil {
 		if err != nil {
 			c.logger.Errorf("[Client -> E2 Manager] #controller.extractJsonBody - unable to extract json body - error: %s", err)
-			c.handleErrorResponse(e2managererrors.NewRequestValidationError(), writer)
+			c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
 			return false
 		}
 	}
@@ -88,8 +85,6 @@ func (c *Controller) extractJsonBody(r *http.Request, request models.Request, wr
 
 func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Header, requestName providers.IncomingRequest,
 	request models.Request, validateHeader bool, httpStatusResponse int) {
-
-	c.logger.Infof("[Client -> E2 Manager] #controller.handleRequest - request: %v", requestName) //TODO print request if exist
 
 	if validateHeader {
 
@@ -152,6 +147,10 @@ func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter){
 			httpError = http.StatusBadRequest
 		case *e2managererrors.RequestValidationError:
 			e2Error, _ := err.(*e2managererrors.RequestValidationError)
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			httpError = http.StatusBadRequest
+		case *e2managererrors.InvalidJsonError:
+			e2Error, _ := err.(*e2managererrors.InvalidJsonError)
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
 			httpError = http.StatusBadRequest
 		case *e2managererrors.RmrError:

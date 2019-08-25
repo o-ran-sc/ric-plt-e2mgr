@@ -84,7 +84,6 @@ func (r *RmrService) SendRmrMessage(response *models.NotificationResponse) error
 	_, err := (*r.Messenger).SendMsg(msg, r.Config.MaxMsgSize)
 
 	if err != nil {
-		r.Config.Logger.Errorf("#rmr_service.SendRmrMessage - error: %#v\n", err)
 		return err
 	}
 	return nil
@@ -101,7 +100,9 @@ func (r *RmrService) SendResponse() {
 		}
 
 		r.Config.Logger.Debugf("#rmr_service.SendResponse - Going to send message: %#v\n", response)
-		r.SendRmrMessage(response)
+		if err := r.SendRmrMessage(response); err != nil {
+			r.Config.Logger.Errorf("#rmr_service.SendResponse - error: %#v\n", err)
+		}
 	}
 }
 

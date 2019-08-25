@@ -14,14 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
-	"time"
 )
 
 
 func TestHandleSuccessfulDefaultCause(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -46,22 +44,15 @@ func TestHandleSuccessfulDefaultCause(t *testing.T){
 	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
 	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName})
 
 	assert.Nil(t, actual)
 
-	v, ok := rmrService.E2sessions[ranName]
-	assert.True(t, ok)
-
-	assert.Equal(t, v.Request.RanName, ranName)
-
-	assert.Equal(t, v.SessionStart ,curTime)
 }
 
 func TestHandleSuccessfulRequestedCause(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -86,22 +77,14 @@ func TestHandleSuccessfulRequestedCause(t *testing.T){
 	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
 	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , Cause:"protocol:transfer-syntax-error", StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , Cause:"protocol:transfer-syntax-error"})
 
 	assert.Nil(t, actual)
-
-	v, ok := rmrService.E2sessions[ranName]
-	assert.True(t, ok)
-
-	assert.Equal(t, v.Request.RanName, ranName)
-
-	assert.Equal(t, v.SessionStart ,curTime)
 }
 
 func TestHandleFailureUnknownCause(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -124,18 +107,15 @@ func TestHandleFailureUnknownCause(t *testing.T){
 	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
 	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , Cause:"XXX", StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , Cause:"XXX"})
 
 	assert.IsType(t, e2managererrors.NewRequestValidationError(), actual)
 
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
 }
 
 func TestHandleFailureWrongState(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -158,12 +138,10 @@ func TestHandleFailureWrongState(t *testing.T){
 	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_DISCONNECTED }
 	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName ,  StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 
-	assert.IsType(t, e2managererrors.NewWrongStateError(entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)]), actual)
+	assert.IsType(t, e2managererrors.NewWrongStateError(X2_RESET_ACTIVITIY_NAME, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)]), actual)
 
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
 }
 
 
@@ -171,7 +149,6 @@ func TestHandleFailureWrongState(t *testing.T){
 func TestHandleFailureRanNotFound(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -193,19 +170,16 @@ func TestHandleFailureRanNotFound(t *testing.T){
 
 	readerMock.On("GetNodeb",ranName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(fmt.Errorf("nodeb not found")))
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName ,  StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 
 	assert.IsType(t, e2managererrors.NewResourceNotFoundError(), actual)
 
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
 }
 
 
 func TestHandleFailureRnibError(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -227,19 +201,16 @@ func TestHandleFailureRnibError(t *testing.T){
 
 	readerMock.On("GetNodeb",ranName).Return(&entities.NodebInfo{}, common.NewInternalError(fmt.Errorf("internal error")))
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName ,  StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 
 	assert.IsType(t, e2managererrors.NewRnibDbError(), actual)
 
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
 }
 
 
 func TestHandleFailureRmrError(t *testing.T){
 	log := initLog(t)
 
-	curTime := time.Now()
 	ranName := "test1"
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -264,10 +235,8 @@ func TestHandleFailureRmrError(t *testing.T){
 	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
 	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
 
-	actual := handler.Handle(log, models.ResetRequest{RanName: ranName , StartTime: curTime})
+	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 
 	assert.IsType(t, e2managererrors.NewRmrError(), actual)
 
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
 }

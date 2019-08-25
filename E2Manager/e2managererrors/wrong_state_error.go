@@ -23,11 +23,11 @@ type WrongStateError struct {
 	Err BaseError
 }
 
-func NewWrongStateError(state string) *WrongStateError {
+func NewWrongStateError(activityName string, state string) *WrongStateError {
 	return &WrongStateError{
 		BaseError{
 			Code:    403,
-			Message: fmt.Sprintf("The RAN state <%s> isn’t in the appropriate state.", state) ,
+			Message: fmt.Sprintf("Activity <%s> rejected. RAN current state <%s> does not allow its execution ", activityName, state) ,
 		},
 	}
 }

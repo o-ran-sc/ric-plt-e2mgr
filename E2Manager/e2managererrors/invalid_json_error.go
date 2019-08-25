@@ -15,9 +15,23 @@
 // limitations under the License.
 //
 
-package models
+package e2managererrors
 
-type ResetRequest struct {
-	RanName string
-	Cause   string `json:"cause"`
+
+type InvalidJsonError struct {
+	Err BaseError
 }
+
+func NewInvalidJsonError() *InvalidJsonError {
+	return &InvalidJsonError{
+		BaseError{
+			Code:    401,
+			Message: "corrupted json",
+		},
+	}
+}
+
+func (e *InvalidJsonError) Error() string {
+	return e.Err.Message
+}
+

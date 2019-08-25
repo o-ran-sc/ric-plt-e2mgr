@@ -58,7 +58,6 @@ func (ctx *Context) SendMsg(msg *MBuf, maxMsgSize int) (*MBuf, error) {
 	state := allocatedCMBuf.state
 	if state != RMR_OK {
 		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to get allocated message. state: %v - %s", state, states[int(state)])
-		ctx.Logger.Errorf(errorMessage)
 		return nil, errors.New(errorMessage)
 	}
 
@@ -73,7 +72,6 @@ func (ctx *Context) SendMsg(msg *MBuf, maxMsgSize int) (*MBuf, error) {
 
 	if state != RMR_OK {
 		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to send message. state: %v - %s", state, states[int(state)])
-		ctx.Logger.Errorf(errorMessage)
 		return nil, errors.New(errorMessage)
 	}
 

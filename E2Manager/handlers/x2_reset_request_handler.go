@@ -16,6 +16,7 @@
 //
 
 package handlers
+
 import (
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
@@ -25,12 +26,14 @@ import (
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
+const (
+	X2_RESET_ACTIVITIY_NAME = "X2_RESET"
+)
 type X2ResetRequestHandler struct {
 	readerProvider func() reader.RNibReader
 	writerProvider func() rNibWriter.RNibWriter
@@ -72,15 +75,12 @@ func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request mode
 
 	if nodeb.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
 		logger.Errorf("#reset_request_handler.Handle - RAN: %s in wrong state (%s)", resetRequest.RanName, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
-		return e2managererrors.NewWrongStateError(entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
+		return e2managererrors.NewWrongStateError(X2_RESET_ACTIVITIY_NAME,entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
 	}
 
-	transactionId := resetRequest.RanName
-	handler.rmrService.E2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: resetRequest.StartTime, Request: &models.RequestDetails{RanName: resetRequest.RanName}}
 	response := models.NotificationResponse{MgsType: rmrCgo.RIC_X2_RESET, RanName: resetRequest.RanName, Payload: payload}
 	if err:= handler.rmrService.SendRmrMessage(&response); err != nil {
 		logger.Errorf("#reset_request_handler.Handle - failed to send reset message to RMR: %s", err)
-		delete(handler.rmrService.E2sessions, transactionId)
 		return  e2managererrors.NewRmrError()
 	}
 

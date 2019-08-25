@@ -259,10 +259,6 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T){
 	controller.X2ResetHandler(writer, req, []httprouter.Param {param})
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
-	v, ok := rmrService.E2sessions[ranName]
-	assert.True(t, ok)
-
-	assert.Equal(t, v.Request.RanName, ranName)
 }
 
 func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T){
@@ -302,10 +298,6 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T){
 	controller.X2ResetHandler(writer, req, []httprouter.Param {param})
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
-	v, ok := rmrService.E2sessions[ranName]
-	assert.True(t, ok)
-
-	assert.Equal(t, v.Request.RanName, ranName)
 }
 
 func TestX2ResetHandleFailureInvalidBody(t *testing.T){
@@ -374,7 +366,7 @@ func TestHandleErrorResponse(t *testing.T){
 	assert.Equal(t, http.StatusUnsupportedMediaType, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewWrongStateError(""),writer)
+	controller.handleErrorResponse(e2managererrors.NewWrongStateError("",""),writer)
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
