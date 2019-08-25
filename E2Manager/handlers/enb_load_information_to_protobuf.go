@@ -36,7 +36,7 @@ func extractPduCellInformationItemIEs(pdu *C.E2AP_PDU_t) ([]*C.CellInformation_I
 
 	initiatingMessage := *(**C.InitiatingMessage_t)(unsafe.Pointer(&pdu.choice[0]))
 
-	if (initiatingMessage == nil || initiatingMessage.value.present != C.InitiatingMessage__value_PR_LoadInformation) {
+	if initiatingMessage == nil || initiatingMessage.value.present != C.InitiatingMessage__value_PR_LoadInformation {
 		return nil, fmt.Errorf("#extractPduCellInformationItemIEs - Invalid InitiatingMessage value")
 	}
 

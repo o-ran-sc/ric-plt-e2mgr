@@ -30,22 +30,21 @@ import (
 )
 
 type NotificationManager struct {
-	rnibReaderProvider func() reader.RNibReader
-	rnibWriterProvider func() rNibWriter.RNibWriter
+	notificationHandlerProvider *providers.NotificationHandlerProvider
 }
 
 func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter) *NotificationManager {
+	notificationHandlerProvider := providers.NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider)
+
 	return &NotificationManager{
-		rnibReaderProvider: rnibReaderProvider,
-		rnibWriterProvider: rnibWriterProvider,
+		notificationHandlerProvider: notificationHandlerProvider,
 	}
 }
 
 //TODO add NEWHandler with log
 func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions sessions.E2Sessions, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse) {
 
-	provider := providers.NewNotificationHandlerProvider(m.rnibReaderProvider, m.rnibWriterProvider)
-	notificationHandler, err := provider.GetNotificationHandler(mbuf.MType)
+	notificationHandler, err := m.notificationHandlerProvider.GetNotificationHandler(mbuf.MType)
 
 	if err != nil {
 		logger.Errorf(fmt.Sprintf("%s", err))

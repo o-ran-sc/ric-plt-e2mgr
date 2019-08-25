@@ -457,7 +457,7 @@ func createIdentityList() []*entities.NbIdentity {
 func initLog(t *testing.T) *logger.Logger {
 	log, err := logger.InitLogger(logger.InfoLevel)
 	if err != nil {
-		t.Errorf("#delete_all_request_handler_test.TestHandleSuccessFlow - failed to initialize logger, error: %s", err)
+		t.Errorf("#initLog test - failed to initialize logger, error: %s", err)
 	}
 	return log
 }
