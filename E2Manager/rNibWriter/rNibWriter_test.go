@@ -71,6 +71,95 @@ func initSdlInstanceMock(namespace string, poolSize int) *mocks.MockSdlInstance 
 	return sdlInstanceMock
 }
 
+func TestUpdateNodebInfoSuccess(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	writerPool = nil
+	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
+	w := GetRNibWriter()
+	nodebInfo := &entities.NodebInfo{}
+	nodebInfo.RanName = inventoryName
+	nodebInfo.GlobalNbId = &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}
+	nodebInfo.NodeType = entities.Node_ENB
+	nodebInfo.ConnectionStatus = 1
+	enb := entities.Enb{}
+	nodebInfo.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfo(nodebInfo)
+	assert.Nil(t, rNibErr)
+}
+
+func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	writerPool = nil
+	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
+	w := GetRNibWriter()
+	nodebInfo := &entities.NodebInfo{}
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfo(nodebInfo)
+
+	assert.NotNil(t, rNibErr)
+	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
+}
+
+func TestUpdateNodebInfoMissingGlobalNbIdFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	writerPool = nil
+	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
+	w := GetRNibWriter()
+	nodebInfo := &entities.NodebInfo{}
+	nodebInfo.RanName = inventoryName
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfo(nodebInfo)
+
+	assert.NotNil(t, rNibErr)
+	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
+}
+
 func TestSaveEnb(t *testing.T) {
 	name := "name"
 	ranName := "RAN:" + name
@@ -83,10 +172,10 @@ func TestSaveEnb(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{CellId:"aaff", Pci:3}
-	cellEntity := entities.Cell{Type:entities.Cell_LTE_CELL, Cell:&entities.Cell_ServedCellInfo{ServedCellInfo:cell}}
+	cell := &entities.ServedCellInfo{CellId: "aaff", Pci: 3}
+	cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
@@ -111,7 +200,7 @@ func TestSaveEnb(t *testing.T) {
 	}
 	sdlInstanceMock.On("RemoveMember", entities.Node_UNKNOWN.String(), []interface{}{nbIdData}).Return(e)
 
-	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nbIdData, err = proto.Marshal(nbIdentity)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB Identity entity. Error: %v", err)
@@ -133,11 +222,11 @@ func TestSaveEnbCellIdValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{Pci:3}
+	cell := &entities.ServedCellInfo{Pci: 3}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -154,11 +243,11 @@ func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	cell := &entities.ServedCellInfo{CellId:"aaa",Pci:3}
+	cell := &entities.ServedCellInfo{CellId: "aaa", Pci: 3}
 	enb.ServedCells = []*entities.ServedCellInfo{cell}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName:"", GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: "", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -176,7 +265,7 @@ func TestSaveEnbOnClosedPool(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	enb := entities.Enb{}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnbOnClosedPool - Failed to marshal NodeB entity. Error: %v", err)
@@ -186,7 +275,7 @@ func TestSaveEnbOnClosedPool(t *testing.T) {
 	sdlInstanceMock.On("Set", setExpected).Return(e)
 	writerPool.Close()
 	nbIdentity := &entities.NbIdentity{}
-	assert.Panics(t, func(){w.SaveNodeb(nbIdentity, &nb)})
+	assert.Panics(t, func() { w.SaveNodeb(nbIdentity, &nb) })
 }
 
 func TestSaveGnbCellIdValidationFailure(t *testing.T) {
@@ -200,12 +289,12 @@ func TestSaveGnbCellIdValidationFailure(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	gnb := entities.Gnb{}
-	cellInfo:= &entities.ServedNRCellInformation{NrPci:2}
-	cell := &entities.ServedNRCell{ServedNrCellInformation:cellInfo}
+	cellInfo := &entities.ServedNRCellInformation{NrPci: 2}
+	cell := &entities.ServedNRCell{ServedNrCellInformation: cellInfo}
 	gnb.ServedNrCells = []*entities.ServedNRCell{cell}
-	nb.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
+	nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &gnb}
 
-	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
@@ -224,17 +313,16 @@ func TestSaveGnb(t *testing.T) {
 	nb.Ip = "localhost"
 	nb.Port = 5656
 	gnb := entities.Gnb{}
-	cellInfo:= &entities.ServedNRCellInformation{NrPci:2,CellId:"ccdd"}
-	cell := &entities.ServedNRCell{ServedNrCellInformation:cellInfo}
-	cellEntity := entities.Cell{Type:entities.Cell_NR_CELL, Cell:&entities.Cell_ServedNrCell{ServedNrCell:cell}}
+	cellInfo := &entities.ServedNRCellInformation{NrPci: 2, CellId: "ccdd"}
+	cell := &entities.ServedNRCell{ServedNrCellInformation: cellInfo}
+	cellEntity := entities.Cell{Type: entities.Cell_NR_CELL, Cell: &entities.Cell_ServedNrCell{ServedNrCell: cell}}
 	gnb.ServedNrCells = []*entities.ServedNRCell{cell}
-	nb.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
+	nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &gnb}
 	data, err := proto.Marshal(&nb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveGnb - Failed to marshal NodeB entity. Error: %v", err)
 	}
 	var e error
-
 
 	cellData, err := proto.Marshal(&cellEntity)
 	if err != nil {
@@ -247,7 +335,7 @@ func TestSaveGnb(t *testing.T) {
 	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", name, cell.GetServedNrCellInformation().GetNrPci()), cellData)
 
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nbIdData, err := proto.Marshal(nbIdentity)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveGnb - Failed to marshal NodeB Identity entity. Error: %v", err)
@@ -276,7 +364,6 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 
-
 	ranLoadInformation := generateRanLoadInformation()
 	data, err := proto.Marshal(ranLoadInformation)
 
@@ -289,7 +376,6 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 	setExpected = append(setExpected, loadKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
 
-
 	rNibErr := w.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 	assert.Nil(t, rNibErr)
 }
@@ -301,7 +387,7 @@ func TestSaveRanLoadInformationMarshalNilFailure(t *testing.T) {
 	w := GetRNibWriter()
 
 	expectedErr := common.NewInternalError(errors.New("proto: Marshal called with nil"))
-	err:= w.SaveRanLoadInformation(inventoryName, nil)
+	err := w.SaveRanLoadInformation(inventoryName, nil)
 	assert.Equal(t, expectedErr, err)
 }
 
@@ -311,7 +397,7 @@ func TestSaveRanLoadInformationEmptyInventoryNameFailure(t *testing.T) {
 	initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 
-	err:= w.SaveRanLoadInformation(inventoryName, nil)
+	err := w.SaveRanLoadInformation(inventoryName, nil)
 	assert.NotNil(t, err)
 	assert.Equal(t, common.VALIDATION_ERROR, err.GetCode())
 }
@@ -325,7 +411,6 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationSuccess - Failed to build ran load infromation key. Error: %v", validationErr)
 	}
 
-
 	writerPool = nil
 	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
@@ -337,12 +422,10 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformation - Failed to marshal RanLoadInformation entity. Error: %v", err)
 	}
 
-
 	expectedErr := errors.New("expected error")
 	var setExpected []interface{}
 	setExpected = append(setExpected, loadKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
-
 
 	rNibErr := w.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 	assert.NotNil(t, rNibErr)
@@ -359,54 +442,54 @@ func generateCellLoadInformation() *entities.CellLoadInformation {
 	cellLoadInformation.UlInterferenceOverloadIndications = []entities.UlInterferenceOverloadIndication{ulInterferenceOverloadIndication}
 
 	ulHighInterferenceInformation := entities.UlHighInterferenceInformation{
-		TargetCellId:"456",
-		UlHighInterferenceIndication:"xxx",
+		TargetCellId:                 "456",
+		UlHighInterferenceIndication: "xxx",
 	}
 
-	cellLoadInformation.UlHighInterferenceInfos = []*entities.UlHighInterferenceInformation{&ulHighInterferenceInformation }
+	cellLoadInformation.UlHighInterferenceInfos = []*entities.UlHighInterferenceInformation{&ulHighInterferenceInformation}
 
 	cellLoadInformation.RelativeNarrowbandTxPower = &entities.RelativeNarrowbandTxPower{
-		RntpPerPrb:"xxx",
-		RntpThreshold:entities.RntpThreshold_NEG_4,
+		RntpPerPrb:                       "xxx",
+		RntpThreshold:                    entities.RntpThreshold_NEG_4,
 		NumberOfCellSpecificAntennaPorts: entities.NumberOfCellSpecificAntennaPorts_V1_ANT_PRT,
-		PB: 1,
-		PdcchInterferenceImpact:2,
+		PB:                               1,
+		PdcchInterferenceImpact:          2,
 		EnhancedRntp: &entities.EnhancedRntp{
-			EnhancedRntpBitmap:"xxx",
-			RntpHighPowerThreshold:entities.RntpThreshold_NEG_2,
-			EnhancedRntpStartTime: &entities.StartTime{StartSfn:500,StartSubframeNumber:5},
+			EnhancedRntpBitmap:     "xxx",
+			RntpHighPowerThreshold: entities.RntpThreshold_NEG_2,
+			EnhancedRntpStartTime:  &entities.StartTime{StartSfn: 500, StartSubframeNumber: 5},
 		},
 	}
 
 	cellLoadInformation.AbsInformation = &entities.AbsInformation{
-		Mode: entities.AbsInformationMode_ABS_INFO_FDD,
-		AbsPatternInfo:"xxx",
-		NumberOfCellSpecificAntennaPorts:entities.NumberOfCellSpecificAntennaPorts_V2_ANT_PRT,
-		MeasurementSubset:"xxx",
+		Mode:                             entities.AbsInformationMode_ABS_INFO_FDD,
+		AbsPatternInfo:                   "xxx",
+		NumberOfCellSpecificAntennaPorts: entities.NumberOfCellSpecificAntennaPorts_V2_ANT_PRT,
+		MeasurementSubset:                "xxx",
 	}
 
 	cellLoadInformation.InvokeIndication = entities.InvokeIndication_ABS_INFORMATION
 
 	cellLoadInformation.ExtendedUlInterferenceOverloadInfo = &entities.ExtendedUlInterferenceOverloadInfo{
-		AssociatedSubframes:"xxx",
-		ExtendedUlInterferenceOverloadIndications:cellLoadInformation.UlInterferenceOverloadIndications,
+		AssociatedSubframes:                       "xxx",
+		ExtendedUlInterferenceOverloadIndications: cellLoadInformation.UlInterferenceOverloadIndications,
 	}
 
 	compInformationItem := &entities.CompInformationItem{
-		CompHypothesisSets: []*entities.CompHypothesisSet{&entities.CompHypothesisSet{CellId: "789", CompHypothesis:"xxx"}},
-		BenefitMetric:50,
+		CompHypothesisSets: []*entities.CompHypothesisSet{&entities.CompHypothesisSet{CellId: "789", CompHypothesis: "xxx"}},
+		BenefitMetric:      50,
 	}
 
 	cellLoadInformation.CompInformation = &entities.CompInformation{
-		CompInformationItems:[]*entities.CompInformationItem{compInformationItem},
-		CompInformationStartTime:&entities.StartTime{StartSfn:123,StartSubframeNumber:456},
+		CompInformationItems:     []*entities.CompInformationItem{compInformationItem},
+		CompInformationStartTime: &entities.StartTime{StartSfn: 123, StartSubframeNumber: 456},
 	}
 
 	cellLoadInformation.DynamicDlTransmissionInformation = &entities.DynamicDlTransmissionInformation{
-		State: entities.NaicsState_NAICS_ACTIVE,
-		TransmissionModes:"xxx",
-		PB: 2,
-		PAList:[]entities.PA{entities.PA_DB_NEG_3},
+		State:             entities.NaicsState_NAICS_ACTIVE,
+		TransmissionModes: "xxx",
+		PB:                2,
+		PAList:            []entities.PA{entities.PA_DB_NEG_3},
 	}
 
 	return &cellLoadInformation
@@ -416,7 +499,6 @@ func generateRanLoadInformation() *entities.RanLoadInformation {
 	ranLoadInformation := entities.RanLoadInformation{}
 
 	ranLoadInformation.LoadTimestamp = uint64(time.Now().UnixNano())
-
 
 	cellLoadInformation := generateCellLoadInformation()
 	ranLoadInformation.CellLoadInfos = []*entities.CellLoadInformation{cellLoadInformation}
@@ -439,7 +521,7 @@ func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
 	expectedErr := common.NewValidationError(errors.New("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 "))
-	nbIdentity := &entities.NbIdentity{InventoryName:"name", GlobalNbId:&entities.GlobalNbId{PlmnId:"02f829", NbId:"4a952a0a"}}
+	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nb := &entities.NodebInfo{}
 	nb.Port = 5656
 	nb.Ip = "localhost"
@@ -461,9 +543,9 @@ func TestSaveEntityFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEntityFailure - Failed to marshal NodeB entity. Error: %v", err)
 	}
-	nbIdentity := &entities.NbIdentity{InventoryName:name, GlobalNbId:&entities.GlobalNbId{PlmnId:plmnId, NbId:nbId}}
+	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}}
 	setExpected := []interface{}{"RAN:" + name, data}
-	setExpected = append(setExpected,"GNB:" + plmnId + ":" + nbId, data)
+	setExpected = append(setExpected, "GNB:"+plmnId+":"+nbId, data)
 	expectedErr := errors.New("expected error")
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
 	rNibErr := w.SaveNodeb(nbIdentity, &gnb)
@@ -472,7 +554,7 @@ func TestSaveEntityFailure(t *testing.T) {
 
 func TestGetRNibWriterPoolNotInitializedFailure(t *testing.T) {
 	writerPool = nil
-	assert.Panics(t, func(){GetRNibWriter()})
+	assert.Panics(t, func() { GetRNibWriter() })
 }
 
 func TestGetRNibWriter(t *testing.T) {
@@ -515,7 +597,7 @@ func TestCloseOnClosedPoolFailure(t *testing.T) {
 	var e error
 	instanceMock.On("Close").Return(e)
 	Close()
-	assert.Panics(t, func(){Close()})
+	assert.Panics(t, func() { Close() })
 }
 
 func TestCloseFailure(t *testing.T) {

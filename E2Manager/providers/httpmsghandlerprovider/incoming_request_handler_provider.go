@@ -15,7 +15,7 @@
 // limitations under the License.
 //
 
-package providers
+package httpmsghandlerprovider
 
 import (
 	"e2mgr/configuration"
@@ -29,31 +29,31 @@ import (
 
 type IncomingRequest string
 
-const(
+const (
 	ShutdownRequest IncomingRequest = "Shutdown"
-	ResetRequest IncomingRequest = "Reset"
+	ResetRequest    IncomingRequest = "Reset"
 )
 
-type IncomingRequestHandlerProvider struct{
+type IncomingRequestHandlerProvider struct {
 	requestMap map[IncomingRequest]handlers.RequestHandler
-	logger *logger.Logger
+	logger     *logger.Logger
 }
 
 func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
 	rNibReaderProvider func() reader.RNibReader) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap:	initRequestHandlerMap(rmrService, config,  rNibWriterProvider, rNibReaderProvider),
-		logger: logger,
+		requestMap: initRequestHandlerMap(rmrService, config, rNibWriterProvider, rNibReaderProvider),
+		logger:     logger,
 	}
 }
 
-func initRequestHandlerMap(rmrService *services.RmrService,config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
+func initRequestHandlerMap(rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
 	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]handlers.RequestHandler {
 
 	return map[IncomingRequest]handlers.RequestHandler{
 		ShutdownRequest: handlers.NewDeleteAllRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
-		ResetRequest: handlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),      //TODO change to pointer
+		ResetRequest:    handlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),   //TODO change to pointer
 	}
 }
 

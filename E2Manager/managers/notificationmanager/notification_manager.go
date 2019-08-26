@@ -15,12 +15,13 @@
 // limitations under the License.
 //
 
-package managers
+package notificationmanager
 
 import (
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/providers"
+	"e2mgr/providers/rmrmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/sessions"
@@ -30,11 +31,11 @@ import (
 )
 
 type NotificationManager struct {
-	notificationHandlerProvider *providers.NotificationHandlerProvider
+	notificationHandlerProvider *rmrmsghandlerprovider.NotificationHandlerProvider
 }
 
-func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter) *NotificationManager {
-	notificationHandlerProvider := providers.NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider)
+func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) *NotificationManager {
+	notificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
 
 	return &NotificationManager{
 		notificationHandlerProvider: notificationHandlerProvider,

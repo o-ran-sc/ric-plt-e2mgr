@@ -15,7 +15,7 @@
 // limitations under the License.
 //
 
-package providers
+package httpmsghandlerprovider
 
 import (
 	"e2mgr/handlers"

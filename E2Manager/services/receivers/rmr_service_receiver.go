@@ -18,18 +18,18 @@
 package receivers
 
 import (
-	"e2mgr/managers"
+	"e2mgr/managers/notificationmanager"
 	"e2mgr/services"
 )
 
 // RmrService holds an instance of RMR messenger as well as its configuration
 type RmrServiceReceiver struct {
 	services.RmrService
-	nManager *managers.NotificationManager
+	nManager *notificationmanager.NotificationManager
 }
 
 // NewRmrService instantiates a new Rmr service instance
-func NewRmrServiceReceiver(rmrService services.RmrService, nManager *managers.NotificationManager) *RmrServiceReceiver {
+func NewRmrServiceReceiver(rmrService services.RmrService, nManager *notificationmanager.NotificationManager) *RmrServiceReceiver {
 
 	return &RmrServiceReceiver{
 		RmrService: rmrService,

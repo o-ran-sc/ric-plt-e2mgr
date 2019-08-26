@@ -20,7 +20,7 @@ package controllers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/providers"
+	"e2mgr/providers/httpmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"e2mgr/sessions"
@@ -77,7 +77,6 @@ func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, 
 	}
 }
 
-
 func prettifyRequest(request *http.Request) string {
 	dump, _ := httputil.DumpRequest(request, true)
 	requestPrettyPrint := strings.Replace(string(dump), "\r\n", " ", -1)
@@ -89,7 +88,7 @@ func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *htt
 	rc.Logger.Infof("[Client -> E2 Manager] #nodeb_controller.HandleRequest - request: %v", prettifyRequest(request))
 
 	messageTypeParam := params.ByName("messageType")
-	requestHandlerProvider := providers.NewRequestHandlerProvider(rc.rnibWriterProvider)
+	requestHandlerProvider := httpmsghandlerprovider.NewRequestHandlerProvider(rc.rnibWriterProvider)
 	handler, err := requestHandlerProvider.GetHandler(rc.Logger, messageTypeParam)
 
 	if err != nil {
@@ -139,7 +138,7 @@ func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *htt
 	printHandlingRequestElapsedTimeInMs(rc.Logger, startTime)
 }
 
-func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (rc NodebController) GetNodebIdList(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	startTime := time.Now()
 	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
 	nodebIdList, rnibError := rnibReaderService.GetNodebIdList()
@@ -147,16 +146,16 @@ func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *h
 	if rnibError != nil {
 		rc.Logger.Errorf("%v", rnibError);
 		httpStatusCode, errorCode, errorMessage := rnibErrorToHttpError(rnibError)
-		handleErrorResponse(rc.Logger,httpStatusCode,errorCode,errorMessage,writer,startTime )
+		handleErrorResponse(rc.Logger, httpStatusCode, errorCode, errorMessage, writer, startTime)
 		return;
 	}
 
-	pmList:= utils.ConvertNodebIdListToProtoMessageList(*nodebIdList)
+	pmList := utils.ConvertNodebIdListToProtoMessageList(*nodebIdList)
 	result, err := utils.MarshalProtoMessageListToJsonArray(pmList)
 
 	if err != nil {
 		rc.Logger.Errorf("%v", err);
-		handleErrorResponse(rc.Logger,http.StatusInternalServerError,internalErrorCode,internalErrorMessage,writer,startTime )
+		handleErrorResponse(rc.Logger, http.StatusInternalServerError, internalErrorCode, internalErrorMessage, writer, startTime)
 		return;
 	}
 

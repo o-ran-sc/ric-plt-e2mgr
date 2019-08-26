@@ -22,6 +22,7 @@ import (
 	"e2mgr/controllers"
 	"e2mgr/logger"
 	"e2mgr/managers"
+	"e2mgr/managers/notificationmanager"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
@@ -35,7 +36,7 @@ import (
 	"os"
 )
 
-const MAX_RNIB_PULL_INSTANCES = 4
+const MAX_RNIB_POOL_INSTANCES = 4
 
 func main() {
 	config := configuration.ParseConfiguration()
@@ -47,14 +48,18 @@ func main() {
 	}
 	rmrConfig := services.NewRmrConfig(config.Rmr.Port, config.Rmr.MaxMsgSize, 0, logger)
 	var msgImpl *rmrCgo.Context
-	rNibWriter.Init("e2Manager", MAX_RNIB_PULL_INSTANCES)
+	rNibWriter.Init("e2Manager", MAX_RNIB_POOL_INSTANCES)
 	defer rNibWriter.Close()
-	reader.Init("e2Manager", MAX_RNIB_PULL_INSTANCES)
+	reader.Init("e2Manager", MAX_RNIB_POOL_INSTANCES)
 	defer reader.Close()
-	var nManager = managers.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter)
 
 	rmrResponseChannel := make(chan *models.NotificationResponse, config.NotificationResponseBuffer)
 	rmrService := services.NewRmrService(rmrConfig, msgImpl, controllers.E2Sessions, rmrResponseChannel)
+
+	var ranSetupManager = managers.NewRanSetupManager(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
+	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter, ranSetupManager)
+	var nManager = notificationmanager.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter, ranReconnectionManager)
+
 	rmrServiceReceiver := receivers.NewRmrServiceReceiver(*rmrService, nManager)
 	defer rmrService.CloseContext()
 	go rmrServiceReceiver.ListenAndHandle()

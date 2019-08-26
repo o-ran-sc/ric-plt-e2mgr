@@ -22,7 +22,7 @@ import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/providers"
+	"e2mgr/providers/httpmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"encoding/json"
@@ -34,39 +34,40 @@ import (
 const (
 	ParamRanName = "ranName"
 )
+
 type Controller struct {
-	logger         *logger.Logger
-	handlerProvider *providers.IncomingRequestHandlerProvider
+	logger          *logger.Logger
+	handlerProvider *httpmsghandlerprovider.IncomingRequestHandlerProvider
 }
 
 func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibReaderProvider func() reader.RNibReader, rNibWriterProvider func() rNibWriter.RNibWriter,
 	config *configuration.Configuration) *Controller {
 
-	provider := providers.NewIncomingRequestHandlerProvider(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider)
+	provider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider)
 	return &Controller{
-		logger: logger,
+		logger:          logger,
 		handlerProvider: provider,
 	}
 }
 
-func (c *Controller)ShutdownHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
+func (c *Controller) ShutdownHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	c.logger.Infof("[Client -> E2 Manager] #controller.ShutdownHandler - request: %v", prettifyRequest(r))
-	c.handleRequest(writer, &r.Header, providers.ShutdownRequest,nil, false, http.StatusNoContent)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ShutdownRequest, nil, false, http.StatusNoContent)
 }
 
-func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params){
+func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	c.logger.Infof("[Client -> E2 Manager] #controller.X2ResetHandler - request: %v", prettifyRequest(r))
-	request:= models.ResetRequest{}
-	ranName:= params.ByName(ParamRanName)
+	request := models.ResetRequest{}
+	ranName := params.ByName(ParamRanName)
 
-	if !c.extractJsonBody(r, &request, writer){
+	if !c.extractJsonBody(r, &request, writer) {
 		return
 	}
 	request.RanName = ranName
-	c.handleRequest(writer, &r.Header, providers.ResetRequest, request, false, http.StatusNoContent)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ResetRequest, request, false, http.StatusNoContent)
 }
 
-func (c *Controller) extractJsonBody(r *http.Request, request models.Request, writer http.ResponseWriter) bool{
+func (c *Controller) extractJsonBody(r *http.Request, request models.Request, writer http.ResponseWriter) bool {
 	if r.ContentLength <= 0 {
 		return true
 	}
@@ -83,7 +84,7 @@ func (c *Controller) extractJsonBody(r *http.Request, request models.Request, wr
 	return true
 }
 
-func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Header, requestName providers.IncomingRequest,
+func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Header, requestName httpmsghandlerprovider.IncomingRequest,
 	request models.Request, validateHeader bool, httpStatusResponse int) {
 
 	if validateHeader {
@@ -95,7 +96,7 @@ func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Head
 		}
 	}
 
-	handler,err := c.handlerProvider.GetHandler(requestName)
+	handler, err := c.handlerProvider.GetHandler(requestName)
 	if err != nil {
 		c.handleErrorResponse(err, writer)
 		return
@@ -112,17 +113,17 @@ func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Head
 	c.logger.Infof("[E2 Manager -> Client] #controller.handleRequest - status response: %v", httpStatusResponse)
 }
 
-func (c *Controller) validateRequestHeader( header *http.Header) error {
+func (c *Controller) validateRequestHeader(header *http.Header) error {
 
-	if header.Get("Content-Type") != "application/json"{
+	if header.Get("Content-Type") != "application/json" {
 		c.logger.Errorf("#controller.validateRequestHeader - validation failure, incorrect content type")
 
-		return  e2managererrors.NewHeaderValidationError()
+		return e2managererrors.NewHeaderValidationError()
 	}
 	return nil
 }
 
-func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter){
+func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter) {
 
 	var errorResponseDetails models.ErrorResponse
 	var httpError int

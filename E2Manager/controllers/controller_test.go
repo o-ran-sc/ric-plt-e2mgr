@@ -24,7 +24,7 @@ import (
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/providers"
+	"e2mgr/providers/httpmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/tests"
@@ -92,7 +92,7 @@ func TestHeaderValidationFailed(t *testing.T) {
 
 	header := &http.Header{}
 
-	controller.handleRequest(writer, header, providers.ShutdownRequest, nil, true, http.StatusNoContent)
+	controller.handleRequest(writer, header, httpmsghandlerprovider.ShutdownRequest, nil, true, http.StatusNoContent)
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
 	err := e2managererrors.NewHeaderValidationError()
@@ -102,7 +102,7 @@ func TestHeaderValidationFailed(t *testing.T) {
 	assert.Equal(t, errorResponse.Message, err.Err.Message)
 }
 
-func TestShutdownStatusNoContent(t *testing.T){
+func TestShutdownStatusNoContent(t *testing.T) {
 	log := initLog(t)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
@@ -178,7 +178,7 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 	assert.Equal(t, errorResponse.Message, err.Err.Message)
 }
 
-func TestValidateHeaders(t *testing.T){
+func TestValidateHeaders(t *testing.T) {
 	log := initLog(t)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
@@ -221,8 +221,7 @@ func initLog(t *testing.T) *logger.Logger {
 	return log
 }
 
-
-func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T){
+func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 	log := initLog(t)
 
 	ranName := "test1"
@@ -235,33 +234,33 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T){
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	payload:= []byte {0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
+	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
 	xaction := []byte(ranName)
-	msg:= rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrMessengerMock.On("SendMsg",msg,mock.Anything).Return(msg,nil)
+	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
 	config := configuration.ParseConfiguration()
-	rmrService:=getRmrService(rmrMessengerMock, log)
+	rmrService := getRmrService(rmrMessengerMock, log)
 
 	writer := httptest.NewRecorder()
 	controller := NewController(log, rmrService, readerProvider, writerProvider, config)
 
-	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
-	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
+	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
 
 	data4Req := map[string]interface{}{"cause": "protocol:transfer-syntax-error"}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(data4Req)
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
 
-	param:= httprouter.Param{Key:"ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param {param})
+	param := httprouter.Param{Key: "ranName", Value: ranName}
+	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
 }
 
-func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T){
+func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	log := initLog(t)
 
 	ranName := "test1"
@@ -275,32 +274,32 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T){
 		return writerMock
 	}
 	// o&m intervention
-	payload:= []byte {0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
+	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	xaction := []byte(ranName)
-	msg:= rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrMessengerMock.On("SendMsg",msg,mock.Anything).Return(msg,nil)
+	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
 	config := configuration.ParseConfiguration()
-	rmrService:=getRmrService(rmrMessengerMock, log)
+	rmrService := getRmrService(rmrMessengerMock, log)
 
 	writer := httptest.NewRecorder()
 	controller := NewController(log, rmrService, readerProvider, writerProvider, config)
 
-	var nodeb = &entities.NodebInfo{ConnectionStatus:  entities.ConnectionStatus_CONNECTED }
-	readerMock.On("GetNodeb",ranName).Return(nodeb, nil)
+	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
 
 	// no body
 	b := new(bytes.Buffer)
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
 
-	param:= httprouter.Param{Key:"ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param {param})
+	param := httprouter.Param{Key: "ranName", Value: ranName}
+	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
 }
 
-func TestX2ResetHandleFailureInvalidBody(t *testing.T){
+func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 	log := initLog(t)
 
 	ranName := "test1"
@@ -316,7 +315,7 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 
 	config := configuration.ParseConfiguration()
-	rmrService:=getRmrService(rmrMessengerMock, log)
+	rmrService := getRmrService(rmrMessengerMock, log)
 
 	writer := httptest.NewRecorder()
 	controller := NewController(log, rmrService, readerProvider, writerProvider, config)
@@ -325,8 +324,8 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T){
 	b := strings.NewReader("{cause:\"protocol:transfer-syntax-error\"")
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
 
-	param:= httprouter.Param{Key:"ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param {param})
+	param := httprouter.Param{Key: "ranName", Value: ranName}
+	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 	_, ok := rmrService.E2sessions[ranName]
@@ -334,7 +333,7 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T){
 
 }
 
-func TestHandleErrorResponse(t *testing.T){
+func TestHandleErrorResponse(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -348,40 +347,39 @@ func TestHandleErrorResponse(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 
 	config := configuration.ParseConfiguration()
-	rmrService:=getRmrService(rmrMessengerMock, log)
-
+	rmrService := getRmrService(rmrMessengerMock, log)
 
 	controller := NewController(log, rmrService, readerProvider, writerProvider, config)
 
 	writer := httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewRnibDbError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewRnibDbError(), writer)
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewCommandAlreadyInProgressError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewCommandAlreadyInProgressError(), writer)
 	assert.Equal(t, http.StatusMethodNotAllowed, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewHeaderValidationError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewHeaderValidationError(), writer)
 	assert.Equal(t, http.StatusUnsupportedMediaType, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewWrongStateError("",""),writer)
+	controller.handleErrorResponse(e2managererrors.NewWrongStateError("", ""), writer)
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewRequestValidationError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewRequestValidationError(), writer)
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewRmrError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewRmrError(), writer)
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(e2managererrors.NewResourceNotFoundError(),writer)
+	controller.handleErrorResponse(e2managererrors.NewResourceNotFoundError(), writer)
 	assert.Equal(t, http.StatusNotFound, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
-	controller.handleErrorResponse(fmt.Errorf("ErrorError"),writer)
+	controller.handleErrorResponse(fmt.Errorf("ErrorError"), writer)
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
 }

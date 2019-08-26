@@ -34,7 +34,8 @@ type Configuration struct {
 		MaxMsgSize int
 	}
 	NotificationResponseBuffer int
-	BigRedButtonTimeoutSec	int
+	BigRedButtonTimeoutSec     int
+	MaxConnectionAttempts      int
 }
 
 func ParseConfiguration() *Configuration{
@@ -43,6 +44,7 @@ func ParseConfiguration() *Configuration{
 	viper.AddConfigPath("E2Manager/resources/")
 	viper.AddConfigPath("./resources/")  //For production
 	viper.AddConfigPath("../resources/") //For test under Docker
+	viper.AddConfigPath("../../resources/") //For test under Docker
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Sprintf("#http_server.parseConfiguration - failed to read configuration file: %s\n", err))
@@ -55,7 +57,7 @@ func ParseConfiguration() *Configuration{
 
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
-
+	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
 	return &config
 }
 

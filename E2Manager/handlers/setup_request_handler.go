@@ -93,24 +93,6 @@ func (SetupRequestHandler) CreateMessage(logger *logger.Logger, requestDetails *
 	wg.Done()
 }
 
-func asn1bstringToString(val []byte, numBits uint) string {
-	// Take the last byte
-	c := val[len(val)-1]
-
-	b := numBits % 8
-
-	// If num bits is not evenly divisable by 8 ...
-	if b != 0 {
-		// ... shift the value to the higher bits (in our case: 0x0b -> 0xb0)
-		c <<= 8 - b
-	}
-
-	if len(val) == 1 {
-		return fmt.Sprintf("%02x", c)
-	}
-	return fmt.Sprintf("%02x%02x", val[:len(val)-1], c)
-}
-
 //Expected value in RIC_ID = pLMN_Identity-eNB_ID/<eNB_ID size in bits>
 //<6 hex digits>-<6 or 8 hex digits>/<18|20|21|28>
 //Each byte is represented by two hex digits, the value in the lowest byte of the eNB_ID must be assigned to the lowest bits

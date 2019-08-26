@@ -15,7 +15,7 @@
 // limitations under the License.
 //
 
-package providers
+package httpmsghandlerprovider
 
 import (
 	"e2mgr/configuration"
@@ -39,7 +39,7 @@ func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, make(sessions.E2Sessions), messageChannel)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {
@@ -106,7 +106,7 @@ func TestGetShutdownHandlerFailure(t *testing.T) {
 	expected := &e2managererrors.InternalError{}
 
 	assert.NotNil(t, actual)
-	if reflect.TypeOf(actual) != reflect.TypeOf(expected){
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }

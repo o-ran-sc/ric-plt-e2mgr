@@ -39,6 +39,18 @@ func (rnibWriterMock *RnibWriterMock) SaveNodeb(nbIdentity *entities.NbIdentity,
 	return nil
 }
 
+func (rnibWriterMock *RnibWriterMock) UpdateNodebInfo(nodebInfo *entities.NodebInfo) common.IRNibError {
+	args := rnibWriterMock.Called(nodebInfo)
+
+	errArg := args.Get(0)
+
+	if errArg != nil {
+		return errArg.(common.IRNibError)
+	}
+
+	return nil
+}
+
 func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) common.IRNibError {
 	args := rnibWriterMock.Called(inventoryName, ranLoadInformation)
 
@@ -50,4 +62,3 @@ func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName strin
 
 	return nil
 }
-

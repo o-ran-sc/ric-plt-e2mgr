@@ -15,11 +15,18 @@
 // limitations under the License.
 //
 
-package providers
+package rmrmsghandlerprovider
 
 import (
+	"e2mgr/configuration"
+	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/mocks"
+	"e2mgr/models"
 	"e2mgr/rNibWriter"
+	"e2mgr/services"
+	"e2mgr/sessions"
+	"e2mgr/tests"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"strings"
@@ -34,6 +41,10 @@ import (
  */
 
 func TestGetNotificationHandlerSuccess(t *testing.T) {
+
+	logger := initLog(t)
+	rmrService := getRmrService(&mocks.RmrMessengerMock{}, logger)
+
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
 		return readerMock
@@ -42,6 +53,10 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
+
+	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibReaderProvider, rnibWriterProvider)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+
 	var testCases = []struct {
 		msgType int
 		handler handlers.NotificationHandler
@@ -50,14 +65,15 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_X2_SETUP_FAILURE /*unsuccessful x2 setup response*/, handlers.X2SetupFailureResponseNotificationHandler{}},
 		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/, handlers.EndcX2SetupResponseNotificationHandler{}},
 		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/, handlers.EndcX2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, handlers.NewRanLostConnectionHandler(rnibReaderProvider, rnibWriterProvider)},
+		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, handlers.NewRanLostConnectionHandler(ranReconnectionManager)},
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, handlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, handlers.X2EnbConfigurationUpdateHandler{}},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, handlers.EndcConfigurationUpdateHandler{}},
 	}
+
 	for _, tc := range testCases {
 
-		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider)
+		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			handler, err := provider.GetNotificationHandler(tc.msgType)
 			if err != nil {
@@ -77,6 +93,10 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
  */
 
 func TestGetNotificationHandlerFailure(t *testing.T) {
+
+	logger := initLog(t)
+	rmrService := getRmrService(&mocks.RmrMessengerMock{}, logger)
+
 	var testCases = []struct {
 		msgType   int
 		errorText string
@@ -92,7 +112,11 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 		rnibWriterProvider := func() rNibWriter.RNibWriter {
 			return writerMock
 		}
-		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider)
+
+		ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibReaderProvider, rnibWriterProvider)
+		ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+
+		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			_, err := provider.GetNotificationHandler(tc.msgType)
 			if err == nil {
@@ -103,4 +127,21 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TODO: extract to test_utils
+func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	messageChannel := make(chan *models.NotificationResponse)
+	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, make(sessions.E2Sessions), messageChannel)
+}
+
+// TODO: extract to test_utils
+func initLog(t *testing.T) *logger.Logger {
+	log, err := logger.InitLogger(logger.InfoLevel)
+	if err != nil {
+		t.Errorf("#delete_all_request_handler_test.TestHandleSuccessFlow - failed to initialize logger, error: %s", err)
+	}
+	return log
 }
