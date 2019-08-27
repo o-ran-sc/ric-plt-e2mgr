@@ -54,8 +54,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		return writerMock
 	}
 
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibReaderProvider, rnibWriterProvider)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
 
 	var testCases = []struct {
 		msgType int
@@ -113,8 +112,7 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 			return writerMock
 		}
 
-		ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibReaderProvider, rnibWriterProvider)
-		ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+		ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
 
 		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {

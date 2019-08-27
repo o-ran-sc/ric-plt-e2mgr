@@ -70,8 +70,7 @@ func getRmrServiceReceiver(rmrMessengerMock *mocks.RmrMessengerMock, logger *log
 
 	rmrService := getRmrService(rmrMessengerMock, logger)
 
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibReaderProvider, rnibWriterProvider)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
 	nManager := notificationmanager.NewNotificationManager(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
 
 	return NewRmrServiceReceiver(*rmrService, nManager)

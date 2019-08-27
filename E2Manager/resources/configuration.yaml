@@ -7,4 +7,4 @@ rmr:
   maxMsgSize: 4096
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
-maxConnectionAttempts: 20
+maxConnectionAttempts: 3

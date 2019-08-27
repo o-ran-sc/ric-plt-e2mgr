@@ -25,22 +25,22 @@ import (
 )
 
 type RanLostConnectionHandler struct {
-	ranReconnectionManager *managers.RanReconnectionManager
+	ranReconnectionManager managers.IRanReconnectionManager
 }
 
-func NewRanLostConnectionHandler(ranReconnectionManager *managers.RanReconnectionManager) RanLostConnectionHandler {
+func NewRanLostConnectionHandler(ranReconnectionManager managers.IRanReconnectionManager) RanLostConnectionHandler {
 	return RanLostConnectionHandler{
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
 func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
-	logger.Warnf("#ranLostConnectionHandler.Handle - Received lost connection (transaction id = %s): %s", request.TransactionId, request.Payload)
+	logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", request.RanName)
 
 	err := handler.ranReconnectionManager.ReconnectRan(request.RanName)
 
 	if err != nil {
-		logger.Errorf("#ranLostConnectionHandler.Handle - An error occurred while trying to reconnect RAN, %v", err)
+		logger.Errorf("#RanLostConnectionHandler.Handle - An error occurred while trying to reconnect RAN, %v", err)
 		return
 	}
 }
