@@ -140,7 +140,7 @@ func TestHandleFailureWrongState(t *testing.T){
 
 	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 
-	assert.IsType(t, e2managererrors.NewWrongStateError(X2_RESET_ACTIVITIY_NAME, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)]), actual)
+	assert.IsType(t, e2managererrors.NewWrongStateError(X2_RESET_ACTIVITY_NAME, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)]), actual)
 
 }
 

@@ -18,9 +18,11 @@
 package handlers
 
 import (
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
 	"e2mgr/rnibBuilders"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"sync"
 	"time"
 
@@ -40,7 +42,7 @@ func NewEndcSetupRequestHandler(rnibWriterProvider func() rNibWriter.RNibWriter)
 }
 
 func (handler EndcSetupRequestHandler) PreHandle(logger *logger.Logger, details *models.RequestDetails) error {
-	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(details)
+	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(details,entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
 
 	rNibErr := handler.rnibWriterProvider().SaveNodeb(nodebIdentity, nodebInfo)
 	if rNibErr != nil {
@@ -56,17 +58,13 @@ func (EndcSetupRequestHandler) CreateMessage(logger *logger.Logger, requestDetai
 
 	wg.Add(1)
 
-	 payload, err := packEndcX2apSetupRequest(logger, MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId[:], eNBId[:], eNBIdBitqty)
-	if err != nil {
-		logger.Errorf("#endc_setup_request_handler.CreateMessage - pack was failed. Error: %v", err)
-	} else {
-		transactionId := requestDetails.RanName
-		e2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: startTime, Request: requestDetails}
-		setupRequestMessage := models.NewE2RequestMessage(transactionId, requestDetails.RanIp, requestDetails.RanPort, requestDetails.RanName, payload)
+	transactionId := requestDetails.RanName
+	e2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: startTime, Request: requestDetails}
+	setupRequestMessage := models.NewE2RequestMessage(transactionId, requestDetails.RanIp, requestDetails.RanPort, requestDetails.RanName, e2pdus.PackedEndcX2setupRequest)
 
-		logger.Debugf("#endc_setup_request_handler.CreateMessage - setupRequestMessage was created successfuly. setup request details(transactionId = [%s]): %+v", transactionId, setupRequestMessage)
-		messageChannel <- setupRequestMessage
-	}
+	logger.Debugf("#endc_setup_request_handler.CreateMessage - PDU: %s", e2pdus.PackedEndcX2setupRequestAsString)
+	logger.Debugf("#endc_setup_request_handler.CreateMessage - setupRequestMessage was created successfuly. setup request details(transactionId = [%s]): %+v", transactionId, setupRequestMessage)
+	messageChannel <- setupRequestMessage
 
 	wg.Done()
 }

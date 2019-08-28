@@ -18,10 +18,12 @@
 package handlers
 
 import (
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
 	"e2mgr/rnibBuilders"
 	"fmt"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"os"
 	"sync"
 	"time"
@@ -38,18 +40,12 @@ const (
 	MaxAsn1CodecMessageBufferSize    = 4096
 )
 
-const (
-	shortMacro_eNB_ID = 18
-	macro_eNB_ID      = 20
-	longMacro_eNB_ID  = 21
-	home_eNB_ID       = 28
-)
 
 /*The Ric Id is the combination of pLMNId and ENBId*/
 var pLMNId []byte
 var eNBId []byte
 var eNBIdBitqty uint
-var ricFlag = [3]byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
+var ricFlag = []byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
 
 type SetupRequestHandler struct {
 	rnibWriterProvider func() rNibWriter.RNibWriter
@@ -62,7 +58,7 @@ func NewSetupRequestHandler(rnibWriterProvider func() rNibWriter.RNibWriter) *Se
 }
 
 func (handler SetupRequestHandler) PreHandle(logger *logger.Logger, details *models.RequestDetails) error {
-	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(details)
+	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(details, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	rNibErr := handler.rnibWriterProvider().SaveNodeb(nodebIdentity, nodebInfo)
 	if rNibErr != nil {
@@ -78,17 +74,13 @@ func (SetupRequestHandler) CreateMessage(logger *logger.Logger, requestDetails *
 
 	wg.Add(1)
 
-	payload, err := packX2apSetupRequest(logger, MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty)
-	if err != nil {
-		logger.Errorf("#setup_request_handler.CreateMessage - pack was failed. Error: %v", err)
-	} else {
-		transactionId := requestDetails.RanName
-		e2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: startTime, Request: requestDetails}
-		setupRequestMessage := models.NewE2RequestMessage(transactionId, requestDetails.RanIp, requestDetails.RanPort, requestDetails.RanName, payload)
+	transactionId := requestDetails.RanName
+	e2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: startTime, Request: requestDetails}
+	setupRequestMessage := models.NewE2RequestMessage(transactionId, requestDetails.RanIp, requestDetails.RanPort, requestDetails.RanName, e2pdus.PackedX2setupRequest)
 
-		logger.Debugf("#setup_request_handler.CreateMessage - setupRequestMessage was created successfully. setup request details(transactionId = [%s]): %+v", transactionId, setupRequestMessage)
-		messageChannel <- setupRequestMessage
-	}
+	logger.Debugf("#setup_request_handler.CreateMessage - PDU: %s", e2pdus.PackedX2setupRequestAsString)
+	logger.Debugf("#setup_request_handler.CreateMessage - setupRequestMessage was created successfully. setup request details(transactionId = [%s]): %+v", transactionId, setupRequestMessage)
+	messageChannel <- setupRequestMessage
 
 	wg.Done()
 }
@@ -110,7 +102,7 @@ func parseRicID(ricId string) error {
 		return fmt.Errorf("invalid value for %s, len(eNBId:%v) != 3 or 4", ENV_RIC_ID, eNBId)
 	}
 
-	if eNBIdBitqty != shortMacro_eNB_ID && eNBIdBitqty != macro_eNB_ID && eNBIdBitqty != longMacro_eNB_ID && eNBIdBitqty != home_eNB_ID {
+	if eNBIdBitqty != e2pdus.ShortMacro_eNB_ID && eNBIdBitqty != e2pdus.Macro_eNB_ID && eNBIdBitqty != e2pdus.LongMacro_eNB_ID && eNBIdBitqty != e2pdus.Home_eNB_ID {
 		return fmt.Errorf("invalid value for %s, eNBIdBitqty: %d", ENV_RIC_ID, eNBIdBitqty)
 	}
 
@@ -123,11 +115,20 @@ func (SetupRequestHandler) GetMessageType() int {
 }
 
 func init() {
+	var err error
 	ricId := os.Getenv(ENV_RIC_ID)
 	//ricId="bbbccc-ffff0e/20"
 	//ricId="bbbccc-abcd0e/20"
-	if err := parseRicID(ricId); err != nil {
+	if err = parseRicID(ricId); err != nil {
 		panic(err)
 	}
 
+	e2pdus.PackedEndcX2setupRequest,e2pdus.PackedEndcX2setupRequestAsString, err = e2pdus.PreparePackedEndcX2SetupRequest(MaxAsn1PackedBufferSize, MaxAsn1CodecMessageBufferSize,pLMNId, eNBId, eNBIdBitqty, ricFlag )
+	if err != nil{
+		panic(err)
+	}
+	e2pdus.PackedX2setupRequest,e2pdus.PackedX2setupRequestAsString, err = e2pdus.PreparePackedX2SetupRequest(MaxAsn1PackedBufferSize, MaxAsn1CodecMessageBufferSize,pLMNId, eNBId, eNBIdBitqty, ricFlag )
+	if err != nil{
+		panic(err)
+	}
 }

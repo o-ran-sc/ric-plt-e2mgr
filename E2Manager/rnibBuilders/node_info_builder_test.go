@@ -34,9 +34,10 @@ func TestCreateInitialNodeInfo(t *testing.T) {
 		RanPort:ranPort,
 		RanIp:ranIP,
 	}
-	nodebInfo, identity := CreateInitialNodeInfo(requestDetails)
+	nodebInfo, identity := CreateInitialNodeInfo(requestDetails, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	assert.Equal(t, identity.InventoryName, ranName)
 	assert.Equal(t, nodebInfo.Ip, ranIP)
 	assert.Equal(t, nodebInfo.ConnectionStatus, entities.ConnectionStatus_CONNECTING)
+	assert.Equal(t, nodebInfo.E2ApplicationProtocol, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	assert.Equal(t, nodebInfo.Port, uint32(ranPort))
 }

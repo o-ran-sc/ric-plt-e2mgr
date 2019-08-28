@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	X2_RESET_ACTIVITIY_NAME = "X2_RESET"
+	X2_RESET_ACTIVITY_NAME = "X2_RESET"
 )
 type X2ResetRequestHandler struct {
 	readerProvider func() reader.RNibReader
@@ -75,7 +75,7 @@ func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request mode
 
 	if nodeb.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
 		logger.Errorf("#reset_request_handler.Handle - RAN: %s in wrong state (%s)", resetRequest.RanName, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
-		return e2managererrors.NewWrongStateError(X2_RESET_ACTIVITIY_NAME,entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
+		return e2managererrors.NewWrongStateError(X2_RESET_ACTIVITY_NAME,entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
 	}
 
 	response := models.NotificationResponse{MgsType: rmrCgo.RIC_X2_RESET, RanName: resetRequest.RanName, Payload: payload}

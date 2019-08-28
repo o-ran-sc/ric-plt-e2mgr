@@ -22,11 +22,12 @@ import (
 	"e2mgr/models"
 )
 
-func CreateInitialNodeInfo(requestDetails *models.RequestDetails) (*entities.NodebInfo, *entities.NbIdentity) {
+func CreateInitialNodeInfo(requestDetails *models.RequestDetails, protocol entities.E2ApplicationProtocol) (*entities.NodebInfo, *entities.NbIdentity) {
 	nodebInfo := &entities.NodebInfo{}
 	nodebInfo.Ip = requestDetails.RanIp
 	nodebInfo.Port = uint32(requestDetails.RanPort)
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+	nodebInfo.E2ApplicationProtocol = protocol
 	nodebInfo.RanName = requestDetails.RanName
 
 	nodebIdentity := &entities.NbIdentity{}

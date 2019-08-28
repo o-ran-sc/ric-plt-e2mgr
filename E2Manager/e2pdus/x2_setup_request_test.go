@@ -15,10 +15,9 @@
  *   limitations under the License.
  *
  *******************************************************************************/
-package handlers
+package e2pdus
 
 import (
-	"e2mgr/logger"
 	"fmt"
 	"strings"
 	"testing"
@@ -29,8 +28,9 @@ import (
  * Verify the packed representation matches the want value.
  */
 func TestPackX2apSetupRequest(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
 	pLMNId := []byte{0xbb, 0xbc, 0xcc}
+	ricFlag := []byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
+
 	var testCases = []struct {
 		eNBId       []byte
 		eNBIdBitqty uint
@@ -38,24 +38,24 @@ func TestPackX2apSetupRequest(t *testing.T) {
 	}{
 		{
 			eNBId:       []byte{0xab, 0xcd, 0x2}, /*00000010 -> 10000000*/
-			eNBIdBitqty: shortMacro_eNB_ID,
+			eNBIdBitqty: ShortMacro_eNB_ID,
 			packedPdu:   "0006002b0000020015000900bbbccc8003abcd8000140017000001f700bbbcccabcd80000000bbbccc000000000001",
 		},
 
 		{
 			eNBId:       []byte{0xab, 0xcd, 0xe},
-			eNBIdBitqty: macro_eNB_ID,
-			packedPdu: "0006002a0000020015000800bbbccc00abcde000140017000001f700bbbcccabcde0000000bbbccc000000000001",
+			eNBIdBitqty: Macro_eNB_ID,
+			packedPdu:   "0006002a0000020015000800bbbccc00abcde000140017000001f700bbbcccabcde0000000bbbccc000000000001",
 		},
 		{
 			eNBId:       []byte{0xab, 0xcd, 0x7}, /*00000111 -> 00111000*/
-			eNBIdBitqty: longMacro_eNB_ID,
+			eNBIdBitqty: LongMacro_eNB_ID,
 			//packedPdu:   "0006002b0000020015000900bbbccc8103abcd3800140017000001f700bbbcccabcd38000000bbbccc000000000001",
 			packedPdu:   "0006002b0000020015000900bbbcccc003abcd3800140017000001f700bbbcccabcd38000000bbbccc000000000001",
 		},
 		{
 			eNBId:       []byte{0xab, 0xcd, 0xef, 0x8},
-			eNBIdBitqty: home_eNB_ID,
+			eNBIdBitqty: Home_eNB_ID,
 			packedPdu:   "0006002b0000020015000900bbbccc40abcdef8000140017000001f700bbbcccabcdef800000bbbccc000000000001",
 		},
 	}
@@ -65,7 +65,7 @@ func TestPackX2apSetupRequest(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.packedPdu, func(t *testing.T) {
 
-			payload, err := packX2apSetupRequest(logger, MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, tc.eNBId, tc.eNBIdBitqty)
+			payload, _, err :=PreparePackedX2SetupRequest(MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, tc.eNBId, tc.eNBIdBitqty,ricFlag)
 			if err != nil {
 				t.Errorf("want: success, got: pack failed. Error: %v\n", err)
 			} else {
@@ -86,13 +86,13 @@ func TestPackX2apSetupRequest(t *testing.T) {
 /*Packing error*/
 
 func TestPackX2apSetupRequestPackError(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
 
 	wantError := "packing error: #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:46"
 	pLMNId := []byte{0xbb, 0xbc, 0xcc}
+	ricFlag := []byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
 	eNBId := []byte{0xab, 0xcd, 0xe}
-	eNBIdBitqty := uint(macro_eNB_ID)
-	_, err := packX2apSetupRequest(logger, MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, 40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId[:], eNBId[:], eNBIdBitqty)
+	eNBIdBitqty := uint(Macro_eNB_ID)
+	_, _, err := PreparePackedX2SetupRequest(40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty, ricFlag)
 	if err != nil {
 		if 0 != strings.Compare(fmt.Sprintf("%s", err), wantError) {
 			t.Errorf("want failure: %s, got: %s", wantError, err)

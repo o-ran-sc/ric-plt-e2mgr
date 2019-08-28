@@ -67,6 +67,7 @@ const (
 	RIC_SCTP_CLEAR_ALL                   = C.RIC_SCTP_CLEAR_ALL
 	RIC_X2_RESET_RESP                    = C.RIC_X2_RESET_RESP
 	RIC_X2_RESET                         = C.RIC_X2_RESET
+	RIC_E2_TERM_INIT 					 = C.E2_TERM_INIT
 )
 
 const (

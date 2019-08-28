@@ -45,7 +45,7 @@ func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Conf
 		config:             config,
 		rnibReaderProvider: rnibReaderProvider,
 		rnibWriterProvider: rnibWriterProvider,
-		ranSetupManager:    NewRanSetupManager(logger,rmrService,rnibReaderProvider,rnibWriterProvider),
+		ranSetupManager:    NewRanSetupManager(logger,rmrService,rnibWriterProvider),
 	}
 }
 

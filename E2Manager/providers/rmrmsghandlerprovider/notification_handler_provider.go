@@ -49,6 +49,7 @@ func initNotificationHandlersMap(rnibReaderProvider func() reader.RNibReader, rn
 		rmrCgo.RIC_ENDC_CONF_UPDATE:        handlers.EndcConfigurationUpdateHandler{},
 		rmrCgo.RIC_X2_RESET_RESP:           handlers.NewX2ResetResponseHandler(rnibReaderProvider),
 		rmrCgo.RIC_X2_RESET:                handlers.NewX2ResetRequestNotificationHandler(rnibReaderProvider),
+		rmrCgo.RIC_E2_TERM_INIT:            handlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider ),
 	}
 }
 

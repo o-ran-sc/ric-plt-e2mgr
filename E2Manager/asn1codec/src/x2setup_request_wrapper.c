@@ -211,7 +211,7 @@ static void assignServedCell_Information(
 	assert(broadcastPLMN_Identity != 0);
 	ASN_SEQUENCE_ADD(&servedCell_Information->broadcastPLMNs, broadcastPLMN_Identity);
 
-	assignPLMN_Identity(broadcastPLMN_Identity,ric_flag);
+	assignPLMN_Identity(broadcastPLMN_Identity, pLMN_Identity); //ric_flag: disabled because a real eNB rejects the message
 
 	servedCell_Information->eUTRA_Mode_Info.present= EUTRA_Mode_Info_PR_fDD;
 	servedCell_Information->eUTRA_Mode_Info.choice.fDD = calloc(1, sizeof(FDD_Info_t));

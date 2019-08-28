@@ -68,6 +68,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, handlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, handlers.X2EnbConfigurationUpdateHandler{}},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, handlers.EndcConfigurationUpdateHandler{}},
+		{rmrCgo.RIC_E2_TERM_INIT,    handlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
 	}
 
 	for _, tc := range testCases {

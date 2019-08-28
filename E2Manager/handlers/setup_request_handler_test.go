@@ -19,6 +19,7 @@ package handlers
 
 import (
 	"bytes"
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
@@ -64,25 +65,25 @@ func TestParseRicId(t *testing.T) {
 			ricId:       "bbbccc-abcd02/18",
 			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
 			eNBId:       []byte{0xab, 0xcd, 0x2}, /*00000010 -> 10000000*/
-			eNBIdBitqty: shortMacro_eNB_ID,
+			eNBIdBitqty: e2pdus.ShortMacro_eNB_ID,
 		},
 		{
 			ricId:       "bbbccc-abcd0e/20",
 			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
 			eNBId:       []byte{0xab, 0xcd, 0xe},
-			eNBIdBitqty: macro_eNB_ID,
+			eNBIdBitqty: e2pdus.Macro_eNB_ID,
 		},
 		{
 			ricId:       "bbbccc-abcd07/21",
 			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
 			eNBId:       []byte{0xab, 0xcd, 0x7}, /*00000111 -> 00111000*/
-			eNBIdBitqty: longMacro_eNB_ID,
+			eNBIdBitqty: e2pdus.LongMacro_eNB_ID,
 		},
 		{
 			ricId:       "bbbccc-abcdef08/28",
 			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
 			eNBId:       []byte{0xab, 0xcd, 0xef, 0x8},
-			eNBIdBitqty: home_eNB_ID,
+			eNBIdBitqty: e2pdus.Home_eNB_ID,
 		},
 		{
 			ricId:   "",

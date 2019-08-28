@@ -51,6 +51,7 @@ func (src X2SetupResponseNotificationHandler) Handle(logger *logger.Logger, e2Se
 			nb.GlobalNbId = nbIdentity.GlobalNbId
 			nb.RanName = e2session.Request.RanName
 			nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+			nb.E2ApplicationProtocol = entities.E2ApplicationProtocol_X2_SETUP_REQUEST
 			nb.Ip = e2session.Request.RanIp
 			nb.Port = uint32(e2session.Request.RanPort)
 			nb.NodeType = entities.Node_ENB
