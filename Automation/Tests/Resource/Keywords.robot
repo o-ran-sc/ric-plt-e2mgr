@@ -17,15 +17,42 @@
 ##############################################################################
 
 *** Settings ***
+Documentation   Keywords file
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
-Library     REST      ${url}
 
 
 
-*** Test Cases ***
-Post Request setup node b endc-setup - 400 validation of fields
+
+
+*** Keywords ***
+Post Request setup node b x-2
     Set Headers     ${header}
-    POST        /v1/nodeb/endc-setup
-    Integer    response status   400
+    POST        /v1/nodeb/x2-setup    ${json}
+
+
+
+Get Request node b enb test1
+    Sleep    1s
+    GET      /v1/nodeb/test1
+
+
+Get Request node b enb test2
+    Sleep    1s
+    GET      /v1/nodeb/test2
+
+
+
+Post Request setup node b endc-setup
+    Set Headers     ${header}
+    POST        /v1/nodeb/endc-setup    ${endcjson}
+
+
+Prepare Simulator For Load Information
+     Run And Return Rc And Output    ${stop_simu}
+     Run And Return Rc And Output    ${docker_Remove}
+     Run And Return Rc And Output    ${run_simu}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    5
+
 

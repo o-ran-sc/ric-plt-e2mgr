@@ -32,7 +32,7 @@ import (
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -57,6 +57,13 @@ var E2Sessions = make(sessions.E2Sessions)
 
 var messageChannel chan *models.E2RequestMessage
 var errorChannel chan error
+
+type INodebController interface {
+	HandleRequest(writer http.ResponseWriter, request *http.Request)
+	GetNodebIdList (writer http.ResponseWriter, request *http.Request)
+	GetNodeb(writer http.ResponseWriter, request *http.Request)
+	HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request)
+}
 
 type NodebController struct {
 	rmrService         *services.RmrService
@@ -83,11 +90,12 @@ func prettifyRequest(request *http.Request) string {
 	return strings.Replace(requestPrettyPrint, "\n", "", -1)
 }
 
-func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *http.Request) {
 	startTime := time.Now()
 	rc.Logger.Infof("[Client -> E2 Manager] #nodeb_controller.HandleRequest - request: %v", prettifyRequest(request))
 
-	messageTypeParam := params.ByName("messageType")
+	vars := mux.Vars(request)
+	messageTypeParam := vars["messageType"]
 	requestHandlerProvider := httpmsghandlerprovider.NewRequestHandlerProvider(rc.rnibWriterProvider)
 	handler, err := requestHandlerProvider.GetHandler(rc.Logger, messageTypeParam)
 
@@ -138,7 +146,7 @@ func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *htt
 	printHandlingRequestElapsedTimeInMs(rc.Logger, startTime)
 }
 
-func (rc NodebController) GetNodebIdList(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *http.Request) {
 	startTime := time.Now()
 	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
 	nodebIdList, rnibError := rnibReaderService.GetNodebIdList()
@@ -164,9 +172,10 @@ func (rc NodebController) GetNodebIdList(writer http.ResponseWriter, request *ht
 	writer.Write([]byte(result))
 }
 
-func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Request) {
 	startTime := time.Now()
-	ranName := params.ByName("ranName")
+	vars := mux.Vars(request)
+	ranName := vars["ranName"]
 	// WAS: respondingNode, rnibError := reader.GetRNibReader().GetNodeb(ranName)
 	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider);
 	respondingNode, rnibError := rnibReaderService.GetNodeb(ranName)
@@ -191,7 +200,7 @@ func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Req
 	writer.Write([]byte(result))
 }
 
-func (rc NodebController) HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (rc NodebController) HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request) {
 	//fmt.Println("[X-APP -> Client] #HandleHealthCheckRequest - http status: 200")
 	writer.WriteHeader(http.StatusOK)
 }

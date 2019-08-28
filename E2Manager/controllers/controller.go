@@ -27,13 +27,18 @@ import (
 	"e2mgr/services"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
 const (
 	ParamRanName = "ranName"
 )
+
+type IController interface {
+	ShutdownHandler(writer http.ResponseWriter, r *http.Request)
+	X2ResetHandler(writer http.ResponseWriter, r *http.Request)
+}
 
 type Controller struct {
 	logger          *logger.Logger
@@ -50,15 +55,16 @@ func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibR
 	}
 }
 
-func (c *Controller) ShutdownHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *Controller) ShutdownHandler(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #controller.ShutdownHandler - request: %v", prettifyRequest(r))
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ShutdownRequest, nil, false, http.StatusNoContent)
 }
 
-func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *Controller) X2ResetHandler(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #controller.X2ResetHandler - request: %v", prettifyRequest(r))
 	request := models.ResetRequest{}
-	ranName := params.ByName(ParamRanName)
+	vars := mux.Vars(r)
+	ranName := vars[ParamRanName]
 
 	if !c.extractJsonBody(r, &request, writer) {
 		return

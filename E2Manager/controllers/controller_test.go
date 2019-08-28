@@ -33,7 +33,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io"
@@ -64,7 +64,7 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 
 	writer := httptest.NewRecorder()
 	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
-	controller.ShutdownHandler(writer, tests.GetHttpRequest(), nil)
+	controller.ShutdownHandler(writer, tests.GetHttpRequest())
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
 
@@ -122,7 +122,7 @@ func TestShutdownStatusNoContent(t *testing.T) {
 
 	writer := httptest.NewRecorder()
 	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config)
-	controller.ShutdownHandler(writer, tests.GetHttpRequest(), nil)
+	controller.ShutdownHandler(writer, tests.GetHttpRequest())
 
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
@@ -253,9 +253,9 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(data4Req)
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
+	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
 
-	param := httprouter.Param{Key: "ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
+	controller.X2ResetHandler(writer, req)
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
 }
@@ -292,9 +292,9 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	// no body
 	b := new(bytes.Buffer)
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
+	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
 
-	param := httprouter.Param{Key: "ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
+	controller.X2ResetHandler(writer, req)
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 
 }
@@ -323,9 +323,9 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 	// Invalid json: attribute name without quotes (should be "cause":).
 	b := strings.NewReader("{cause:\"protocol:transfer-syntax-error\"")
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
+	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
 
-	param := httprouter.Param{Key: "ranName", Value: ranName}
-	controller.X2ResetHandler(writer, req, []httprouter.Param{param})
+	controller.X2ResetHandler(writer, req)
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 	_, ok := rmrService.E2sessions[ranName]

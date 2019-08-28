@@ -1735,28 +1735,28 @@ function stopPropagation(event) {
 window.output = {};
 </script>
 <script type="text/javascript">
-window.output["suite"] = [1,2,1,3,[],[1,0,36297],[[4,5,6,0,[],[1,30,36266],[],[[7,0,1,0,[],[1,36255,40],[[0,8,9,0,10,11,0,12,[1,36256,36],[],[]],[0,13,9,0,14,15,0,16,[1,36293,2],[],[]]]]],[[1,17,0,0,0,0,0,0,[1,342,35913],[[0,18,19,0,20,21,0,0,[1,342,35822],[],[[345,2,22]]],[0,18,19,0,20,23,24,0,[1,36165,87],[],[[36169,2,25],[36252,2,26]]],[0,27,28,0,29,30,0,0,[1,36253,1],[],[]]],[]]],[1,1,1,1]]],[],[],[1,1,1,1]];
+window.output["suite"] = [1,2,3,4,[],[0,0,51470],[[5,6,7,0,[],[0,80,51376],[],[[8,0,1,0,[],[0,808,50646,9],[[0,10,11,0,0,0,0,0,[0,809,50645],[[0,12,13,0,14,15,0,16,[1,810,0],[],[]],[0,17,13,0,18,19,0,20,[0,810,50644],[],[]]],[]]]],[21,0,1,0,[22],[0,51455,0,23],[]]],[],[2,0,2,0]],[24,25,26,0,[],[0,51458,3],[],[[8,0,1,0,[22],[0,51459,0,23],[]],[21,0,1,0,[22],[0,51460,1,23],[]]],[],[2,0,2,0]],[27,28,29,0,[],[0,51462,6],[],[[30,0,1,0,[22],[0,51463,1,23],[]],[31,0,1,0,[22],[0,51465,0,23],[]],[21,0,1,0,[22],[0,51466,0,23],[]]],[],[3,0,3,0]]],[],[],[7,0,7,0]];
 </script>
 <script type="text/javascript">
 window.output["strings"] = [];
 </script>
 <script type="text/javascript">
-window.output["strings"] = window.output["strings"].concat(["*","*Health","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Health","*<p>ORAN health check\x3c/p>","*Get Health Check","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Health/get_health_check.robot","*Health/get_health_check.robot","*Get Health","*Get","*REST","*<p><b>Sends a GET request to the endpoint.\x3c/b>\x3c/p>","*/v1/health","*http","*Integer","*<p><b>Asserts the field as JSON integer.\x3c/b>\x3c/p>","*response status, 200","*assertions","*Start dockers","*Run And Return Rc And Output","*OperatingSystem","*<p>Runs the given command in the system and returns the RC and output.\x3c/p>","*${run_script}","*Running command '/home/ubuntu/run.sh 2&gt;&amp;1'.","*${docker_command}","*${result}","*Running command 'docker ps | grep 1.0 | wc --lines 2&gt;&amp;1'.","*${result} = (0, '4')","*Should Be Equal As Integers","*BuiltIn","*<p>Fails if objects are unequal after converting them to integers.\x3c/p>","*${result[1]}, 4"]);
+window.output["strings"] = window.output["strings"].concat(["*","*Reset RIC TO RAN","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Reset_RIC_TO_RAN","*Reset_RIC_TO_RAN","*<p>ORAN Reset API - RIC to RAN\x3c/p>","*Reset Happy no cause","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot","*Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot","*Prepare Ran in Connected connectionStatus","*Execution terminated by signal","*Post Request setup node b x-2","*Keywords","*Set Headers","*REST","*<p><b>Sets new request headers or updates the existing.\x3c/b>\x3c/p>","*${header}","*settings","*Post","*<p><b>Sends a POST request to the endpoint.\x3c/b>\x3c/p>","*/v1/nodeb/x2-setup, ${json}","*http","*Send Reset reqeust with no cause","*robot:exit","*Test execution stopped due to a fatal error.","*Reset Happy with cause","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot","*Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot","*Reset unhappy","*/home/ubuntu/oran_repo/LF-e2mgr/Automation/Tests/Reset_RIC_TO_RAN/Reset_unhappy.robot","*Reset_RIC_TO_RAN/Reset_unhappy.robot","*Pre Condition for Connecting - no E2","*Prepare Ran in Connecting connectionStatus"]);
 </script>
 <script type="text/javascript">
-window.output["stats"] = [[{"elapsed":"00:00:00","fail":0,"label":"Critical Tests","pass":1},{"elapsed":"00:00:00","fail":0,"label":"All Tests","pass":1}],[],[{"elapsed":"00:00:36","fail":0,"id":"s1","label":"Health","name":"Health","pass":1},{"elapsed":"00:00:36","fail":0,"id":"s1-s1","label":"Health.Get Health Check","name":"Get Health Check","pass":1}]];
+window.output["stats"] = [[{"elapsed":"00:00:51","fail":7,"label":"Critical Tests","pass":0},{"elapsed":"00:00:51","fail":7,"label":"All Tests","pass":0}],[{"combined":"NOT robot:exit","elapsed":"00:00:51","fail":1,"info":"combined","label":"NOT robot:exit","pass":0},{"elapsed":"00:00:00","fail":6,"label":"robot:exit","pass":0}],[{"elapsed":"00:00:51","fail":7,"id":"s1","label":"Reset RIC TO RAN","name":"Reset RIC TO RAN","pass":0},{"elapsed":"00:00:51","fail":2,"id":"s1-s1","label":"Reset RIC TO RAN.Reset Happy no cause","name":"Reset Happy no cause","pass":0},{"elapsed":"00:00:00","fail":2,"id":"s1-s2","label":"Reset RIC TO RAN.Reset Happy with cause","name":"Reset Happy with cause","pass":0},{"elapsed":"00:00:00","fail":3,"id":"s1-s3","label":"Reset RIC TO RAN.Reset unhappy","name":"Reset unhappy","pass":0}]];
 </script>
 <script type="text/javascript">
 window.output["errors"] = [];
 </script>
 <script type="text/javascript">
-window.output["baseMillis"] = 1565098692698;
+window.output["baseMillis"] = 1566996138555;
 </script>
 <script type="text/javascript">
-window.output["generated"] = 36309;
+window.output["generated"] = 51502;
 </script>
 <script type="text/javascript">
-window.settings = {"defaultLevel":"INFO","minLevel":"INFO","reportURL":"report.html","rpa":false,"splitLogBase":"log","title":""};
+window.settings = {"defaultLevel":"INFO","minLevel":"NONE","reportURL":"report.html","rpa":false,"splitLogBase":"log","title":""};
 </script>
 <title></title>
 </head>

@@ -16,5 +16,6 @@
 #
 ##############################################################################
 
+
 *** Settings ***
-Documentation    X2-Setup ENB
+Documentation    Configuration Update test

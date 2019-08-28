@@ -30,7 +30,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -59,8 +59,8 @@ func TestHandleRequestSuccess(t *testing.T) {
 		t.Errorf("#nodeb_controller_test.TestHandleRequestSuccess - failed to initialize logger, error: %s", err)
 	}
 
-	rmrMessengerMock :=&mocks.RmrMessengerMock{}
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName", &tests.DummyPayload, &tests.DummyXAction)
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 
 	rmrMessengerMock.On("SendMsg",
 		mock.AnythingOfType(fmt.Sprintf("%T", mbuf)),
@@ -69,7 +69,7 @@ func TestHandleRequestSuccess(t *testing.T) {
 	writer := httptest.NewRecorder()
 
 	handleRequest(writer, log, rmrMessengerMock, tests.GetHttpRequest(), x2SetupMessageType)
-	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
+	assert.Equal(t, http.StatusOK, writer.Result().StatusCode)
 }
 
 func TestHandleRequestFailure_InvalidRequestDetails(t *testing.T) {
@@ -113,14 +113,14 @@ func TestHandleRequestFailure_InvalidMessageType(t *testing.T) {
 func TestHandleHealthCheckRequest(t *testing.T) {
 	rc := NewNodebController(nil, nil, nil, nil)
 	writer := httptest.NewRecorder()
-	rc.HandleHealthCheckRequest(writer, nil, nil)
+	rc.HandleHealthCheckRequest(writer, nil)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
 }
 
 func handleRequest(writer *httptest.ResponseRecorder, log *logger.Logger, rmrMessengerMock *mocks.RmrMessengerMock,
 	request *http.Request, messageType string) {
 	rmrService := getRmrService(rmrMessengerMock, log)
-	params := []httprouter.Param{{Key: "messageType", Value: messageType}}
+	request = mux.SetURLVars(request, map[string]string{"messageType": messageType})
 
 	var nodebInfo *entities.NodebInfo
 	var nbIdentity *entities.NbIdentity
@@ -138,23 +138,21 @@ func handleRequest(writer *httptest.ResponseRecorder, log *logger.Logger, rmrMes
 		return &rnibWriterMock
 	}
 
-	NewNodebController(log, rmrService, rnibReaderProvider, rnibWriterProvider).HandleRequest(writer, request, params)
+	NewNodebController(log, rmrService, rnibReaderProvider, rnibWriterProvider).HandleRequest(writer, request)
 }
 
 func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, make(sessions.E2Sessions), messageChannel)
 }
-
 
 func executeGetNodeb(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibReaderProvider func() reader.RNibReader) {
 	req, _ := http.NewRequest("GET", "/nodeb", nil)
+	req = mux.SetURLVars(req, map[string]string{"ranName": "testNode"})
 
-	params := []httprouter.Param{{Key: "ranName", Value: "testNode"}}
-
-	NewNodebController(logger, nil, rnibReaderProvider, nil).GetNodeb(writer, req, params)
+	NewNodebController(logger, nil, rnibReaderProvider, nil).GetNodeb(writer, req)
 }
 
 func TestNodebController_GetNodeb_Success(t *testing.T) {
@@ -227,13 +225,13 @@ func TestNodebController_GetNodeb_InternalError(t *testing.T) {
 
 func executeGetNodebIdList(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibReaderProvider func() reader.RNibReader) {
 	req, _ := http.NewRequest("GET", "/nodeb-ids", nil)
-	NewNodebController(logger, nil, rnibReaderProvider, nil ).GetNodebIdList(writer,req,nil)
+	NewNodebController(logger, nil, rnibReaderProvider, nil).GetNodebIdList(writer, req)
 }
 
 func TestNodebController_GetNodebIdList_Success(t *testing.T) {
 	logger, err := logger.InitLogger(logger.InfoLevel)
 
-	if err!=nil{
+	if err != nil {
 		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_Success - failed to initialize logger, error: %s", err)
 	}
 
@@ -242,27 +240,26 @@ func TestNodebController_GetNodebIdList_Success(t *testing.T) {
 	rnibReaderMock := mocks.RnibReaderMock{}
 	var rnibError common.IRNibError
 
-	enbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName:"test1", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId1",NbId: "nbId1"}}}
-	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName:"test2", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId2",NbId: "nbId2"}}}
+	enbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName: "test1", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}}
+	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName: "test2", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}}
 
 	rnibReaderMock.On("GetListEnbIds").Return(&enbList, rnibError)
 	rnibReaderMock.On("GetListGnbIds").Return(&gnbList, rnibError)
 
-
-	rnibReaderProvider:= func() reader.RNibReader {
+	rnibReaderProvider := func() reader.RNibReader {
 		return &rnibReaderMock
 	}
 
 	executeGetNodebIdList(logger, writer, rnibReaderProvider)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
 	bodyBytes, err := ioutil.ReadAll(writer.Body)
-	assert.Equal(t, "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}]",string(bodyBytes) )
+	assert.Equal(t, "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}]", string(bodyBytes))
 }
 
 func TestNodebController_GetNodebIdList_EmptyList(t *testing.T) {
 	log, err := logger.InitLogger(logger.InfoLevel)
 
-	if err!=nil{
+	if err != nil {
 		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_EmptyList - failed to initialize logger, error: %s", err)
 	}
 
@@ -277,8 +274,7 @@ func TestNodebController_GetNodebIdList_EmptyList(t *testing.T) {
 	rnibReaderMock.On("GetListEnbIds").Return(&enbList, rnibError)
 	rnibReaderMock.On("GetListGnbIds").Return(&gnbList, rnibError)
 
-
-	rnibReaderProvider:= func() reader.RNibReader {
+	rnibReaderProvider := func() reader.RNibReader {
 		return &rnibReaderMock
 	}
 
@@ -315,7 +311,7 @@ func TestNodebController_GetNodebIdList_InternalError(t *testing.T) {
 func TestNodebController_GetNodebIdList_Success_One(t *testing.T) {
 	logger, err := logger.InitLogger(logger.InfoLevel)
 
-	if err!=nil{
+	if err != nil {
 		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_Success - failed to initialize logger, error: %s", err)
 	}
 
@@ -325,26 +321,25 @@ func TestNodebController_GetNodebIdList_Success_One(t *testing.T) {
 	var rnibError common.IRNibError
 
 	enbList := []*entities.NbIdentity{}
-	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName:"test2", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId2",NbId: "nbId2"}}}
+	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName: "test2", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}}
 
 	rnibReaderMock.On("GetListEnbIds").Return(&enbList, rnibError)
 	rnibReaderMock.On("GetListGnbIds").Return(&gnbList, rnibError)
 
-
-	rnibReaderProvider:= func() reader.RNibReader {
+	rnibReaderProvider := func() reader.RNibReader {
 		return &rnibReaderMock
 	}
 
 	executeGetNodebIdList(logger, writer, rnibReaderProvider)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
 	bodyBytes, err := ioutil.ReadAll(writer.Body)
-	assert.Equal(t, "[{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}]",string(bodyBytes) )
+	assert.Equal(t, "[{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}]", string(bodyBytes))
 }
 
 func TestNodebController_GetNodebIdList_Success_Many(t *testing.T) {
 	logger, err := logger.InitLogger(logger.InfoLevel)
 
-	if err!=nil{
+	if err != nil {
 		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_Success - failed to initialize logger, error: %s", err)
 	}
 
@@ -353,19 +348,18 @@ func TestNodebController_GetNodebIdList_Success_Many(t *testing.T) {
 	rnibReaderMock := mocks.RnibReaderMock{}
 	var rnibError common.IRNibError
 
-	enbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName:"test1", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId1",NbId: "nbId1"}}}
-	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName:"test2", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId2",NbId: "nbId2"}}, {InventoryName:"test3", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId3",NbId: "nbId3"}}}
+	enbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName: "test1", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}}
+	gnbList := []*entities.NbIdentity{&entities.NbIdentity{InventoryName: "test2", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}, {InventoryName: "test3", GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId3", NbId: "nbId3"}}}
 
 	rnibReaderMock.On("GetListEnbIds").Return(&enbList, rnibError)
 	rnibReaderMock.On("GetListGnbIds").Return(&gnbList, rnibError)
 
-
-	rnibReaderProvider:= func() reader.RNibReader {
+	rnibReaderProvider := func() reader.RNibReader {
 		return &rnibReaderMock
 	}
 
 	executeGetNodebIdList(logger, writer, rnibReaderProvider)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
 	bodyBytes, err := ioutil.ReadAll(writer.Body)
-	assert.Equal(t, "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}},{\"inventoryName\":\"test3\",\"globalNbId\":{\"plmnId\":\"plmnId3\",\"nbId\":\"nbId3\"}}]",string(bodyBytes) )
+	assert.Equal(t, "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}},{\"inventoryName\":\"test3\",\"globalNbId\":{\"plmnId\":\"plmnId3\",\"nbId\":\"nbId3\"}}]", string(bodyBytes))
 }

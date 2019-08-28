@@ -19,15 +19,126 @@ package main
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/mocks"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
 
-func TestRunServer(t *testing.T) {
+func setupRouterAndMocks() (*mux.Router, *mocks.ControllerMock, *mocks.NodebControllerMock) {
+	controllerMock := &mocks.ControllerMock{}
+	controllerMock.On("ShutdownHandler").Return(nil)
+	controllerMock.On("X2ResetHandler").Return(nil)
 
+	nodebControllerMock := &mocks.NodebControllerMock{}
+	nodebControllerMock.On("HandleRequest").Return(nil)
+	nodebControllerMock.On("GetNodebIdList").Return(nil)
+	nodebControllerMock.On("GetNodeb").Return(nil)
+	nodebControllerMock.On("HandleHealthCheckRequest").Return(nil)
+
+	router := mux.NewRouter();
+	initializeRoutes(router, nodebControllerMock, controllerMock)
+	return router, controllerMock, nodebControllerMock
+}
+
+func TestRoutePostNodebMessageType(t *testing.T) {
+	router, _, nodebControllerMock := setupRouterAndMocks()
+
+	req, err := http.NewRequest("POST", "/v1/nodeb/messageType", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	nodebControllerMock.AssertNumberOfCalls(t,"HandleRequest", 1)
+}
+
+func TestRouteGetNodebIds(t *testing.T) {
+	router, _, nodebControllerMock := setupRouterAndMocks()
+
+	req, err := http.NewRequest("GET", "/v1/nodeb/ids", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	nodebControllerMock.AssertNumberOfCalls(t,"GetNodebIdList", 1)
+}
+
+func TestRouteGetNodebRanName(t *testing.T) {
+	router, _, nodebControllerMock := setupRouterAndMocks()
+
+	req, err := http.NewRequest("GET", "/v1/nodeb/ran1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
+	assert.Equal(t, "ran1", rr.Body.String(), "handler returned wrong body")
+	nodebControllerMock.AssertNumberOfCalls(t,"GetNodeb", 1)
+}
+
+func TestRouteGetHealth(t *testing.T) {
+	router, _, nodebControllerMock := setupRouterAndMocks()
+
+	req, err := http.NewRequest("GET", "/v1/health", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	nodebControllerMock.AssertNumberOfCalls(t,"HandleHealthCheckRequest", 1)
+}
+
+func TestRoutePutNodebShutdown(t *testing.T) {
+	router, controllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("PUT", "/v1/nodeb/shutdown", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	controllerMock.AssertNumberOfCalls(t,"ShutdownHandler", 1)
+}
+
+func TestRoutePutNodebResetRanName(t *testing.T) {
+	router, controllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("PUT", "/v1/nodeb/ran1/reset", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
+	assert.Equal(t, "ran1", rr.Body.String(), "handler returned wrong body")
+	controllerMock.AssertNumberOfCalls(t,"X2ResetHandler", 1)
+}
+
+func TestRouteNotFound(t *testing.T) {
+	router, _, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("GET", "/v1/no/such/route", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code, "handler returned wrong status code")
 }
 
 func TestParseConfigurationSuccess(t *testing.T) {

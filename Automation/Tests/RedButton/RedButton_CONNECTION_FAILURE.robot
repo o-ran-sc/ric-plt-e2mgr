@@ -18,14 +18,35 @@
 
 *** Settings ***
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
 
 
-
 *** Test Cases ***
-Post Request setup node b endc-setup - 400 validation of fields
+
+Prepare Ran in CONNECTION FAILURE connectionStatus
     Set Headers     ${header}
-    POST        /v1/nodeb/endc-setup
-    Integer    response status   400
+    POST        /v1/nodeb/x2-setup   ${json}
+    Sleep    1s
+    POST        /v1/nodeb/x2-setup   ${json}
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer    response status       200
+    String     response body connectionStatus     CONNECTED_SETUP_FAILED
+
+Disconnect Ran
+    PUT    /v1/nodeb/shutdown
+    Integer   response status   204
+
+
+
+Verfiy Shutdown ConnectionStatus
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    SHUT_DOWN
+
 

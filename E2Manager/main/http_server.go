@@ -30,7 +30,7 @@ import (
 	"e2mgr/services/receivers"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
@@ -62,24 +62,31 @@ func main() {
 	defer rmrService.CloseContext()
 	go rmrServiceReceiver.ListenAndHandle()
 	go rmrService.SendResponse()
-	runServer(rmrService, logger, config)
-}
 
-func runServer(rmrService *services.RmrService, logger *logger.Logger, config *configuration.Configuration) {
-
-	router := httprouter.New()
 	controller := controllers.NewNodebController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
 	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config)
+	runServer(config.Http.Port, controller, newController)
+}
 
-	router.POST("/v1/nodeb/:messageType", controller.HandleRequest)
-	router.GET("/v1/nodeb-ids", controller.GetNodebIdList)
-	router.GET("/v1/nodeb/:ranName", controller.GetNodeb)
-	router.GET("/v1/health", controller.HandleHealthCheckRequest)
-	router.PUT("/v1/nodeb/shutdown", newController.ShutdownHandler)
-	router.PUT("/v1/nodeb-reset/:ranName", newController.X2ResetHandler)
+func runServer(port int, controller controllers.INodebController, newController controllers.IController) {
 
-	port := fmt.Sprintf(":%d", config.Http.Port)
-	if err := http.ListenAndServe(port, router); err != nil {
+	router := mux.NewRouter();
+	initializeRoutes(router, controller, newController)
+
+	addr := fmt.Sprintf(":%d", port)
+	if err := http.ListenAndServe(addr, router); err != nil {
 		log.Fatalf("#runNodebServer - fail to start http server. Error: %v", err)
 	}
+}
+
+func initializeRoutes(router *mux.Router, controller controllers.INodebController, newController controllers.IController) {
+	r := router.PathPrefix("/v1").Subrouter()
+	r.HandleFunc("/health", controller.HandleHealthCheckRequest).Methods("GET")
+
+	rr := r.PathPrefix("/nodeb").Subrouter()
+	rr.HandleFunc("/{messageType}", controller.HandleRequest).Methods("POST")
+	rr.HandleFunc("/ids", controller.GetNodebIdList).Methods("GET") // nodeb/ids
+	rr.HandleFunc("/{ranName}", controller.GetNodeb).Methods("GET")
+	rr.HandleFunc("/shutdown", newController.ShutdownHandler).Methods("PUT")
+	rr.HandleFunc("/{ranName}/reset", newController.X2ResetHandler).Methods("PUT") // nodeb/{ranName}/reset
 }
