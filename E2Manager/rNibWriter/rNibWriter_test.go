@@ -131,10 +131,8 @@ func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
 	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
 }
 
-func TestUpdateNodebInfoMissingGlobalNbIdFailure(t *testing.T) {
+func TestUpdateNodebInfoMissingGlobalNbId(t *testing.T) {
 	inventoryName := "name"
-	plmnId := "02f829"
-	nbId := "4a952a0a"
 	writerPool = nil
 	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
@@ -148,16 +146,12 @@ func TestUpdateNodebInfoMissingGlobalNbIdFailure(t *testing.T) {
 	var setExpected []interface{}
 
 	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
-	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
 	setExpected = append(setExpected, nodebNameKey, data)
-	setExpected = append(setExpected, nodebIdKey, data)
-
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
 
 	rNibErr := w.UpdateNodebInfo(nodebInfo)
 
-	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
+	assert.Nil(t, rNibErr)
 }
 
 func TestSaveEnb(t *testing.T) {

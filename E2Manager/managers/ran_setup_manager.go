@@ -38,21 +38,20 @@ func NewRanSetupManager(logger *logger.Logger, rmrService *services.RmrService, 
 	return &RanSetupManager{
 		logger:             logger,
 		rnibWriterProvider: rnibWriterProvider,
-		rmrService        : rmrService,
+		rmrService:         rmrService,
 	}
 }
-
 
 // Update retries and connection status (connecting)
 func (m *RanSetupManager) updateConnectionStatusConnecting(nodebInfo *entities.NodebInfo) error {
 	// Update retries and connection status (connecting)
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
 	nodebInfo.ConnectionAttempts++
-	err:= m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
+	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
 	if err != nil {
-		m.logger.Errorf("#ran_setup_manager.updateConnectionStatusConnecting - failed to update RAN's connection status to CONNECTING: %s", err)
+		m.logger.Errorf("#RanSetupManager.updateConnectionStatusConnecting - failed to update RAN's connection status to CONNECTING: %s", err)
 	} else {
-		m.logger.Infof("#ran_setup_manager.updateConnectionStatusConnecting - successfully updated RAN's connection status to CONNECTING: %s", err)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatusConnecting - successfully updated RAN's connection status to CONNECTING")
 	}
 	return err
 }
@@ -64,9 +63,9 @@ func (m *RanSetupManager) updateConnectionStatusDisconnected(nodebInfo *entities
 	nodebInfo.ConnectionAttempts--
 	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
 	if err != nil {
-		m.logger.Errorf("#ran_setup_manager.updateConnectionStatusDisconnected - failed to update RAN's connection status to DISCONNECTED : %s", err)
+		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - failed to update RAN's connection status to DISCONNECTED : %s", err)
 	} else {
-		m.logger.Errorf("#ran_setup_manager.updateConnectionStatusDisconnected - successfully updated RAN's connection status to DISCONNECTED : %s", err)
+		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - successfully updated RAN's connection status to DISCONNECTED")
 	}
 	return err
 }
@@ -80,11 +79,11 @@ func (m *RanSetupManager) prepareSetupRequest(nodebInfo *entities.NodebInfo) (in
 		return rmrMsgType, request, nil
 	case entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST:
 		rmrMsgType := rmrCgo.RIC_ENDC_X2_SETUP_REQ
-		request:= models.NewE2RequestMessage(nodebInfo.RanName /*tid*/, nodebInfo.Ip, uint16(nodebInfo.Port), nodebInfo.RanName, e2pdus.PackedEndcX2setupRequest)
+		request := models.NewE2RequestMessage(nodebInfo.RanName /*tid*/, nodebInfo.Ip, uint16(nodebInfo.Port), nodebInfo.RanName, e2pdus.PackedEndcX2setupRequest)
 		return rmrMsgType, request, nil
 	}
 
-	m.logger.Errorf("#ran_setup_manager.ExecuteSetup - unsupported nodebInfo.E2ApplicationProtocol %d ", nodebInfo.E2ApplicationProtocol)
+	m.logger.Errorf("#RanSetupManager.ExecuteSetup - unsupported nodebInfo.E2ApplicationProtocol %d ", nodebInfo.E2ApplicationProtocol)
 	return 0, nil, e2managererrors.NewInternalError()
 }
 
@@ -97,15 +96,15 @@ func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo) error {
 	}
 
 	// Build the endc/x2 setup request
-	rmrMsgType,request, err := m.prepareSetupRequest(nodebInfo)
+	rmrMsgType, request, err := m.prepareSetupRequest(nodebInfo)
 	if err != nil {
 		return err
 	}
-	
+
 	// Send the endc/x2 setup request
 	response := &models.NotificationResponse{MgsType: rmrMsgType, RanName: nodebInfo.RanName, Payload: request.GetMessageAsBytes(m.logger)}
 	if err := m.rmrService.SendRmrMessage(response); err != nil {
-		m.logger.Errorf("#ran_setup_manager.ExecuteSetup - failed to send setup request to RMR: %s", err)
+		m.logger.Errorf("#RanSetupManager.ExecuteSetup - failed to send setup request to RMR: %s", err)
 
 		// Decrement retries and connection status (disconnected)
 		if err := m.updateConnectionStatusDisconnected(nodebInfo); err != nil {
@@ -114,5 +113,6 @@ func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo) error {
 
 		return e2managererrors.NewRmrError()
 	}
+
 	return nil
 }

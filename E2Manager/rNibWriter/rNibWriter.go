@@ -156,11 +156,7 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) comm
 		return rNibErr
 	}
 
-	nodebIdKey, rNibErr := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
-
-	if rNibErr != nil {
-		return rNibErr
-	}
+	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
 
 	data, err := proto.Marshal(nodebInfo)
 
@@ -169,7 +165,12 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) comm
 	}
 
 	var pairs []interface{}
-	pairs = append(pairs, nodebNameKey, data, nodebIdKey, data)
+	pairs = append(pairs, nodebNameKey, data)
+
+	if buildNodebIdKeyError == nil {
+		pairs = append(pairs, nodebIdKey, data)
+	}
+
 	err = (*w.sdl).Set(pairs)
 
 	if err != nil {

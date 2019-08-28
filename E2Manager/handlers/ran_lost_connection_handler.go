@@ -35,9 +35,16 @@ func NewRanLostConnectionHandler(ranReconnectionManager managers.IRanReconnectio
 }
 func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
-	logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", request.RanName)
+	ranName := request.TransactionId
 
-	err := handler.ranReconnectionManager.ReconnectRan(request.RanName)
+	// TODO: check with E2T dev why does request.RanName (MEID) does not contain the ran name (in case sim is down)
+	if len(request.RanName) > 0 {
+		ranName = request.RanName
+	}
+
+	logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", ranName)
+
+	err := handler.ranReconnectionManager.ReconnectRan(ranName)
 
 	if err != nil {
 		logger.Errorf("#RanLostConnectionHandler.Handle - An error occurred while trying to reconnect RAN, %v", err)

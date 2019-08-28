@@ -53,23 +53,23 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 	nodebInfo, rnibErr := m.rnibReaderProvider().GetNodeb(inventoryName)
 
 	if rnibErr != nil {
-		m.logger.Errorf("#ReconnectRan - RAN name: %s - Failed fetching RAN from rNib. Error: %v", inventoryName, rnibErr)
+		m.logger.Errorf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Failed fetching RAN from rNib. Error: %v", inventoryName, rnibErr)
 		return rnibErr
 	}
 
 	if !m.canReconnectRan(nodebInfo) {
-		m.logger.Warnf("#ReconnectRan - RAN name: %s - Cannot reconnect RAN", inventoryName)
+		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN", inventoryName)
 		return m.setConnectionStatusOfUnconnectableRan(nodebInfo)
 	}
 
 	err := m.ranSetupManager.ExecuteSetup(nodebInfo)
 
 	if err != nil {
-		m.logger.Errorf("#ReconnectRan - RAN name: %s - Failed executing setup. Error: %v", inventoryName, err)
+		m.logger.Errorf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Failed executing setup. Error: %v", inventoryName, err)
 		return err
 	}
 
-	m.logger.Infof("#ReconnectRan - RAN name: %s - Successfully done executing setup", inventoryName)
+	m.logger.Infof("#RanReconnectionManager.ReconnectRan - RAN name: %s - Successfully done executing setup. RAN's connection attempts: %d", inventoryName, nodebInfo.ConnectionAttempts)
 	return nil
 }
 
@@ -80,28 +80,32 @@ func (m *RanReconnectionManager) canReconnectRan(nodebInfo *entities.NodebInfo) 
 }
 
 func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) common.IRNibError {
+	if nodebInfo.ConnectionStatus == connectionStatus {
+		return nil
+	}
+
 	nodebInfo.ConnectionStatus = connectionStatus;
 	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
 
 	if err != nil {
-		m.logger.Errorf("#updateNodebInfoStatus - RAN name: %s - Failed updating RAN's connection status to %s in rNib. Error: %v", nodebInfo.RanName, connectionStatus, err)
+		m.logger.Errorf("#RanReconnectionManager.updateNodebInfoStatus - RAN name: %s - Failed updating RAN's connection status to %s in rNib. Error: %v", nodebInfo.RanName, connectionStatus, err)
 		return err
 	}
 
-	m.logger.Infof("#updateNodebInfoStatus - RAN name: %s - Successfully updated RAN's connection status to %s in rNib", nodebInfo.RanName, connectionStatus)
+	m.logger.Infof("#RanReconnectionManager.updateNodebInfoStatus - RAN name: %s - Successfully updated RAN's connection status to %s in rNib", nodebInfo.RanName, connectionStatus)
 	return nil
 }
 
 func (m *RanReconnectionManager) setConnectionStatusOfUnconnectableRan(nodebInfo *entities.NodebInfo) common.IRNibError {
 	connectionStatus := nodebInfo.GetConnectionStatus()
-	m.logger.Warnf("#setConnectionStatusOfUnconnectableRan - RAN name: %s, RAN's connection status: %s, RAN's connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionStatus, nodebInfo.ConnectionAttempts)
+	m.logger.Warnf("#RanReconnectionManager.setConnectionStatusOfUnconnectableRan - RAN name: %s, RAN's connection status: %s, RAN's connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionStatus, nodebInfo.ConnectionAttempts)
 
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}
 
 	if int(nodebInfo.GetConnectionAttempts()) >= m.config.MaxConnectionAttempts {
-		m.logger.Warnf("#setConnectionStatusOfUnconnectableRan - RAN name: %s - RAN's connection attempts are greater than %d", nodebInfo.RanName, m.config.MaxConnectionAttempts)
+		m.logger.Warnf("#RanReconnectionManager.setConnectionStatusOfUnconnectableRan - RAN name: %s - RAN's connection attempts are greater than %d", nodebInfo.RanName, m.config.MaxConnectionAttempts)
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 	}
 
