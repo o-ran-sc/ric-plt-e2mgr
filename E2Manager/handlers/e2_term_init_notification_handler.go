@@ -22,45 +22,46 @@ import (
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/sessions"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type E2TermInitNotificationHandler struct {
-	rnibReaderProvider func() reader.RNibReader
+	rnibReaderProvider     func() reader.RNibReader
 	ranReconnectionManager *managers.RanReconnectionManager
 }
 
-func NewE2TermInitNotificationHandler(ranReconnectionManager  *managers.RanReconnectionManager, rnibReaderProvider func() reader.RNibReader) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconnectionManager, rnibReaderProvider func() reader.RNibReader) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
-		rnibReaderProvider: rnibReaderProvider,
+		rnibReaderProvider:     rnibReaderProvider,
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
 
-
 func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions,
 	request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
-	logger.Infof("#e2_term_init_notification_handler.Handle - Received E2_TERM_INIT")
-	return	//TODO: enable
 
 	nbIdentityList, err := handler.rnibReaderProvider().GetListNodebIds()
 
 	if err != nil {
-		logger.Errorf("#e2_term_init_notification_handler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
+		logger.Errorf("#E2TermInitNotificationHandler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
 		return
 	}
 
 	if len(nbIdentityList) == 0 {
-		logger.Warnf("#e2_term_init_notification_handler.Handle - The Nodes list in RNIB is empty")
+		logger.Warnf("#E2TermInitNotificationHandler.Handle - The Nodes list in RNIB is empty")
 		return
 	}
 
-	for _,nbIdentity := range nbIdentityList{
+	for _, nbIdentity := range nbIdentityList {
 
 		if err := handler.ranReconnectionManager.ReconnectRan(nbIdentity.InventoryName); err != nil {
-			logger.Errorf("#e2_term_init_notification_handler.Handle - connection attempt failure, ran name: %s. Error: %s",
-				(*nbIdentity).GetInventoryName(), err.Error())
-			break
+			logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", (*nbIdentity).GetInventoryName(), err.Error())
+			rNibError, ok := err.(common.IRNibError)
+			if !ok || rNibError.GetCode() != common.RESOURCE_NOT_FOUND {
+				break
+			}
 		}
 	}
+	logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
 }
