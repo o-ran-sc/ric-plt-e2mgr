@@ -15,17 +15,40 @@
 #   limitations under the License.
 #
 ##############################################################################
-
 *** Settings ***
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
+
+*** Variables ***
+${stop_docker_e2}      docker stop e2
 
 
 
 *** Test Cases ***
-Post Request setup node b endc-setup - 400 validation of fields
+
+Pre Condition for Connecting - no E2
+    Run And Return Rc And Output    ${stop_docker_e2}
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    4
+
+
+Prepare Ran in Connecting connectionStatus
+    Sleep  1s
+    Post Request setup node b x-2
+    Integer     response status       200
+    Sleep  1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTING
+
+
+Send Reset reqeust with no cause
     Set Headers     ${header}
-    POST        /v1/nodeb/endc-setup
-    Integer    response status   400
+    PUT    /v1/nodeb-reset/test1    ${resetcausejson}
+    Integer  response status  400
+    Integer  response body errorCode   403
 

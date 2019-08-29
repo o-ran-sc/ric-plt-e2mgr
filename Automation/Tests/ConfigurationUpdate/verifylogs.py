@@ -16,5 +16,32 @@
 #
 ##############################################################################
 
-*** Settings ***
-Documentation    X2-Setup ENB
+
+def verify(directory):
+
+    file = 'e2mgr.log'
+
+    path = '/'
+
+    file_path = directory + path + file
+
+    f = open(file_path,'r')
+
+    found_message_10370 = False
+    found_message_10371 = False
+
+    for l in f:
+        if l.find('MType: 10370') > 0 and l.find('Meid: \\"test1\\"') > 0:
+            found_message_10370 = True
+        elif l.find('MType: 10371') > 0 and l.find('Meid: \\"test1\\"') > 0:
+            found_message_10371 = True
+        if found_message_10370 and found_message_10371:
+            break
+
+    if found_message_10370 and found_message_10371:
+        return True
+    else:
+        return False
+
+
+

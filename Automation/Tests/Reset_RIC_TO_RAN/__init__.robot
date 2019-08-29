@@ -17,4 +17,4 @@
 ##############################################################################
 
 *** Settings ***
-Documentation    X2-Setup ENB
+Documentation    ORAN Reset API - RIC to RAN

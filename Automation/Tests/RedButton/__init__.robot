@@ -17,4 +17,4 @@
 ##############################################################################
 
 *** Settings ***
-Documentation    X2-Setup ENB
+Documentation    ORAN Red Button Scenarios

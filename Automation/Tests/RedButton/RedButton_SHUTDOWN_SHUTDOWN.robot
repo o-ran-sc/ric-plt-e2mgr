@@ -18,21 +18,43 @@
 
 *** Settings ***
 Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
 
 
-
 *** Test Cases ***
-Get Health
-    GET     /v1/health
+
+Prepare Ran in Connected connectionStatus
+    Post Request setup node b x-2
     Integer     response status       200
+    Sleep  1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTED
 
+Disconnect Ran
+   PUT    /v1/nodeb/shutdown
+   Integer   response status   204
 
-*** Keywords ***
-Start dockers
-     Run And Return Rc And Output    ${run_script}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    4
+Verfiy Shutdown ConnectionStatus
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    SHUT_DOWN
+
+Disconnect Ran on shutdown Status
+   PUT    /v1/nodeb/shutdown
+   Integer   response status   204
+
+Verfiy Shutdown ConnectionStatus second time
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    SHUT_DOWN
 
 
