@@ -32,16 +32,18 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
-func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *RanReconnectionManager) {
+func initRanLostConnectionTest(t *testing.T) (*logger.Logger,*mocks.RmrMessengerMock, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *RanReconnectionManager) {
 	logger, err := logger.InitLogger(logger.DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
 
-	rmrService := getRmrService(&mocks.RmrMessengerMock{}, logger)
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrService := getRmrService(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
@@ -53,11 +55,11 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderM
 	}
 
 	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
-	return logger, readerMock, writerMock, ranReconnectionManager
+	return logger,rmrMessengerMock, readerMock, writerMock, ranReconnectionManager
 }
 
 func TestRanReconnectionGetNodebFailure(t *testing.T) {
-	_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	var nodebInfo *entities.NodebInfo
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, common.NewInternalError(errors.New("Error")))
@@ -68,7 +70,7 @@ func TestRanReconnectionGetNodebFailure(t *testing.T) {
 }
 
 func TestShutdownRanReconnection(t *testing.T) {
-	_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
 	var rnibErr common.IRNibError
@@ -80,7 +82,7 @@ func TestShutdownRanReconnection(t *testing.T) {
 }
 
 func TestShuttingdownRanReconnection(t *testing.T) {
-	_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
 	var rnibErr common.IRNibError
@@ -95,7 +97,7 @@ func TestShuttingdownRanReconnection(t *testing.T) {
 }
 
 func TestConnectingRanWithMaxAttemptsReconnection(t *testing.T) {
-	_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20}
 	var rnibErr common.IRNibError
@@ -110,13 +112,47 @@ func TestConnectingRanWithMaxAttemptsReconnection(t *testing.T) {
 }
 
 func TestUnconnectableRanUpdateNodebInfoFailure(t *testing.T) {
-	_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
 	var rnibErr common.IRNibError
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	err := ranReconnectionManager.ReconnectRan(ranName)
+	assert.NotNil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+}
+
+func TestConnectedRanExecuteSetupSuccess(t *testing.T) {
+	_,rmrMessengerMock, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	ranName := "test"
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+	var rnibErr common.IRNibError
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo := *origNodebInfo
+	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+	updatedNodebInfo.ConnectionAttempts++
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
+	rmrMessengerMock.On("SendMsg",mock.Anything, mock.AnythingOfType("int")).Return(&rmrCgo.MBuf{},nil)
+	err := ranReconnectionManager.ReconnectRan(ranName)
+	assert.Nil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
+}
+
+func TestConnectedRanExecuteSetupFailure(t *testing.T) {
+	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	ranName := "test"
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	var rnibErr common.IRNibError
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo := *origNodebInfo
+	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+	updatedNodebInfo.ConnectionAttempts++
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.NotNil(t, err)

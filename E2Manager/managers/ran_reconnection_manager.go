@@ -57,10 +57,12 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 		return rnibErr
 	}
 
+	m.logger.Infof("#RanReconnectionManager.ReconnectRan - RAN name: %s - RAN's connection status: %s, RAN's connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionStatus, nodebInfo.ConnectionAttempts)
+
 	if !m.canReconnectRan(nodebInfo) {
-		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN", inventoryName)
 		return m.setConnectionStatusOfUnconnectableRan(nodebInfo)
 	}
+
 
 	err := m.ranSetupManager.ExecuteSetup(nodebInfo)
 
@@ -69,7 +71,6 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 		return err
 	}
 
-	m.logger.Infof("#RanReconnectionManager.ReconnectRan - RAN name: %s - Successfully done executing setup. RAN's connection attempts: %d", inventoryName, nodebInfo.ConnectionAttempts)
 	return nil
 }
 
@@ -92,20 +93,25 @@ func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.Nodeb
 		return err
 	}
 
-	m.logger.Infof("#RanReconnectionManager.updateNodebInfoStatus - RAN name: %s - Successfully updated RAN's connection status to %s in rNib", nodebInfo.RanName, connectionStatus)
+	m.logger.Infof("#RanReconnectionManager.updateNodebInfoStatus - RAN name: %s - Successfully updated rNib. RAN's current connection status: %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
 	return nil
 }
 
 func (m *RanReconnectionManager) setConnectionStatusOfUnconnectableRan(nodebInfo *entities.NodebInfo) common.IRNibError {
 	connectionStatus := nodebInfo.GetConnectionStatus()
-	m.logger.Warnf("#RanReconnectionManager.setConnectionStatusOfUnconnectableRan - RAN name: %s, RAN's connection status: %s, RAN's connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionStatus, nodebInfo.ConnectionAttempts)
+
+	if connectionStatus == entities.ConnectionStatus_SHUT_DOWN {
+		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN. Reason: connection status is SHUT_DOWN", nodebInfo.RanName)
+		return nil
+	}
 
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
+		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN. Reason: connection status is SHUTTING_DOWN", nodebInfo.RanName)
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}
 
 	if int(nodebInfo.GetConnectionAttempts()) >= m.config.MaxConnectionAttempts {
-		m.logger.Warnf("#RanReconnectionManager.setConnectionStatusOfUnconnectableRan - RAN name: %s - RAN's connection attempts are greater than %d", nodebInfo.RanName, m.config.MaxConnectionAttempts)
+		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN. Reason: RAN's connection attempts exceeded the limit (%d)", nodebInfo.RanName, m.config.MaxConnectionAttempts)
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 	}
 

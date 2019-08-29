@@ -44,10 +44,5 @@ func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, e2Sessions
 
 	logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", ranName)
 
-	err := handler.ranReconnectionManager.ReconnectRan(ranName)
-
-	if err != nil {
-		logger.Errorf("#RanLostConnectionHandler.Handle - An error occurred while trying to reconnect RAN, %v", err)
-		return
-	}
+	_ = handler.ranReconnectionManager.ReconnectRan(ranName)
 }
