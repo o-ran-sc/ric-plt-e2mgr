@@ -158,7 +158,7 @@ func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *h
 		return;
 	}
 
-	pmList := utils.ConvertNodebIdListToProtoMessageList(*nodebIdList)
+	pmList := utils.ConvertNodebIdListToProtoMessageList(nodebIdList)
 	result, err := utils.MarshalProtoMessageListToJsonArray(pmList)
 
 	if err != nil {

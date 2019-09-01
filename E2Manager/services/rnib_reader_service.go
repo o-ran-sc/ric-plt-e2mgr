@@ -35,22 +35,8 @@ func (s RnibReaderService) GetNodeb(ranName string) (*entities.NodebInfo, common
 	return s.rnibReaderProvider().GetNodeb(ranName)
 }
 
-func (s  RnibReaderService) GetNodebIdList()(*[]*entities.NbIdentity, common.IRNibError) {
-	enbIdList, err := s.rnibReaderProvider().GetListEnbIds()
-
-	if (err != nil) {
-		return nil, err
-	}
-
-	gnbIdList, err := s.rnibReaderProvider().GetListGnbIds()
-
-	if (err != nil) {
-		return nil, err
-	}
-
-	nodebIdList := append(*enbIdList, *gnbIdList...)
-
-	return &nodebIdList, nil
+func (s  RnibReaderService) GetNodebIdList()([]*entities.NbIdentity, common.IRNibError) {
+	return s.rnibReaderProvider().GetListNodebIds()
 }
 
 
