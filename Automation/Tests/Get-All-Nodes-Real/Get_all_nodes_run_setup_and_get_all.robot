@@ -46,7 +46,7 @@ Run endc setup
 
 
 Get all node ids
-    GET     v1/nodeb-ids
+    GET     v1/nodeb/ids
     #Output
     Integer  response status   200
     String   response body 0 inventoryName  test1
@@ -55,11 +55,3 @@ Get all node ids
     String   response body 1 inventoryName  test2
     String   response body 1 globalNbId plmnId   42f490
     String   response body 1 globalNbId nbId     000004
-
-
-
-
-
-
-
-

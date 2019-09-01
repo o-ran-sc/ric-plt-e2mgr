@@ -34,7 +34,7 @@ Add nodes to redis db
 
 
 Get all node ids
-    GET     v1/nodeb-ids
+    GET     v1/nodeb/ids
     Integer  response status   200
     String   response body 0 inventoryName  test1
     String   response body 0 globalNbId plmnId   02f829
@@ -49,12 +49,3 @@ Get all node ids
 Flush Redis
     ${result}   scripts.flush
     Should Be Equal As Strings  ${result}  True
-
-
-
-
-
-
-
-
-

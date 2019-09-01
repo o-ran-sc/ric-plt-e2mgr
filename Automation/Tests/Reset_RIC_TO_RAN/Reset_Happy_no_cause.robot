@@ -38,5 +38,5 @@ Prepare Ran in Connected connectionStatus
 
 Send Reset reqeust with no cause
     Set Headers     ${header}
-    PUT    /v1/nodeb-reset/test1
+    PUT    /v1/nodeb/test1/reset
     Integer  response status  204
