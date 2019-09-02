@@ -46,6 +46,10 @@ func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logg
 		}
 	}
 	logger.Infof("#rmrCgoApi.Init - RMR router has been initiated")
+
+	// Configure the rmr to make rounds of attempts to send a message before notifying the application that it should retry.
+	// Each round is about 1000 attempts with a short sleep between each round.
+	C.rmr_set_stimeout(ctx.RmrCtx, C.int(1000))
 	r := RmrMessenger(ctx)
 	return &r
 }

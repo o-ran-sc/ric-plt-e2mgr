@@ -53,7 +53,7 @@ func (m *RanSetupManager) updateConnectionStatusConnecting(nodebInfo *entities.N
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatusConnecting - Ran name: %s - Failed updating RAN's connection status to CONNECTING : %s", nodebInfo.RanName, err)
 	} else {
-		m.logger.Errorf("#RanSetupManager.updateConnectionStatusConnecting - Ran name: %s - Successfully updated rNib. RAN's current connection status: CONNECTING, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatusConnecting - Ran name: %s - Successfully updated rNib. RAN's current connection status: CONNECTING, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
 	}
 	return err
 }
@@ -67,7 +67,7 @@ func (m *RanSetupManager) updateConnectionStatusDisconnected(nodebInfo *entities
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Failed updating RAN's connection status to DISCONNECTED : %s", nodebInfo.RanName, err)
 	} else {
-		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Successfully updated rNib. RAN's current connection status: DISCONNECTED, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Successfully updated rNib. RAN's current connection status: DISCONNECTED, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
 	}
 	return err
 }
@@ -85,7 +85,7 @@ func (m *RanSetupManager) prepareSetupRequest(nodebInfo *entities.NodebInfo) (in
 		return rmrMsgType, request, nil
 	}
 
-	m.logger.Errorf("#RanSetupManager.ExecuteSetup - Unsupported nodebInfo.E2ApplicationProtocol %d ", nodebInfo.E2ApplicationProtocol)
+	m.logger.Errorf("#RanSetupManager.prepareSetupRequest - Unsupported nodebInfo.E2ApplicationProtocol %d ", nodebInfo.E2ApplicationProtocol)
 	return 0, nil, e2managererrors.NewInternalError()
 }
 

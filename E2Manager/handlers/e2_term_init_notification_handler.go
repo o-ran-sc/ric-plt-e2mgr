@@ -41,8 +41,9 @@ func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconn
 func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions,
 	request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
-	nbIdentityList, err := handler.rnibReaderProvider().GetListNodebIds()
+	logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
 
+	nbIdentityList, err := handler.rnibReaderProvider().GetListNodebIds()
 	if err != nil {
 		logger.Errorf("#E2TermInitNotificationHandler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
 		return
@@ -63,5 +64,6 @@ func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, e2Ses
 			}
 		}
 	}
+
 	logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
 }
