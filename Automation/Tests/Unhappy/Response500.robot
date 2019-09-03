@@ -17,9 +17,12 @@
 ##############################################################################
 
 *** Settings ***
+Suite Setup   Prepare Enviorment
+Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     REST      ${url}
+Suite Teardown   Start Redis
 
 *** Test Cases ***
 Get Request node b gnb - DB down - 500
@@ -27,9 +30,3 @@ Get Request node b gnb - DB down - 500
     GET      /v1/nodeb/test5
     Integer  response status   500
 
-
-*** Keywords ***
-Start dockers
-     Run And Return Rc And Output    ${run_script}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    5

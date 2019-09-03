@@ -16,40 +16,5 @@
 #
 ##############################################################################
 
-*** Settings ***
-Suite Setup   Prepare Enviorment
-Library      Process
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     ${CURDIR}/getnodes.py
-Library     REST      ${url}
-
-
-
-
-*** Test Cases ***
-Add nodes to redis db
-    ${result}   getnodes.add
-    Should Be Equal As Strings  ${result}  True
-
-
-Get all node ids
-    GET     v1/nodeb/ids
-    Integer  response status   200
-    String   response body 0 inventoryName  test1
-    String   response body 0 globalNbId plmnId   02f829
-    String   response body 0 globalNbId nbId     007a80
-    String   response body 1 inventoryName  test2
-    String   response body 1 globalNbId plmnId   03f829
-    String   response body 1 globalNbId nbId     001234
-
-
-
-
-
-
-
-
-
-
+redis_ip_address = 'localhost'
+redis_ip_port = 6379

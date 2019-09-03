@@ -17,6 +17,8 @@
 ##############################################################################
 
 *** Settings ***
+Suite Setup   Prepare Enviorment
+Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     REST      ${url}

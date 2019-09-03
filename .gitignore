@@ -11,3 +11,12 @@
 E2Manager/asn1codec/e2ap_engine/converter-example
 E2Manager/asn1codec/tests/
 E2Manager/cp.out
+/Automation/Tests/ConfigurationUpdate/__pycache__/verifylogs.cpython-36.pyc
+/Automation/Tests/Get-All-Nodes/__pycache__/getnodes.cpython-36.pyc
+/Automation/Tests/LoadInfomation/__pycache__/Loadinformation_adding_data_and_overwrite.robot
+/Automation/Tests/LoadInfomation/__pycache__/Loadinformation_verify_saving.robot
+/Automation/Tests/LoadInfomation/__pycache__/__init__.robot
+/Automation/Tests/LoadInfomation/__pycache__/config.py
+/Automation/Tests/LoadInfomation/__pycache__/loadscripts.py
+/Automation/Tests/Resource/__pycache__/config.cpython-36.pyc
+/Automation/Tests/Resource/__pycache__/scripts.cpython-36.pyc

@@ -16,6 +16,7 @@
 #
 ##############################################################################
 *** Settings ***
+Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem

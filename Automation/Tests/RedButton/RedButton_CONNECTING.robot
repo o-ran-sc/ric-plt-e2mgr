@@ -16,14 +16,13 @@
 #
 ##############################################################################
 *** Settings ***
+Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
-
-*** Variables ***
-${stop_docker_e2}      docker stop e2
+Suite Teardown   Start E2
 
 
 
@@ -47,7 +46,7 @@ Prepare Ran in Connecting connectionStatus
 
 Disconnect Ran
    PUT    /v1/nodeb/shutdown
-   Integer   response status   204
+   Integer   response status   500
 
 
 Verfiy Shutdown ConnectionStatus
@@ -55,5 +54,5 @@ Verfiy Shutdown ConnectionStatus
     GET      /v1/nodeb/test1
     Integer  response status  200
     String   response body ranName    test1
-    String   response body connectionStatus    SHUT_DOWN
+    String   response body connectionStatus    SHUTTING_DOWN
 

@@ -18,18 +18,15 @@
 
 *** Settings ***
 Documentation   Keywords file
+Library     ${CURDIR}/scripts.py
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
-
-
-
 
 
 *** Keywords ***
 Post Request setup node b x-2
     Set Headers     ${header}
     POST        /v1/nodeb/x2-setup    ${json}
-
 
 
 Get Request node b enb test1
@@ -41,8 +38,6 @@ Get Request node b enb test2
     Sleep    1s
     GET      /v1/nodeb/test2
 
-
-
 Post Request setup node b endc-setup
     Set Headers     ${header}
     POST        /v1/nodeb/endc-setup    ${endcjson}
@@ -51,8 +46,35 @@ Post Request setup node b endc-setup
 Prepare Simulator For Load Information
      Run And Return Rc And Output    ${stop_simu}
      Run And Return Rc And Output    ${docker_Remove}
-     Run And Return Rc And Output    ${run_simu}
+     ${flush}  scripts.flush
+     Should Be Equal As Strings  ${flush}  True
+     Run And Return Rc And Output    ${run_simu_load}
      ${result}=  Run And Return Rc And Output     ${docker_command}
      Should Be Equal As Integers    ${result[1]}    5
+
+Prepare Enviorment
+     ${flush}  scripts.flush
+     Should Be Equal As Strings  ${flush}  True
+     Run And Return Rc And Output    ${stop_simu}
+     Run And Return Rc And Output    ${docker_Remove}
+     Run And Return Rc And Output    ${run_simu_regular}
+     Run And Return Rc And Output    ${restart_e2adapter}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    5
+
+Start E2
+     Run And Return Rc And Output    ${start_e2}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    5
+     Sleep  2s
+
+Start Redis
+     Run And Return Rc And Output    ${redis_remove}
+     Run And Return Rc And Output    ${start_redis}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    5
+
+
+
 
 

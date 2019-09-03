@@ -16,38 +16,43 @@
 #
 ##############################################################################
 
+
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
-Library    Collections
 Library     REST      ${url}
 
 
+*** Variables ***
+${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT
+${Save_e2_log}      docker logs --tail 300 gnbe2_simu > gnb.log
+${Save_e2mgr_log}   docker logs --tail 300 e2mgr > e2mgr.log
+
 *** Test Cases ***
-
-Prepare Ran in CONNECTION FAILURE connectionStatus
-    Set Headers     ${header}
-    POST        /v1/nodeb/x2-setup   ${json}
-    Sleep    1s
-    POST        /v1/nodeb/x2-setup   ${json}
-    Sleep    1s
-    GET      /v1/nodeb/test1
-    Integer    response status       200
-    String     response body connectionStatus     CONNECTED_SETUP_FAILED
-
-Disconnect Ran
-    PUT    /v1/nodeb/shutdown
-    Integer   response status   204
+X2 - Setup and Get
+    Post Request setup node b x-2
+    Get Request node b enb test1
 
 
+Run Configuration update
+    Run    ${Run_Config}
+    Sleep   1s
 
-Verfiy Shutdown ConnectionStatus
-    Sleep    1s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    SHUT_DOWN
+Remove log files
+    Remove File  ${EXECDIR}/gnb.log
+    Remove File  ${EXECDIR}/e2mgr.log
+
+Save logs
+    Sleep   1s
+    Run     ${Save_e2_log}
+    Run     ${Save_e2mgr_log}
+
+
+
+
+
+
 
 

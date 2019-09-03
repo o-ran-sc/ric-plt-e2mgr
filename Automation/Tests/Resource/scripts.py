@@ -15,41 +15,19 @@
 #   limitations under the License.
 #
 ##############################################################################
-
-*** Settings ***
-Suite Setup   Prepare Enviorment
-Library      Process
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     ${CURDIR}/getnodes.py
-Library     REST      ${url}
+import config
+import redis
 
 
+def flush():
 
+    c = config.redis_ip_address
 
-*** Test Cases ***
-Add nodes to redis db
-    ${result}   getnodes.add
-    Should Be Equal As Strings  ${result}  True
+    p = config.redis_ip_port
 
+    r = redis.Redis(host=c, port=p, db=0)
 
-Get all node ids
-    GET     v1/nodeb/ids
-    Integer  response status   200
-    String   response body 0 inventoryName  test1
-    String   response body 0 globalNbId plmnId   02f829
-    String   response body 0 globalNbId nbId     007a80
-    String   response body 1 inventoryName  test2
-    String   response body 1 globalNbId plmnId   03f829
-    String   response body 1 globalNbId nbId     001234
+    r.flushall()
 
-
-
-
-
-
-
-
-
+    return True
 
