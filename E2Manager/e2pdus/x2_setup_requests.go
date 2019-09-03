@@ -1,3 +1,20 @@
+/*******************************************************************************
+ *
+ *   Copyright (c) 2019 AT&T Intellectual Property.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ *******************************************************************************/
 package e2pdus
 
 // #cgo CFLAGS: -I../asn1codec/inc/ -I../asn1codec/e2ap_engine/
@@ -23,27 +40,27 @@ var PackedX2setupRequest []byte
 var PackedEndcX2setupRequestAsString string
 var PackedX2setupRequestAsString string
 
-func PreparePackedEndcX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMessageBufferSize int,pLMNId []byte, eNB_Id []byte /*18, 20, 21, 28 bits length*/, bitqty uint, ricFlag []byte) ([]byte, string, error) {
+func PreparePackedEndcX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMessageBufferSize int, pLMNId []byte, eNB_Id []byte /*18, 20, 21, 28 bits length*/, bitqty uint, ricFlag []byte) ([]byte, string, error) {
 	packedBuf := make([]byte, maxAsn1PackedBufferSize)
 	errBuf := make([]C.char, maxAsn1CodecMessageBufferSize)
 	packedBufSize := C.ulong(len(packedBuf))
 	pduAsString := ""
 
 	if !C.build_pack_endc_x2setup_request(
-			(*C.uchar)(unsafe.Pointer(&pLMNId[0])) /*pLMN_Identity*/,
-			(*C.uchar)(unsafe.Pointer(&eNB_Id[0])),
-			C.uint(bitqty),
-			(*C.uchar)(unsafe.Pointer(&ricFlag[0])) /*pLMN_Identity*/,
-			&packedBufSize,
-			(*C.uchar)(unsafe.Pointer(&packedBuf[0])),
-			C.ulong(len(errBuf)),
-			&errBuf[0]) {
+		(*C.uchar)(unsafe.Pointer(&pLMNId[0])) /*pLMN_Identity*/,
+		(*C.uchar)(unsafe.Pointer(&eNB_Id[0])),
+		C.uint(bitqty),
+		(*C.uchar)(unsafe.Pointer(&ricFlag[0])) /*pLMN_Identity*/,
+		&packedBufSize,
+		(*C.uchar)(unsafe.Pointer(&packedBuf[0])),
+		C.ulong(len(errBuf)),
+		&errBuf[0]) {
 		return nil, "", errors.New(fmt.Sprintf("packing error: %s", C.GoString(&errBuf[0])))
 	}
 
-	pdu:= C.new_pdu(C.size_t(1)) //TODO: change signature
+	pdu := C.new_pdu(C.size_t(1)) //TODO: change signature
 	defer C.delete_pdu(pdu)
-	if C.per_unpack_pdu(pdu, packedBufSize, (*C.uchar)(unsafe.Pointer(&packedBuf[0])),C.size_t(len(errBuf)), &errBuf[0]){
+	if C.per_unpack_pdu(pdu, packedBufSize, (*C.uchar)(unsafe.Pointer(&packedBuf[0])), C.size_t(len(errBuf)), &errBuf[0]) {
 		C.asn1_pdu_printer(pdu, C.size_t(len(errBuf)), &errBuf[0])
 		pduAsString = C.GoString(&errBuf[0])
 	}
@@ -51,7 +68,7 @@ func PreparePackedEndcX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMe
 	return packedBuf[:packedBufSize], pduAsString, nil
 }
 
-func PreparePackedX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMessageBufferSize int,pLMNId []byte, eNB_Id []byte /*18, 20, 21, 28 bits length*/, bitqty uint, ricFlag []byte) ([]byte, string, error)  {
+func PreparePackedX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMessageBufferSize int, pLMNId []byte, eNB_Id []byte /*18, 20, 21, 28 bits length*/, bitqty uint, ricFlag []byte) ([]byte, string, error) {
 	packedBuf := make([]byte, maxAsn1PackedBufferSize)
 	errBuf := make([]C.char, maxAsn1CodecMessageBufferSize)
 	packedBufSize := C.ulong(len(packedBuf))
@@ -69,12 +86,11 @@ func PreparePackedX2SetupRequest(maxAsn1PackedBufferSize int, maxAsn1CodecMessag
 		return nil, "", errors.New(fmt.Sprintf("packing error: %s", C.GoString(&errBuf[0])))
 	}
 
-	pdu:= C.new_pdu(C.size_t(1)) //TODO: change signature
+	pdu := C.new_pdu(C.size_t(1)) //TODO: change signature
 	defer C.delete_pdu(pdu)
-	if C.per_unpack_pdu(pdu, packedBufSize, (*C.uchar)(unsafe.Pointer(&packedBuf[0])),C.size_t(len(errBuf)), &errBuf[0]){
+	if C.per_unpack_pdu(pdu, packedBufSize, (*C.uchar)(unsafe.Pointer(&packedBuf[0])), C.size_t(len(errBuf)), &errBuf[0]) {
 		C.asn1_pdu_printer(pdu, C.size_t(len(errBuf)), &errBuf[0])
 		pduAsString = C.GoString(&errBuf[0])
 	}
 	return packedBuf[:packedBufSize], pduAsString, nil
 }
-

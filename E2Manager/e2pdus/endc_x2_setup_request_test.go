@@ -32,34 +32,32 @@ func TestPackEndcX2apSetupRequest(t *testing.T) {
 	ricFlag := []byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
 
 	var testCases = []struct {
-		eNBId []byte
-		eNBIdBitqty  uint
-		packedPdu        string
+		eNBId       []byte
+		eNBIdBitqty uint
+		packedPdu   string
 	}{
 		{
-			eNBId :      []byte{0xab, 0xcd, 0x2}, /*00000010 -> 10000000*/
+			eNBId:       []byte{0xab, 0xcd, 0x2}, /*00000010 -> 10000000*/
 			eNBIdBitqty: ShortMacro_eNB_ID,
 			packedPdu:   "0024003200000100f4002b0000020015000900bbbccc8003abcd8000fa0017000001f700bbbcccabcd80000000bbbccc000000000001",
 		},
 
 		{
-			eNBId :      []byte{0xab, 0xcd, 0xe},
+			eNBId:       []byte{0xab, 0xcd, 0xe},
 			eNBIdBitqty: Macro_eNB_ID,
 			packedPdu:   "0024003100000100f4002a0000020015000800bbbccc00abcde000fa0017000001f700bbbcccabcde0000000bbbccc000000000001",
 		},
 		{
-			eNBId :      []byte{0xab, 0xcd, 0x7}, /*00000111 -> 00111000*/
+			eNBId:       []byte{0xab, 0xcd, 0x7}, /*00000111 -> 00111000*/
 			eNBIdBitqty: LongMacro_eNB_ID,
 			//packedPdu: "0024003200000100f4002b0000020015000900bbbccc8103abcd3800fa0017000001f700bbbcccabcd38000000bbbccc000000000001",
 			packedPdu: "0024003200000100f4002b0000020015000900bbbcccc003abcd3800fa0017000001f700bbbcccabcd38000000bbbccc000000000001",
 		},
 		{
-			eNBId :      []byte{0xab, 0xcd, 0xef, 0x8},
+			eNBId:       []byte{0xab, 0xcd, 0xef, 0x8},
 			eNBIdBitqty: Home_eNB_ID,
 			packedPdu:   "0024003200000100f4002b0000020015000900bbbccc40abcdef8000fa0017000001f700bbbcccabcdef800000bbbccc000000000001",
 		},
-
-
 	}
 
 	for _, tc := range testCases {
@@ -92,7 +90,7 @@ func TestPackEndcX2apSetupRequestPackError(t *testing.T) {
 	eNBIdBitqty := uint(Macro_eNB_ID)
 	wantError := "packing error: #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:53"
 
-	 _, _, err :=PreparePackedEndcX2SetupRequest(40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty, ricFlag)
+	_, _, err := PreparePackedEndcX2SetupRequest(40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty, ricFlag)
 	if err != nil {
 		if 0 != strings.Compare(fmt.Sprintf("%s", err), wantError) {
 			t.Errorf("want failure: %s, got: %s", wantError, err)

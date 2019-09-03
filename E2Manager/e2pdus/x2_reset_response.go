@@ -35,7 +35,7 @@ func prepareX2ResetResponsePDU(maxAsn1PackedBufferSize int, maxAsn1CodecMessageB
 	var payloadSize = C.ulong(maxAsn1PackedBufferSize)
 
 	if status := C.build_pack_x2reset_response(&payloadSize, &packedBuffer[0], C.ulong(maxAsn1CodecMessageBufferSize), &errorBuffer[0]); !status {
-		return fmt.Errorf("#reset_response.prepareX2ResetResponsePDU - failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
+		return fmt.Errorf("#x2_reset_response.prepareX2ResetResponsePDU - failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
 
 	}
 	PackedX2ResetResponse = C.GoBytes(unsafe.Pointer(&packedBuffer[0]), C.int(payloadSize))

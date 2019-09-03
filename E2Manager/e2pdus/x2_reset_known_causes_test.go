@@ -1,3 +1,20 @@
+/*******************************************************************************
+ *
+ *   Copyright (c) 2019 AT&T Intellectual Property.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ *******************************************************************************/
 package e2pdus
 
 import (
@@ -8,13 +25,13 @@ import (
 )
 
 func TestKnownCausesToX2ResetPDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
-	if err!=nil{
+	_, err := logger.InitLogger(logger.InfoLevel)
+	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
 	var testCases = []struct {
-		cause string
-		packedPdu        string
+		cause     string
+		packedPdu string
 	}{
 		{
 			cause:     OmInterventionCause,
@@ -33,7 +50,6 @@ func TestKnownCausesToX2ResetPDU(t *testing.T) {
 			cause:     "radioNetwork:invalid-MME-groupid",
 			packedPdu: "00070009000001000540020680",
 		},
-
 	}
 
 	for _, tc := range testCases {
@@ -56,19 +72,17 @@ func TestKnownCausesToX2ResetPDU(t *testing.T) {
 	}
 }
 
-
 func TestKnownCausesToX2ResetPDUFailure(t *testing.T) {
 	_, err := logger.InitLogger(logger.InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
 
-	_, ok  := KnownCausesToX2ResetPDU("xxxx")
+	_, ok := KnownCausesToX2ResetPDU("xxxx")
 	if ok {
 		t.Errorf("want: not found, got: success.\n")
 	}
 }
-
 
 func TestPrepareX2ResetPDUsFailure(t *testing.T) {
 	_, err := logger.InitLogger(logger.InfoLevel)
@@ -76,12 +90,12 @@ func TestPrepareX2ResetPDUsFailure(t *testing.T) {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
 
-	err  = prepareX2ResetPDUs(1, 4096)
+	err = prepareX2ResetPDUs(1, 4096)
 	if err == nil {
 		t.Errorf("want: error, got: success.\n")
 	}
 
-	expected:= "#reset_request_handler.Handle - failed to build and pack the reset message #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:"
+	expected := "#x2_reset_known_causes_test.TestPrepareX2ResetPDUsFailure - failed to build and pack the reset message #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:"
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("want :[%s], got: [%s]\n", expected, err)
 	}

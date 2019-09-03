@@ -1,3 +1,20 @@
+/*******************************************************************************
+ *
+ *   Copyright (c) 2019 AT&T Intellectual Property.
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ *
+ *******************************************************************************/
 package e2pdus
 
 // #cgo CFLAGS: -I../asn1codec/inc/  -I../asn1codec/e2ap_engine/
@@ -12,8 +29,8 @@ import (
 
 //TODO: replace the constant in setup_request_handler.go
 const (
-	MaxAsn1PackedBufferSize          = 4096
-	MaxAsn1CodecMessageBufferSize    = 4096
+	MaxAsn1PackedBufferSize       = 4096
+	MaxAsn1CodecMessageBufferSize = 4096
 )
 
 // Used as default by the x2_reset_request
@@ -97,16 +114,16 @@ var knownCauses = map[string]cause{
 	"radioNetwork:pdcp-Overload":                                                   {causeGroup: C.Cause_PR_radioNetwork, cause: C.CauseRadioNetwork_pDCP_Overload},
 }
 
-var knownCausesToX2ResetPDUs =  map[string][]byte{}
+var knownCausesToX2ResetPDUs = map[string][]byte{}
 
 func prepareX2ResetPDUs(maxAsn1PackedBufferSize int, maxAsn1CodecMessageBufferSize int) error {
-	packedBuffer := make([]C.uchar,maxAsn1PackedBufferSize)
-	errorBuffer := make([]C.char,maxAsn1CodecMessageBufferSize)
+	packedBuffer := make([]C.uchar, maxAsn1PackedBufferSize)
+	errorBuffer := make([]C.char, maxAsn1CodecMessageBufferSize)
 
 	for k, cause := range knownCauses {
 		var payloadSize = C.ulong(maxAsn1PackedBufferSize)
 		if status := C.build_pack_x2reset_request(cause.causeGroup, C.int(cause.cause), &payloadSize, &packedBuffer[0], C.ulong(maxAsn1CodecMessageBufferSize), &errorBuffer[0]); !status {
-			return fmt.Errorf("#reset_request_handler.Handle - failed to build and pack the reset message %s ", C.GoString(&errorBuffer[0]))
+			return fmt.Errorf("#x2_reset_known_causes.prepareX2ResetPDUs - failed to build and pack the reset message %s ", C.GoString(&errorBuffer[0]))
 		}
 		knownCausesToX2ResetPDUs[strings.ToLower(k)] = C.GoBytes(unsafe.Pointer(&packedBuffer[0]), C.int(payloadSize))
 	}
