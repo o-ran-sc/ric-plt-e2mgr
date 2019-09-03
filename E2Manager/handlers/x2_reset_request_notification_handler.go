@@ -17,19 +17,14 @@
 
 package handlers
 
-// #cgo CFLAGS: -I../asn1codec/inc/  -I../asn1codec/e2ap_engine/
-// #cgo LDFLAGS: -L ../asn1codec/lib/ -L../asn1codec/e2ap_engine/ -le2ap_codec -lasncodec
-// #include <asn1codec_utils.h>
-// #include <x2reset_response_wrapper.h>
-import "C"
 import (
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"unsafe"
 )
 
 type X2ResetRequestNotificationHandler struct {
@@ -69,24 +64,9 @@ func (src X2ResetRequestNotificationHandler) Handle(logger *logger.Logger, e2Ses
 
 		return
 	}
-	src.createAndAddToChannel(logger, request, messageChannel)
+	response := models.NotificationResponse{RanName: request.RanName, Payload: e2pdus.PackedX2ResetResponse, MgsType: rmrCgo.RIC_X2_RESET_RESP}
+	messageChannel <- &response
 
 	//TODO change name of printHandlingSetupResponseElapsedTimeInMs (remove setup response) and move to utils?
 	printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)
-}
-
-func (src X2ResetRequestNotificationHandler) createAndAddToChannel(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
-
-	packedBuffer := make([]C.uchar, MaxAsn1PackedBufferSize)
-	errorBuffer := make([]C.char, MaxAsn1CodecMessageBufferSize)
-	var payloadSize = C.ulong(MaxAsn1PackedBufferSize)
-
-	if status := C.build_pack_x2reset_response(&payloadSize, &packedBuffer[0], C.ulong(MaxAsn1CodecMessageBufferSize), &errorBuffer[0]); !status {
-		logger.Errorf("#X2ResetRequestNotificationHandler.createAndAddToChannel - failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
-		return
-	}
-	payload := C.GoBytes(unsafe.Pointer(&packedBuffer[0]), C.int(payloadSize))
-	response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_X2_RESET_RESP}
-
-	messageChannel <- &response
 }
