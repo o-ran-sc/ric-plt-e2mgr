@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef170658_f7e0322b",
+        "filename": "E2Manager/e2pdus/x2_reset_response.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000045
+      },
+      "writtenOn": "2019-09-03T10:53:32Z",
+      "side": 1,
+      "message": "#reset_response does not match the file name.",
+      "revId": "79fa3a3a2b555c8b43792f9a3ae6128ddedd75a2",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
