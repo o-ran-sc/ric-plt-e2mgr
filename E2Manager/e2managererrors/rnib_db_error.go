@@ -18,12 +18,12 @@
 package e2managererrors
 
 type RnibDbError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewRnibDbError() *RnibDbError {
 	return &RnibDbError {
-		BaseError{
+		&BaseError{
 			Code: 500,
 			Message: "RNIB error",
 		},
@@ -31,5 +31,5 @@ func NewRnibDbError() *RnibDbError {
 }
 
 func (e *RnibDbError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

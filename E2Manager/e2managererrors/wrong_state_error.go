@@ -20,12 +20,12 @@ package e2managererrors
 import "fmt"
 
 type WrongStateError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewWrongStateError(activityName string, state string) *WrongStateError {
 	return &WrongStateError{
-		BaseError{
+		&BaseError{
 			Code:    403,
 			Message: fmt.Sprintf("Activity <%s> rejected. RAN current state <%s> does not allow its execution ", activityName, state) ,
 		},
@@ -33,5 +33,5 @@ func NewWrongStateError(activityName string, state string) *WrongStateError {
 }
 
 func (e *WrongStateError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

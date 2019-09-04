@@ -18,12 +18,12 @@
 package e2managererrors
 
 type RmrError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewRmrError() *RmrError {
 	return &RmrError{
-		BaseError{
+		&BaseError{
 			Code:    502,
 			Message: "RMR error",
 		},
@@ -31,5 +31,5 @@ func NewRmrError() *RmrError {
 }
 
 func (e *RmrError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

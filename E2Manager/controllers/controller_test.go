@@ -69,7 +69,7 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 	var errorResponse = parseJsonRequest(t, writer.Body)
 
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
-	assert.Equal(t, errorResponse.Code, e2managererrors.NewRnibDbError().Err.Code)
+	assert.Equal(t, errorResponse.Code, e2managererrors.NewRnibDbError().Code)
 }
 
 func TestHeaderValidationFailed(t *testing.T) {
@@ -98,8 +98,8 @@ func TestHeaderValidationFailed(t *testing.T) {
 	err := e2managererrors.NewHeaderValidationError()
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, writer.Result().StatusCode)
-	assert.Equal(t, errorResponse.Code, err.Err.Code)
-	assert.Equal(t, errorResponse.Message, err.Err.Message)
+	assert.Equal(t, errorResponse.Code, err.Code)
+	assert.Equal(t, errorResponse.Message, err.Message)
 }
 
 func TestShutdownStatusNoContent(t *testing.T) {
@@ -149,8 +149,8 @@ func TestHandleInternalError(t *testing.T) {
 	var errorResponse = parseJsonRequest(t, writer.Body)
 
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
-	assert.Equal(t, errorResponse.Code, err.Err.Code)
-	assert.Equal(t, errorResponse.Message, err.Err.Message)
+	assert.Equal(t, errorResponse.Code, err.Code)
+	assert.Equal(t, errorResponse.Message, err.Message)
 }
 
 func TestHandleCommandAlreadyInProgressError(t *testing.T) {
@@ -174,8 +174,8 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 	var errorResponse = parseJsonRequest(t, writer.Body)
 
 	assert.Equal(t, http.StatusMethodNotAllowed, writer.Result().StatusCode)
-	assert.Equal(t, errorResponse.Code, err.Err.Code)
-	assert.Equal(t, errorResponse.Message, err.Err.Message)
+	assert.Equal(t, errorResponse.Code, err.Code)
+	assert.Equal(t, errorResponse.Message, err.Message)
 }
 
 func TestValidateHeaders(t *testing.T) {

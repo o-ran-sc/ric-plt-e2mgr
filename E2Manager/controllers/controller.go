@@ -138,40 +138,40 @@ func (c *Controller) handleErrorResponse(err error, writer http.ResponseWriter) 
 		switch err.(type) {
 		case *e2managererrors.RnibDbError:
 			e2Error, _ := err.(*e2managererrors.RnibDbError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusInternalServerError
 		case *e2managererrors.CommandAlreadyInProgressError:
 			e2Error, _ := err.(*e2managererrors.CommandAlreadyInProgressError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusMethodNotAllowed
 		case *e2managererrors.HeaderValidationError:
 			e2Error, _ := err.(*e2managererrors.HeaderValidationError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusUnsupportedMediaType
 		case *e2managererrors.WrongStateError:
 			e2Error, _ := err.(*e2managererrors.WrongStateError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusBadRequest
 		case *e2managererrors.RequestValidationError:
 			e2Error, _ := err.(*e2managererrors.RequestValidationError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusBadRequest
 		case *e2managererrors.InvalidJsonError:
 			e2Error, _ := err.(*e2managererrors.InvalidJsonError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusBadRequest
 		case *e2managererrors.RmrError:
 			e2Error, _ := err.(*e2managererrors.RmrError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusInternalServerError
 		case *e2managererrors.ResourceNotFoundError:
 			e2Error, _ := err.(*e2managererrors.ResourceNotFoundError)
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusNotFound
 
 		default:
 			e2Error := e2managererrors.NewInternalError()
-			errorResponseDetails = models.ErrorResponse{Code: e2Error.Err.Code, Message: e2Error.Err.Message}
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusInternalServerError
 		}
 	}

@@ -18,12 +18,12 @@
 package e2managererrors
 
 type ResourceNotFoundError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewResourceNotFoundError() *ResourceNotFoundError {
 	return &ResourceNotFoundError{
-		BaseError{
+		&BaseError{
 			Code:    404,
 			Message: "Resource not found",
 		},
@@ -31,5 +31,5 @@ func NewResourceNotFoundError() *ResourceNotFoundError {
 }
 
 func (e *ResourceNotFoundError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

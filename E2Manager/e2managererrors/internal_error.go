@@ -18,12 +18,12 @@
 package e2managererrors
 
 type InternalError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewInternalError() *InternalError {
 	return &InternalError {
-		BaseError{
+		&BaseError{
 			Code: 501,
 			Message: "Internal Server Error. Please try again later",
 		},
@@ -31,5 +31,5 @@ func NewInternalError() *InternalError {
 }
 
 func (e *InternalError) Error() string {
-	return e.Err.Message
+	return e.Message
 }
