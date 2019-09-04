@@ -19,12 +19,12 @@ package e2managererrors
 
 
 type InvalidJsonError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewInvalidJsonError() *InvalidJsonError {
 	return &InvalidJsonError{
-		BaseError{
+		&BaseError{
 			Code:    401,
 			Message: "corrupted json",
 		},
@@ -32,6 +32,6 @@ func NewInvalidJsonError() *InvalidJsonError {
 }
 
 func (e *InvalidJsonError) Error() string {
-	return e.Err.Message
+	return e.Message
 }
 

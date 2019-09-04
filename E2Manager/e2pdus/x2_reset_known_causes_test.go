@@ -95,7 +95,7 @@ func TestPrepareX2ResetPDUsFailure(t *testing.T) {
 		t.Errorf("want: error, got: success.\n")
 	}
 
-	expected := "#x2_reset_known_causes_test.TestPrepareX2ResetPDUsFailure - failed to build and pack the reset message #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:"
+	expected := "#x2_reset_known_causes.prepareX2ResetPDUs - failed to build and pack the reset message #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:"
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("want :[%s], got: [%s]\n", expected, err)
 	}

@@ -18,12 +18,12 @@
 package e2managererrors
 
 type HeaderValidationError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewHeaderValidationError() *HeaderValidationError {
 	return &HeaderValidationError {
-		BaseError{
+		&BaseError{
 			Code: 415,
 			Message: "Header validation error",
 		},
@@ -31,5 +31,5 @@ func NewHeaderValidationError() *HeaderValidationError {
 }
 
 func (e *HeaderValidationError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

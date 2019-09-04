@@ -18,12 +18,12 @@
 package e2managererrors
 
 type RequestValidationError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewRequestValidationError() *RequestValidationError {
 	return &RequestValidationError{
-		BaseError{
+		&BaseError{
 			Code:    402,
 			Message: "Validation error",
 		},
@@ -31,5 +31,5 @@ func NewRequestValidationError() *RequestValidationError {
 }
 
 func (e *RequestValidationError) Error() string {
-	return e.Err.Message
+	return e.Message
 }

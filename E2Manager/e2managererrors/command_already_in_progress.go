@@ -18,12 +18,12 @@
 package e2managererrors
 
 type CommandAlreadyInProgressError struct {
-	Err BaseError
+	*BaseError
 }
 
 func NewCommandAlreadyInProgressError() *CommandAlreadyInProgressError {
 	return &CommandAlreadyInProgressError {
-		BaseError{
+		&BaseError{
 			Code: 405,
 			Message: "Command already in progress",
 		},
@@ -31,6 +31,6 @@ func NewCommandAlreadyInProgressError() *CommandAlreadyInProgressError {
 }
 
 func (e *CommandAlreadyInProgressError) Error() string {
-	return e.Err.Message
+	return e.Message
 }
 
