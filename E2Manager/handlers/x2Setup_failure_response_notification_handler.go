@@ -44,7 +44,9 @@ func (src X2SetupFailureResponseNotificationHandler) Handle(logger *logger.Logge
 			nb := &entities.NodebInfo{}
 			nbIdentity := &entities.NbIdentity{}
 
+			nb.RanName = e2session.Request.RanName
 			nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED_SETUP_FAILED
+			nb.E2ApplicationProtocol = entities.E2ApplicationProtocol_X2_SETUP_REQUEST
 			nb.Ip = e2session.Request.RanIp
 			nb.Port = uint32(e2session.Request.RanPort)
 			nb.SetupFailure = failureResponse
