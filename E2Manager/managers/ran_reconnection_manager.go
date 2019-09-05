@@ -22,7 +22,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
@@ -80,7 +79,7 @@ func (m *RanReconnectionManager) canReconnectRan(nodebInfo *entities.NodebInfo) 
 		int(nodebInfo.GetConnectionAttempts()) < m.config.MaxConnectionAttempts
 }
 
-func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) common.IRNibError {
+func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) error {
 	if nodebInfo.ConnectionStatus == connectionStatus {
 		return nil
 	}
@@ -97,7 +96,7 @@ func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.Nodeb
 	return nil
 }
 
-func (m *RanReconnectionManager) setConnectionStatusOfUnconnectableRan(nodebInfo *entities.NodebInfo) common.IRNibError {
+func (m *RanReconnectionManager) setConnectionStatusOfUnconnectableRan(nodebInfo *entities.NodebInfo) error {
 	connectionStatus := nodebInfo.GetConnectionStatus()
 
 	if connectionStatus == entities.ConnectionStatus_SHUT_DOWN {

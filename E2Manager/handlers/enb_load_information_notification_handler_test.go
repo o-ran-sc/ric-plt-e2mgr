@@ -69,7 +69,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //		return writerMock
 //	}
 //
-//	var rnibErr common.IRNibError
+//	var rnibErr error
 //	writerMock.On("SaveRanLoadInformation",inventoryName, mock.Anything).Return(rnibErr)
 //
 //	loadInformationHandler := NewEnbLoadInformationNotificationHandler(rnibWriterProvider)
@@ -95,7 +95,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //		return writerMock
 //	}
 //
-//	var rnibErr common.IRNibError
+//	var rnibErr error
 //	writerMock.On("SaveRanLoadInformation",inventoryName, mock.Anything).Return(rnibErr)
 //
 //	loadInformationHandler := NewEnbLoadInformationNotificationHandler(rnibWriterProvider)

@@ -128,7 +128,7 @@ func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
 	rNibErr := w.UpdateNodebInfo(nodebInfo)
 
 	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
 }
 
 func TestUpdateNodebInfoMissingGlobalNbId(t *testing.T) {
@@ -223,8 +223,8 @@ func TestSaveEnbCellIdValidationFailure(t *testing.T) {
 	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
-	assert.Equal(t, "3 VALIDATION_ERROR - #utils.ValidateAndBuildCellIdKey - an empty cell id received", rNibErr.Error())
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	assert.Equal(t, "#utils.ValidateAndBuildCellIdKey - an empty cell id received", rNibErr.Error())
 }
 
 func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
@@ -244,8 +244,8 @@ func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
 	nbIdentity := &entities.NbIdentity{InventoryName: "", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
-	assert.Equal(t, "3 VALIDATION_ERROR - #utils.ValidateAndBuildNodeBNameKey - an empty inventory name received", rNibErr.Error())
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	assert.Equal(t, "#utils.ValidateAndBuildNodeBNameKey - an empty inventory name received", rNibErr.Error())
 }
 
 func TestSaveEnbOnClosedPool(t *testing.T) {
@@ -291,8 +291,8 @@ func TestSaveGnbCellIdValidationFailure(t *testing.T) {
 	nbIdentity := &entities.NbIdentity{InventoryName: name, GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	rNibErr := w.SaveNodeb(nbIdentity, &nb)
 	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.VALIDATION_ERROR, rNibErr.GetCode())
-	assert.Equal(t, "3 VALIDATION_ERROR - #utils.ValidateAndBuildNrCellIdKey - an empty cell id received", rNibErr.Error())
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	assert.Equal(t, "#utils.ValidateAndBuildNrCellIdKey - an empty cell id received", rNibErr.Error())
 }
 
 func TestSaveGnb(t *testing.T) {
@@ -393,7 +393,7 @@ func TestSaveRanLoadInformationEmptyInventoryNameFailure(t *testing.T) {
 
 	err := w.SaveRanLoadInformation(inventoryName, nil)
 	assert.NotNil(t, err)
-	assert.Equal(t, common.VALIDATION_ERROR, err.GetCode())
+	assert.IsType(t, &common.ValidationError{}, err)
 }
 
 func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
@@ -423,8 +423,7 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 
 	rNibErr := w.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 	assert.NotNil(t, rNibErr)
-	assert.Equal(t, common.INTERNAL_ERROR, rNibErr.GetCode())
-	assert.Equal(t, expectedErr, rNibErr.GetError())
+	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
 
 func generateCellLoadInformation() *entities.CellLoadInformation {
@@ -514,7 +513,7 @@ func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	writerPool = nil
 	initSdlInstanceMock(namespace, 1)
 	w := GetRNibWriter()
-	expectedErr := common.NewValidationError(errors.New("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 "))
+	expectedErr := common.NewValidationError("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 ")
 	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nb := &entities.NodebInfo{}
 	nb.Port = 5656
@@ -548,17 +547,17 @@ func TestSaveEntityFailure(t *testing.T) {
 
 func TestGetRNibWriterPoolNotInitializedFailure(t *testing.T) {
 	writerPool = nil
-	assert.Panics(t, func() { GetRNibWriter() })
+	assert.Panics(t, func() { GetRNibWriter().SaveNodeb(nil,nil) })
 }
 
 func TestGetRNibWriter(t *testing.T) {
 	writerPool = nil
 	initSdlInstanceMock(namespace, 1)
 	received := GetRNibWriter()
-	assert.NotEmpty(t, received)
+	assert.Empty(t, received)
 	available, created := writerPool.Stats()
 	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 1, created, "number of created objects in the writerPool should be 1")
+	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 	writerPool.Close()
 }
 
@@ -571,13 +570,12 @@ func TestClose(t *testing.T) {
 	writerPool.Put(w2)
 	available, created := writerPool.Stats()
 	assert.Equal(t, 2, available, "number of available objects in the writerPool should be 2")
-	assert.Equal(t, 2, created, "number of created objects in the writerPool should be 2")
+	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 	var e error
 	instanceMock.On("Close").Return(e)
 	Close()
 	available, created = writerPool.Stats()
 	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 }
 
 func TestCloseOnClosedPoolFailure(t *testing.T) {
@@ -587,7 +585,7 @@ func TestCloseOnClosedPoolFailure(t *testing.T) {
 	writerPool.Put(w1)
 	available, created := writerPool.Stats()
 	assert.Equal(t, 1, available, "number of available objects in the writerPool should be 1")
-	assert.Equal(t, 1, created, "number of created objects in the writerPool should be 1")
+	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 	var e error
 	instanceMock.On("Close").Return(e)
 	Close()
@@ -601,13 +599,12 @@ func TestCloseFailure(t *testing.T) {
 	writerPool.Put(w1)
 	available, created := writerPool.Stats()
 	assert.Equal(t, 1, available, "number of available objects in the writerPool should be 1")
-	assert.Equal(t, 1, created, "number of created objects in the writerPool should be 1")
+	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 	e := errors.New("expected error")
 	instanceMock.On("Close").Return(e)
 	Close()
 	available, created = writerPool.Stats()
 	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
 }
 
 func TestInit(t *testing.T) {

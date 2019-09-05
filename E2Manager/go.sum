@@ -1,12 +1,20 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.19 h1:b6ggNQ4PdWxCkQupfus80nsCs0YD84u+cGc+nQ2W560=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.19/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.21 h1:eK9nUZOTMJ/EnMpH9bkWtMgOvCn3u4+PNCb9gu10s6w=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.21/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.19 h1:5VGHtsiGnR/VfcsqhbKVScUTLBgoePp1KhSVylwlFKM=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.19/go.mod h1:GXiXLz4ORBeIr0FLIbzENRykgh3Po5uPkX2jICxnRF0=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21 h1:PQ/Mu2ol+8Oh/0BqCWWhPlVVoRCg5dQDEGm4+Opp5w4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.21/go.mod h1:GXiXLz4ORBeIr0FLIbzENRykgh3Po5uPkX2jICxnRF0=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.19 h1:WwUWG3mp2uU9ouqAzj4d6dUGZUA+2HmutQBiH4s4UIw=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.19/go.mod h1:7fQ7/R9hBsCi5g6444ySaavYLB+/aCsCyDEiqWK+L34=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21 h1:N3UbqJ9WqC8JEz/TwHHwZwCFAW6VTlZLpD5lnbdD+Y8=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.21/go.mod h1:SQBZLy1HP94i1vQ3y730wGFsrHqZtgPaEkzPgtqBNw0=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0 h1:7edCLIQtk9xCwxTtLRUlXr8wQ6nmr/Mo4ZoqjF3m0NE=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.0 h1:Gg3PH9XVAuSjyAr8Z8Ebmcmt6PTKeU/+FG6J7qQl+ew=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.0/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
@@ -39,6 +47,8 @@ github.com/go-ozzo/ozzo-validation v3.5.0+incompatible h1:sUy/in/P6askYr16XJgTKq
 github.com/go-ozzo/ozzo-validation v3.5.0+incompatible/go.mod h1:gsEKFIVnabGBt6mXmxK0MoFy+cZoTJY6mu5Ll3LVLBU=
 github.com/go-redis/redis v6.15.2+incompatible h1:9SpNVG76gr6InJGxoZ6IuuxaCOQwDAhzyXg+Bs+0Sb4=
 github.com/go-redis/redis v6.15.2+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=
+github.com/go-redis/redis v6.15.3+incompatible h1:NZ0O90AhLSvSrvLZ/S9h7D4kl1mW2PrKyxL7MyBKO2g=
+github.com/go-redis/redis v6.15.3+incompatible/go.mod h1:W2YCLaZryXHirdd9QqwkiVUxCQsrx8SbLq9Uqk7JS7A=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.2.1/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zVXpSg4=
@@ -153,6 +163,7 @@ golang.org/x/sys v0.0.0-20180905080454-ebe1bf3edb33/go.mod h1:STP8DvDyc/dI5b8T5h
 golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20181107165924-66b7b1311ac8/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20181116152217-5ac8a444bdc5/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190204203706-41f3e6584952/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a h1:1BGLXjeY4akVXGgbC9HugT3Jv3hCI0z56oJR5vAMgBU=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=

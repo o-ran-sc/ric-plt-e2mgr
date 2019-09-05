@@ -18,7 +18,6 @@
 package mocks
 
 import (
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/mock"
 )
@@ -27,37 +26,37 @@ type RnibWriterMock struct {
 	mock.Mock
 }
 
-func (rnibWriterMock *RnibWriterMock) SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) common.IRNibError {
+func (rnibWriterMock *RnibWriterMock) SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error {
 	args := rnibWriterMock.Called(nbIdentity, nb)
 
 	errArg := args.Get(0)
 
 	if errArg != nil {
-		return errArg.(common.IRNibError)
+		return errArg.(error)
 	}
 
 	return nil
 }
 
-func (rnibWriterMock *RnibWriterMock) UpdateNodebInfo(nodebInfo *entities.NodebInfo) common.IRNibError {
+func (rnibWriterMock *RnibWriterMock) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 	args := rnibWriterMock.Called(nodebInfo)
 
 	errArg := args.Get(0)
 
 	if errArg != nil {
-		return errArg.(common.IRNibError)
+		return errArg.(error)
 	}
 
 	return nil
 }
 
-func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) common.IRNibError {
+func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
 	args := rnibWriterMock.Called(inventoryName, ranLoadInformation)
 
 	errArg := args.Get(0)
 
 	if errArg != nil {
-		return errArg.(common.IRNibError)
+		return errArg.(error)
 	}
 
 	return nil

@@ -27,7 +27,6 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/pkg/errors"
 	"testing"
 	"time"
 )
@@ -57,7 +56,7 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 	var messageChannel chan<- *models.NotificationResponse
 
 	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_CONNECTED_SETUP_FAILED,}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	h.Handle(log,e2Sessions, &notificationRequest, messageChannel)
@@ -87,7 +86,7 @@ func TestX2ResetResponseReaderFailure(t *testing.T) {
 	var messageChannel chan<- *models.NotificationResponse
 
 	var nb *entities.NodebInfo
-	rnibErr  := common.NewResourceNotFoundError(errors.New("nodeb not found"))
+	rnibErr  := common.NewResourceNotFoundError("nodeb not found")
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	h.Handle(log,e2Sessions, &notificationRequest, messageChannel)
@@ -117,7 +116,7 @@ func TestX2ResetResponseUnpackFailure(t *testing.T) {
 	var messageChannel chan<- *models.NotificationResponse
 
 	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_CONNECTED_SETUP_FAILED,}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	h.Handle(log,e2Sessions, &notificationRequest, messageChannel)

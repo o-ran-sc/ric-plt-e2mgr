@@ -55,7 +55,7 @@ func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T){
 
 	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
-	rnibErr := &common.RNibError{}
+	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
@@ -83,7 +83,7 @@ func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
 
 	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
-	rnibErr := &common.RNibError{}
+	rnibErr := &common.ResourceNotFoundError{}
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
 
@@ -265,7 +265,7 @@ func TestHandleGetNodebFailedFlow(t *testing.T){
 	nbIdentityList := createIdentityList()
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
-	errRnib := &common.RNibError{}
+	errRnib := &common.ResourceNotFoundError{}
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
 	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
 	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
@@ -328,7 +328,7 @@ func TestHandleSaveFailedFlow(t *testing.T){
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
-	errRnib := &common.RNibError{}
+	errRnib := &common.ResourceNotFoundError{}
 	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
 	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
@@ -431,7 +431,7 @@ func TestHandleGetListEnbIdsEmptyFlow(t *testing.T){
 
 	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
-	var rnibError common.IRNibError
+	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}
 
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)

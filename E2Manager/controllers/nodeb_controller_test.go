@@ -166,7 +166,7 @@ func TestNodebController_GetNodeb_Success(t *testing.T) {
 
 	rnibReaderMock := mocks.RnibReaderMock{}
 
-	var rnibError common.IRNibError
+	var rnibError error
 	rnibReaderMock.On("GetNodeb", "testNode").Return(&entities.NodebInfo{}, rnibError)
 
 	rnibReaderProvider := func() reader.RNibReader {
@@ -188,7 +188,7 @@ func TestNodebController_GetNodeb_NotFound(t *testing.T) {
 	writer := httptest.NewRecorder()
 
 	rnibReaderMock := mocks.RnibReaderMock{}
-	rnibError := common.NewResourceNotFoundError(errors.Errorf("#reader.GetNodeb - responding node %s not found", "testNode"))
+	rnibError := common.NewResourceNotFoundErrorf("#reader.GetNodeb - responding node %s not found", "testNode")
 	var nodebInfo *entities.NodebInfo
 	rnibReaderMock.On("GetNodeb", "testNode").Return(nodebInfo, rnibError)
 
@@ -238,7 +238,7 @@ func TestNodebController_GetNodebIdList_Success(t *testing.T) {
 	writer := httptest.NewRecorder()
 
 	rnibReaderMock := mocks.RnibReaderMock{}
-	var rnibError common.IRNibError
+	var rnibError error
 
 	nbList := []*entities.NbIdentity{
 		{InventoryName:"test1", GlobalNbId: &entities.GlobalNbId{PlmnId:"plmnId1",NbId: "nbId1"}},
@@ -268,7 +268,7 @@ func TestNodebController_GetNodebIdList_EmptyList(t *testing.T) {
 
 	rnibReaderMock := mocks.RnibReaderMock{}
 
-	var rnibError common.IRNibError
+	var rnibError error
 	nbList := []*entities.NbIdentity{}
 	rnibReaderMock.On("GetListNodebIds").Return(nbList, rnibError)
 

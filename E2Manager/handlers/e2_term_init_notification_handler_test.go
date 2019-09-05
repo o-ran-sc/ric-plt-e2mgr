@@ -38,7 +38,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderM
 
 func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
@@ -68,7 +68,7 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 
 func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
@@ -101,7 +101,7 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 
 func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
@@ -145,7 +145,7 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 
 func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
@@ -158,7 +158,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 	var initialNodeb1 = &entities.NodebInfo{RanName: ids[1].InventoryName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var initialNodeb2 = &entities.NodebInfo{RanName: ids[2].InventoryName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", ids[0].InventoryName).Return(initialNodeb0, rnibErr)
-	readerMock.On("GetNodeb", ids[1].InventoryName).Return(initialNodeb1, common.NewResourceNotFoundError(fmt.Errorf("not found")))
+	readerMock.On("GetNodeb", ids[1].InventoryName).Return(initialNodeb1, common.NewResourceNotFoundError("not found"))
 	readerMock.On("GetNodeb", ids[2].InventoryName).Return(initialNodeb2, rnibErr)
 
 	var argNodeb0 = &entities.NodebInfo{RanName: ids[0].InventoryName,ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
@@ -196,7 +196,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 
 func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
@@ -246,7 +246,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 
 func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
 	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerProvider := func() reader.RNibReader {
 		return readerMock
