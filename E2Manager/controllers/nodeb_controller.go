@@ -250,13 +250,13 @@ func printHandlingRequestElapsedTimeInMs(logger *logger.Logger, startTime time.T
 		float64(time.Since(startTime))/float64(time.Millisecond))
 }
 
-func rnibErrorToHttpError(rnibError common.IRNibError) (int, int, string) {
-	switch rnibError.GetCode() {
-	case common.RESOURCE_NOT_FOUND:
+func rnibErrorToHttpError(rnibError error) (int, int, string) {
+	switch rnibError.(type) {
+	case *common.ResourceNotFoundError:
 		return http.StatusNotFound, notFoundErrorCode, notFoundErrorMessage
-	case common.INTERNAL_ERROR:
+	case *common.InternalError:
 		return http.StatusInternalServerError, internalErrorCode, internalErrorMessage
-	case common.VALIDATION_ERROR:
+	case *common.ValidationError:
 		return http.StatusBadRequest, validationErrorCode, validationFailedMessage
 	default:
 		return http.StatusInternalServerError, internalErrorCode, internalErrorMessage

@@ -18,7 +18,6 @@
 package rNibWriter
 
 import (
-	"errors"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -37,9 +36,9 @@ type rNibWriterInstance struct {
 RNibWriter interface allows saving data to the redis DB
 */
 type RNibWriter interface {
-	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) common.IRNibError
-	UpdateNodebInfo(nodebInfo *entities.NodebInfo) common.IRNibError
-	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) common.IRNibError
+	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error
+	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
+	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 }
 
 /*
@@ -62,23 +61,21 @@ InitPool initializes the writer's instances pool
 func initPool(poolSize int, newObj func() interface{}, destroyObj func(interface{})) {
 	writerPool = common.NewPool(poolSize, newObj, destroyObj)
 }
-
 /*
-GetRNibWriter returns RNibWriter instance from the pool
+GetRNibWriter returns reference to RNibWriter
 */
 func GetRNibWriter() RNibWriter {
-	return writerPool.Get().(RNibWriter)
+	return &rNibWriterInstance{}
 }
-
 /*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
-func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) common.IRNibError {
-
+func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
+	w := writerPool.Get().(*rNibWriterInstance)
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
 	if isNotEmptyIdentity && entity.GetNodeType() == entities.Node_UNKNOWN {
-		return common.NewValidationError(errors.New(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity)))
+		return common.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
 	defer writerPool.Put(w)
 	data, err := proto.Marshal(entity)
@@ -146,8 +143,8 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 /*
 UpdateNodebInfo...
 */
-func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) common.IRNibError {
-
+func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
+	w := writerPool.Get().(*rNibWriterInstance)
 	defer writerPool.Put(w)
 
 	nodebNameKey, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.GetRanName())
@@ -183,8 +180,8 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) comm
 /*
 SaveRanLoadInformation stores ran load information for the provided ran
 */
-func (w *rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) common.IRNibError {
-
+func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
+	w := writerPool.Get().(*rNibWriterInstance)
 	defer writerPool.Put(w)
 
 	key, rnibErr := common.ValidateAndBuildRanLoadInformationKey(inventoryName)
@@ -218,7 +215,7 @@ func Close() {
 	writerPool.Close()
 }
 
-func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, common.IRNibError) {
+func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -239,7 +236,7 @@ func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCel
 	return pairs, nil
 }
 
-func appendGnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedNRCell, pairs []interface{}) ([]interface{}, common.IRNibError) {
+func appendGnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := entities.Cell{Type: entities.Cell_NR_CELL, Cell: &entities.Cell_ServedNrCell{ServedNrCell: cell}}
 		cellData, err := proto.Marshal(&cellEntity)

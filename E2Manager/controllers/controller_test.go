@@ -58,7 +58,7 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 		return writerMock
 	}
 
-	rnibErr := &common.RNibError{}
+	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
@@ -116,7 +116,7 @@ func TestShutdownStatusNoContent(t *testing.T) {
 	}
 	config := configuration.ParseConfiguration()
 
-	var rnibError common.IRNibError
+	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
 

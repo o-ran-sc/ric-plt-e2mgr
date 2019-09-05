@@ -168,7 +168,7 @@ func TestHandleFailureRanNotFound(t *testing.T){
 	rmrService:=getRmrService(rmrMessengerMock, log)
 	handler := NewX2ResetRequestHandler(rmrService, config, writerProvider, readerProvider)
 
-	readerMock.On("GetNodeb",ranName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(fmt.Errorf("nodeb not found")))
+	readerMock.On("GetNodeb",ranName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError("nodeb not found"))
 
 	actual := handler.Handle(log, models.ResetRequest{RanName: ranName })
 

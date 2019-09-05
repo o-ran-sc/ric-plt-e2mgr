@@ -58,8 +58,8 @@ func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, e2Ses
 
 		if err := handler.ranReconnectionManager.ReconnectRan(nbIdentity.InventoryName); err != nil {
 			logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", (*nbIdentity).GetInventoryName(), err.Error())
-			rNibError, ok := err.(common.IRNibError)
-			if !ok || rNibError.GetCode() != common.RESOURCE_NOT_FOUND {
+			_, ok := err.(*common.ResourceNotFoundError)
+			if !ok {
 				break
 			}
 		}

@@ -67,7 +67,8 @@ func (handler *X2ResetRequestHandler) Handle(logger *logger.Logger, request mode
 	nodeb, err  := handler.readerProvider().GetNodeb(resetRequest.RanName)
 	if err != nil {
 		logger.Errorf("#reset_request_handler.Handle - failed to get status of RAN: %s from RNIB. Error: %s", resetRequest.RanName,  err.Error())
-		if err.GetCode() == common.RESOURCE_NOT_FOUND {
+		_, ok := err.(*common.ResourceNotFoundError)
+		if ok {
 			return e2managererrors.NewResourceNotFoundError()
 		}
 		return e2managererrors.NewRnibDbError()

@@ -73,7 +73,7 @@ func TestShutdownRanReconnection(t *testing.T) {
 	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
@@ -85,7 +85,7 @@ func TestShuttingdownRanReconnection(t *testing.T) {
 	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
@@ -100,7 +100,7 @@ func TestConnectingRanWithMaxAttemptsReconnection(t *testing.T) {
 	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
@@ -115,7 +115,7 @@ func TestUnconnectableRanUpdateNodebInfoFailure(t *testing.T) {
 	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
@@ -130,7 +130,7 @@ func TestConnectedRanExecuteSetupSuccess(t *testing.T) {
 	_,rmrMessengerMock, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
@@ -148,7 +148,7 @@ func TestConnectedRanExecuteSetupFailure(t *testing.T) {
 	_,_, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING

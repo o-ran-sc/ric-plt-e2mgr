@@ -18,7 +18,6 @@
 package services
 
 import (
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
@@ -31,11 +30,11 @@ func NewRnibReaderService(rnibReaderProvider func() reader.RNibReader) *RnibRead
 	return &RnibReaderService{rnibReaderProvider}
 }
 
-func (s RnibReaderService) GetNodeb(ranName string) (*entities.NodebInfo, common.IRNibError) {
+func (s RnibReaderService) GetNodeb(ranName string) (*entities.NodebInfo, error) {
 	return s.rnibReaderProvider().GetNodeb(ranName)
 }
 
-func (s  RnibReaderService) GetNodebIdList()([]*entities.NbIdentity, common.IRNibError) {
+func (s  RnibReaderService) GetNodebIdList()([]*entities.NbIdentity, error) {
 	return s.rnibReaderProvider().GetListNodebIds()
 }
 

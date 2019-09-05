@@ -46,7 +46,7 @@ func TestX2ResetRequestNotifSuccess(t *testing.T) {
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
 	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
-	var rnibErr common.IRNibError
+	var rnibErr error
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	messageChannel := make(chan *models.NotificationResponse)
@@ -74,7 +74,7 @@ func TestHandleX2ResetRequestNotifShuttingDownStatus(t *testing.T) {
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
 	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
@@ -97,7 +97,7 @@ func TestHandleX2ResetRequestNotifDisconnectStatus(t *testing.T) {
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
 	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_DISCONNECTED,}
-	var rnibErr common.IRNibError
+	var rnibErr error
 
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
@@ -120,7 +120,7 @@ func TestHandleX2ResetRequestNotifGetNodebFailed(t *testing.T){
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
 	var nb *entities.NodebInfo
-	rnibErr  := &common.RNibError{}
+	rnibErr  := &common.ResourceNotFoundError{}
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	h.Handle(log,nil, &notificationRequest, nil)
