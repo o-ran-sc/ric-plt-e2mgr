@@ -20,7 +20,7 @@ package httpmsghandlerprovider
 import (
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
-	"e2mgr/handlers"
+	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
@@ -82,7 +82,7 @@ func TestShutdownRequestHandler(t *testing.T) {
 	assert.NotNil(t, provider)
 	assert.Nil(t, err)
 
-	_, ok := handler.(*handlers.DeleteAllRequestHandler)
+	_, ok := handler.(*httpmsghandlers.DeleteAllRequestHandler)
 
 	assert.True(t, ok)
 	/*if !ok {

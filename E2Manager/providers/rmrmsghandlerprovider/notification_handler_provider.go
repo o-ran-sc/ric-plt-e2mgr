@@ -18,7 +18,7 @@
 package rmrmsghandlerprovider
 
 import (
-	"e2mgr/handlers"
+	"e2mgr/handlers/rmrmsghandlers"
 	"e2mgr/managers"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
@@ -27,7 +27,7 @@ import (
 )
 
 type NotificationHandlerProvider struct {
-	notificationHandlers map[int]handlers.NotificationHandler
+	notificationHandlers map[int]rmrmsghandlers.NotificationHandler
 }
 
 func NewNotificationHandlerProvider(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) *NotificationHandlerProvider {
@@ -36,24 +36,24 @@ func NewNotificationHandlerProvider(rnibReaderProvider func() reader.RNibReader,
 	}
 }
 
-func initNotificationHandlersMap(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) map[int]handlers.NotificationHandler {
-	return map[int]handlers.NotificationHandler{
+func initNotificationHandlersMap(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) map[int]rmrmsghandlers.NotificationHandler {
+	return map[int]rmrmsghandlers.NotificationHandler{
 		//TODO change handlers.NotificationHandler to *handlers.NotificationHandler
-		rmrCgo.RIC_X2_SETUP_RESP:           handlers.X2SetupResponseNotificationHandler{},
-		rmrCgo.RIC_X2_SETUP_FAILURE:        handlers.X2SetupFailureResponseNotificationHandler{},
-		rmrCgo.RIC_ENDC_X2_SETUP_RESP:      handlers.EndcX2SetupResponseNotificationHandler{},
-		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE:   handlers.EndcX2SetupFailureResponseNotificationHandler{},
-		rmrCgo.RIC_SCTP_CONNECTION_FAILURE: handlers.NewRanLostConnectionHandler(ranReconnectionManager),
-		rmrCgo.RIC_ENB_LOAD_INFORMATION:    handlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider),
-		rmrCgo.RIC_ENB_CONF_UPDATE:         handlers.X2EnbConfigurationUpdateHandler{},
-		rmrCgo.RIC_ENDC_CONF_UPDATE:        handlers.EndcConfigurationUpdateHandler{},
-		rmrCgo.RIC_X2_RESET_RESP:           handlers.NewX2ResetResponseHandler(rnibReaderProvider),
-		rmrCgo.RIC_X2_RESET:                handlers.NewX2ResetRequestNotificationHandler(rnibReaderProvider),
-		rmrCgo.RIC_E2_TERM_INIT:            handlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider ),
+		rmrCgo.RIC_X2_SETUP_RESP:           rmrmsghandlers.X2SetupResponseNotificationHandler{},
+		rmrCgo.RIC_X2_SETUP_FAILURE:        rmrmsghandlers.X2SetupFailureResponseNotificationHandler{},
+		rmrCgo.RIC_ENDC_X2_SETUP_RESP:      rmrmsghandlers.EndcX2SetupResponseNotificationHandler{},
+		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE:   rmrmsghandlers.EndcX2SetupFailureResponseNotificationHandler{},
+		rmrCgo.RIC_SCTP_CONNECTION_FAILURE: rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager),
+		rmrCgo.RIC_ENB_LOAD_INFORMATION:    rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider),
+		rmrCgo.RIC_ENB_CONF_UPDATE:         rmrmsghandlers.X2EnbConfigurationUpdateHandler{},
+		rmrCgo.RIC_ENDC_CONF_UPDATE:        rmrmsghandlers.EndcConfigurationUpdateHandler{},
+		rmrCgo.RIC_X2_RESET_RESP:           rmrmsghandlers.NewX2ResetResponseHandler(rnibReaderProvider),
+		rmrCgo.RIC_X2_RESET:                rmrmsghandlers.NewX2ResetRequestNotificationHandler(rnibReaderProvider),
+		rmrCgo.RIC_E2_TERM_INIT:            rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider ),
 	}
 }
 
-func (provider NotificationHandlerProvider) GetNotificationHandler(messageType int) (handlers.NotificationHandler, error) {
+func (provider NotificationHandlerProvider) GetNotificationHandler(messageType int) (rmrmsghandlers.NotificationHandler, error) {
 	handler, ok := provider.notificationHandlers[messageType]
 
 	if !ok {

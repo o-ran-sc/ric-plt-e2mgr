@@ -72,8 +72,7 @@ type NodebController struct {
 	rnibWriterProvider func() rNibWriter.RNibWriter
 }
 
-func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, rnibReaderProvider func() reader.RNibReader,
-	rnibWriterProvider func() rNibWriter.RNibWriter) *NodebController {
+func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter) *NodebController {
 	messageChannel = make(chan *models.E2RequestMessage)
 	errorChannel = make(chan error)
 	return &NodebController{

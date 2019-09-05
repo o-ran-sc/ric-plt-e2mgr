@@ -31,6 +31,7 @@ import (
 const (
 	MaxAsn1PackedBufferSize       = 4096
 	MaxAsn1CodecMessageBufferSize = 4096
+	MaxAsn1CodecAllocationBufferSize = 4096 // TODO: remove later
 )
 
 // Used as default by the x2_reset_request

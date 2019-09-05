@@ -19,6 +19,7 @@ package rmrmsghandlerprovider
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/handlers/rmrmsghandlers"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/mocks"
@@ -32,7 +33,6 @@ import (
 	"strings"
 	"testing"
 
-	"e2mgr/handlers"
 	"e2mgr/rmrCgo"
 )
 
@@ -58,17 +58,17 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 
 	var testCases = []struct {
 		msgType int
-		handler handlers.NotificationHandler
+		handler rmrmsghandlers.NotificationHandler
 	}{
-		{rmrCgo.RIC_X2_SETUP_RESP /*successful x2 setup response*/, handlers.X2SetupResponseNotificationHandler{}},
-		{rmrCgo.RIC_X2_SETUP_FAILURE /*unsuccessful x2 setup response*/, handlers.X2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/, handlers.EndcX2SetupResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/, handlers.EndcX2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, handlers.NewRanLostConnectionHandler(ranReconnectionManager)},
-		{rmrCgo.RIC_ENB_LOAD_INFORMATION, handlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
-		{rmrCgo.RIC_ENB_CONF_UPDATE, handlers.X2EnbConfigurationUpdateHandler{}},
-		{rmrCgo.RIC_ENDC_CONF_UPDATE, handlers.EndcConfigurationUpdateHandler{}},
-		{rmrCgo.RIC_E2_TERM_INIT,    handlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
+		{rmrCgo.RIC_X2_SETUP_RESP /*successful x2 setup response*/, rmrmsghandlers.X2SetupResponseNotificationHandler{}},
+		{rmrCgo.RIC_X2_SETUP_FAILURE /*unsuccessful x2 setup response*/, rmrmsghandlers.X2SetupFailureResponseNotificationHandler{}},
+		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/, rmrmsghandlers.EndcX2SetupResponseNotificationHandler{}},
+		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/, rmrmsghandlers.EndcX2SetupFailureResponseNotificationHandler{}},
+		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager)},
+		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
+		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.X2EnbConfigurationUpdateHandler{}},
+		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.EndcConfigurationUpdateHandler{}},
+		{rmrCgo.RIC_E2_TERM_INIT,    rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
 	}
 
 	for _, tc := range testCases {

@@ -79,12 +79,13 @@ func (c *Controller) extractJsonBody(r *http.Request, request models.Request, wr
 	}
 
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(request); err != nil {
-		if err != nil {
-			c.logger.Errorf("[Client -> E2 Manager] #controller.extractJsonBody - unable to extract json body - error: %s", err)
-			c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
-			return false
-		}
+
+	err := decoder.Decode(request)
+
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #controller.extractJsonBody - unable to extract json body - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return false
 	}
 
 	return true
@@ -103,6 +104,7 @@ func (c *Controller) handleRequest(writer http.ResponseWriter, header *http.Head
 	}
 
 	handler, err := c.handlerProvider.GetHandler(requestName)
+
 	if err != nil {
 		c.handleErrorResponse(err, writer)
 		return

@@ -20,7 +20,7 @@ package httpmsghandlerprovider
 import (
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
-	"e2mgr/handlers"
+	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
@@ -35,12 +35,11 @@ const (
 )
 
 type IncomingRequestHandlerProvider struct {
-	requestMap map[IncomingRequest]handlers.RequestHandler
+	requestMap map[IncomingRequest]httpmsghandlers.RequestHandler
 	logger     *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
-	rNibReaderProvider func() reader.RNibReader) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter, rNibReaderProvider func() reader.RNibReader) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
 		requestMap: initRequestHandlerMap(rmrService, config, rNibWriterProvider, rNibReaderProvider),
@@ -49,15 +48,15 @@ func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *servic
 }
 
 func initRequestHandlerMap(rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
-	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]handlers.RequestHandler {
+	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
-	return map[IncomingRequest]handlers.RequestHandler{
-		ShutdownRequest: handlers.NewDeleteAllRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
-		ResetRequest:    handlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),   //TODO change to pointer
+	return map[IncomingRequest]httpmsghandlers.RequestHandler{
+		ShutdownRequest: httpmsghandlers.NewDeleteAllRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
+		ResetRequest:    httpmsghandlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),   //TODO change to pointer
 	}
 }
 
-func (provider IncomingRequestHandlerProvider) GetHandler(requestType IncomingRequest) (handlers.RequestHandler, error) {
+func (provider IncomingRequestHandlerProvider) GetHandler(requestType IncomingRequest) (httpmsghandlers.RequestHandler, error) {
 	handler, ok := provider.requestMap[requestType]
 
 	if !ok {

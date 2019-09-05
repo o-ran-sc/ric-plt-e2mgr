@@ -18,14 +18,14 @@
 package httpmsghandlerprovider
 
 import (
-	"e2mgr/handlers"
+	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
 	"errors"
 	"fmt"
 )
 
-var requestMap map[string]handlers.Handler
+var requestMap map[string]httpmsghandlers.Handler
 
 type RequestHandlerProvider struct{}
 
@@ -34,14 +34,14 @@ func NewRequestHandlerProvider(rnibWriterProvider func() rNibWriter.RNibWriter) 
 	return &RequestHandlerProvider{}
 }
 
-func initRequestMap(rnibWriterProvider func() rNibWriter.RNibWriter) map[string]handlers.Handler {
-	return map[string]handlers.Handler{
-		"x2-setup":   handlers.NewSetupRequestHandler(rnibWriterProvider),
-		"endc-setup": handlers.NewEndcSetupRequestHandler(rnibWriterProvider),
+func initRequestMap(rnibWriterProvider func() rNibWriter.RNibWriter) map[string]httpmsghandlers.Handler {
+	return map[string]httpmsghandlers.Handler{
+		"x2-setup":   httpmsghandlers.NewSetupRequestHandler(rnibWriterProvider),
+		"endc-setup": httpmsghandlers.NewEndcSetupRequestHandler(rnibWriterProvider),
 	}
 }
 
-func (provider RequestHandlerProvider) GetHandler(logger *logger.Logger, requestType string) (handlers.Handler, error) {
+func (provider RequestHandlerProvider) GetHandler(logger *logger.Logger, requestType string) (httpmsghandlers.Handler, error) {
 	handler, ok := requestMap[requestType]
 
 	if !ok {

@@ -18,7 +18,7 @@
 package httpmsghandlerprovider
 
 import (
-	"e2mgr/handlers"
+	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/rNibWriter"
@@ -66,7 +66,7 @@ func TestGetX2SetupRequestHandler(t *testing.T) {
 		t.Errorf("failed to get x2 setup handler")
 	}
 
-	_, ok := handler.(*handlers.SetupRequestHandler)
+	_, ok := handler.(*httpmsghandlers.SetupRequestHandler)
 
 	if !ok {
 		t.Errorf("failed to get x2 setup handler")
@@ -92,7 +92,7 @@ func TestGetEndcSetupRequestHandler(t *testing.T) {
 		t.Errorf("failed to get endc setup handler")
 	}
 
-	_, ok := handler.(*handlers.EndcSetupRequestHandler)
+	_, ok := handler.(*httpmsghandlers.EndcSetupRequestHandler)
 
 	if !ok {
 		t.Errorf("failed to get endc setup handler")
