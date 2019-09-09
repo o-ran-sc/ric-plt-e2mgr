@@ -18,12 +18,13 @@ func (m *X2SetupFailureResponseManager) SetNodeb(logger *logger.Logger, nbIdenti
 	failureResponse, err := converters.UnpackX2SetupFailureResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 
 	if err != nil {
-		logger.Errorf("#x2Setup_failure_response_notification_handler.Handle - unpack failed. Error: %v", err)
+		logger.Errorf("#X2SetupFailureResponseManager.SetNodeb - RAN name: %s - Unpack & extract failed. Error: %v", nodebInfo.RanName, err)
 		return err
 	}
 
+	logger.Infof("#X2SetupFailureResponseManager.SetNodeb - RAN name: %s - Unpacked payload and extracted protobuf successfully", nodebInfo.RanName)
+
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED_SETUP_FAILED
-	nodebInfo.E2ApplicationProtocol = entities.E2ApplicationProtocol_X2_SETUP_REQUEST
 	nodebInfo.SetupFailure = failureResponse
 	nodebInfo.FailureType = entities.Failure_X2_SETUP_FAILURE
 	return nil

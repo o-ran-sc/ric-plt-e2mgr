@@ -34,6 +34,10 @@ import (
 
 type EndcConfigurationUpdateHandler struct{}
 
+func NewEndcConfigurationUpdateHandler() EndcConfigurationUpdateHandler {
+	return EndcConfigurationUpdateHandler{}
+}
+
 func (src EndcConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest,
 	messageChannel chan<- *models.NotificationResponse) {
 

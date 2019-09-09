@@ -30,33 +30,37 @@ type SetupResponseNotificationHandler struct {
 	rnibReaderProvider   func() reader.RNibReader
 	rnibWriterProvider   func() rNibWriter.RNibWriter
 	setupResponseManager managers.ISetupResponseManager
+	notificationType     string
 }
 
-func NewSetupResponseNotificationHandler(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, setupResponseManager managers.ISetupResponseManager) SetupResponseNotificationHandler {
+func NewSetupResponseNotificationHandler(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, setupResponseManager managers.ISetupResponseManager, notificationType string) SetupResponseNotificationHandler {
 	return SetupResponseNotificationHandler{
 		rnibReaderProvider:   rnibReaderProvider,
 		rnibWriterProvider:   rnibWriterProvider,
 		setupResponseManager: setupResponseManager,
+		notificationType:     notificationType,
 	}
 }
 
 func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
-	logger.Infof("#SetupResponseNotificationHandler - RAN name : %s - Received X2 Setup Response Notification", request.RanName)
+	logger.Infof("#SetupResponseNotificationHandler - RAN name: %s - Received %s notification", request.RanName, h.notificationType)
 
-	nodebInfo, rnibErr := h.rnibReaderProvider().GetNodeb(request.RanName)
+	inventoryName := request.RanName
+
+	nodebInfo, rnibErr := h.rnibReaderProvider().GetNodeb(inventoryName)
 
 	if rnibErr != nil {
-		logger.Errorf("#X2SetupResponseNotificationHandler - RAN name : %s - Error fetching ran from rNib: %v", request.RanName, rnibErr)
+		logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Error fetching RAN from rNib: %v", request.RanName, rnibErr)
 		return
 	}
 
 	if !isConnectionStatusValid(nodebInfo.ConnectionStatus) {
-		logger.Errorf("#X2SetupResponseNotificationHandler - RAN name : %s - Invalid connection status: %s", request.RanName, nodebInfo.ConnectionStatus)
+		logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Invalid RAN connection status: %s", request.RanName, nodebInfo.ConnectionStatus)
 		return
 	}
 
-	nbIdentity := &entities.NbIdentity{}
-
+	nodebInfo.ConnectionAttempts = 0
+	nbIdentity := &entities.NbIdentity{InventoryName: inventoryName}
 	err := h.setupResponseManager.SetNodeb(logger, nbIdentity, nodebInfo, request.Payload)
 
 	if err != nil {
@@ -66,11 +70,11 @@ func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, e2Sessio
 	rnibErr = h.rnibWriterProvider().SaveNodeb(nbIdentity, nodebInfo)
 
 	if rnibErr != nil {
-		logger.Errorf("#X2SetupResponseNotificationHandler - RAN name : %s - Error saving RAN to rNib: %v", request.RanName, rnibErr)
+		logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Error saving RAN to rNib: %v", request.RanName, rnibErr)
 		return
 	}
 
-	logger.Infof("#X2SetupResponseNotificationHandler - RAN name : %s - Successfully saved RAN to rNib", request.RanName)
+	logger.Infof("#SetupResponseNotificationHandler - RAN name: %s - Successfully saved RAN to rNib", request.RanName)
 }
 
 func isConnectionStatusValid(connectionStatus entities.ConnectionStatus) bool {

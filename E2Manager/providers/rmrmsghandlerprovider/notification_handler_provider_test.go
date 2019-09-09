@@ -60,15 +60,15 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		msgType int
 		handler rmrmsghandlers.NotificationHandler
 	}{
-		{rmrCgo.RIC_X2_SETUP_RESP /*successful x2 setup response*/, rmrmsghandlers.X2SetupResponseNotificationHandler{}},
-		{rmrCgo.RIC_X2_SETUP_FAILURE /*unsuccessful x2 setup response*/, rmrmsghandlers.X2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_RESP /*successful en-dc x2 setup response*/, rmrmsghandlers.EndcX2SetupResponseNotificationHandler{}},
-		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE /*unsuccessful en-dc x2 setup response*/, rmrmsghandlers.EndcX2SetupFailureResponseNotificationHandler{}},
-		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE /*sctp errors*/, rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager)},
+		{rmrCgo.RIC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupResponseManager(), "X2 Setup Response")},
+		{rmrCgo.RIC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupFailureResponseManager(),"X2 Setup Failure Response")},
+		{rmrCgo.RIC_ENDC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupResponseManager(),"ENDC Setup Response")},
+		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupFailureResponseManager(),"ENDC Setup Failure Response"),},
+		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE, rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager)},
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.X2EnbConfigurationUpdateHandler{}},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.EndcConfigurationUpdateHandler{}},
-		{rmrCgo.RIC_E2_TERM_INIT,    rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
+		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
 	}
 
 	for _, tc := range testCases {

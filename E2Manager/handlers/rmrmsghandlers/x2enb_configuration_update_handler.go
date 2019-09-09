@@ -34,6 +34,10 @@ import (
 
 type X2EnbConfigurationUpdateHandler struct{}
 
+func NewX2EnbConfigurationUpdateHandler() X2EnbConfigurationUpdateHandler {
+	return X2EnbConfigurationUpdateHandler{}
+}
+
 func (src X2EnbConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest,
 	messageChannel chan<- *models.NotificationResponse) {
 
@@ -41,14 +45,14 @@ func (src X2EnbConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessi
 	payloadSize = e2pdus.MaxAsn1PackedBufferSize
 	packedBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.uchar{}
 	errorBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.char{}
-	refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize , request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize )
+	refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 	if err != nil {
-		status :=  C.build_pack_x2enb_configuration_update_failure( &payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
-		if status{
-			payload := (*[1<<30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
+		status := C.build_pack_x2enb_configuration_update_failure(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
+		if status {
+			payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
 			logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update negative ack message payload: (%d) %02x", len(payload), payload)
-			response := models.NotificationResponse{RanName:request.RanName, Payload:payload, MgsType: rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE}
-			messageChannel<- &response
+			response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE}
+			messageChannel <- &response
 		} else {
 			logger.Errorf("#x2enb_configuration_update_handler.Handle - failed to build and pack Enb configuration update unsuccessful outcome message. Error: %v", errorBuffer)
 		}
@@ -57,16 +61,15 @@ func (src X2EnbConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessi
 		logger.Infof("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message received")
 		logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message payload: %s", refinedMessage.PduPrint)
 
-		status := C.build_pack_x2enb_configuration_update_ack( &payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
+		status := C.build_pack_x2enb_configuration_update_ack(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
 		if status {
 			payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
 			logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update positive ack message payload: (%d) %02x", len(payload), payload)
 			response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK}
-			messageChannel<- &response
+			messageChannel <- &response
 		} else {
 			logger.Errorf("#x2enb_configuration_update_handler.Handle - failed to build and pack enb configuration update successful outcome message. Error: %v", errorBuffer)
 		}
 	}
 	printHandlingSetupResponseElapsedTimeInMs(logger, "#x2enb_configuration_update_handler.Handle - Summary: Elapsed time for receiving and handling enb configuration update initiating message from E2 terminator", request.StartTime)
 }
-

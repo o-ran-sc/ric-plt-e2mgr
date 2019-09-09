@@ -21,8 +21,14 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/sessions"
+	"time"
 )
 
 type NotificationHandler interface {
 	Handle(*logger.Logger, sessions.E2Sessions, *models.NotificationRequest, chan<- *models.NotificationResponse)
+}
+
+//TODO: remove that
+func printHandlingSetupResponseElapsedTimeInMs(logger *logger.Logger, msg string, startTime time.Time) {
+	logger.Infof("%s: %f ms", msg, float64(time.Since(startTime))/float64(time.Millisecond))
 }
