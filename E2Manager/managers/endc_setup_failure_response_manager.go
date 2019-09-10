@@ -13,16 +13,16 @@ func NewEndcSetupFailureResponseManager() *EndcSetupFailureResponseManager {
 	return &EndcSetupFailureResponseManager{}
 }
 
-func (m *EndcSetupFailureResponseManager) SetNodeb(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error {
+func (m *EndcSetupFailureResponseManager) PopulateNodebByPdu(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error {
 
 	failureResponse, err := converters.UnpackEndcX2SetupFailureResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 
 	if err != nil {
-		logger.Errorf("#EndcSetupFailureResponseManager.SetNodeb - RAN name: %s - Unpack & extract failed. Error: %v", nodebInfo.RanName, err)
+		logger.Errorf("#EndcSetupFailureResponseManager.PopulateNodebByPdu - RAN name: %s - Unpack and extract failed. Error: %v", nodebInfo.RanName, err)
 		return err
 	}
 
-	logger.Infof("#EndcSetupFailureResponseManager.SetNodeb - RAN name: %s - Unpacked payload and extracted protobuf successfully", nodebInfo.RanName)
+	logger.Infof("#EndcSetupFailureResponseManager.PopulateNodebByPdu - RAN name: %s - Unpacked payload and extracted protobuf successfully", nodebInfo.RanName)
 
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED_SETUP_FAILED
 	nodebInfo.SetupFailure = failureResponse

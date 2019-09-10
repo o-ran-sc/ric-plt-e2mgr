@@ -6,5 +6,5 @@ import (
 )
 
 type ISetupResponseManager interface {
-	SetNodeb(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error
+	PopulateNodebByPdu(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error
 }

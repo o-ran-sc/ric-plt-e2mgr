@@ -60,7 +60,7 @@ func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, request 
 
 	nodebInfo.ConnectionAttempts = 0
 	nbIdentity := &entities.NbIdentity{InventoryName: inventoryName}
-	err := h.setupResponseManager.SetNodeb(logger, nbIdentity, nodebInfo, request.Payload)
+	err := h.setupResponseManager.PopulateNodebByPdu(logger, nbIdentity, nodebInfo, request.Payload)
 
 	if err != nil {
 		return

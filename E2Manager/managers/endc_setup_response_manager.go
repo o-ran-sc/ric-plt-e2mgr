@@ -13,16 +13,16 @@ func NewEndcSetupResponseManager() *EndcSetupResponseManager {
 	return &EndcSetupResponseManager{}
 }
 
-func (m *EndcSetupResponseManager) SetNodeb(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error {
+func (m *EndcSetupResponseManager) PopulateNodebByPdu(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error {
 
 	gnbId, gnb, err := converters.UnpackEndcX2SetupResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 
 	if err != nil {
-		logger.Errorf("#EndcSetupResponseManager.SetNodeb - RAN name: %s - Unpack & extract failed. Error: %v", nodebInfo.RanName, err)
+		logger.Errorf("#EndcSetupResponseManager.PopulateNodebByPdu - RAN name: %s - Unpack and extract failed. Error: %v", nodebInfo.RanName, err)
 		return err
 	}
 
-	logger.Infof("#EndcSetupResponseManager.SetNodeb - RAN name: %s - Unpacked payload and extracted protobuf successfully", nodebInfo.RanName)
+	logger.Infof("#EndcSetupResponseManager.PopulateNodebByPdu - RAN name: %s - Unpacked payload and extracted protobuf successfully", nodebInfo.RanName)
 
 	nbIdentity.GlobalNbId = gnbId
 	nodebInfo.GlobalNbId = gnbId
