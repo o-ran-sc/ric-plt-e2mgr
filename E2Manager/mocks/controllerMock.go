@@ -26,3 +26,16 @@ func (c *ControllerMock) X2ResetHandler(writer http.ResponseWriter, r *http.Requ
 	c.Called()
 }
 
+func (c *ControllerMock) X2SetupHandler(writer http.ResponseWriter, r *http.Request){
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	c.Called()
+}
+
+func (c *ControllerMock) EndcSetupHandler(writer http.ResponseWriter, r *http.Request){
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	c.Called()
+}

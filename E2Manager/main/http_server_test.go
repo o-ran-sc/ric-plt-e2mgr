@@ -34,29 +34,43 @@ func setupRouterAndMocks() (*mux.Router, *mocks.ControllerMock, *mocks.NodebCont
 	controllerMock := &mocks.ControllerMock{}
 	controllerMock.On("ShutdownHandler").Return(nil)
 	controllerMock.On("X2ResetHandler").Return(nil)
+	controllerMock.On("X2SetupHandler").Return(nil)
+	controllerMock.On("EndcSetupHandler").Return(nil)
 
 	nodebControllerMock := &mocks.NodebControllerMock{}
-	nodebControllerMock.On("HandleRequest").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
 	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("HandleHealthCheckRequest").Return(nil)
 
-	router := mux.NewRouter();
+	router := mux.NewRouter()
 	initializeRoutes(router, nodebControllerMock, controllerMock)
 	return router, controllerMock, nodebControllerMock
 }
 
-func TestRoutePostNodebMessageType(t *testing.T) {
-	router, _, nodebControllerMock := setupRouterAndMocks()
+func TestRoutePostEndcSetup(t *testing.T) {
+	router, controllerMock, _ := setupRouterAndMocks()
 
-	req, err := http.NewRequest("POST", "/v1/nodeb/messageType", nil)
+	req, err := http.NewRequest("POST", "/v1/nodeb/endc-setup", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	nodebControllerMock.AssertNumberOfCalls(t, "HandleRequest", 1)
+	controllerMock.AssertNumberOfCalls(t,"EndcSetupHandler", 1)
+}
+
+func TestRoutePostX2Setup(t *testing.T) {
+	router, controllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("POST", "/v1/nodeb/x2-setup", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	controllerMock.AssertNumberOfCalls(t,"X2SetupHandler", 1)
 }
 
 func TestRouteGetNodebIds(t *testing.T) {

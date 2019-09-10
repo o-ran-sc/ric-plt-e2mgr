@@ -53,8 +53,8 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger,*mocks.RmrMessenger
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-
-	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
+	ranSetupManager := NewRanSetupManager(logger,rmrService, rnibWriterProvider)
+	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
 	return logger,rmrMessengerMock, readerMock, writerMock, ranReconnectionManager
 }
 

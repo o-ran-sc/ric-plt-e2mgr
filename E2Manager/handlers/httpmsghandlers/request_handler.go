@@ -18,10 +18,9 @@
 package httpmsghandlers
 
 import (
-	"e2mgr/logger"
 	"e2mgr/models"
 )
 
 type RequestHandler interface {
-	Handle(logger *logger.Logger, request models.Request) error
+	Handle(request models.Request) error
 }

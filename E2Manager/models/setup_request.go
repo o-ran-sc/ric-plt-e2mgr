@@ -15,18 +15,10 @@
 // limitations under the License.
 //
 
-package httpmsghandlers
+package models
 
-import (
-	"e2mgr/logger"
-	"e2mgr/models"
-	"e2mgr/sessions"
-	"sync"
-	"time"
-)
-
-type Handler interface {
-	PreHandle(logger *logger.Logger, details *models.RequestDetails) error
-	CreateMessage(logger *logger.Logger, details *models.RequestDetails, messageChannel chan *models.E2RequestMessage, e2sessions sessions.E2Sessions, startTime time.Time, wg sync.WaitGroup)
-	GetMessageType() int
+type SetupRequest struct {
+	RanIp   string `json:"ranIp"`
+	RanPort uint16 `json:"ranPort"`
+	RanName string `json:"ranName"`
 }

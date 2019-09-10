@@ -22,16 +22,20 @@ import (
 	"e2mgr/e2managererrors"
 	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type IncomingRequest string
 
 const (
-	ShutdownRequest IncomingRequest = "Shutdown"
-	ResetRequest    IncomingRequest = "Reset"
+	ShutdownRequest  IncomingRequest = "Shutdown"
+	ResetRequest     IncomingRequest = "Reset"
+	X2SetupRequest   IncomingRequest = "X2SetupRequest"
+	EndcSetupRequest IncomingRequest = "EndcSetupRequest"
 )
 
 type IncomingRequestHandlerProvider struct {
@@ -39,20 +43,23 @@ type IncomingRequestHandlerProvider struct {
 	logger     *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter, rNibReaderProvider func() reader.RNibReader) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
+	rNibReaderProvider func() reader.RNibReader, ranSetupManager *managers.RanSetupManager) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap: initRequestHandlerMap(rmrService, config, rNibWriterProvider, rNibReaderProvider),
+		requestMap: initRequestHandlerMap(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider, ranSetupManager),
 		logger:     logger,
 	}
 }
 
-func initRequestHandlerMap(rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
-	rNibReaderProvider func() reader.RNibReader) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibWriterProvider func() rNibWriter.RNibWriter,
+	rNibReaderProvider func() reader.RNibReader, ranSetupManager *managers.RanSetupManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
-		ShutdownRequest: httpmsghandlers.NewDeleteAllRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
-		ResetRequest:    httpmsghandlers.NewX2ResetRequestHandler(rmrService, config, rNibWriterProvider, rNibReaderProvider),   //TODO change to pointer
+		ShutdownRequest: httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider), //TODO change to pointer
+		ResetRequest:    httpmsghandlers.NewX2ResetRequestHandler(logger, rmrService, rNibWriterProvider, rNibReaderProvider),
+		X2SetupRequest:    httpmsghandlers.NewSetupRequestHandler(logger, rNibWriterProvider, rNibReaderProvider, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST),
+		EndcSetupRequest:    httpmsghandlers.NewSetupRequestHandler(logger, rNibWriterProvider, rNibReaderProvider, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST), //TODO change to pointer
 	}
 }
 

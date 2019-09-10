@@ -20,37 +20,26 @@ package controllers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/providers/httpmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"e2mgr/sessions"
 	"e2mgr/utils"
 	"encoding/json"
-	"errors"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/mux"
 	"net/http"
-	"net/http/httputil"
-	"strings"
-	"sync"
 	"time"
 )
 
 const (
-	parseErrorCode            int = 401
 	validationErrorCode       int = 402
 	notFoundErrorCode         int = 404
 	internalErrorCode         int = 501
-	requiredInputErrorMessage     = "Mandatory fields are missing"
 	validationFailedMessage       = "Validation failed"
-	parseErrorMessage             = "Parse failure"
 	notFoundErrorMessage          = "Resource not found"
 	internalErrorMessage          = "Internal Server Error. Please try again later"
-	sendMessageErrorMessage       = "Failed to send message. For more information please check logs"
 )
 
 var E2Sessions = make(sessions.E2Sessions)
@@ -59,7 +48,6 @@ var messageChannel chan *models.E2RequestMessage
 var errorChannel chan error
 
 type INodebController interface {
-	HandleRequest(writer http.ResponseWriter, request *http.Request)
 	GetNodebIdList (writer http.ResponseWriter, request *http.Request)
 	GetNodeb(writer http.ResponseWriter, request *http.Request)
 	HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request)
@@ -81,68 +69,6 @@ func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, 
 		rnibReaderProvider: rnibReaderProvider,
 		rnibWriterProvider: rnibWriterProvider,
 	}
-}
-
-func prettifyRequest(request *http.Request) string {
-	dump, _ := httputil.DumpRequest(request, true)
-	requestPrettyPrint := strings.Replace(string(dump), "\r\n", " ", -1)
-	return strings.Replace(requestPrettyPrint, "\n", "", -1)
-}
-
-func (rc NodebController) HandleRequest(writer http.ResponseWriter, request *http.Request) {
-	startTime := time.Now()
-	rc.Logger.Infof("[Client -> E2 Manager] #nodeb_controller.HandleRequest - request: %v", prettifyRequest(request))
-
-	vars := mux.Vars(request)
-	messageTypeParam := vars["messageType"]
-	requestHandlerProvider := httpmsghandlerprovider.NewRequestHandlerProvider(rc.rnibWriterProvider)
-	handler, err := requestHandlerProvider.GetHandler(rc.Logger, messageTypeParam)
-
-	if err != nil {
-		handleErrorResponse(rc.Logger, http.StatusNotFound, notFoundErrorCode, notFoundErrorMessage, writer, startTime)
-		return
-	}
-
-	requestDetails, err := parseJson(rc.Logger, request)
-
-	if err != nil {
-		handleErrorResponse(rc.Logger, http.StatusBadRequest, parseErrorCode, parseErrorMessage, writer, startTime)
-		return
-	}
-
-	rc.Logger.Infof("#nodeb_controller.HandleRequest - request: %+v", requestDetails)
-
-	if err := validateRequestDetails(rc.Logger, requestDetails); err != nil {
-		handleErrorResponse(rc.Logger, http.StatusBadRequest, validationErrorCode, requiredInputErrorMessage, writer, startTime)
-		return
-	}
-
-	err = handler.PreHandle(rc.Logger, &requestDetails)
-
-	if err != nil {
-		handleErrorResponse(rc.Logger, http.StatusInternalServerError, internalErrorCode, err.Error(), writer, startTime)
-		return
-	}
-
-	rc.Logger.Infof("[E2 Manager -> Client] #nodeb_controller.HandleRequest - http status: 200")
-	writer.WriteHeader(http.StatusOK)
-
-	var wg sync.WaitGroup
-
-	go handler.CreateMessage(rc.Logger, &requestDetails, messageChannel, E2Sessions, startTime, wg)
-
-	go rc.rmrService.SendMessage(handler.GetMessageType(), messageChannel, errorChannel, wg)
-
-	wg.Wait()
-
-	err = <-errorChannel
-
-	if err != nil {
-		handleErrorResponse(rc.Logger, http.StatusInternalServerError, internalErrorCode, sendMessageErrorMessage, writer, startTime)
-		return
-	}
-
-	printHandlingRequestElapsedTimeInMs(rc.Logger, startTime)
 }
 
 func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *http.Request) {
@@ -176,7 +102,7 @@ func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Req
 	vars := mux.Vars(request)
 	ranName := vars["ranName"]
 	// WAS: respondingNode, rnibError := reader.GetRNibReader().GetNodeb(ranName)
-	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider);
+	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
 	respondingNode, rnibError := rnibReaderService.GetNodeb(ranName)
 	if rnibError != nil {
 		rc.Logger.Errorf("%v", rnibError)
@@ -202,32 +128,6 @@ func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Req
 func (rc NodebController) HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request) {
 	//fmt.Println("[X-APP -> Client] #HandleHealthCheckRequest - http status: 200")
 	writer.WriteHeader(http.StatusOK)
-}
-
-func parseJson(logger *logger.Logger, request *http.Request) (models.RequestDetails, error) {
-	var requestDetails models.RequestDetails
-	if err := json.NewDecoder(request.Body).Decode(&requestDetails); err != nil {
-		logger.Errorf("#nodeb_controller.parseJson - cannot deserialize incoming request. request: %v, error: %v", request, err)
-		return requestDetails, err
-	}
-	return requestDetails, nil
-}
-
-func validateRequestDetails(logger *logger.Logger, requestDetails models.RequestDetails) error {
-
-	if requestDetails.RanPort == 0 {
-		logger.Errorf("#nodeb_controller.validateRequestDetails - validation failure: port cannot be zero")
-		return errors.New("port: cannot be blank")
-	}
-	err := validation.ValidateStruct(&requestDetails,
-		validation.Field(&requestDetails.RanIp, validation.Required, is.IP),
-		validation.Field(&requestDetails.RanName, validation.Required),
-	)
-	if err != nil {
-		logger.Errorf("#nodeb_controller.validateRequestDetails - validation failure, error: %v", err)
-	}
-
-	return err
 }
 
 func handleErrorResponse(logger *logger.Logger, httpStatus int, errorCode int, errorMessage string, writer http.ResponseWriter, startTime time.Time) {

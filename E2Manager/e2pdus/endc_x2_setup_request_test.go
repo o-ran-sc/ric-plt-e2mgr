@@ -63,7 +63,7 @@ func TestPackEndcX2apSetupRequest(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.packedPdu, func(t *testing.T) {
 
-			payload, _, err := PreparePackedEndcX2SetupRequest(MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, tc.eNBId, tc.eNBIdBitqty, ricFlag)
+			payload, _, err := preparePackedEndcX2SetupRequest(MaxAsn1PackedBufferSize /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, tc.eNBId, tc.eNBIdBitqty, ricFlag)
 			if err != nil {
 				t.Errorf("want: success, got: pack failed. Error: %v\n", err)
 			} else {
@@ -90,7 +90,7 @@ func TestPackEndcX2apSetupRequestPackError(t *testing.T) {
 	eNBIdBitqty := uint(Macro_eNB_ID)
 	wantError := "packing error: #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big:53"
 
-	_, _, err := PreparePackedEndcX2SetupRequest(40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty, ricFlag)
+	_, _, err := preparePackedEndcX2SetupRequest(40 /*max packed buffer*/, MaxAsn1CodecMessageBufferSize /*max message buffer*/, pLMNId, eNBId, eNBIdBitqty, ricFlag)
 	if err != nil {
 		if 0 != strings.Compare(fmt.Sprintf("%s", err), wantError) {
 			t.Errorf("want failure: %s, got: %s", wantError, err)

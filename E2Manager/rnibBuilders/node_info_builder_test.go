@@ -29,7 +29,7 @@ const ranIP = "ip"
 const ranPort = uint16(30000)
 
 func TestCreateInitialNodeInfo(t *testing.T) {
-	requestDetails :=  &models.RequestDetails{
+	requestDetails :=  &models.SetupRequest{
 		RanName: ranName,
 		RanPort:ranPort,
 		RanIp:ranIP,

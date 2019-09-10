@@ -27,7 +27,6 @@ import (
 	"unsafe"
 )
 
-//TODO: replace the constant in setup_request_handler.go
 const (
 	MaxAsn1PackedBufferSize       = 4096
 	MaxAsn1CodecMessageBufferSize = 4096

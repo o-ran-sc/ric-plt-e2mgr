@@ -27,7 +27,7 @@ import "e2mgr/models"
  */
 type E2SessionDetails struct {
 	SessionStart time.Time
-	Request *models.RequestDetails
+	Request *models.SetupRequest
 }
 
 /*

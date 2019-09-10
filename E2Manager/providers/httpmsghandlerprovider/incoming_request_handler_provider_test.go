@@ -22,6 +22,7 @@ import (
 	"e2mgr/e2managererrors"
 	"e2mgr/handlers/httpmsghandlers"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
@@ -52,11 +53,8 @@ func TestNewIncomingRequestHandlerProvider(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return &mocks.RnibWriterMock{}
 	}
-
-	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
-	/*if provider == nil {
-		t.Errorf("want: provider, got: nil")
-	}*/
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider,ranSetupManager)
 
 	assert.NotNil(t, provider)
 }
@@ -72,22 +70,65 @@ func TestShutdownRequestHandler(t *testing.T) {
 		return &mocks.RnibWriterMock{}
 	}
 
-	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider,ranSetupManager)
 
 	handler, err := provider.GetHandler(ShutdownRequest)
 
-	/*if handler == nil {
-		t.Errorf("failed to get x2 setup handler")
-	}*/
 	assert.NotNil(t, provider)
 	assert.Nil(t, err)
 
 	_, ok := handler.(*httpmsghandlers.DeleteAllRequestHandler)
 
 	assert.True(t, ok)
-	/*if !ok {
-		t.Errorf("failed to delete all handler")
-	}*/
+}
+
+func TestX2SetupRequestHandler(t *testing.T) {
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+
+	log := initLog(t)
+	readerProvider := func() reader.RNibReader {
+		return &mocks.RnibReaderMock{}
+	}
+	writerProvider := func() rNibWriter.RNibWriter {
+		return &mocks.RnibWriterMock{}
+	}
+
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider,ranSetupManager)
+
+	handler, err := provider.GetHandler(X2SetupRequest)
+
+	assert.NotNil(t, provider)
+	assert.Nil(t, err)
+
+	_, ok := handler.(*httpmsghandlers.SetupRequestHandler)
+
+	assert.True(t, ok)
+}
+
+func TestEndcSetupRequestHandler(t *testing.T) {
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+
+	log := initLog(t)
+	readerProvider := func() reader.RNibReader {
+		return &mocks.RnibReaderMock{}
+	}
+	writerProvider := func() rNibWriter.RNibWriter {
+		return &mocks.RnibWriterMock{}
+	}
+
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider,ranSetupManager)
+
+	handler, err := provider.GetHandler(EndcSetupRequest)
+
+	assert.NotNil(t, provider)
+	assert.Nil(t, err)
+
+	_, ok := handler.(*httpmsghandlers.SetupRequestHandler)
+
+	assert.True(t, ok)
 }
 
 func TestGetShutdownHandlerFailure(t *testing.T) {
@@ -100,7 +141,8 @@ func TestGetShutdownHandlerFailure(t *testing.T) {
 		return &mocks.RnibWriterMock{}
 	}
 
-	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider)
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
+	provider := NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), writerProvider, readerProvider, ranSetupManager)
 
 	_, actual := provider.GetHandler("test")
 	expected := &e2managererrors.InternalError{}

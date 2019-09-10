@@ -38,7 +38,7 @@ import (
 	"testing"
 )
 
-func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T){
+func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -53,20 +53,20 @@ func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T){
 
 	config := configuration.ParseConfiguration()
 
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
 	expected := &e2managererrors.RnibDbError{}
-	actual := handler.Handle(log, nil)
-	if reflect.TypeOf(actual) != reflect.TypeOf(expected){
+	actual := handler.Handle(nil)
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
+func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -81,7 +81,7 @@ func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
 
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
@@ -90,26 +90,26 @@ func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil).Return(nbIdentityList, rnibErr)
 
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(nil)
 
 	expected := &e2managererrors.RnibDbError{}
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
-	if reflect.TypeOf(actual) != reflect.TypeOf(expected){
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleSuccessFlow(t *testing.T){
+func TestHandleSuccessFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -123,21 +123,21 @@ func TestHandleSuccessFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(nil)
 
@@ -145,26 +145,26 @@ func TestHandleSuccessFlow(t *testing.T){
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
-	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3AfterTimer, nil)
 
-	updatedNb2AfterTimer := &entities.NodebInfo{RanName:"RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3AfterTimer := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb2AfterTimer).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSuccessGetNextStatusFlow(t *testing.T){
+func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -178,7 +178,7 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -186,7 +186,7 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T){
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
 
 	//after timer: ShutDown->Ignore, ShuttingDown->ShutDown
@@ -195,18 +195,18 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T){
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, nil)
 
-	updatedNb1AfterTimer := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleShuttingDownStatusFlow(t *testing.T){
+func TestHandleShuttingDownStatusFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -220,7 +220,7 @@ func TestHandleShuttingDownStatusFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -234,18 +234,18 @@ func TestHandleShuttingDownStatusFlow(t *testing.T){
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, nil)
 
-	updatedNb1AfterTimer := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleGetNodebFailedFlow(t *testing.T){
+func TestHandleGetNodebFailedFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -259,7 +259,7 @@ func TestHandleGetNodebFailedFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	//Before timer: Disconnected->ShutDown(will fail), ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
@@ -267,14 +267,14 @@ func TestHandleGetNodebFailedFlow(t *testing.T){
 
 	errRnib := &common.ResourceNotFoundError{}
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, errRnib)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(errRnib)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(nil)
 
@@ -282,26 +282,26 @@ func TestHandleGetNodebFailedFlow(t *testing.T){
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
-	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, errRnib)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3AfterTimer, nil)
 
-	updatedNb2AfterTimer := &entities.NodebInfo{RanName:"RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3AfterTimer := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb2AfterTimer).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSaveFailedFlow(t *testing.T){
+func TestHandleSaveFailedFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -315,22 +315,22 @@ func TestHandleSaveFailedFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
 	errRnib := &common.ResourceNotFoundError{}
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(errRnib)
 
@@ -338,26 +338,26 @@ func TestHandleSaveFailedFlow(t *testing.T){
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
-	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3AfterTimer, nil)
 
-	updatedNb2AfterTimer := &entities.NodebInfo{RanName:"RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3AfterTimer := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb2AfterTimer).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(errRnib)
 
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSendRmrFailedFlow(t *testing.T){
+func TestHandleSendRmrFailedFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -371,21 +371,21 @@ func TestHandleSendRmrFailedFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3, nil)
 
-	updatedNb1 := &entities.NodebInfo{RanName:"RanName_1", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3 := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(nil)
 
@@ -393,29 +393,29 @@ func TestHandleSendRmrFailedFlow(t *testing.T){
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	nb1AfterTimer := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
-	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
-	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2AfterTimer, nil)
 	readerMock.On("GetNodeb", "RanName_3").Return(nb3AfterTimer, nil)
 
-	updatedNb2AfterTimer := &entities.NodebInfo{RanName:"RanName_2", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
-	updatedNb3AfterTimer := &entities.NodebInfo{RanName:"RanName_3", ConnectionStatus:entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb2AfterTimer := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
+	updatedNb3AfterTimer := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb2AfterTimer).Return(nil)
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	expected := e2managererrors.NewRmrError()
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize,"RanName" , &tests.DummyPayload, &tests.DummyXAction)
+	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, expected)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 
-	if reflect.TypeOf(actual) != reflect.TypeOf(expected){
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleGetListEnbIdsEmptyFlow(t *testing.T){
+func TestHandleGetListEnbIdsEmptyFlow(t *testing.T) {
 	log := initLog(t)
 
 	readerMock := &mocks.RnibReaderMock{}
@@ -429,14 +429,14 @@ func TestHandleGetListEnbIdsEmptyFlow(t *testing.T){
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	config := configuration.ParseConfiguration()
 
-	handler := NewDeleteAllRequestHandler(getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
 
 	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}
 
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
 
-	actual := handler.Handle(log, nil)
+	actual := handler.Handle(nil)
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 0)
 	assert.Nil(t, actual)
 }
@@ -462,10 +462,9 @@ func initLog(t *testing.T) *logger.Logger {
 	return log
 }
 
-
 func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, make(sessions.E2Sessions), messageChannel)
 }

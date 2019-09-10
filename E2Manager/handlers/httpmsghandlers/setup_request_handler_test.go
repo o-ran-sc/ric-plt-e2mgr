@@ -14,154 +14,290 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 package httpmsghandlers
 
 import (
-	"bytes"
+	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
-	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
-	"e2mgr/sessions"
-	"fmt"
+	"e2mgr/rmrCgo"
+	"e2mgr/rnibBuilders"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"sync"
+	"github.com/stretchr/testify/mock"
+	"reflect"
 	"testing"
-	"time"
 )
 
-func TestNewSetupRequestHandler(t *testing.T) {
+func TestSetupHandleNewRanSave_Error(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
 
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return &mocks.RnibWriterMock{}
+	ranName := "RanName"
+	rnibErr := &common.ResourceNotFoundError{}
+	sr := models.SetupRequest{"127.0.0.1", 8080, ranName,}
+
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", ranName).Return(nb, rnibErr)
+
+	vErr := &common.ValidationError{}
+	updatedNb, _ := rnibBuilders.CreateInitialNodeInfo(&sr, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+	writerMock.On("SaveNodeb", mock.Anything, updatedNb).Return(vErr)
+
+	var nbUpdated = &entities.NodebInfo{RanName: ranName, Ip: sr.RanIp, Port: uint32(sr.RanPort), ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
+
+	payload := e2pdus.PackedEndcX2setupRequest
+	xaction := []byte(ranName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+
+	actual := handler.Handle(sr)
+	expected := &e2managererrors.RnibDbError{}
+
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 
-	h := NewSetupRequestHandler(rnibWriterProvider)
-	assert.NotNil(t, h)
+	writerMock.AssertNumberOfCalls(t, "SaveNodeb", 1)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 }
 
-func TestCreateMessageSuccess(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-	if err != nil {
-		t.Errorf("#setup_request_handler_test.TestCreateMessageSuccess - failed to initialize logger, error: %s", err)
-	}
-	messageChannel := make(chan *models.E2RequestMessage)
-	assert.NotPanics(t, func() { createMsg(log, messageChannel) })
-	assert.NotEmpty(t, <-messageChannel)
+func TestSetupHandleNewRan_Success(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+
+	ranName := "RanName"
+	rnibErr := &common.ResourceNotFoundError{}
+	sr := models.SetupRequest{"127.0.0.1", 8080, ranName,}
+
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", ranName).Return(nb, rnibErr)
+
+	updatedNb, _ := rnibBuilders.CreateInitialNodeInfo(&sr, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+	writerMock.On("SaveNodeb", mock.Anything, updatedNb).Return(nil)
+
+	var nbUpdated = &entities.NodebInfo{RanName: ranName, Ip: sr.RanIp, Port: uint32(sr.RanPort), ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
+
+	payload := e2pdus.PackedEndcX2setupRequest
+	xaction := []byte(ranName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+
+	actual := handler.Handle(sr)
+
+	assert.Nil(t, actual)
+
+	writerMock.AssertNumberOfCalls(t, "SaveNodeb", 1)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
-func TestParseRicId(t *testing.T) {
-	var testCases = []struct {
-		ricId       string
-		pLMNId      []byte
-		eNBId       []byte
-		eNBIdBitqty uint
-		failure     error
-	}{
-		{
-			ricId:       "bbbccc-abcd02/18",
-			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
-			eNBId:       []byte{0xab, 0xcd, 0x2}, /*00000010 -> 10000000*/
-			eNBIdBitqty: e2pdus.ShortMacro_eNB_ID,
-		},
-		{
-			ricId:       "bbbccc-abcd0e/20",
-			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
-			eNBId:       []byte{0xab, 0xcd, 0xe},
-			eNBIdBitqty: e2pdus.Macro_eNB_ID,
-		},
-		{
-			ricId:       "bbbccc-abcd07/21",
-			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
-			eNBId:       []byte{0xab, 0xcd, 0x7}, /*00000111 -> 00111000*/
-			eNBIdBitqty: e2pdus.LongMacro_eNB_ID,
-		},
-		{
-			ricId:       "bbbccc-abcdef08/28",
-			pLMNId:      []byte{0xbb, 0xbc, 0xcc},
-			eNBId:       []byte{0xab, 0xcd, 0xef, 0x8},
-			eNBIdBitqty: e2pdus.Home_eNB_ID,
-		},
-		{
-			ricId:   "",
-			failure: fmt.Errorf("unable to extract the value of RIC_ID: EOF"),
-		},
+func TestEndcSetupHandleRmr_Error(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
 
-		{
-			ricId:   "bbbccc",
-			failure: fmt.Errorf("unable to extract the value of RIC_ID: unexpected EOF"),
-		},
-		{
-			ricId:   "bbbccc-",
-			failure: fmt.Errorf("unable to extract the value of RIC_ID: EOF"),
-		},
-		{
-			ricId:   "-bbbccc",
-			failure: fmt.Errorf("%s", "unable to extract the value of RIC_ID: no hex data for %x string"),
-		},
-		{
-			ricId:   "/20",
-			failure: fmt.Errorf("%s", "unable to extract the value of RIC_ID: no hex data for %x string"),
-		},
-		{
-			ricId:   "bbbcccdd-abcdef08/28", // pLMNId too long
-			failure: fmt.Errorf("unable to extract the value of RIC_ID: input does not match format"),
-		},
-		{
-			ricId:   "bbbccc-abcdef0809/28", // eNBId too long
-			failure: fmt.Errorf("unable to extract the value of RIC_ID: input does not match format"),
-		},
+	ranName := "RanName"
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", ranName).Return(nb, nil)
 
-		{
-			ricId:   "bbbc-abcdef08/28", // pLMNId too short
-			failure: fmt.Errorf("invalid value for RIC_ID, len(pLMNId:[187 188]) != 3"),
-		},
-		{
-			ricId:   "bbbccc-abcd/28", // eNBId too short
-			failure: fmt.Errorf("invalid value for RIC_ID, len(eNBId:[171 205]) != 3 or 4"),
-		},
-		{
-			ricId:   "bbbccc-abcdef08/239", // bit quantity too long - no error, will return 23 (which is invalid)
-			failure: fmt.Errorf("invalid value for RIC_ID, eNBIdBitqty: 23"),
-		},
+	var nbUpdated = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
+
+	var nbDisconnected = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	writerMock.On("UpdateNodebInfo", nbDisconnected).Return(nil)
+
+	payload := e2pdus.PackedEndcX2setupRequest
+	xaction := []byte(ranName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+
+	rmrErr := &e2managererrors.RmrError{}
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, rmrErr)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, ranName,}
+	actual := handler.Handle(sr)
+
+	if reflect.TypeOf(actual) != reflect.TypeOf(rmrErr) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, rmrErr)
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.ricId, func(t *testing.T) {
-
-			err := parseRicID(tc.ricId)
-			if err != nil {
-				if tc.failure == nil {
-					t.Errorf("want: success, got: parse failed. Error: %v\n", err)
-				} else {
-					if strings.Compare(err.Error(), tc.failure.Error()) != 0 {
-						t.Errorf("want: %s, got: %s\n", err, tc.failure)
-					}
-				}
-			} else {
-				if bytes.Compare(tc.pLMNId, pLMNId) != 0 {
-					t.Errorf("want: pLMNId = %v, got: pLMNId = %v", tc.pLMNId, pLMNId)
-				}
-
-				if bytes.Compare(tc.eNBId, eNBId) != 0 {
-					t.Errorf("want: eNBId = %v, got: eNBId = %v", tc.eNBId, eNBId)
-				}
-
-				if tc.eNBIdBitqty != eNBIdBitqty {
-					t.Errorf("want: eNBIdBitqty = %d, got: eNBIdBitqty = %d", tc.eNBIdBitqty, eNBIdBitqty)
-				}
-			}
-		})
-	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
-func createMsg(log *logger.Logger, messageChannel chan *models.E2RequestMessage) {
-	h := SetupRequestHandler{}
-	E2Sessions := make(sessions.E2Sessions)
-	var wg sync.WaitGroup
-	var rd models.RequestDetails
-	go h.CreateMessage(log, &rd, messageChannel, E2Sessions, time.Now(), wg)
-	wg.Wait()
+
+func TestEndcSetupHandleExistingDisconnectedRan_Success(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+
+	ranName := "RanName"
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", ranName).Return(nb, nil)
+
+	var nbUpdated = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
+
+	payload := e2pdus.PackedEndcX2setupRequest
+	xaction := []byte(ranName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, ranName,}
+	actual := handler.Handle(sr)
+
+	assert.Nil(t, actual)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
+}
+
+func TestX2SetupHandleExistingConnectedRan_Success(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	ranName := "RanName"
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", ranName).Return(nb, nil)
+
+	var nbUpdated = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
+
+	payload := e2pdus.PackedX2setupRequest
+	xaction := []byte(ranName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, ranName,}
+	actual := handler.Handle(sr)
+
+	assert.Nil(t, actual)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
+}
+
+func TestX2SetupHandleRnibGet_Error(t *testing.T) {
+	readerMock, _, handler,rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	rnibErr := &common.ValidationError{}
+	nb := &entities.NodebInfo{RanName: "RanName", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	readerMock.On("GetNodeb", "RanName").Return(nb, rnibErr)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, "RanName",}
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.RnibDbError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func TestX2SetupHandleShuttingDownRan_Error(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	nb := &entities.NodebInfo{RanName: "RanName", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	readerMock.On("GetNodeb", "RanName").Return(nb, nil)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, "RanName",}
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.WrongStateError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func TestX2SetupHandleNoPort_Error(t *testing.T) {
+	_, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	sr := models.SetupRequest{"127.0.0.1", 0, "RanName",}
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.RequestValidationError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func TestX2SetupHandleNoRanName_Error(t *testing.T) {
+	_, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	sr := models.SetupRequest{}
+	sr.RanPort = 8080
+	sr.RanIp = "127.0.0.1"
+
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.RequestValidationError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func TestX2SetupHandleNoIP_Error(t *testing.T) {
+	_, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	sr := models.SetupRequest{}
+	sr.RanPort = 8080
+	sr.RanName = "RanName"
+
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.RequestValidationError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func TestX2SetupHandleInvalidIp_Error(t *testing.T) {
+	_, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+
+	sr := models.SetupRequest{}
+	sr.RanPort = 8080
+	sr.RanName = "RanName"
+	sr.RanIp = "invalid ip"
+
+	actual := handler.Handle(sr)
+
+	expected := &e2managererrors.RequestValidationError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
+func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol)(*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.RmrMessengerMock) {
+	log := initLog(t)
+
+	readerMock := &mocks.RnibReaderMock{}
+	readerProvider := func() reader.RNibReader {
+		return readerMock
+	}
+	writerMock := &mocks.RnibWriterMock{}
+	writerProvider := func() rNibWriter.RNibWriter {
+		return writerMock
+	}
+
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrService := getRmrService(rmrMessengerMock, log)
+
+	ranSetupManager := managers.NewRanSetupManager(log, rmrService, writerProvider)
+	handler := NewSetupRequestHandler(log, writerProvider, readerProvider, ranSetupManager, protocol)
+
+	return readerMock, writerMock, handler, rmrMessengerMock
 }

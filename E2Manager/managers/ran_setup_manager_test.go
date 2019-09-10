@@ -55,7 +55,7 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err != nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
 	}
 
@@ -86,7 +86,7 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err != nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
 	}
 
@@ -119,7 +119,7 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err == nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	}
 
@@ -152,7 +152,7 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err == nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	} else {
 		assert.IsType(t, e2managererrors.NewRnibDbError(), err)
@@ -187,7 +187,7 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err == nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	} else {
 		assert.IsType(t, e2managererrors.NewRnibDbError(), err)
@@ -220,7 +220,7 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	rmrService := getRmrService(rmrMessengerMock, log)
 
 	mgr := NewRanSetupManager(log, rmrService, writerProvider)
-	if err := mgr.ExecuteSetup(initialNodeb); err == nil {
+	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: error, got: success")
 	}
 

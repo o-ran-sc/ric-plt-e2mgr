@@ -55,7 +55,8 @@ func main() {
 
 	rmrResponseChannel := make(chan *models.NotificationResponse, config.NotificationResponseBuffer)
 	rmrService := services.NewRmrService(rmrConfig, msgImpl, controllers.E2Sessions, rmrResponseChannel)
-	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter, rmrService)
+	var ranSetupManager = managers.NewRanSetupManager(logger, rmrService, rNibWriter.GetRNibWriter)
+	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter, ranSetupManager)
 	var nManager = notificationmanager.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter, ranReconnectionManager)
 
 	rmrServiceReceiver := receivers.NewRmrServiceReceiver(*rmrService, nManager)
@@ -64,7 +65,7 @@ func main() {
 	go rmrService.SendResponse()
 
 	controller := controllers.NewNodebController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
-	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config)
+	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config, ranSetupManager)
 	runServer(config.Http.Port, controller, newController)
 }
 
@@ -84,9 +85,10 @@ func initializeRoutes(router *mux.Router, controller controllers.INodebControlle
 	r.HandleFunc("/health", controller.HandleHealthCheckRequest).Methods("GET")
 
 	rr := r.PathPrefix("/nodeb").Subrouter()
-	rr.HandleFunc("/{messageType}", controller.HandleRequest).Methods("POST")
 	rr.HandleFunc("/ids", controller.GetNodebIdList).Methods("GET") // nodeb/ids
 	rr.HandleFunc("/{ranName}", controller.GetNodeb).Methods("GET")
 	rr.HandleFunc("/shutdown", newController.ShutdownHandler).Methods("PUT")
 	rr.HandleFunc("/{ranName}/reset", newController.X2ResetHandler).Methods("PUT") // nodeb/{ranName}/reset
+	rr.HandleFunc("/x2-setup", newController.X2SetupHandler).Methods("POST")
+	rr.HandleFunc("/endc-setup", newController.EndcSetupHandler).Methods("POST")
 }

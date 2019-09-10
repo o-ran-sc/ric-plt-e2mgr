@@ -44,23 +44,23 @@ func NewRanSetupManager(logger *logger.Logger, rmrService *services.RmrService, 
 	}
 }
 
-// Update retries and connection status (connecting)
-func (m *RanSetupManager) updateConnectionStatusConnecting(nodebInfo *entities.NodebInfo) error {
-	// Update retries and connection status (connecting)
-	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+// Update retries and connection status 
+func (m *RanSetupManager) updateConnectionStatus(nodebInfo *entities.NodebInfo, status entities.ConnectionStatus) error {
+	// Update retries and connection status
+	nodebInfo.ConnectionStatus = status
 	nodebInfo.ConnectionAttempts++
 	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
 	if err != nil {
-		m.logger.Errorf("#RanSetupManager.updateConnectionStatusConnecting - Ran name: %s - Failed updating RAN's connection status to CONNECTING : %s", nodebInfo.RanName, err)
+		m.logger.Errorf("#RanSetupManager.updateConnectionStatus - Ran name: %s - Failed updating RAN's connection status to %v : %s", nodebInfo.RanName, status.String(), err)
 	} else {
-		m.logger.Infof("#RanSetupManager.updateConnectionStatusConnecting - Ran name: %s - Successfully updated rNib. RAN's current connection status: CONNECTING, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatus - Ran name: %s - Successfully updated rNib. RAN's current connection status: %v, RAN's current connection attempts: %d", nodebInfo.RanName, status.String(), nodebInfo.ConnectionAttempts)
 	}
 	return err
 }
 
 // Decrement retries and connection status (disconnected)
 func (m *RanSetupManager) updateConnectionStatusDisconnected(nodebInfo *entities.NodebInfo) error {
-	// Update retries and connection status (connecting)
+	// Update retries and connection status
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	nodebInfo.ConnectionAttempts--
 	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
@@ -90,14 +90,14 @@ func (m *RanSetupManager) prepareSetupRequest(nodebInfo *entities.NodebInfo) (in
 }
 
 // ExecuteSetup updates the connection status and number of attempts in the nodebInfo and send an endc/x2 setup request to establish a connection with the RAN
-func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo) error {
+func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo, status entities.ConnectionStatus) error {
 
 	//Fill details for the response handler
-	requestDetails := models.RequestDetails{RanName: nodebInfo.RanName, RanPort: uint16(nodebInfo.Port), RanIp: nodebInfo.Ip}
+	requestDetails := models.SetupRequest{RanName: nodebInfo.RanName, RanPort: uint16(nodebInfo.Port), RanIp: nodebInfo.Ip}
 	m.rmrService.E2sessions[nodebInfo.RanName] = sessions.E2SessionDetails{SessionStart: time.Now(), Request: &requestDetails}
 
-	// Update retries and connection status (connecting)
-	if err := m.updateConnectionStatusConnecting(nodebInfo); err != nil {
+	// Update retries and connection status
+	if err := m.updateConnectionStatus(nodebInfo, status); err != nil {
 		delete(m.rmrService.E2sessions, nodebInfo.RanName)
 		return e2managererrors.NewRnibDbError()
 	}

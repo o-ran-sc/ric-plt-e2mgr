@@ -21,7 +21,6 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
-	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
@@ -38,13 +37,14 @@ type RanReconnectionManager struct {
 	ranSetupManager    *RanSetupManager
 }
 
-func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, rmrService *services.RmrService) *RanReconnectionManager {
+func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibReaderProvider func() reader.RNibReader,
+	rnibWriterProvider func() rNibWriter.RNibWriter, ranSetupManager *RanSetupManager) *RanReconnectionManager {
 	return &RanReconnectionManager{
 		logger:             logger,
 		config:             config,
 		rnibReaderProvider: rnibReaderProvider,
 		rnibWriterProvider: rnibWriterProvider,
-		ranSetupManager:    NewRanSetupManager(logger,rmrService,rnibWriterProvider),
+		ranSetupManager:    ranSetupManager,
 	}
 }
 
@@ -62,8 +62,7 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 		return m.setConnectionStatusOfUnconnectableRan(nodebInfo)
 	}
 
-
-	err := m.ranSetupManager.ExecuteSetup(nodebInfo)
+	err := m.ranSetupManager.ExecuteSetup(nodebInfo, entities.ConnectionStatus_CONNECTING)
 
 	if err != nil {
 		m.logger.Errorf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Failed executing setup. Error: %v", inventoryName, err)

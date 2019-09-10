@@ -26,21 +26,17 @@ import (
 	"e2mgr/services"
 	"e2mgr/sessions"
 	"e2mgr/tests"
-	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
-
-const x2SetupMessageType = "x2-setup"
 
 func TestNewRequestController(t *testing.T) {
 	rnibReaderProvider := func() reader.RNibReader {
@@ -53,92 +49,11 @@ func TestNewRequestController(t *testing.T) {
 	assert.NotNil(t, NewNodebController(&logger.Logger{}, &services.RmrService{}, rnibReaderProvider, rnibWriterProvider))
 }
 
-func TestHandleRequestSuccess(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestHandleRequestSuccess - failed to initialize logger, error: %s", err)
-	}
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-
-	rmrMessengerMock.On("SendMsg",
-		mock.AnythingOfType(fmt.Sprintf("%T", mbuf)),
-		tests.MaxMsgSize).Return(mbuf, nil)
-
-	writer := httptest.NewRecorder()
-
-	handleRequest(writer, log, rmrMessengerMock, tests.GetHttpRequest(), x2SetupMessageType)
-	assert.Equal(t, http.StatusOK, writer.Result().StatusCode)
-}
-
-func TestHandleRequestFailure_InvalidRequestDetails(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestHandleRequestFailure - failed to initialize logger, error: %s", err)
-	}
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	var mbuf *rmrCgo.MBuf
-
-	rmrMessengerMock.On("SendMsg",
-		mock.AnythingOfType(fmt.Sprintf("%T", mbuf)),
-		tests.MaxMsgSize).Return(mbuf, errors.New("test failure"))
-
-	writer := httptest.NewRecorder()
-
-	handleRequest(writer, log, rmrMessengerMock, tests.GetInvalidRequestDetails(), x2SetupMessageType)
-	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
-}
-
-func TestHandleRequestFailure_InvalidMessageType(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestHandleRequestFailure - failed to initialize logger, error: %s", err)
-	}
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	var mbuf *rmrCgo.MBuf
-
-	rmrMessengerMock.On("SendMsg",
-		mock.AnythingOfType(fmt.Sprintf("%T", mbuf)),
-		tests.MaxMsgSize).Return(mbuf, errors.New("test failure"))
-
-	writer := httptest.NewRecorder()
-
-	handleRequest(writer, log, rmrMessengerMock, tests.GetInvalidMessageType(), "dummy")
-	assert.Equal(t, http.StatusNotFound, writer.Result().StatusCode)
-}
-
 func TestHandleHealthCheckRequest(t *testing.T) {
 	rc := NewNodebController(nil, nil, nil, nil)
 	writer := httptest.NewRecorder()
 	rc.HandleHealthCheckRequest(writer, nil)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
-}
-
-func handleRequest(writer *httptest.ResponseRecorder, log *logger.Logger, rmrMessengerMock *mocks.RmrMessengerMock,
-	request *http.Request, messageType string) {
-	rmrService := getRmrService(rmrMessengerMock, log)
-	request = mux.SetURLVars(request, map[string]string{"messageType": messageType})
-
-	var nodebInfo *entities.NodebInfo
-	var nbIdentity *entities.NbIdentity
-
-	rnibWriterMock := mocks.RnibWriterMock{}
-	rnibWriterMock.On("SaveNodeb",
-		mock.AnythingOfType(fmt.Sprintf("%T", nbIdentity)),
-		mock.AnythingOfType(fmt.Sprintf("%T", nodebInfo))).Return(nil)
-
-	rnibReaderProvider := func() reader.RNibReader {
-		return &mocks.RnibReaderMock{}
-	}
-
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return &rnibWriterMock
-	}
-
-	NewNodebController(log, rmrService, rnibReaderProvider, rnibWriterProvider).HandleRequest(writer, request)
 }
 
 func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {

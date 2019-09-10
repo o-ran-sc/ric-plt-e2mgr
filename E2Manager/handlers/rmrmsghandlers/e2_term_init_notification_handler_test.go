@@ -21,6 +21,7 @@ import (
 )
 
 func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *managers.RanReconnectionManager) {
+
 	logger := initLog(t)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
@@ -34,8 +35,8 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderM
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, rmrService)
+	ranSetupManager := managers.NewRanSetupManager(logger,rmrService, rnibWriterProvider)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
 	return logger, readerMock, writerMock, rmrMessengerMock, ranReconnectionManager
 }
 

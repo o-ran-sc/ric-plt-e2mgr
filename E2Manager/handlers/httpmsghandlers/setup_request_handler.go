@@ -14,121 +14,126 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
 package httpmsghandlers
 
 import (
-	"e2mgr/e2pdus"
+	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
+	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rnibBuilders"
-	"fmt"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"os"
-	"sync"
-	"time"
-
-	"e2mgr/models"
-	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 )
 
 const (
-	ENV_RIC_ID                       = "RIC_ID"
-	MaxAsn1CodecAllocationBufferSize = 64 * 1024
-	MaxAsn1PackedBufferSize          = 4096
-	MaxAsn1CodecMessageBufferSize    = 4096
+	X2SetupActivityName   = "X2_SETUP"
+	EndcSetupActivityName = "ENDC_SETUP"
 )
 
-
-/*The Ric Id is the combination of pLMNId and ENBId*/
-var pLMNId []byte
-var eNBId []byte
-var eNBIdBitqty uint
-var ricFlag = []byte{0xbb, 0xbc, 0xcc} /*pLMNId [3]bytes*/
-
 type SetupRequestHandler struct {
-	rnibWriterProvider func() rNibWriter.RNibWriter
+	readerProvider  func() reader.RNibReader
+	writerProvider  func() rNibWriter.RNibWriter
+	logger          *logger.Logger
+	ranSetupManager *managers.RanSetupManager
+	protocol        entities.E2ApplicationProtocol
 }
 
-func NewSetupRequestHandler(rnibWriterProvider func() rNibWriter.RNibWriter) *SetupRequestHandler {
+func NewSetupRequestHandler(logger *logger.Logger, writerProvider func() rNibWriter.RNibWriter, readerProvider func() reader.RNibReader,
+	ranSetupManager *managers.RanSetupManager, protocol entities.E2ApplicationProtocol) *SetupRequestHandler {
 	return &SetupRequestHandler{
-		rnibWriterProvider: rnibWriterProvider,
+		logger:          logger,
+		readerProvider:  readerProvider,
+		writerProvider:  writerProvider,
+		ranSetupManager: ranSetupManager,
+		protocol:        protocol,
 	}
 }
 
-func (handler SetupRequestHandler) PreHandle(logger *logger.Logger, details *models.RequestDetails) error {
-	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(details, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+func (handler *SetupRequestHandler) Handle(request models.Request) error {
 
-	rNibErr := handler.rnibWriterProvider().SaveNodeb(nodebIdentity, nodebInfo)
+	setupRequest := request.(models.SetupRequest)
+
+	err := handler.validateRequestDetails(setupRequest)
+	if err != nil {
+		return err
+	}
+
+	nodebInfo, err := handler.readerProvider().GetNodeb(setupRequest.RanName)
+	if err != nil {
+		_, ok := err.(*common.ResourceNotFoundError)
+		if !ok {
+			handler.logger.Errorf("#SetupRequestHandler.Handle - failed to get nodeB entity for ran name: %v from RNIB. Error: %s",
+				setupRequest.RanName, err.Error())
+			return e2managererrors.NewRnibDbError()
+		}
+
+		result := handler.connectNewRan(&setupRequest, handler.protocol)
+		return result
+	}
+
+	result := handler.connectExistingRan(nodebInfo)
+	return result
+}
+
+func (handler *SetupRequestHandler) connectExistingRan(nodebInfo *entities.NodebInfo) error {
+
+	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
+		handler.logger.Errorf("#SetupRequestHandler.connectExistingRan - RAN: %s in wrong state (%s)", nodebInfo.RanName, entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
+		return e2managererrors.NewWrongStateError(handler.getActivityName(handler.protocol), entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
+	}
+
+	status := entities.ConnectionStatus_CONNECTING
+	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_CONNECTED{
+		status = nodebInfo.ConnectionStatus
+	}
+	nodebInfo.ConnectionAttempts = 0
+
+	result := handler.ranSetupManager.ExecuteSetup(nodebInfo, status)
+	return result
+}
+
+func (handler *SetupRequestHandler) connectNewRan(request *models.SetupRequest, protocol entities.E2ApplicationProtocol) error {
+
+	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(request, protocol)
+
+	rNibErr := handler.writerProvider().SaveNodeb(nodebIdentity, nodebInfo)
 	if rNibErr != nil {
-		logger.Errorf("#setup_request_handler.PreHandle - failed to save initial nodeb entity for ran name: %v in RNIB. Error: %s", details.RanName, rNibErr.Error())
-	} else {
-		logger.Infof("#setup_request_handler.PreHandle - initial nodeb entity for ran name: %v was saved to RNIB ", details.RanName)
+		handler.logger.Errorf("#SetupRequestHandler.connectNewRan - failed to initial nodeb entity for ran name: %v in RNIB. Error: %s", request.RanName, rNibErr.Error())
+		return e2managererrors.NewRnibDbError()
 	}
+	handler.logger.Infof("#SetupRequestHandler.connectNewRan - initial nodeb entity for ran name: %v was saved to RNIB ", request.RanName)
 
-	return rNibErr
+	result := handler.ranSetupManager.ExecuteSetup(nodebInfo, entities.ConnectionStatus_CONNECTING)
+	return result
 }
 
-func (SetupRequestHandler) CreateMessage(logger *logger.Logger, requestDetails *models.RequestDetails, messageChannel chan *models.E2RequestMessage, e2sessions sessions.E2Sessions, startTime time.Time, wg sync.WaitGroup) {
+func (handler *SetupRequestHandler) validateRequestDetails(request models.SetupRequest) error {
 
-	wg.Add(1)
-
-	transactionId := requestDetails.RanName
-	e2sessions[transactionId] = sessions.E2SessionDetails{SessionStart: startTime, Request: requestDetails}
-	setupRequestMessage := models.NewE2RequestMessage(transactionId, requestDetails.RanIp, requestDetails.RanPort, requestDetails.RanName, e2pdus.PackedX2setupRequest)
-
-	logger.Debugf("#setup_request_handler.CreateMessage - PDU: %s", e2pdus.PackedX2setupRequestAsString)
-	logger.Debugf("#setup_request_handler.CreateMessage - setupRequestMessage was created successfully. setup request details(transactionId = [%s]): %+v", transactionId, setupRequestMessage)
-	messageChannel <- setupRequestMessage
-
-	wg.Done()
-}
-
-//Expected value in RIC_ID = pLMN_Identity-eNB_ID/<eNB_ID size in bits>
-//<6 hex digits>-<6 or 8 hex digits>/<18|20|21|28>
-//Each byte is represented by two hex digits, the value in the lowest byte of the eNB_ID must be assigned to the lowest bits
-//For example, to get the value of ffffeab/28  the last byte must be 0x0b, not 0xb0 (-ffffea0b/28).
-func parseRicID(ricId string) error {
-	if _, err := fmt.Sscanf(ricId, "%6x-%8x/%2d", &pLMNId, &eNBId, &eNBIdBitqty); err != nil {
-		return fmt.Errorf("unable to extract the value of %s: %s", ENV_RIC_ID, err)
+	if request.RanPort == 0 {
+		handler.logger.Errorf("#SetupRequestHandler.validateRequestDetails - validation failure: port cannot be zero")
+		return e2managererrors.NewRequestValidationError()
 	}
+	err := validation.ValidateStruct(&request,
+		validation.Field(&request.RanIp, validation.Required, is.IP),
+		validation.Field(&request.RanName, validation.Required),
+	)
 
-	if len(pLMNId) < 3 {
-		return fmt.Errorf("invalid value for %s, len(pLMNId:%v) != 3", ENV_RIC_ID, pLMNId)
-	}
-
-	if len(eNBId) < 3 {
-		return fmt.Errorf("invalid value for %s, len(eNBId:%v) != 3 or 4", ENV_RIC_ID, eNBId)
-	}
-
-	if eNBIdBitqty != e2pdus.ShortMacro_eNB_ID && eNBIdBitqty != e2pdus.Macro_eNB_ID && eNBIdBitqty != e2pdus.LongMacro_eNB_ID && eNBIdBitqty != e2pdus.Home_eNB_ID {
-		return fmt.Errorf("invalid value for %s, eNBIdBitqty: %d", ENV_RIC_ID, eNBIdBitqty)
+	if err != nil {
+		handler.logger.Errorf("#SetupRequestHandler.validateRequestDetails - validation failure, error: %v", err)
+		return e2managererrors.NewRequestValidationError()
 	}
 
 	return nil
 }
 
-//TODO: remove Get
-func (SetupRequestHandler) GetMessageType() int {
-	return rmrCgo.RIC_X2_SETUP_REQ
-}
-
-func init() {
-	var err error
-	ricId := os.Getenv(ENV_RIC_ID)
-	//ricId="bbbccc-ffff0e/20"
-	//ricId="bbbccc-abcd0e/20"
-	if err = parseRicID(ricId); err != nil {
-		panic(err)
+func (handler *SetupRequestHandler) getActivityName(protocol entities.E2ApplicationProtocol) string {
+	if protocol == entities.E2ApplicationProtocol_X2_SETUP_REQUEST {
+		return X2SetupActivityName
 	}
-
-	e2pdus.PackedEndcX2setupRequest,e2pdus.PackedEndcX2setupRequestAsString, err = e2pdus.PreparePackedEndcX2SetupRequest(MaxAsn1PackedBufferSize, MaxAsn1CodecMessageBufferSize,pLMNId, eNBId, eNBIdBitqty, ricFlag )
-	if err != nil{
-		panic(err)
-	}
-	e2pdus.PackedX2setupRequest,e2pdus.PackedX2setupRequestAsString, err = e2pdus.PreparePackedX2SetupRequest(MaxAsn1PackedBufferSize, MaxAsn1CodecMessageBufferSize,pLMNId, eNBId, eNBIdBitqty, ricFlag )
-	if err != nil{
-		panic(err)
-	}
+	return EndcSetupActivityName
 }
