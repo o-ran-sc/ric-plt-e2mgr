@@ -18,37 +18,18 @@
 
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
+Library     String
 Library     OperatingSystem
-Library     REST      ${url}
-
+Library     Process
+Library     ${CURDIR}/Reset_Ran_To_Ric_Verify_logs.py
 
 
 *** Test Cases ***
-X2 - Setup and Get
-    Post Request setup node b x-2
-    Get Request node b enb test1
+Verify logs - Reset Sent by simulator
+    ${Reset}=   Grep File  ./gnb.log  ResetRequest has been sent
+    #Log to console      ${Reset}
+    Should Be Equal     ${Reset}     gnbe2_simu: ResetRequest has been sent
 
-
-Run Configuration update
-    Run    ${Run_Config}
-    Sleep   1s
-
-Remove log files
-    Remove File  ${EXECDIR}/gnb.log
-    Remove File  ${EXECDIR}/e2mgr.log
-
-Save logs
-    Sleep   1s
-    Run     ${Save_e2_log}
-    Run     ${Save_e2mgr_log}
-
-
-
-
-
-
-
-
+Verify logs - e2mgr logs
+   ${result}    Reset_Ran_To_Ric_Verify_logs.verify   ${EXECDIR}
+   Should Be Equal As Strings    ${result}      True

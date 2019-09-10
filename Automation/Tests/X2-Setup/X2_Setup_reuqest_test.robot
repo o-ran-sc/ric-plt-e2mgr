@@ -29,7 +29,7 @@ X2 - Setup Test
     Integer     response status       200
 
 X2 - Get Nodeb
-    Get Request node b enb test1
+    Get Request Node B Enb test1
     Integer  response status  200
     String   response body ranName    test1
     String   response body ip    10.0.2.15

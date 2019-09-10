@@ -17,38 +17,31 @@
 ##############################################################################
 
 
-*** Settings ***
-Suite Setup   Prepare Enviorment
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     REST      ${url}
+def verify(directory):
 
+    file = 'e2mgr.log'
 
+    path = '/'
 
-*** Test Cases ***
-X2 - Setup and Get
-    Post Request setup node b x-2
-    Get Request node b enb test1
+    file_path = directory + path + file
 
+    f = open(file_path,'r')
 
-Run Configuration update
-    Run    ${Run_Config}
-    Sleep   1s
+    found_message_10070 = False
+    found_message_error = False
 
-Remove log files
-    Remove File  ${EXECDIR}/gnb.log
-    Remove File  ${EXECDIR}/e2mgr.log
+    for l in f:
+        if l.find('MType: 10070') > 0 and l.find('Meid: \\"test1\\"') > 0:
+            found_message_10070 = True
+        elif l.find('RanName: test1') > 0 and l.find('Error:') > 0:
+            found_message_error = True
+        if found_message_10070 and found_message_error:
+            break
 
-Save logs
-    Sleep   1s
-    Run     ${Save_e2_log}
-    Run     ${Save_e2mgr_log}
-
-
-
-
-
+    if found_message_10070 and found_message_error:
+        return True
+    else:
+        return False
 
 
 

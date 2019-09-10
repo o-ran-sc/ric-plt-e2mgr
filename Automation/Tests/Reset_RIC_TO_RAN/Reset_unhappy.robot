@@ -22,6 +22,7 @@ Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
+Suite Teardown   Start E2
 
 *** Variables ***
 ${stop_docker_e2}      docker stop e2

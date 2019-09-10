@@ -16,23 +16,33 @@
 #
 ##############################################################################
 
-
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library     Collections
 Library     REST      ${url}
 
 
 
+
+
 *** Test Cases ***
-X2 - Setup and Get
+
+Prepare Ran in Connected connectionStatus
     Post Request setup node b x-2
-    Get Request node b enb test1
+    Integer     response status       200
+    Sleep  1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTED
 
+Stop RNIB
+      Run   docker stop redis
 
-Run Configuration update
+Run Reset from RAN
     Run    ${Run_Config}
     Sleep   1s
 
@@ -44,11 +54,3 @@ Save logs
     Sleep   1s
     Run     ${Save_e2_log}
     Run     ${Save_e2mgr_log}
-
-
-
-
-
-
-
-

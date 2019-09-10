@@ -23,10 +23,14 @@ Resource   ../Resource/resource.robot
 Library     OperatingSystem
 
 
+
+
+
 *** Keywords ***
 Post Request setup node b x-2
     Set Headers     ${header}
     POST        /v1/nodeb/x2-setup    ${json}
+
 
 
 Get Request node b enb test1
@@ -38,9 +42,14 @@ Get Request node b enb test2
     Sleep    1s
     GET      /v1/nodeb/test2
 
+
+
 Post Request setup node b endc-setup
     Set Headers     ${header}
     POST        /v1/nodeb/endc-setup    ${endcjson}
+
+Stop Simulator
+    Run And Return Rc And Output    ${stop_simu}
 
 
 Prepare Simulator For Load Information

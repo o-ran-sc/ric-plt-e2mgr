@@ -25,7 +25,7 @@ Library     Collections
 Library     Process
 Library     ${CURDIR}/loadscripts.py
 Library     REST      ${url}
-
+Suite Teardown  Stop Simulator
 
 
 

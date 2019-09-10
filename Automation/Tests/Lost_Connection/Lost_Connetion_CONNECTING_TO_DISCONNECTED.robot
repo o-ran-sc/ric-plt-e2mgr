@@ -15,40 +15,43 @@
 #   limitations under the License.
 #
 ##############################################################################
-
-
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library    Collections
 Library     REST      ${url}
 
 
 
+
+
 *** Test Cases ***
-X2 - Setup and Get
+
+Pre Condition for Connecting - no simu
+    Run And Return Rc And Output    ${stop_simu}
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    4
+
+
+Prepare Ran in Connecting connectionStatus
+    Sleep  1s
     Post Request setup node b x-2
-    Get Request node b enb test1
-
-
-Run Configuration update
-    Run    ${Run_Config}
-    Sleep   1s
-
-Remove log files
-    Remove File  ${EXECDIR}/gnb.log
-    Remove File  ${EXECDIR}/e2mgr.log
-
-Save logs
-    Sleep   1s
-    Run     ${Save_e2_log}
-    Run     ${Save_e2mgr_log}
+    Integer     response status       200
+    Sleep  1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    #String   response body connectionStatus    CONNECTING
 
 
 
-
-
-
-
+Verfiy Disconnected ConnectionStatus
+    Sleep    1s
+    GET      /v1/nodeb/test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    DISCONNECTED
+    Integer   response body connectionAttempts    3
 
