@@ -20,7 +20,6 @@ package rmrmsghandlers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/sessions"
 	"fmt"
 	"time"
 )
@@ -52,7 +51,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 		return err
 	}
 
-	loadInformationHandler.Handle(log, sessions.E2Sessions{}, notificationRequest, nil)
+	loadInformationHandler.Handle(log, notificationRequest, nil)
 	return nil
 }
 
@@ -77,7 +76,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //	var packedExampleByteSlice []byte
 //	_, err = fmt.Sscanf(FullUperPdu, "%x", &packedExampleByteSlice)
 //	notificationRequest := models.NewNotificationRequest(inventoryName, packedExampleByteSlice, time.Now(), " 881828026419")
-//	loadInformationHandler.Handle(log, sessions.E2Sessions{}, notificationRequest, nil)
+//	loadInformationHandler.Handle(log, notificationRequest, nil)
 //
 //	writerMock.AssertNumberOfCalls(t, "SaveRanLoadInformation", 1)
 //}
@@ -103,7 +102,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //	var packedExampleByteSlice []byte
 //	_, err = fmt.Sscanf(GarbagePdu, "%x", &packedExampleByteSlice)
 //	notificationRequest := models.NewNotificationRequest(inventoryName, packedExampleByteSlice, time.Now(), " 881828026419")
-//	loadInformationHandler.Handle(log, sessions.E2Sessions{}, notificationRequest, nil)
+//	loadInformationHandler.Handle(log, notificationRequest, nil)
 //
 //	writerMock.AssertNumberOfCalls(t, "SaveRanLoadInformation", 0)
 //}

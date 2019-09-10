@@ -10,7 +10,6 @@ import (
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
-	"e2mgr/sessions"
 	"e2mgr/tests"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -35,7 +34,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderM
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	ranSetupManager := managers.NewRanSetupManager(logger,rmrService, rnibWriterProvider)
+	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibWriterProvider)
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
 	return logger, readerMock, writerMock, rmrMessengerMock, ranReconnectionManager
 }
@@ -64,7 +63,7 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
@@ -96,7 +95,7 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 2)
@@ -137,7 +136,7 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	//test1 (before send +1, after failure +1), test2 (0) test3 (0)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
@@ -185,7 +184,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 3)
 	//test1 (+1), test2 failure (0) test3 (+1)
@@ -234,7 +233,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 2)
 	//test1 (+1), test2 failure (0) test3 (0)
@@ -254,7 +253,7 @@ func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, rnibErr)
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
@@ -270,7 +269,7 @@ func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, common.NewInternalError(fmt.Errorf("internal error")))
 
 	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
-	handler.Handle(log, nil, nil, nil)
+	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
@@ -281,7 +280,7 @@ func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, make(sessions.E2Sessions), messageChannel)
+	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
 }
 
 // TODO: extract to test_utils

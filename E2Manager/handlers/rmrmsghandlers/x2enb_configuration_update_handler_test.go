@@ -20,7 +20,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"e2mgr/tests"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -33,14 +32,13 @@ func TestHandleSuccessEnbConfigUpdate(t *testing.T){
 			t.Errorf("#endc_configuration_update_handler_test.TestHandleSuccessEndcConfigUpdate - failed to initialize logger, error: %s", err)
 		}
 		h := X2EnbConfigurationUpdateHandler{}
-		E2Sessions := make(sessions.E2Sessions)
 
 		payload := tests.GetPackedPayload(t)
 		mBuf := rmrCgo.NewMBuf(10370, len(payload),"RanName", &payload, &tests.DummyXAction)
 		notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now()}
 		messageChannel := make(chan *models.NotificationResponse)
 
-		go h.Handle(log, E2Sessions, &notificationRequest, messageChannel)
+		go h.Handle(log, &notificationRequest, messageChannel)
 
 		response := <-messageChannel
 
@@ -55,13 +53,12 @@ func TestHandleFailureEnbConfigUpdate(t *testing.T){
 		t.Errorf("#endc_configuration_update_handler_test.TestHandleFailureEndcConfigUpdate - failed to initialize logger, error: %s", err)
 	}
 	h := X2EnbConfigurationUpdateHandler{}
-	E2Sessions := make(sessions.E2Sessions)
 
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, 4,"RanName", &tests.DummyPayload, &tests.DummyXAction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now()}
 	messageChannel := make(chan *models.NotificationResponse)
 
-	go h.Handle(log, E2Sessions, &notificationRequest, messageChannel)
+	go h.Handle(log, &notificationRequest, messageChannel)
 
 	response := <-messageChannel
 

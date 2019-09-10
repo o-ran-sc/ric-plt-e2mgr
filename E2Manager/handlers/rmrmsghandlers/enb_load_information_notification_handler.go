@@ -7,7 +7,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"time"
 )
@@ -26,7 +25,7 @@ func elapsed(startTime time.Time) float64 {
 	return float64(time.Since(startTime)) / float64(time.Millisecond)
 }
 
-func (src EnbLoadInformationNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (src EnbLoadInformationNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 	pdu, err := converters.UnpackX2apPdu(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 

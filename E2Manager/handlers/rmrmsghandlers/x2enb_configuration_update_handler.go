@@ -28,7 +28,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"unsafe"
 )
 
@@ -38,7 +37,7 @@ func NewX2EnbConfigurationUpdateHandler() X2EnbConfigurationUpdateHandler {
 	return X2EnbConfigurationUpdateHandler{}
 }
 
-func (src X2EnbConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest,
+func (src X2EnbConfigurationUpdateHandler) Handle(logger *logger.Logger, request *models.NotificationRequest,
 	messageChannel chan<- *models.NotificationResponse) {
 
 	var payloadSize C.ulong

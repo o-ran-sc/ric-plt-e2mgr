@@ -41,17 +41,17 @@ func TestX2ResetRequestNotifSuccess(t *testing.T) {
 	h := NewX2ResetRequestNotificationHandler(readerProvider)
 
 	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
-	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_CONNECTED,}
+	nb := &entities.NodebInfo{RanName: mBuf.Meid, ConnectionStatus: entities.ConnectionStatus_CONNECTED,}
 	var rnibErr error
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
 	messageChannel := make(chan *models.NotificationResponse)
 
-	go h.Handle(log,nil, &notificationRequest, messageChannel)
+	go h.Handle(log, &notificationRequest, messageChannel)
 
 	result := <-messageChannel
 	assert.Equal(t, result.RanName, mBuf.Meid)
@@ -69,16 +69,16 @@ func TestHandleX2ResetRequestNotifShuttingDownStatus(t *testing.T) {
 	h := NewX2ResetRequestNotificationHandler(readerProvider)
 
 	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
-	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN,}
+	nb := &entities.NodebInfo{RanName: mBuf.Meid, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	var rnibErr error
 
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
-	h.Handle(log,nil, &notificationRequest, nil)
+	h.Handle(log, &notificationRequest, nil)
 }
 
 func TestHandleX2ResetRequestNotifDisconnectStatus(t *testing.T) {
@@ -92,19 +92,19 @@ func TestHandleX2ResetRequestNotifDisconnectStatus(t *testing.T) {
 	h := NewX2ResetRequestNotificationHandler(readerProvider)
 
 	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
-	nb := &entities.NodebInfo{RanName:mBuf.Meid, ConnectionStatus:entities.ConnectionStatus_DISCONNECTED,}
+	nb := &entities.NodebInfo{RanName: mBuf.Meid, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
 	var rnibErr error
 
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
-	h.Handle(log,nil, &notificationRequest, nil)
+	h.Handle(log, &notificationRequest, nil)
 }
 
-func TestHandleX2ResetRequestNotifGetNodebFailed(t *testing.T){
+func TestHandleX2ResetRequestNotifGetNodebFailed(t *testing.T) {
 
 	log := initLog(t)
 	var payload []byte
@@ -115,13 +115,13 @@ func TestHandleX2ResetRequestNotifGetNodebFailed(t *testing.T){
 
 	h := NewX2ResetRequestNotificationHandler(readerProvider)
 	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
 		StartTime: time.Now(), TransactionId: string(xaction)}
 
 	var nb *entities.NodebInfo
-	rnibErr  := &common.ResourceNotFoundError{}
+	rnibErr := &common.ResourceNotFoundError{}
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
 
-	h.Handle(log,nil, &notificationRequest, nil)
+	h.Handle(log, &notificationRequest, nil)
 }

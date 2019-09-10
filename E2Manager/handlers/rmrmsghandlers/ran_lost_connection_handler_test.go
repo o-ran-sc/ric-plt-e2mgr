@@ -20,7 +20,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/sessions"
 	"github.com/pkg/errors"
 	"testing"
 )
@@ -32,7 +31,7 @@ func TestLostConnectionHandlerSuccess(t *testing.T) {
 	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
 	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(nil)
 	handler := NewRanLostConnectionHandler(ranReconnectionManagerMock)
-	handler.Handle(logger, make(sessions.E2Sessions), &notificationRequest, nil)
+	handler.Handle(logger, &notificationRequest, nil)
 	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
 }
 
@@ -43,6 +42,6 @@ func TestLostConnectionHandlerFailure(t *testing.T) {
 	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
 	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(errors.New("error"))
 	handler := NewRanLostConnectionHandler(ranReconnectionManagerMock)
-	handler.Handle(logger, make(sessions.E2Sessions), &notificationRequest, nil)
+	handler.Handle(logger, &notificationRequest, nil)
 	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
 }

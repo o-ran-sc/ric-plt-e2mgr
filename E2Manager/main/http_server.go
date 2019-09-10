@@ -54,7 +54,7 @@ func main() {
 	defer reader.Close()
 
 	rmrResponseChannel := make(chan *models.NotificationResponse, config.NotificationResponseBuffer)
-	rmrService := services.NewRmrService(rmrConfig, msgImpl, controllers.E2Sessions, rmrResponseChannel)
+	rmrService := services.NewRmrService(rmrConfig, msgImpl, rmrResponseChannel)
 	var ranSetupManager = managers.NewRanSetupManager(logger, rmrService, rNibWriter.GetRNibWriter)
 	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter, ranSetupManager)
 	var nManager = notificationmanager.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter, ranReconnectionManager)

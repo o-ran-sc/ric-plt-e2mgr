@@ -27,7 +27,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"unsafe"
@@ -43,7 +42,7 @@ func NewX2ResetRequestNotificationHandler(rnibReaderProvider func() reader.RNibR
 	}
 }
 
-func (src X2ResetRequestNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (src X2ResetRequestNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 	logger.Debugf("#X2ResetRequestNotificationHandler.Handle - Ran name: %s", request.RanName)
 

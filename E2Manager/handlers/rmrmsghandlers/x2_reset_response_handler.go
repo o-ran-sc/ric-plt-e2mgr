@@ -26,7 +26,6 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
@@ -40,8 +39,7 @@ func NewX2ResetResponseHandler(rnibReaderProvider func() reader.RNibReader) X2Re
 	}
 }
 
-func (src X2ResetResponseHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions,
-	request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (src X2ResetResponseHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 	logger.Infof("#x2ResetResponseHandler.Handle - received reset response. Payload: %x", request.Payload)
 

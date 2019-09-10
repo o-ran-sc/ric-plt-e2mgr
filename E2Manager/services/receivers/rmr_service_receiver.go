@@ -49,6 +49,6 @@ func (r *RmrServiceReceiver) ListenAndHandle() {
 			continue //TODO log error
 		}
 
-		r.nManager.HandleMessage(r.Config.Logger, r.E2sessions, mbuf, r.RmrResponse)
+		r.nManager.HandleMessage(r.Config.Logger, mbuf, r.RmrResponse)
 	}
 }

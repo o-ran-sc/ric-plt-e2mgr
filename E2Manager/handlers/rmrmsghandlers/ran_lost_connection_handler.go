@@ -21,7 +21,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/sessions"
 )
 
 type RanLostConnectionHandler struct {
@@ -33,7 +32,7 @@ func NewRanLostConnectionHandler(ranReconnectionManager managers.IRanReconnectio
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
-func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 	ranName := request.RanName
 

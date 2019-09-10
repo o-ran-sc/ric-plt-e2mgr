@@ -21,7 +21,6 @@ import (
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
@@ -42,7 +41,7 @@ func NewSetupResponseNotificationHandler(rnibReaderProvider func() reader.RNibRe
 	}
 }
 
-func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 	logger.Infof("#SetupResponseNotificationHandler - RAN name: %s - Received %s notification", request.RanName, h.notificationType)
 
 	inventoryName := request.RanName

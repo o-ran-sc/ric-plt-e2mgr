@@ -363,10 +363,6 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 
 	controller.X2ResetHandler(writer, req)
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
-
-	_, ok := rmrService.E2sessions[ranName]
-	assert.False(t, ok)
-
 }
 
 func TestHandleErrorResponse(t *testing.T) {

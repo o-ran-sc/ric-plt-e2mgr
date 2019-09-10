@@ -21,7 +21,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"strconv"
 	"sync"
 )
@@ -41,17 +40,15 @@ func NewRmrConfig(port int, maxMsgSize int, flags int, logger *logger.Logger) *R
 type RmrService struct {
 	Config      *RmrConfig
 	Messenger   *rmrCgo.RmrMessenger
-	E2sessions  sessions.E2Sessions
 	RmrResponse chan *models.NotificationResponse
 }
 
 // NewRmrService instantiates a new Rmr service instance
-func NewRmrService(rmrConfig *RmrConfig, msrImpl rmrCgo.RmrMessenger, e2sessions sessions.E2Sessions, rmrResponse chan *models.NotificationResponse) *RmrService {
+func NewRmrService(rmrConfig *RmrConfig, msrImpl rmrCgo.RmrMessenger, rmrResponse chan *models.NotificationResponse) *RmrService {
 
 	return &RmrService{
 		Config:      rmrConfig,
 		Messenger:   msrImpl.Init("tcp:"+strconv.Itoa(rmrConfig.Port), rmrConfig.MaxMsgSize, rmrConfig.Flags, rmrConfig.Logger),
-		E2sessions:  e2sessions,
 		RmrResponse: rmrResponse,
 	}
 }

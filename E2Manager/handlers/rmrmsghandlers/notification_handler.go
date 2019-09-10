@@ -20,12 +20,11 @@ package rmrmsghandlers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/sessions"
 	"time"
 )
 
 type NotificationHandler interface {
-	Handle(*logger.Logger, sessions.E2Sessions, *models.NotificationRequest, chan<- *models.NotificationResponse)
+	Handle(*logger.Logger, *models.NotificationRequest, chan<- *models.NotificationResponse)
 }
 
 //TODO: remove that

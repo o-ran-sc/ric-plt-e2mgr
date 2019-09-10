@@ -57,7 +57,7 @@ func TestSetupResponseGetNodebFailure(t *testing.T) {
 	testContext := NewSetupResponseTestContext(nil)
 	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	testContext.readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewInternalError(errors.New("Error")))
-	handler.Handle(testContext.logger, nil, &notificationRequest, nil)
+	handler.Handle(testContext.logger, &notificationRequest, nil)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
 }
@@ -69,7 +69,7 @@ func TestSetupResponseInvalidConnectionStatus(t *testing.T) {
 	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}, rnibErr)
-	handler.Handle(testContext.logger, nil, &notificationRequest, nil)
+	handler.Handle(testContext.logger, &notificationRequest, nil)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", ranName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
 }
@@ -98,7 +98,7 @@ func executeHandleSuccessSetupResponse(t *testing.T, packedPdu string, setupResp
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
 	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(saveNodebMockReturnValue)
-	handler.Handle(testContext.logger, nil, &notificationRequest, nil)
+	handler.Handle(testContext.logger, &notificationRequest, nil)
 
 	return testContext, nodebInfo
 }
@@ -159,14 +159,14 @@ func TestSetupResponseInvalidPayload(t *testing.T) {
 	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 1}, rnibErr)
-	handler.Handle(testContext.logger, nil, &notificationRequest, nil)
+	handler.Handle(testContext.logger, &notificationRequest, nil)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", ranName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
 }
 
 func TestSetupResponseSaveNodebFailure(t *testing.T) {
 	rnibErr := common.NewInternalError(errors.New("Error"))
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, X2SetupResponsePackedPdu, &managers.X2SetupResponseManager{},"X2 Setup Response", rnibErr)
+	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, X2SetupResponsePackedPdu, &managers.X2SetupResponseManager{}, "X2 Setup Response", rnibErr)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 }

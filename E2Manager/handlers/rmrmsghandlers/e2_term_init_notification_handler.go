@@ -21,7 +21,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/sessions"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
@@ -38,7 +37,7 @@ func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconn
 	}
 }
 
-func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
 

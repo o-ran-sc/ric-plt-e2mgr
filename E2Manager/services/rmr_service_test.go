@@ -22,7 +22,6 @@ import (
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"e2mgr/tests"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -75,5 +74,5 @@ func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return NewRmrService(NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  make(sessions.E2Sessions), messageChannel)
+	return NewRmrService(NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger,  messageChannel)
 }

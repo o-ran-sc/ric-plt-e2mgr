@@ -22,7 +22,6 @@ import (
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/services"
-	"e2mgr/sessions"
 	"e2mgr/utils"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -41,8 +40,6 @@ const (
 	notFoundErrorMessage          = "Resource not found"
 	internalErrorMessage          = "Internal Server Error. Please try again later"
 )
-
-var E2Sessions = make(sessions.E2Sessions)
 
 var messageChannel chan *models.E2RequestMessage
 var errorChannel chan error

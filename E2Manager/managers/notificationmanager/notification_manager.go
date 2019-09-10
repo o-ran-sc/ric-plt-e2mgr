@@ -24,7 +24,6 @@ import (
 	"e2mgr/providers/rmrmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"time"
@@ -43,7 +42,7 @@ func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWri
 }
 
 //TODO add NEWHandler with log
-func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions sessions.E2Sessions, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse) {
+func (m NotificationManager) HandleMessage(logger *logger.Logger, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse) {
 
 	notificationHandler, err := m.notificationHandlerProvider.GetNotificationHandler(mbuf.MType)
 
@@ -53,5 +52,5 @@ func (m NotificationManager) HandleMessage(logger *logger.Logger, e2Sessions ses
 	}
 
 	notificationRequest := models.NewNotificationRequest(mbuf.Meid, *mbuf.Payload, time.Now(), string(*mbuf.XAction))
-	go notificationHandler.Handle(logger, e2Sessions, notificationRequest, responseChannel)
+	go notificationHandler.Handle(logger, notificationRequest, responseChannel)
 }

@@ -28,7 +28,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/sessions"
 	"unsafe"
 )
 
@@ -38,8 +37,7 @@ func NewEndcConfigurationUpdateHandler() EndcConfigurationUpdateHandler {
 	return EndcConfigurationUpdateHandler{}
 }
 
-func (src EndcConfigurationUpdateHandler) Handle(logger *logger.Logger, e2Sessions sessions.E2Sessions, request *models.NotificationRequest,
-	messageChannel chan<- *models.NotificationResponse) {
+func (src EndcConfigurationUpdateHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
 	var payloadSize C.ulong
 	payloadSize = e2pdus.MaxAsn1PackedBufferSize
