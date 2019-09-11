@@ -22,7 +22,6 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -30,14 +29,14 @@ import (
 
 type RanSetupManager struct {
 	logger             *logger.Logger
-	rnibWriterProvider func() rNibWriter.RNibWriter
+	rnibDataService services.RNibDataService
 	rmrService         *services.RmrService
 }
 
-func NewRanSetupManager(logger *logger.Logger, rmrService *services.RmrService, rnibWriterProvider func() rNibWriter.RNibWriter) *RanSetupManager {
+func NewRanSetupManager(logger *logger.Logger, rmrService *services.RmrService, rnibDataService services.RNibDataService) *RanSetupManager {
 	return &RanSetupManager{
 		logger:             logger,
-		rnibWriterProvider: rnibWriterProvider,
+		rnibDataService: rnibDataService,
 		rmrService:         rmrService,
 	}
 }
@@ -47,7 +46,7 @@ func (m *RanSetupManager) updateConnectionStatus(nodebInfo *entities.NodebInfo, 
 	// Update retries and connection status
 	nodebInfo.ConnectionStatus = status
 	nodebInfo.ConnectionAttempts++
-	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
+	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatus - Ran name: %s - Failed updating RAN's connection status to %v : %s", nodebInfo.RanName, status, err)
 	} else {
@@ -61,7 +60,7 @@ func (m *RanSetupManager) updateConnectionStatusDisconnected(nodebInfo *entities
 	// Update retries and connection status
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	nodebInfo.ConnectionAttempts--
-	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
+	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Failed updating RAN's connection status to DISCONNECTED : %s", nodebInfo.RanName, err)
 	} else {

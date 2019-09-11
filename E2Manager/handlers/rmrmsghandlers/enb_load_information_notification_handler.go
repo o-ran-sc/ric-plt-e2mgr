@@ -6,18 +6,18 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"time"
 )
 
 type EnbLoadInformationNotificationHandler struct {
-	rnibWriterProvider func() rNibWriter.RNibWriter
+	rnibDataService services.RNibDataService
 }
 
-func NewEnbLoadInformationNotificationHandler(rnibWriterProvider func() rNibWriter.RNibWriter) EnbLoadInformationNotificationHandler {
+func NewEnbLoadInformationNotificationHandler(rnibDataService services.RNibDataService) EnbLoadInformationNotificationHandler {
 	return EnbLoadInformationNotificationHandler{
-		rnibWriterProvider: rnibWriterProvider,
+		rnibDataService: rnibDataService,
 	}
 }
 
@@ -47,7 +47,7 @@ func (src EnbLoadInformationNotificationHandler) Handle(logger *logger.Logger, r
 
 	logger.Debugf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully done with extracting and building RAN load information. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
 
-	rnibErr := src.rnibWriterProvider().SaveRanLoadInformation(request.RanName, ranLoadInformation)
+	rnibErr := src.rnibDataService.SaveRanLoadInformation(request.RanName, ranLoadInformation)
 
 	if rnibErr != nil {
 		logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Failed saving RAN load information. Error: %v", request.RanName, rnibErr)

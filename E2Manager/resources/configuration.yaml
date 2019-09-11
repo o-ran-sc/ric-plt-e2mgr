@@ -8,3 +8,5 @@ rmr:
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
 maxConnectionAttempts: 3
+maxRnibConnectionAttempts: 3
+rnibRetryIntervalMs: 10

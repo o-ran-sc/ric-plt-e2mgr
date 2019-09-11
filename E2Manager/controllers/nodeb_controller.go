@@ -20,12 +20,10 @@ package controllers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"e2mgr/utils"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -53,25 +51,22 @@ type INodebController interface {
 type NodebController struct {
 	rmrService         *services.RmrService
 	Logger             *logger.Logger
-	rnibReaderProvider func() reader.RNibReader
-	rnibWriterProvider func() rNibWriter.RNibWriter
+	rnibDataService services.RNibDataService
 }
 
-func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter) *NodebController {
+func NewNodebController(logger *logger.Logger, rmrService *services.RmrService, rnibDataService services.RNibDataService) *NodebController {
 	messageChannel = make(chan *models.E2RequestMessage)
 	errorChannel = make(chan error)
 	return &NodebController{
 		rmrService:         rmrService,
 		Logger:             logger,
-		rnibReaderProvider: rnibReaderProvider,
-		rnibWriterProvider: rnibWriterProvider,
+		rnibDataService: rnibDataService,
 	}
 }
 
 func (rc NodebController) GetNodebIdList (writer http.ResponseWriter, request *http.Request) {
 	startTime := time.Now()
-	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
-	nodebIdList, rnibError := rnibReaderService.GetNodebIdList()
+	nodebIdList, rnibError := rc.rnibDataService.GetListNodebIds()
 
 	if rnibError != nil {
 		rc.Logger.Errorf("%v", rnibError);
@@ -98,9 +93,7 @@ func (rc NodebController) GetNodeb(writer http.ResponseWriter, request *http.Req
 	startTime := time.Now()
 	vars := mux.Vars(request)
 	ranName := vars["ranName"]
-	// WAS: respondingNode, rnibError := reader.GetRNibReader().GetNodeb(ranName)
-	rnibReaderService := services.NewRnibReaderService(rc.rnibReaderProvider)
-	respondingNode, rnibError := rnibReaderService.GetNodeb(ranName)
+	respondingNode, rnibError := rc.rnibDataService.GetNodeb(ranName)
 	if rnibError != nil {
 		rc.Logger.Errorf("%v", rnibError)
 		httpStatusCode, errorCode, errorMessage := rnibErrorToHttpError(rnibError)

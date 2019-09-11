@@ -36,6 +36,8 @@ type Configuration struct {
 	NotificationResponseBuffer int
 	BigRedButtonTimeoutSec     int
 	MaxConnectionAttempts      int
+	MaxRnibConnectionAttempts  int
+	RnibRetryIntervalMs		   int
 }
 
 func ParseConfiguration() *Configuration{
@@ -58,6 +60,8 @@ func ParseConfiguration() *Configuration{
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
 	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
+	config.MaxConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
+	config.MaxConnectionAttempts = viper.GetInt("rnibRetryIntervalMs")
 	return &config
 }
 

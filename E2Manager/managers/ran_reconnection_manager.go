@@ -20,9 +20,8 @@ package managers
 import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
-	"e2mgr/rNibWriter"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type IRanReconnectionManager interface {
@@ -30,26 +29,23 @@ type IRanReconnectionManager interface {
 }
 
 type RanReconnectionManager struct {
-	logger             *logger.Logger
-	config             *configuration.Configuration
-	rnibReaderProvider func() reader.RNibReader
-	rnibWriterProvider func() rNibWriter.RNibWriter
-	ranSetupManager    *RanSetupManager
+	logger          *logger.Logger
+	config          *configuration.Configuration
+	rnibDataService services.RNibDataService
+	ranSetupManager *RanSetupManager
 }
 
-func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibReaderProvider func() reader.RNibReader,
-	rnibWriterProvider func() rNibWriter.RNibWriter, ranSetupManager *RanSetupManager) *RanReconnectionManager {
+func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, ranSetupManager *RanSetupManager) *RanReconnectionManager {
 	return &RanReconnectionManager{
-		logger:             logger,
-		config:             config,
-		rnibReaderProvider: rnibReaderProvider,
-		rnibWriterProvider: rnibWriterProvider,
-		ranSetupManager:    ranSetupManager,
+		logger:          logger,
+		config:          config,
+		rnibDataService: rnibDataService,
+		ranSetupManager: ranSetupManager,
 	}
 }
 
 func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
-	nodebInfo, rnibErr := m.rnibReaderProvider().GetNodeb(inventoryName)
+	nodebInfo, rnibErr := m.rnibDataService.GetNodeb(inventoryName)
 
 	if rnibErr != nil {
 		m.logger.Errorf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Failed fetching RAN from rNib. Error: %v", inventoryName, rnibErr)
@@ -84,7 +80,7 @@ func (m *RanReconnectionManager) updateNodebInfoStatus(nodebInfo *entities.Nodeb
 	}
 
 	nodebInfo.ConnectionStatus = connectionStatus;
-	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
+	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 
 	if err != nil {
 		m.logger.Errorf("#RanReconnectionManager.updateNodebInfoStatus - RAN name: %s - Failed updating RAN's connection status to %s in rNib. Error: %v", nodebInfo.RanName, connectionStatus, err)

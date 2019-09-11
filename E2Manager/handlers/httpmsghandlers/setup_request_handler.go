@@ -21,11 +21,10 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rnibBuilders"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
@@ -36,19 +35,17 @@ const (
 )
 
 type SetupRequestHandler struct {
-	readerProvider  func() reader.RNibReader
-	writerProvider  func() rNibWriter.RNibWriter
+	rNibDataService services.RNibDataService
 	logger          *logger.Logger
 	ranSetupManager *managers.RanSetupManager
 	protocol        entities.E2ApplicationProtocol
 }
 
-func NewSetupRequestHandler(logger *logger.Logger, writerProvider func() rNibWriter.RNibWriter, readerProvider func() reader.RNibReader,
+func NewSetupRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService,
 	ranSetupManager *managers.RanSetupManager, protocol entities.E2ApplicationProtocol) *SetupRequestHandler {
 	return &SetupRequestHandler{
 		logger:          logger,
-		readerProvider:  readerProvider,
-		writerProvider:  writerProvider,
+		rNibDataService:  rNibDataService,
 		ranSetupManager: ranSetupManager,
 		protocol:        protocol,
 	}
@@ -63,7 +60,7 @@ func (handler *SetupRequestHandler) Handle(request models.Request) error {
 		return err
 	}
 
-	nodebInfo, err := handler.readerProvider().GetNodeb(setupRequest.RanName)
+	nodebInfo, err := handler.rNibDataService.GetNodeb(setupRequest.RanName)
 	if err != nil {
 		_, ok := err.(*common.ResourceNotFoundError)
 		if !ok {
@@ -101,7 +98,7 @@ func (handler *SetupRequestHandler) connectNewRan(request *models.SetupRequest, 
 
 	nodebInfo, nodebIdentity := rnibBuilders.CreateInitialNodeInfo(request, protocol)
 
-	rNibErr := handler.writerProvider().SaveNodeb(nodebIdentity, nodebInfo)
+	rNibErr := handler.rNibDataService.SaveNodeb(nodebIdentity, nodebInfo)
 	if rNibErr != nil {
 		handler.logger.Errorf("#SetupRequestHandler.connectNewRan - failed to initial nodeb entity for ran name: %v in RNIB. Error: %s", request.RanName, rNibErr.Error())
 		return e2managererrors.NewRnibDbError()

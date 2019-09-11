@@ -37,8 +37,9 @@ import (
 	"testing"
 )
 
-func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T) {
+func setupTest(t *testing.T) (*logger.Logger, *configuration.Configuration, *mocks.RnibReaderMock, *mocks.RnibWriterMock, services.RNibDataService, *mocks.RmrMessengerMock) {
 	log := initLog(t)
+	config := configuration.ParseConfiguration()
 
 	readerMock := &mocks.RnibReaderMock{}
 	readerProvider := func() reader.RNibReader {
@@ -48,11 +49,15 @@ func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
+	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	return log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock
+}
 
-	config := configuration.ParseConfiguration()
+func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T){
+	log, config, readerMock, _, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
@@ -65,22 +70,12 @@ func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	}
 }
 
-func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
 
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
@@ -108,21 +103,11 @@ func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	}
 }
 
-func TestHandleSuccessFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleSuccessFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
@@ -163,21 +148,11 @@ func TestHandleSuccessFlow(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleSuccessGetNextStatusFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -205,21 +180,11 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestHandleShuttingDownStatusFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleShuttingDownStatusFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -244,21 +209,11 @@ func TestHandleShuttingDownStatusFlow(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestHandleGetNodebFailedFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleGetNodebFailedFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown(will fail), ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
@@ -300,21 +255,11 @@ func TestHandleGetNodebFailedFlow(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestHandleSaveFailedFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleSaveFailedFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
@@ -356,21 +301,11 @@ func TestHandleSaveFailedFlow(t *testing.T) {
 	assert.Nil(t, actual)
 }
 
-func TestHandleSendRmrFailedFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleSendRmrFailedFlow(t *testing.T){
+	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
@@ -414,21 +349,10 @@ func TestHandleSendRmrFailedFlow(t *testing.T) {
 	}
 }
 
-func TestHandleGetListEnbIdsEmptyFlow(t *testing.T) {
-	log := initLog(t)
+func TestHandleGetListEnbIdsEmptyFlow(t *testing.T){
+	log, config, readerMock, _, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	config := configuration.ParseConfiguration()
-
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, writerProvider, readerProvider)
+	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
 
 	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}

@@ -22,12 +22,10 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 const (
@@ -35,17 +33,14 @@ const (
 )
 
 type X2ResetRequestHandler struct {
-	readerProvider func() reader.RNibReader
-	writerProvider func() rNibWriter.RNibWriter
+	rNibDataService services.RNibDataService
 	rmrService     *services.RmrService
 	logger         *logger.Logger
 }
 
-func NewX2ResetRequestHandler(logger *logger.Logger, rmrService *services.RmrService, writerProvider func() rNibWriter.RNibWriter,
-	readerProvider func() reader.RNibReader) *X2ResetRequestHandler {
+func NewX2ResetRequestHandler(logger *logger.Logger, rmrService *services.RmrService, rNibDataService services.RNibDataService) *X2ResetRequestHandler {
 	return &X2ResetRequestHandler{
-		readerProvider: readerProvider,
-		writerProvider: writerProvider,
+		rNibDataService: rNibDataService,
 		rmrService:     rmrService,
 		logger:         logger,
 	}
@@ -63,7 +58,7 @@ func (handler *X2ResetRequestHandler) Handle(request models.Request) error {
 		return e2managererrors.NewRequestValidationError()
 	}
 
-	nodeb, err := handler.readerProvider().GetNodeb(resetRequest.RanName)
+	nodeb, err := handler.rNibDataService.GetNodeb(resetRequest.RanName)
 	if err != nil {
 		handler.logger.Errorf("#reset_request_handler.Handle - failed to get status of RAN: %s from RNIB. Error: %s", resetRequest.RanName, err.Error())
 		_, ok := err.(*common.ResourceNotFoundError)

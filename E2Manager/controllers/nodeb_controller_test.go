@@ -18,6 +18,7 @@
 package controllers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
@@ -37,19 +38,30 @@ import (
 	"testing"
 )
 
-func TestNewRequestController(t *testing.T) {
+func setupNodebControllerTest(t *testing.T) (*logger.Logger, services.RNibDataService, *mocks.RnibReaderMock){
+	logger, err := logger.InitLogger(logger.DebugLevel)
+	if err != nil {
+		t.Errorf("#... - failed to initialize logger, error: %s", err)
+	}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
-		return &mocks.RnibReaderMock{}
+		return readerMock
 	}
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return &mocks.RnibWriterMock{}
 	}
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	return logger, rnibDataService, readerMock
+}
 
-	assert.NotNil(t, NewNodebController(&logger.Logger{}, &services.RmrService{}, rnibReaderProvider, rnibWriterProvider))
+func TestNewRequestController(t *testing.T) {
+	logger, rnibDataService, _ := setupNodebControllerTest(t)
+	assert.NotNil(t, NewNodebController(logger, &services.RmrService{}, rnibDataService))
 }
 
 func TestHandleHealthCheckRequest(t *testing.T) {
-	rc := NewNodebController(nil, nil, nil, nil)
+	rc := NewNodebController(nil, nil, nil)
 	writer := httptest.NewRecorder()
 	rc.HandleHealthCheckRequest(writer, nil)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
@@ -62,96 +74,62 @@ func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger)
 	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
 }
 
-func executeGetNodeb(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibReaderProvider func() reader.RNibReader) {
+func executeGetNodeb(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibDataService services.RNibDataService) {
 	req, _ := http.NewRequest("GET", "/nodeb", nil)
 	req = mux.SetURLVars(req, map[string]string{"ranName": "testNode"})
 
-	NewNodebController(logger, nil, rnibReaderProvider, nil).GetNodeb(writer, req)
+	NewNodebController(logger, nil, rnibDataService).GetNodeb(writer, req)
 }
 
 func TestNodebController_GetNodeb_Success(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodeb_Success - failed to initialize logger, error: %s", err)
-	}
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 
 	writer := httptest.NewRecorder()
 
-	rnibReaderMock := mocks.RnibReaderMock{}
 
 	var rnibError error
 	rnibReaderMock.On("GetNodeb", "testNode").Return(&entities.NodebInfo{}, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
-
-	executeGetNodeb(log, writer, rnibReaderProvider)
+	executeGetNodeb(logger, writer, rnibDataService)
 
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
 }
 
 func TestNodebController_GetNodeb_NotFound(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodeb_NotFound - failed to initialize logger, error: %s", err)
-	}
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 
 	writer := httptest.NewRecorder()
 
-	rnibReaderMock := mocks.RnibReaderMock{}
 	rnibError := common.NewResourceNotFoundErrorf("#reader.GetNodeb - responding node %s not found", "testNode")
 	var nodebInfo *entities.NodebInfo
 	rnibReaderMock.On("GetNodeb", "testNode").Return(nodebInfo, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
-
-	executeGetNodeb(log, writer, rnibReaderProvider)
+	executeGetNodeb(logger, writer, rnibDataService)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusNotFound)
 }
 
 func TestNodebController_GetNodeb_InternalError(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodeb_InternalError - failed to initialize logger, error: %s", err)
-	}
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 
 	writer := httptest.NewRecorder()
-
-	rnibReaderMock := mocks.RnibReaderMock{}
 
 	rnibError := common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error"))
 	var nodebInfo *entities.NodebInfo
 	rnibReaderMock.On("GetNodeb", "testNode").Return(nodebInfo, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
-
-	executeGetNodeb(log, writer, rnibReaderProvider)
+	executeGetNodeb(logger, writer, rnibDataService)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusInternalServerError)
 }
 
-func executeGetNodebIdList(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibReaderProvider func() reader.RNibReader) {
+func executeGetNodebIdList(logger *logger.Logger, writer *httptest.ResponseRecorder, rnibDataService services.RNibDataService) {
 	req, _ := http.NewRequest("GET", "/nodeb-ids", nil)
-	NewNodebController(logger, nil, rnibReaderProvider, nil).GetNodebIdList(writer, req)
+	NewNodebController(logger, nil, rnibDataService).GetNodebIdList(writer,req)
 }
 
 func TestNodebController_GetNodebIdList_Success(t *testing.T) {
-	logger, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_Success - failed to initialize logger, error: %s", err)
-	}
-
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 	writer := httptest.NewRecorder()
 
-	rnibReaderMock := mocks.RnibReaderMock{}
 	var rnibError error
 
 	nbList := []*entities.NbIdentity{
@@ -161,61 +139,38 @@ func TestNodebController_GetNodebIdList_Success(t *testing.T) {
 	}
 	rnibReaderMock.On("GetListNodebIds").Return(nbList, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
-
-	executeGetNodebIdList(logger, writer, rnibReaderProvider)
+	executeGetNodebIdList(logger, writer, rnibDataService)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
-	bodyBytes, err := ioutil.ReadAll(writer.Body)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
 	assert.Equal(t, "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}},{\"inventoryName\":\"test3\",\"globalNbId\":{}}]", string(bodyBytes))
 }
 
 func TestNodebController_GetNodebIdList_EmptyList(t *testing.T) {
-	log, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_EmptyList - failed to initialize logger, error: %s", err)
-	}
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 
 	writer := httptest.NewRecorder()
-
-	rnibReaderMock := mocks.RnibReaderMock{}
 
 	var rnibError error
 	nbList := []*entities.NbIdentity{}
 	rnibReaderMock.On("GetListNodebIds").Return(nbList, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
 
-	executeGetNodebIdList(log, writer, rnibReaderProvider)
+	executeGetNodebIdList(logger, writer, rnibDataService)
 
 	assert.Equal(t, writer.Result().StatusCode, http.StatusOK)
-	bodyBytes, err := ioutil.ReadAll(writer.Body)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
 	assert.Equal(t, "[]", string(bodyBytes))
 }
 
 func TestNodebController_GetNodebIdList_InternalError(t *testing.T) {
-	logger, err := logger.InitLogger(logger.InfoLevel)
-
-	if err != nil {
-		t.Errorf("#nodeb_controller_test.TestNodebController_GetNodebIdList_InternalError - failed to initialize logger, error: %s", err)
-	}
+	logger, rnibDataService, rnibReaderMock := setupNodebControllerTest(t)
 
 	writer := httptest.NewRecorder()
-
-	rnibReaderMock := mocks.RnibReaderMock{}
 
 	rnibError := common.NewInternalError(errors.New("#reader.GetEnbIdList - Internal Error"))
 	var nbList []*entities.NbIdentity
 	rnibReaderMock.On("GetListNodebIds").Return(nbList, rnibError)
 
-	rnibReaderProvider := func() reader.RNibReader {
-		return &rnibReaderMock
-	}
-
-	executeGetNodebIdList(logger, writer, rnibReaderProvider)
+	executeGetNodebIdList(logger, writer, rnibDataService)
 	assert.Equal(t, writer.Result().StatusCode, http.StatusInternalServerError)
 }

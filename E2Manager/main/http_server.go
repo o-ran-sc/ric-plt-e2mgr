@@ -53,19 +53,20 @@ func main() {
 	reader.Init("e2Manager", MAX_RNIB_POOL_INSTANCES)
 	defer reader.Close()
 
+	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter)
 	rmrResponseChannel := make(chan *models.NotificationResponse, config.NotificationResponseBuffer)
 	rmrService := services.NewRmrService(rmrConfig, msgImpl, rmrResponseChannel)
-	var ranSetupManager = managers.NewRanSetupManager(logger, rmrService, rNibWriter.GetRNibWriter)
-	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter, ranSetupManager)
-	var nManager = notificationmanager.NewNotificationManager(reader.GetRNibReader, rNibWriter.GetRNibWriter, ranReconnectionManager)
+	var ranSetupManager = managers.NewRanSetupManager(logger, rmrService, rnibDataService)
+	var ranReconnectionManager = managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager)
+	var nManager = notificationmanager.NewNotificationManager(rnibDataService, ranReconnectionManager)
 
 	rmrServiceReceiver := receivers.NewRmrServiceReceiver(*rmrService, nManager)
 	defer rmrService.CloseContext()
 	go rmrServiceReceiver.ListenAndHandle()
 	go rmrService.SendResponse()
 
-	controller := controllers.NewNodebController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter)
-	newController := controllers.NewController(logger, rmrService, reader.GetRNibReader, rNibWriter.GetRNibWriter, config, ranSetupManager)
+	controller := controllers.NewNodebController(logger, rmrService, rnibDataService)
+	newController := controllers.NewController(logger, rmrService, rnibDataService, config, ranSetupManager)
 	runServer(config.Http.Port, controller, newController)
 }
 

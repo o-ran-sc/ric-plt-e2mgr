@@ -58,6 +58,8 @@ func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger)
 }
 
 func getRmrServiceReceiver(rmrMessengerMock *mocks.RmrMessengerMock, logger *logger.Logger) *RmrServiceReceiver {
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
 		return readerMock
@@ -67,10 +69,11 @@ func getRmrServiceReceiver(rmrMessengerMock *mocks.RmrMessengerMock, logger *log
 		return writerMock
 	}
 
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
 	rmrService := getRmrService(rmrMessengerMock, logger)
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rNibWriter.GetRNibWriter)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
-	nManager := notificationmanager.NewNotificationManager(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
+	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	nManager := notificationmanager.NewNotificationManager(rnibDataService, ranReconnectionManager)
 
 	return NewRmrServiceReceiver(*rmrService, nManager)
 }

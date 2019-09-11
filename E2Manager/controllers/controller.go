@@ -24,10 +24,8 @@ import (
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/providers/httpmsghandlerprovider"
-	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"encoding/json"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -53,10 +51,10 @@ type Controller struct {
 	handlerProvider *httpmsghandlerprovider.IncomingRequestHandlerProvider
 }
 
-func NewController(logger *logger.Logger, rmrService *services.RmrService, rNibReaderProvider func() reader.RNibReader, rNibWriterProvider func() rNibWriter.RNibWriter,
+func NewController(logger *logger.Logger, rmrService *services.RmrService, rnibDataService services.RNibDataService,
 	config *configuration.Configuration, ranSetupManager *managers.RanSetupManager) *Controller {
 
-	provider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrService, config, rNibWriterProvider, rNibReaderProvider, ranSetupManager)
+	provider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrService, config, rnibDataService, ranSetupManager)
 	return &Controller{
 		logger:          logger,
 		handlerProvider: provider,

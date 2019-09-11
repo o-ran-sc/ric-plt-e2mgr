@@ -19,9 +19,10 @@ import (
 	"testing"
 )
 
-func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *managers.RanReconnectionManager) {
+func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock) {
 
 	logger := initLog(t)
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrService := getRmrService(rmrMessengerMock, logger)
@@ -34,18 +35,16 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RnibReaderM
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibWriterProvider)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
-	return logger, readerMock, writerMock, rmrMessengerMock, ranReconnectionManager
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	handler := NewE2TermInitNotificationHandler(ranReconnectionManager, rnibDataService)
+	return logger, handler, readerMock, writerMock, rmrMessengerMock
 }
 
 func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}}
 	readerMock.On("GetListNodebIds").Return(ids, rnibErr)
@@ -62,7 +61,6 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
@@ -70,12 +68,8 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 }
 
 func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}}
 	readerMock.On("GetListNodebIds").Return(ids, rnibErr)
@@ -94,7 +88,6 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
@@ -102,12 +95,8 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 }
 
 func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
 	readerMock.On("GetListNodebIds").Return(ids, rnibErr)
@@ -135,7 +124,6 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	//test1 (before send +1, after failure +1), test2 (0) test3 (0)
@@ -145,12 +133,8 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 }
 
 func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
 	readerMock.On("GetListNodebIds").Return(ids, rnibErr)
@@ -183,7 +167,6 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 3)
@@ -194,12 +177,8 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 }
 
 func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
 	readerMock.On("GetListNodebIds").Return(ids, rnibErr)
@@ -232,7 +211,6 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 2)
@@ -243,16 +221,11 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 }
 
 func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, rnibErr)
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
@@ -260,15 +233,10 @@ func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
 }
 
 func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
-	log, readerMock, writerMock, rmrMessengerMock, ranReconnectMgr := initRanLostConnectionTest(t)
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
+	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, common.NewInternalError(fmt.Errorf("internal error")))
 
-	handler := NewE2TermInitNotificationHandler(ranReconnectMgr, readerProvider)
 	handler.Handle(log, nil, nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)

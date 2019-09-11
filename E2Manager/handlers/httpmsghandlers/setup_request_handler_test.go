@@ -17,6 +17,7 @@
 package httpmsghandlers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
 	"e2mgr/managers"
@@ -25,6 +26,7 @@ import (
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/rnibBuilders"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
@@ -283,6 +285,7 @@ func TestX2SetupHandleInvalidIp_Error(t *testing.T) {
 
 func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol)(*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.RmrMessengerMock) {
 	log := initLog(t)
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
 	readerProvider := func() reader.RNibReader {
@@ -296,8 +299,10 @@ func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol)
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrService := getRmrService(rmrMessengerMock, log)
 
-	ranSetupManager := managers.NewRanSetupManager(log, rmrService, writerProvider)
-	handler := NewSetupRequestHandler(log, writerProvider, readerProvider, ranSetupManager, protocol)
+	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
+
+	ranSetupManager := managers.NewRanSetupManager(log, rmrService, rnibDataService)
+	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManager, protocol)
 
 	return readerMock, writerMock, handler, rmrMessengerMock
 }

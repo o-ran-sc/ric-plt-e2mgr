@@ -18,11 +18,13 @@
 package rmrmsghandlers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
+	"e2mgr/services"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -45,26 +47,28 @@ type setupResponseTestContext struct {
 	logger               *logger.Logger
 	readerMock           *mocks.RnibReaderMock
 	writerMock           *mocks.RnibWriterMock
-	rnibReaderProvider   func() reader.RNibReader
-	rnibWriterProvider   func() rNibWriter.RNibWriter
+	rnibDataService      services.RNibDataService
 	setupResponseManager managers.ISetupResponseManager
 }
 
 func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupResponseTestContext {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
+	rnibReaderProvider := func() reader.RNibReader {
+		return readerMock
+	}
+	rnibWriterProvider := func() rNibWriter.RNibWriter {
+		return writerMock
+	}
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
 
 	return &setupResponseTestContext{
-		logger:     logger,
-		readerMock: readerMock,
-		writerMock: writerMock,
-		rnibReaderProvider: func() reader.RNibReader {
-			return readerMock
-		},
-		rnibWriterProvider: func() rNibWriter.RNibWriter {
-			return writerMock
-		},
+		logger:               logger,
+		readerMock:           readerMock,
+		writerMock:           writerMock,
+		rnibDataService:      rnibDataService,
 		setupResponseManager: manager,
 	}
 }
@@ -72,7 +76,7 @@ func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupR
 func TestSetupResponseGetNodebFailure(t *testing.T) {
 	notificationRequest := models.NotificationRequest{RanName: RanName}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	testContext.readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewInternalError(errors.New("Error")))
 	handler.Handle(testContext.logger, &notificationRequest, nil)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
@@ -83,7 +87,7 @@ func TestSetupResponseInvalidConnectionStatus(t *testing.T) {
 	ranName := "test"
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}, rnibErr)
 	handler.Handle(testContext.logger, &notificationRequest, nil)
@@ -101,7 +105,7 @@ func executeHandleSuccessSetupResponse(t *testing.T, packedPdu string, setupResp
 	notificationRequest := models.NotificationRequest{RanName: RanName, Payload: payload}
 	testContext := NewSetupResponseTestContext(setupResponseManager)
 
-	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, testContext.setupResponseManager, notificationType)
+	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, testContext.setupResponseManager, notificationType)
 
 	var rnibErr error
 
@@ -173,7 +177,7 @@ func TestSetupResponseInvalidPayload(t *testing.T) {
 	ranName := "test"
 	notificationRequest := models.NotificationRequest{RanName: ranName, Payload: []byte("123")}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibReaderProvider, testContext.rnibWriterProvider, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 1}, rnibErr)
 	handler.Handle(testContext.logger, &notificationRequest, nil)

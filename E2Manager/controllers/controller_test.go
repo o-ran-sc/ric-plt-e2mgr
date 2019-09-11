@@ -29,6 +29,7 @@ import (
 	"e2mgr/providers/httpmsghandlerprovider"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"e2mgr/tests"
 	"encoding/json"
 	"fmt"
@@ -46,17 +47,29 @@ import (
 	"testing"
 )
 
-func TestX2SetupInvalidBody(t *testing.T) {
-
-	readerMock, writerMock, rmrMessengerMock, ranSetupManager := initTest(t)
+func setupControllerTest(t *testing.T) (*Controller, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock){
 	log := initLog(t)
+	config := configuration.ParseConfiguration()
 
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	readerMock := &mocks.RnibReaderMock{}
 	readerProvider := func() reader.RNibReader {
 		return readerMock
 	}
+	writerMock := &mocks.RnibWriterMock{}
 	writerProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
+	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
+
+	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rnibDataService)
+	controller := NewController(log, getRmrService(rmrMessengerMock, log), rnibDataService, config, ranSetupManager)
+	return controller, readerMock, writerMock, rmrMessengerMock
+}
+
+func TestX2SetupInvalidBody(t *testing.T) {
+
+	controller, _, _, _ := setupControllerTest(t)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
@@ -64,8 +77,6 @@ func TestX2SetupInvalidBody(t *testing.T) {
 	httpRequest.Header = header
 
 	writer := httptest.NewRecorder()
-	config := configuration.ParseConfiguration()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	controller.X2SetupHandler(writer, httpRequest)
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
@@ -76,15 +87,7 @@ func TestX2SetupInvalidBody(t *testing.T) {
 
 func TestX2SetupSuccess(t *testing.T) {
 
-	readerMock, writerMock, rmrMessengerMock, ranSetupManager := initTest(t)
-	log := initLog(t)
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, readerMock, writerMock, rmrMessengerMock := setupControllerTest(t)
 
 	ranName := "test"
 	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -105,8 +108,6 @@ func TestX2SetupSuccess(t *testing.T) {
 	httpRequest.Header = header
 
 	writer := httptest.NewRecorder()
-	config := configuration.ParseConfiguration()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	controller.X2SetupHandler(writer, httpRequest)
 
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
@@ -114,15 +115,7 @@ func TestX2SetupSuccess(t *testing.T) {
 
 func TestEndcSetupSuccess(t *testing.T) {
 
-	readerMock, writerMock, rmrMessengerMock, ranSetupManager := initTest(t)
-	log := initLog(t)
-
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, readerMock, writerMock, rmrMessengerMock := setupControllerTest(t)
 
 	ranName := "test"
 	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
@@ -143,34 +136,20 @@ func TestEndcSetupSuccess(t *testing.T) {
 	httpRequest.Header = header
 
 	writer := httptest.NewRecorder()
-	config := configuration.ParseConfiguration()
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	controller.EndcSetupHandler(writer, httpRequest)
 
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
 
 func TestShutdownHandlerRnibError(t *testing.T) {
-	log := initLog(t)
-	config := configuration.ParseConfiguration()
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, readerMock, _, _:= setupControllerTest(t)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
+
 	controller.ShutdownHandler(writer, tests.GetHttpRequest())
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
@@ -180,22 +159,9 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 }
 
 func TestHeaderValidationFailed(t *testing.T) {
-	log := initLog(t)
-	config := configuration.ParseConfiguration()
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 
 	header := &http.Header{}
 
@@ -210,48 +176,22 @@ func TestHeaderValidationFailed(t *testing.T) {
 }
 
 func TestShutdownStatusNoContent(t *testing.T) {
-	log := initLog(t)
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	config := configuration.ParseConfiguration()
+	controller, readerMock, _, _ := setupControllerTest(t)
 
 	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
 
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	controller.ShutdownHandler(writer, tests.GetHttpRequest())
 
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
 
 func TestHandleInternalError(t *testing.T) {
-	log := initLog(t)
-	config := configuration.ParseConfiguration()
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	err := e2managererrors.NewInternalError()
 
 	controller.handleErrorResponse(err, writer)
@@ -263,21 +203,8 @@ func TestHandleInternalError(t *testing.T) {
 }
 
 func TestHandleCommandAlreadyInProgressError(t *testing.T) {
-	log := initLog(t)
-	config := configuration.ParseConfiguration()
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	controller, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
 	err := e2managererrors.NewCommandAlreadyInProgressError()
 
 	controller.handleErrorResponse(err, writer)
@@ -289,20 +216,7 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 }
 
 func TestValidateHeaders(t *testing.T) {
-	log := initLog(t)
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	config := configuration.ParseConfiguration()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, getRmrService(rmrMessengerMock, log), readerProvider, writerProvider, config, ranSetupManager)
+	controller, _, _, _ := setupControllerTest(t)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
@@ -332,30 +246,15 @@ func initLog(t *testing.T) *logger.Logger {
 }
 
 func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
-	log := initLog(t)
+	controller, readerMock, _, rmrMessengerMock := setupControllerTest(t)
 
 	ranName := "test1"
-
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
-	config := configuration.ParseConfiguration()
-	rmrService := getRmrService(rmrMessengerMock, log)
-
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, rmrService, readerProvider, writerProvider, config, ranSetupManager)
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
@@ -372,31 +271,16 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 }
 
 func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
-	log := initLog(t)
+	controller, readerMock, _, rmrMessengerMock := setupControllerTest(t)
 
 	ranName := "test1"
-
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 	// o&m intervention
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
-	config := configuration.ParseConfiguration()
-	rmrService := getRmrService(rmrMessengerMock, log)
-
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, rmrService, readerProvider, writerProvider, config, ranSetupManager)
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
@@ -412,26 +296,11 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 }
 
 func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
-	log := initLog(t)
+	controller, _, _, _ := setupControllerTest(t)
 
 	ranName := "test1"
 
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-
-	config := configuration.ParseConfiguration()
-	rmrService := getRmrService(rmrMessengerMock, log)
-
 	writer := httptest.NewRecorder()
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, rmrService, readerProvider, writerProvider, config, ranSetupManager)
 
 	// Invalid json: attribute name without quotes (should be "cause":).
 	b := strings.NewReader("{cause:\"protocol:transfer-syntax-error\"")
@@ -444,22 +313,7 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 }
 
 func TestHandleErrorResponse(t *testing.T) {
-	log := initLog(t)
-
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-
-	config := configuration.ParseConfiguration()
-	rmrService := getRmrService(rmrMessengerMock, log)
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rNibWriter.GetRNibWriter)
-	controller := NewController(log, rmrService, readerProvider, writerProvider, config, ranSetupManager)
+	controller, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	controller.handleErrorResponse(e2managererrors.NewRnibDbError(), writer)
@@ -492,21 +346,4 @@ func TestHandleErrorResponse(t *testing.T) {
 	writer = httptest.NewRecorder()
 	controller.handleErrorResponse(fmt.Errorf("ErrorError"), writer)
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
-}
-
-func initTest(t *testing.T)(*mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *managers.RanSetupManager) {
-	log := initLog(t)
-
-	readerMock := &mocks.RnibReaderMock{}
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrService := getRmrService(rmrMessengerMock, log)
-
-	ranSetupManager := managers.NewRanSetupManager(log, rmrService, writerProvider)
-
-	return readerMock, writerMock, rmrMessengerMock, ranSetupManager
 }

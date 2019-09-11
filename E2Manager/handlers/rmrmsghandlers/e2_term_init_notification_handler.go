@@ -21,27 +21,27 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type E2TermInitNotificationHandler struct {
-	rnibReaderProvider     func() reader.RNibReader
+	rnibDataService        services.RNibDataService
 	ranReconnectionManager *managers.RanReconnectionManager
 }
 
-func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconnectionManager, rnibReaderProvider func() reader.RNibReader) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
-		rnibReaderProvider:     rnibReaderProvider,
+		rnibDataService:        rnibDataService,
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
 
 func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
 
-logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
+	logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
 
-	nbIdentityList, err := handler.rnibReaderProvider().GetListNodebIds()
+	nbIdentityList, err := handler.rnibDataService.GetListNodebIds()
 	if err != nil {
 		logger.Errorf("#E2TermInitNotificationHandler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
 		return

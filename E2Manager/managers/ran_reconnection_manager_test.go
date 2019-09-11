@@ -40,6 +40,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrService := getRmrService(rmrMessengerMock, logger)
@@ -52,8 +53,9 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	ranSetupManager := NewRanSetupManager(logger, rmrService, rnibWriterProvider)
-	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	ranSetupManager := NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
 	return logger, rmrMessengerMock, readerMock, writerMock, ranReconnectionManager
 }
 

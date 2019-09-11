@@ -18,29 +18,50 @@
 package managers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
-func TestExecuteSetupConnectingX2Setup(t *testing.T) {
-	log := initLog(t)
+func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibWriterMock, *RanSetupManager) {
+	logger, err := logger.InitLogger(logger.DebugLevel)
+	if err != nil {
+		t.Errorf("#... - failed to initialize logger, error: %s", err)
+	}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
-	ranName := "test1"
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrService := getRmrService(rmrMessengerMock, logger)
 
+	readerMock := &mocks.RnibReaderMock{}
+	rnibReaderProvider := func() reader.RNibReader {
+		return readerMock
+	}
 	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
+	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	ranSetupManager := NewRanSetupManager(logger, rmrService, rnibDataService)
+	return rmrMessengerMock, writerMock, ranSetupManager
+}
+
+func TestExecuteSetupConnectingX2Setup(t *testing.T) {
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
+
+	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
@@ -50,11 +71,8 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
 	}
@@ -64,16 +82,11 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 }
 
 func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
-	log := initLog(t)
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
 
 	ranName := "test1"
 
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-
-	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
+		var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
@@ -81,11 +94,8 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	payload := e2pdus.PackedEndcX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
 	}
@@ -95,14 +105,9 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 }
 
 func TestExecuteSetupDisconnected(t *testing.T) {
-	log := initLog(t)
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
 
 	ranName := "test1"
-
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
@@ -114,11 +119,8 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	}
@@ -128,14 +130,9 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 }
 
 func TestExecuteSetupConnectingRnibError(t *testing.T) {
-	log := initLog(t)
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
 
 	ranName := "test1"
-
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
@@ -147,11 +144,8 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	} else {
@@ -163,14 +157,9 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 }
 
 func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
-	log := initLog(t)
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
 
 	ranName := "test1"
-
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
@@ -182,11 +171,8 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
 	} else {
@@ -198,14 +184,9 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 }
 
 func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
-	log := initLog(t)
+	rmrMessengerMock, writerMock, mgr := initRanSetupManagerTest(t)
 
 	ranName := "test1"
-
-	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_UNKNOWN_E2_APPLICATION_PROTOCOL}
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_UNKNOWN_E2_APPLICATION_PROTOCOL, ConnectionAttempts: 1}
@@ -215,11 +196,8 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
-	rmrService := getRmrService(rmrMessengerMock, log)
 
-	mgr := NewRanSetupManager(log, rmrService, writerProvider)
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: error, got: success")
 	}

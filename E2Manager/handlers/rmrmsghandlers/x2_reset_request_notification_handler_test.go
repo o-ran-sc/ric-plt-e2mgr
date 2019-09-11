@@ -18,9 +18,12 @@
 package rmrmsghandlers
 
 import (
+	"e2mgr/configuration"
+	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -30,15 +33,23 @@ import (
 	"time"
 )
 
-func TestX2ResetRequestNotifSuccess(t *testing.T) {
+func initX2ResetRequestNotifHandlerTest(t *testing.T) (*logger.Logger, X2ResetRequestNotificationHandler, *mocks.RnibReaderMock) {
 	log := initLog(t)
-	payload := []byte("payload")
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 	readerProvider := func() reader.RNibReader {
 		return readerMock
 	}
+	rnibDataService := services.NewRnibDataService(log, config, readerProvider, nil)
 
-	h := NewX2ResetRequestNotificationHandler(readerProvider)
+	h := NewX2ResetRequestNotificationHandler(rnibDataService)
+	return log, h, readerMock
+}
+
+func TestX2ResetRequestNotifSuccess(t *testing.T) {
+	log, h, readerMock := initX2ResetRequestNotifHandlerTest(t)
+
+	payload := []byte("payload")
 
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
@@ -59,14 +70,8 @@ func TestX2ResetRequestNotifSuccess(t *testing.T) {
 }
 
 func TestHandleX2ResetRequestNotifShuttingDownStatus(t *testing.T) {
-	log := initLog(t)
+	log, h, readerMock := initX2ResetRequestNotifHandlerTest(t)
 	var payload []byte
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-
-	h := NewX2ResetRequestNotificationHandler(readerProvider)
 
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
@@ -82,14 +87,8 @@ func TestHandleX2ResetRequestNotifShuttingDownStatus(t *testing.T) {
 }
 
 func TestHandleX2ResetRequestNotifDisconnectStatus(t *testing.T) {
-	log := initLog(t)
+	log, h, readerMock := initX2ResetRequestNotifHandlerTest(t)
 	var payload []byte
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-
-	h := NewX2ResetRequestNotificationHandler(readerProvider)
 
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
@@ -106,14 +105,8 @@ func TestHandleX2ResetRequestNotifDisconnectStatus(t *testing.T) {
 
 func TestHandleX2ResetRequestNotifGetNodebFailed(t *testing.T) {
 
-	log := initLog(t)
+	log, h, readerMock := initX2ResetRequestNotifHandlerTest(t)
 	var payload []byte
-	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-
-	h := NewX2ResetRequestNotificationHandler(readerProvider)
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,

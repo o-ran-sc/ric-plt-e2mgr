@@ -20,36 +20,35 @@ package rmrmsghandlerprovider
 import (
 	"e2mgr/handlers/rmrmsghandlers"
 	"e2mgr/managers"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type NotificationHandlerProvider struct {
 	notificationHandlers map[int]rmrmsghandlers.NotificationHandler
 }
 
-func NewNotificationHandlerProvider(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) *NotificationHandlerProvider {
+func NewNotificationHandlerProvider(rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager) *NotificationHandlerProvider {
 	return &NotificationHandlerProvider{
-		notificationHandlers: initNotificationHandlersMap(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager),
+		notificationHandlers: initNotificationHandlersMap(rnibDataService, ranReconnectionManager),
 	}
 }
 
 //TODO change handlers.NotificationHandler to *handlers.NotificationHandler
-func initNotificationHandlersMap(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) map[int]rmrmsghandlers.NotificationHandler {
+func initNotificationHandlersMap(rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager) map[int]rmrmsghandlers.NotificationHandler {
 	return map[int]rmrmsghandlers.NotificationHandler{
-		rmrCgo.RIC_X2_SETUP_RESP:           rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupResponseManager(), "X2 Setup Response"),
-		rmrCgo.RIC_X2_SETUP_FAILURE:        rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupFailureResponseManager(), "X2 Setup Failure Response"),
-		rmrCgo.RIC_ENDC_X2_SETUP_RESP:      rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupResponseManager(), "ENDC Setup Response"),
-		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE:   rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupFailureResponseManager(), "ENDC Setup Failure Response"),
+		rmrCgo.RIC_X2_SETUP_RESP:           rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewX2SetupResponseManager(), "X2 Setup Response"),
+		rmrCgo.RIC_X2_SETUP_FAILURE:        rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewX2SetupFailureResponseManager(), "X2 Setup Failure Response"),
+		rmrCgo.RIC_ENDC_X2_SETUP_RESP:      rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewEndcSetupResponseManager(), "ENDC Setup Response"),
+		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE:   rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewEndcSetupFailureResponseManager(), "ENDC Setup Failure Response"),
 		rmrCgo.RIC_SCTP_CONNECTION_FAILURE: rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager),
-		rmrCgo.RIC_ENB_LOAD_INFORMATION:    rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider),
+		rmrCgo.RIC_ENB_LOAD_INFORMATION:    rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibDataService),
 		rmrCgo.RIC_ENB_CONF_UPDATE:         rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(),
 		rmrCgo.RIC_ENDC_CONF_UPDATE:        rmrmsghandlers.NewEndcConfigurationUpdateHandler(),
-		rmrCgo.RIC_X2_RESET_RESP:           rmrmsghandlers.NewX2ResetResponseHandler(rnibReaderProvider),
-		rmrCgo.RIC_X2_RESET:                rmrmsghandlers.NewX2ResetRequestNotificationHandler(rnibReaderProvider),
-		rmrCgo.RIC_E2_TERM_INIT:            rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider),
+		rmrCgo.RIC_X2_RESET_RESP:           rmrmsghandlers.NewX2ResetResponseHandler(rnibDataService),
+		rmrCgo.RIC_X2_RESET:                rmrmsghandlers.NewX2ResetRequestNotificationHandler(rnibDataService),
+		rmrCgo.RIC_E2_TERM_INIT:            rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibDataService),
 	}
 }
 

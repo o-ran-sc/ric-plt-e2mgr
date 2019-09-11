@@ -39,9 +39,9 @@ import (
  * Verify support for known providers.
  */
 
-func TestGetNotificationHandlerSuccess(t *testing.T) {
-
+func initTestCase(t *testing.T) (services.RNibDataService, *managers.RanReconnectionManager) {
 	logger := initLog(t)
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
@@ -51,27 +51,34 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	rnibWriterProvider := func() rNibWriter.RNibWriter {
 		return writerMock
 	}
-	ranSetupManager := managers.NewRanSetupManager(logger, getRmrService(&mocks.RmrMessengerMock{}, logger), rNibWriter.GetRNibWriter)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
+	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	ranSetupManager := managers.NewRanSetupManager(logger, getRmrService(&mocks.RmrMessengerMock{}, logger), rnibDataService)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	return rnibDataService, ranReconnectionManager
+}
+
+func TestGetNotificationHandlerSuccess(t *testing.T) {
+
+	rnibDataService, ranReconnectionManager := initTestCase(t)
 
 	var testCases = []struct {
 		msgType int
 		handler rmrmsghandlers.NotificationHandler
 	}{
-		{rmrCgo.RIC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupResponseManager(), "X2 Setup Response")},
-		{rmrCgo.RIC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewX2SetupFailureResponseManager(), "X2 Setup Failure Response")},
-		{rmrCgo.RIC_ENDC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupResponseManager(), "ENDC Setup Response")},
-		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibReaderProvider, rnibWriterProvider, managers.NewEndcSetupFailureResponseManager(), "ENDC Setup Failure Response"),},
+		{rmrCgo.RIC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewX2SetupResponseManager(), "X2 Setup Response")},
+		{rmrCgo.RIC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewX2SetupFailureResponseManager(), "X2 Setup Failure Response")},
+		{rmrCgo.RIC_ENDC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewEndcSetupResponseManager(), "ENDC Setup Response")},
+		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(rnibDataService, managers.NewEndcSetupFailureResponseManager(), "ENDC Setup Failure Response"),},
 		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE, rmrmsghandlers.NewRanLostConnectionHandler(ranReconnectionManager)},
-		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibWriterProvider)},
+		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(rnibDataService)},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.X2EnbConfigurationUpdateHandler{}},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.EndcConfigurationUpdateHandler{}},
-		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibReaderProvider)},
+		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(ranReconnectionManager, rnibDataService)},
 	}
 
 	for _, tc := range testCases {
 
-		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
+		provider := NewNotificationHandlerProvider(rnibDataService, ranReconnectionManager)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			handler, err := provider.GetNotificationHandler(tc.msgType)
 			if err != nil {
@@ -92,8 +99,6 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 
 func TestGetNotificationHandlerFailure(t *testing.T) {
 
-	logger := initLog(t)
-
 	var testCases = []struct {
 		msgType   int
 		errorText string
@@ -101,19 +106,9 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 		{9999 /*unknown*/, "notification handler not found"},
 	}
 	for _, tc := range testCases {
-		readerMock := &mocks.RnibReaderMock{}
-		rnibReaderProvider := func() reader.RNibReader {
-			return readerMock
-		}
-		writerMock := &mocks.RnibWriterMock{}
-		rnibWriterProvider := func() rNibWriter.RNibWriter {
-			return writerMock
-		}
 
-		ranSetupManager := managers.NewRanSetupManager(logger, getRmrService(&mocks.RmrMessengerMock{}, logger), rNibWriter.GetRNibWriter)
-		ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibReaderProvider, rnibWriterProvider, ranSetupManager)
-
-		provider := NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
+		rnibDataService, ranReconnectionManager := initTestCase(t)
+		provider := NewNotificationHandlerProvider(rnibDataService, ranReconnectionManager)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			_, err := provider.GetNotificationHandler(tc.msgType)
 			if err == nil {

@@ -20,22 +20,19 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 )
 
 type SetupResponseNotificationHandler struct {
-	rnibReaderProvider   func() reader.RNibReader
-	rnibWriterProvider   func() rNibWriter.RNibWriter
+	rnibDataService      services.RNibDataService
 	setupResponseManager managers.ISetupResponseManager
 	notificationType     string
 }
 
-func NewSetupResponseNotificationHandler(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, setupResponseManager managers.ISetupResponseManager, notificationType string) SetupResponseNotificationHandler {
+func NewSetupResponseNotificationHandler(rnibDataService services.RNibDataService, setupResponseManager managers.ISetupResponseManager, notificationType string) SetupResponseNotificationHandler {
 	return SetupResponseNotificationHandler{
-		rnibReaderProvider:   rnibReaderProvider,
-		rnibWriterProvider:   rnibWriterProvider,
+		rnibDataService:      rnibDataService,
 		setupResponseManager: setupResponseManager,
 		notificationType:     notificationType,
 	}
@@ -46,7 +43,7 @@ func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, request 
 
 	inventoryName := request.RanName
 
-	nodebInfo, rnibErr := h.rnibReaderProvider().GetNodeb(inventoryName)
+	nodebInfo, rnibErr := h.rnibDataService.GetNodeb(inventoryName)
 
 	if rnibErr != nil {
 		logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Error fetching RAN from rNib: %v", request.RanName, rnibErr)
@@ -66,7 +63,7 @@ func (h SetupResponseNotificationHandler) Handle(logger *logger.Logger, request 
 		return
 	}
 
-	rnibErr = h.rnibWriterProvider().SaveNodeb(nbIdentity, nodebInfo)
+	rnibErr = h.rnibDataService.SaveNodeb(nbIdentity, nodebInfo)
 
 	if rnibErr != nil {
 		logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Error saving RAN to rNib: %v", request.RanName, rnibErr)

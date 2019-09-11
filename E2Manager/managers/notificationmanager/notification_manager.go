@@ -22,10 +22,9 @@ import (
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/providers/rmrmsghandlerprovider"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"time"
 )
 
@@ -33,8 +32,8 @@ type NotificationManager struct {
 	notificationHandlerProvider *rmrmsghandlerprovider.NotificationHandlerProvider
 }
 
-func NewNotificationManager(rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter, ranReconnectionManager *managers.RanReconnectionManager) *NotificationManager {
-	notificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(rnibReaderProvider, rnibWriterProvider, ranReconnectionManager)
+func NewNotificationManager(rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager) *NotificationManager {
+	notificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(rnibDataService, ranReconnectionManager)
 
 	return &NotificationManager{
 		notificationHandlerProvider: notificationHandlerProvider,

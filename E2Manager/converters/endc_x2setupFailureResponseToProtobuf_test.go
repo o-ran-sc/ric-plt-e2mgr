@@ -20,7 +20,6 @@ package converters
 import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
-	"e2mgr/rNibWriter"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"strings"
@@ -35,14 +34,12 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
 
 	var testCases = []struct {
-		saveToRNib bool
-		response   string
-		packedPdu  string
-		failure    error
+		response  string
+		packedPdu string
+		failure   error
 	}{
 		{
-			saveToRNib: false, //TODO: use MOCK?
-			response:   "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS time_to_wait:V1S criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS time_to_wait:V1S criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -77,7 +74,6 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 		/**** shares the same code with x2setup failure response to protobuf ****/
 	}
 
-	initDb_f := true
 	for _, tc := range testCases {
 		t.Run(tc.packedPdu, func(t *testing.T) {
 
@@ -113,23 +109,6 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 					t.Errorf("want: response=[%s], got: [%s]", tc.response, respStr)
 				}
 
-				// Save to rNib
-				if tc.saveToRNib {
-					if initDb_f {
-						rNibWriter.Init("e2Manager", 1)
-						initDb_f = false
-					}
-					nbIdentity := &entities.NbIdentity{InventoryName: "RanName"}
-					if rNibErr := rNibWriter.GetRNibWriter().SaveNodeb(nbIdentity, nb); rNibErr != nil {
-						if tc.failure == nil {
-							t.Errorf("rNibWriter failed to save ENB. Error: %s\n", rNibErr.Error())
-						} else {
-							if strings.Compare(rNibErr.Error(), tc.failure.Error()) != 0 {
-								t.Errorf("want: %s, got: %s", tc.failure, rNibErr.Error())
-							}
-						}
-					}
-				}
 			}
 		})
 	}

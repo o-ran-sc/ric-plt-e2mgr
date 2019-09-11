@@ -27,18 +27,18 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"unsafe"
 )
 
 type X2ResetRequestNotificationHandler struct {
-	rnibReaderProvider func() reader.RNibReader
+	rnibDataService services.RNibDataService
 }
 
-func NewX2ResetRequestNotificationHandler(rnibReaderProvider func() reader.RNibReader) X2ResetRequestNotificationHandler {
+func NewX2ResetRequestNotificationHandler(rnibDataService services.RNibDataService) X2ResetRequestNotificationHandler {
 	return X2ResetRequestNotificationHandler{
-		rnibReaderProvider: rnibReaderProvider,
+		rnibDataService: rnibDataService,
 	}
 }
 
@@ -46,7 +46,7 @@ func (src X2ResetRequestNotificationHandler) Handle(logger *logger.Logger, reque
 
 	logger.Debugf("#X2ResetRequestNotificationHandler.Handle - Ran name: %s", request.RanName)
 
-	nb, rNibErr := src.rnibReaderProvider().GetNodeb(request.RanName)
+	nb, rNibErr := src.rnibDataService.GetNodeb(request.RanName)
 	if rNibErr != nil {
 		logger.Errorf("#X2ResetRequestNotificationHandler.Handle - failed to retrieve nodeB entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
 		printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)

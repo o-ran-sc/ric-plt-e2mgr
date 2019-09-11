@@ -18,10 +18,12 @@
 package rmrmsghandlers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
+	"e2mgr/services"
 	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -30,12 +32,9 @@ import (
 	"time"
 )
 
-func TestX2ResetResponseSuccess(t *testing.T) {
-	payload, err := tests.BuildPackedX2ResetResponse()
-	if err != nil {
-		t.Errorf("#x2_reset_response_handler_test.TestX2resetResponse - failed to build and pack X2ResetResponse. Error %x", err)
-	}
+func initX2ResetResponseHandlerTest(t *testing.T) (*logger.Logger, X2ResetResponseHandler, *mocks.RnibReaderMock) {
 	log, err := logger.InitLogger(logger.DebugLevel)
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	if err!=nil{
 		t.Errorf("#sctp_errors_notification_handler_test.TestHandleInSession - failed to initialize logger, error: %s", err)
 	}
@@ -43,8 +42,20 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 	rnibReaderProvider := func() reader.RNibReader {
 		return readerMock
 	}
+	rnibDataService := services.NewRnibDataService(log, config, rnibReaderProvider, nil)
 
-	h := NewX2ResetResponseHandler(rnibReaderProvider)
+	h := NewX2ResetResponseHandler(rnibDataService)
+	return log, h, readerMock
+}
+
+func TestX2ResetResponseSuccess(t *testing.T) {
+	log, h, readerMock := initX2ResetResponseHandlerTest(t)
+
+	payload, err := tests.BuildPackedX2ResetResponse()
+	if err != nil {
+		t.Errorf("#x2_reset_response_handler_test.TestX2resetResponse - failed to build and pack X2ResetResponse. Error %x", err)
+	}
+
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
@@ -61,17 +72,9 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 }
 
 func TestX2ResetResponseReaderFailure(t *testing.T) {
-	var payload []byte
-	log, err := logger.InitLogger(logger.DebugLevel)
-	if err!=nil{
-		t.Errorf("#sctp_errors_notification_handler_test.TestX2ResetResponseReaderFailure - failed to initialize logger, error: %s", err)
-	}
-	readerMock :=&mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+	log, h, readerMock := initX2ResetResponseHandlerTest(t)
 
-	h := NewX2ResetResponseHandler(rnibReaderProvider)
+	var payload []byte
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
@@ -88,17 +91,9 @@ func TestX2ResetResponseReaderFailure(t *testing.T) {
 }
 
 func TestX2ResetResponseUnpackFailure(t *testing.T) {
-	payload := []byte("not valid payload")
-	log, err := logger.InitLogger(logger.DebugLevel)
-	if err!=nil{
-		t.Errorf("#sctp_errors_notification_handler_test.TestX2ResetResponseUnpackFailure - failed to initialize logger, error: %s", err)
-	}
-	readerMock :=&mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+	log, h, readerMock := initX2ResetResponseHandlerTest(t)
 
-	h := NewX2ResetResponseHandler(rnibReaderProvider)
+	payload := []byte("not valid payload")
 	xaction := []byte("RanName")
 	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload),"RanName", &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,

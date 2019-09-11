@@ -26,16 +26,16 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/models"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
+	"e2mgr/services"
 )
 
 type X2ResetResponseHandler struct {
-	rnibReaderProvider func() reader.RNibReader
+	rnibDataService services.RNibDataService
 }
 
-func NewX2ResetResponseHandler(rnibReaderProvider func() reader.RNibReader) X2ResetResponseHandler {
+func NewX2ResetResponseHandler(rnibDataService services.RNibDataService) X2ResetResponseHandler {
 	return X2ResetResponseHandler{
-		rnibReaderProvider: rnibReaderProvider,
+		rnibDataService: rnibDataService,
 	}
 }
 
@@ -43,11 +43,11 @@ func (src X2ResetResponseHandler) Handle(logger *logger.Logger, request *models.
 
 	logger.Infof("#x2ResetResponseHandler.Handle - received reset response. Payload: %x", request.Payload)
 
-	if nb, rNibErr := src.rnibReaderProvider().GetNodeb(request.RanName); rNibErr != nil {
+	if nb, rNibErr := src.rnibDataService.GetNodeb(request.RanName); rNibErr != nil {
 		logger.Errorf("#x2ResetResponseHandler.Handle - failed to retrieve nb entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
 	} else {
 		logger.Debugf("#x2ResetResponseHandler.Handle - nb entity retrieved. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize , request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
+		refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
 		if err != nil {
 			logger.Errorf("#x2ResetResponseHandler.Handle - failed to unpack reset response message. RanName %s, Payload: %s", request.RanName, request.Payload)
 		} else {
