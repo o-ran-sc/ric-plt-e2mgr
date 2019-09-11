@@ -15,6 +15,8 @@ gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0 h1:7edCLIQtk9xCwxTtLRUlXr8wQ6nmr/
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.2.0/go.mod h1:2Y8gw2jqj9urI8VFqFQn7BX0J3A852+YrXVV9V8gOt4=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.0 h1:Gg3PH9XVAuSjyAr8Z8Ebmcmt6PTKeU/+FG6J7qQl+ew=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.0/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.1 h1:ZIhABs0WLMn8lp1Y3719315/3jbV+yLcovOGScL03eM=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.3.1/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
