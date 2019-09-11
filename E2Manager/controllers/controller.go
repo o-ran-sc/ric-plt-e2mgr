@@ -38,7 +38,7 @@ import (
 
 const (
 	ParamRanName = "ranName"
-	LimitRequest = 1000
+	LimitRequest = 2000
 )
 
 type IController interface {
