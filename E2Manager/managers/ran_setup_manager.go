@@ -49,9 +49,9 @@ func (m *RanSetupManager) updateConnectionStatus(nodebInfo *entities.NodebInfo, 
 	nodebInfo.ConnectionAttempts++
 	err := m.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
 	if err != nil {
-		m.logger.Errorf("#RanSetupManager.updateConnectionStatus - Ran name: %s - Failed updating RAN's connection status to %v : %s", nodebInfo.RanName, status.String(), err)
+		m.logger.Errorf("#RanSetupManager.updateConnectionStatus - Ran name: %s - Failed updating RAN's connection status to %v : %s", nodebInfo.RanName, status, err)
 	} else {
-		m.logger.Infof("#RanSetupManager.updateConnectionStatus - Ran name: %s - Successfully updated rNib. RAN's current connection status: %v, RAN's current connection attempts: %d", nodebInfo.RanName, status.String(), nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatus - Ran name: %s - Successfully updated rNib. RAN's current connection status: %v, RAN's current connection attempts: %d", nodebInfo.RanName, status, nodebInfo.ConnectionAttempts)
 	}
 	return err
 }

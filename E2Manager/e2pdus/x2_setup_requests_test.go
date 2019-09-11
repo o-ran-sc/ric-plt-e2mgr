@@ -15,14 +15,85 @@
  *   limitations under the License.
  *
  *******************************************************************************/
- package e2pdus
+package e2pdus
 
 import (
 	"bytes"
+	"e2mgr/logger"
 	"fmt"
 	"strings"
 	"testing"
 )
+
+func TestPreparePackedEndcX2SetupRequest(t *testing.T) {
+	_,err := logger.InitLogger(logger.InfoLevel)
+	if err!=nil{
+		t.Errorf("failed to initialize logger, error: %s", err)
+	}
+	packedPdu := "0024003100000100f4002a0000020015000800bbbccc00abcde000fa0017000001f700bbbcccabcde0000000bbbccc000000000001"
+	packedEndcX2setupRequest := PackedEndcX2setupRequest
+
+	tmp := fmt.Sprintf("%x", packedEndcX2setupRequest)
+	if len(tmp) != len(packedPdu) {
+		t.Errorf("want packed len:%d, got: %d\n", len(packedPdu)/2, len(packedEndcX2setupRequest)/2)
+	}
+
+	if strings.Compare(tmp, packedPdu) != 0 {
+		t.Errorf("\nwant :\t[%s]\n got: \t\t[%s]\n", packedPdu, tmp)
+	}
+}
+
+func TestPreparePackedX2SetupRequest(t *testing.T) {
+	_,err := logger.InitLogger(logger.InfoLevel)
+	if err!=nil{
+		t.Errorf("failed to initialize logger, error: %s", err)
+	}
+	packedPdu := "0006002a0000020015000800bbbccc00abcde000140017000001f700bbbcccabcde0000000bbbccc000000000001"
+	packedX2setupRequest := PackedX2setupRequest
+
+	tmp := fmt.Sprintf("%x", packedX2setupRequest)
+	if len(tmp) != len(packedPdu) {
+		t.Errorf("want packed len:%d, got: %d\n", len(packedPdu)/2, len(packedX2setupRequest)/2)
+	}
+
+	if strings.Compare(tmp, packedPdu) != 0 {
+		t.Errorf("\nwant :\t[%s]\n got: \t\t[%s]\n", packedPdu, tmp)
+	}
+}
+
+func TestPreparePackedX2SetupRequestFailure(t *testing.T) {
+	_, err := logger.InitLogger(logger.InfoLevel)
+	if err != nil {
+		t.Errorf("failed to initialize logger, error: %s", err)
+	}
+
+	_, _, err  = preparePackedX2SetupRequest(1, 4096, pLMNId, eNBId, eNBIdBitqty, ricFlag)
+	if err == nil {
+		t.Errorf("want: error, got: success.\n")
+	}
+
+	expected:= "packing error: #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big"
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("want :[%s], got: [%s]\n", expected, err)
+	}
+}
+
+func TestPreparePackedEndcSetupRequestFailure(t *testing.T) {
+	_, err := logger.InitLogger(logger.InfoLevel)
+	if err != nil {
+		t.Errorf("failed to initialize logger, error: %s", err)
+	}
+
+	_, _, err  = preparePackedEndcX2SetupRequest(1, 4096, pLMNId, eNBId, eNBIdBitqty, ricFlag)
+	if err == nil {
+		t.Errorf("want: error, got: success.\n")
+	}
+
+	expected:= "packing error: #src/asn1codec_utils.c.pack_pdu_aux - Encoded output of E2AP-PDU, is too big"
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("want :[%s], got: [%s]\n", expected, err)
+	}
+}
 
 func TestParseRicId(t *testing.T) {
 	var testCases = []struct {
