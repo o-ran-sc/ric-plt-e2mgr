@@ -17,7 +17,7 @@
 ##############################################################################
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Suite Setup  Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
@@ -26,10 +26,9 @@ Library     REST      ${url}
 
 
 *** Test Cases ***
-
 Prepare Ran in Connected connectionStatus
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
     Sleep  1s
     GET      /v1/nodeb/test1
     Integer  response status  200
@@ -37,7 +36,7 @@ Prepare Ran in Connected connectionStatus
     String   response body connectionStatus    CONNECTED
 
 
-Send Reset reqeust with no cause
+Send Reset reqeust with cause
     Set Headers     ${header}
     PUT    /v1/nodeb/test1/reset    ${resetcausejson}
     Integer  response status  204

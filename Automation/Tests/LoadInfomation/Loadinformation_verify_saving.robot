@@ -39,7 +39,7 @@ Verify Load information doesn't exist in redis
 
 Trigger X-2 Setup for load information
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
     Sleep  1s
     GET      /v1/nodeb/test1
     Integer  response status  200

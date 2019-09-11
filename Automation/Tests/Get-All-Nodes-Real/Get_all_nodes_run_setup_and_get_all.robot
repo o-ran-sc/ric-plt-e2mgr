@@ -18,7 +18,6 @@
 
 *** Settings ***
 Suite Setup  Prepare Enviorment
-Library      Process
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
@@ -28,7 +27,7 @@ Library     REST      ${url}
 *** Test Cases ***
 Run x2 setup
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
     Sleep  2s
     GET      /v1/nodeb/test1
     Integer  response status  200
@@ -39,7 +38,7 @@ Run x2 setup
 
 Run endc setup
     Post Request setup node b endc-setup
-    Integer     response status       200
+    Integer     response status       204
     Sleep  2s
     GET      /v1/nodeb/test2
     Integer  response status  200

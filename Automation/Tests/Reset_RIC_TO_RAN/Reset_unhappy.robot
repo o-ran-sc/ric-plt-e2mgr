@@ -16,18 +16,13 @@
 #
 ##############################################################################
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Suite Setup  Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
 Suite Teardown   Start E2
-
-*** Variables ***
-${stop_docker_e2}      docker stop e2
-
-
 
 *** Test Cases ***
 
@@ -40,7 +35,7 @@ Pre Condition for Connecting - no E2
 Prepare Ran in Connecting connectionStatus
     Sleep  1s
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
     Sleep  1s
     GET      /v1/nodeb/test1
     Integer  response status  200

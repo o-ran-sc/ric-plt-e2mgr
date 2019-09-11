@@ -26,7 +26,7 @@ Library     REST      ${url}
 *** Test Cases ***
 X2 - Setup Test
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
 
 X2 - Get Nodeb
     Get Request Node B Enb test1

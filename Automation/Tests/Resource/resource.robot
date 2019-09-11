@@ -26,7 +26,7 @@ ${json}    {"ranIp": "10.0.2.15","ranPort": 5577,"ranName":"test1"}
 ${endcjson}    {"ranIp": "10.0.2.15","ranPort": 49999,"ranName":"test2"}
 ${resetcausejson}   {"cause": "misc:not-enough-user-plane-processing-resources"}
 ${header}  {"Content-Type": "application/json"}
-${docker_command}  docker ps | grep 1.0 | wc --lines
+${docker_command}  docker ps | grep Up | wc --lines
 ${run_simu_load}   docker run -d --name gnbe2_simu --env gNBipv4=localhost  --env gNBport=36422  --env duration=600000000000 --env indicationReportRate=1000000000 --env indicationInsertRate=0 -p 5577:36422/sctp snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/gnbe2_simu:1.0.6
 ${stop_simu}  docker stop gnbe2_simu
 ${run_simu_regular}  docker run -d --name gnbe2_simu --env gNBipv4=localhost  --env gNBport=36422 --env duration=600000000000 --env indicationReportRate=0 --env indicationInsertRate=0 -p 5577:36422/sctp snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/gnbe2_simu:1.0.6

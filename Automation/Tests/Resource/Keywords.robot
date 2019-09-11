@@ -68,7 +68,9 @@ Prepare Enviorment
      Run And Return Rc And Output    ${docker_Remove}
      Run And Return Rc And Output    ${run_simu_regular}
      Run And Return Rc And Output    ${restart_e2adapter}
+     Sleep  2s
      ${result}=  Run And Return Rc And Output     ${docker_command}
+     log to console   ${result}
      Should Be Equal As Integers    ${result[1]}    5
 
 Start E2

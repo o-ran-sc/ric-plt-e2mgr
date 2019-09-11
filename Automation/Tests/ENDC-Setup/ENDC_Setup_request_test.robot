@@ -30,7 +30,7 @@ Library     REST        ${url}
 *** Test Cases ***
 Run Endc setup request
     Post Request setup node b endc-setup
-    Integer     response status       200
+    Integer     response status       204
 
 Get request gnb
     Sleep    1s

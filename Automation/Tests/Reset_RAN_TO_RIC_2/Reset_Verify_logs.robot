@@ -23,6 +23,7 @@ Library     OperatingSystem
 Library     Process
 Library     ${CURDIR}/Reset_Ran_To_Ric_RNIB_Down_Verify_logs.py
 Resource   ../Resource/Keywords.robot
+Test Teardown  Start Redis with 4 dockers
 
 
 
@@ -36,3 +37,12 @@ Verify logs - e2mgr logs
    ${result}    Reset_Ran_To_Ric_RNIB_Down_Verify_logs.verify   ${EXECDIR}
    log to console   ${result}
    Should Be Equal As Strings    ${result}      True
+
+
+*** Keywords ***
+Start Redis with 4 dockers
+     Run And Return Rc And Output    ${redis_remove}
+     Run And Return Rc And Output    ${start_redis}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    4
+     Sleep  5s

@@ -31,7 +31,7 @@ Library     REST      ${url}
 
 Prepare Ran in Connected connectionStatus
     Post Request setup node b x-2
-    Integer     response status       200
+    Integer     response status       204
     Sleep  1s
     GET      /v1/nodeb/test1
     Integer  response status  200
