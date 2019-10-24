@@ -24,68 +24,81 @@ package rmrmsghandlers
 import "C"
 import (
 	"e2mgr/e2pdus"
+	"e2mgr/enums"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
+	"e2mgr/utils"
+	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"unsafe"
 )
 
 type X2ResetRequestNotificationHandler struct {
-	rnibDataService services.RNibDataService
+	logger                 *logger.Logger
+	rnibDataService        services.RNibDataService
+	ranStatusChangeManager managers.IRanStatusChangeManager
+	rmrSender              *rmrsender.RmrSender
 }
 
-func NewX2ResetRequestNotificationHandler(rnibDataService services.RNibDataService) X2ResetRequestNotificationHandler {
+func NewX2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, ranStatusChangeManager managers.IRanStatusChangeManager, rmrSender *rmrsender.RmrSender) X2ResetRequestNotificationHandler {
 	return X2ResetRequestNotificationHandler{
-		rnibDataService: rnibDataService,
+		logger:                 logger,
+		rnibDataService:        rnibDataService,
+		ranStatusChangeManager: ranStatusChangeManager,
+		rmrSender:              rmrSender,
 	}
 }
 
-func (src X2ResetRequestNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h X2ResetRequestNotificationHandler) Handle(request *models.NotificationRequest) {
 
-	logger.Debugf("#X2ResetRequestNotificationHandler.Handle - Ran name: %s", request.RanName)
+	h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Ran name: %s", request.RanName)
 
-	nb, rNibErr := src.rnibDataService.GetNodeb(request.RanName)
+	nb, rNibErr := h.rnibDataService.GetNodeb(request.RanName)
 	if rNibErr != nil {
-		logger.Errorf("#X2ResetRequestNotificationHandler.Handle - failed to retrieve nodeB entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
-		printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)
-
+		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - failed to retrieve nodeB entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
+		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 		return
 	}
-	logger.Debugf("#X2ResetRequestNotificationHandler.Handle - nodeB entity retrieved. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
+
+	h.logger.Debugf("#X2ResetRequestNotificationHandler.Handle - nodeB entity retrieved. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
 
 	if nb.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
-		logger.Warnf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)
-
+		h.logger.Warnf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
+		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	if nb.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
-		logger.Errorf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)
-
+		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
+		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 		return
 	}
-	src.createAndAddToChannel(logger, request, messageChannel)
 
-	//TODO change name of printHandlingSetupResponseElapsedTimeInMs (remove setup response) and move to utils?
-	printHandlingSetupResponseElapsedTimeInMs(logger, "#X2ResetRequestNotificationHandler.Handle - Summary: Elapsed time for receiving and handling reset request message from E2 terminator", request.StartTime)
+	msg, err := createX2ResetResponseNotification(request)
+	if err != nil {
+		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - %s", err)
+		return
+	}
+
+	_ = h.rmrSender.Send(msg)
+	h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+	_ = h.ranStatusChangeManager.Execute(rmrCgo.RAN_RESTARTED, enums.RAN_TO_RIC, nb)
 }
 
-func (src X2ResetRequestNotificationHandler) createAndAddToChannel(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func createX2ResetResponseNotification(request *models.NotificationRequest) (*models.RmrMessage, error) {
 
 	packedBuffer := make([]C.uchar, e2pdus.MaxAsn1PackedBufferSize)
 	errorBuffer := make([]C.char, e2pdus.MaxAsn1CodecMessageBufferSize)
 	var payloadSize = C.ulong(e2pdus.MaxAsn1PackedBufferSize)
 
 	if status := C.build_pack_x2reset_response(&payloadSize, &packedBuffer[0], C.ulong(e2pdus.MaxAsn1CodecMessageBufferSize), &errorBuffer[0]); !status {
-		logger.Errorf("#X2ResetRequestNotificationHandler.createAndAddToChannel - failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
-		return
+		return nil, fmt.Errorf("failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
 	}
 	payload := C.GoBytes(unsafe.Pointer(&packedBuffer[0]), C.int(payloadSize))
-	response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_X2_RESET_RESP}
-
-	messageChannel <- &response
+	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, payload)
+	return msg, nil
 }

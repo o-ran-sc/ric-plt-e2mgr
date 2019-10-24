@@ -28,45 +28,53 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
+	"e2mgr/services/rmrsender"
 	"unsafe"
 )
 
-type EndcConfigurationUpdateHandler struct{}
-
-func NewEndcConfigurationUpdateHandler() EndcConfigurationUpdateHandler {
-	return EndcConfigurationUpdateHandler{}
+type EndcConfigurationUpdateHandler struct {
+	logger *logger.Logger
+	rmrSender *rmrsender.RmrSender
 }
 
-func (src EndcConfigurationUpdateHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func NewEndcConfigurationUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender) EndcConfigurationUpdateHandler {
+	return EndcConfigurationUpdateHandler{
+		logger: logger,
+		rmrSender: rmrSender,
+	}
+}
+
+func (h EndcConfigurationUpdateHandler) Handle(request *models.NotificationRequest) {
 
 	var payloadSize C.ulong
 	payloadSize = e2pdus.MaxAsn1PackedBufferSize
 	packedBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.uchar{}
 	errorBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.char{}
-	refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
+	refinedMessage, err := converters.UnpackX2apPduAndRefine(h.logger, e2pdus.MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
 	if err != nil {
 		status := C.build_pack_endc_configuration_update_failure(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
 		if status {
 			payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
-			logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update negative ack message payload: (%d) %02x", len(payload), payload)
-			response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE}
-			messageChannel <- &response
+			h.logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update negative ack message payload: (%d) %02x", len(payload), payload)
+			msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE, request.RanName, payload)
+			_ = h.rmrSender.Send(msg)
 		} else {
-			logger.Errorf("#endc_configuration_update_handler.Handle - failed to build and pack Endc configuration update unsuccessful outcome message. Error: %v", errorBuffer)
+			h.logger.Errorf("#endc_configuration_update_handler.Handle - failed to build and pack Endc configuration update unsuccessful outcome message. Error: %v", errorBuffer)
 		}
-		logger.Errorf("#endc_configuration_update_handler.Handle - unpack failed. Error: %v", err)
+		h.logger.Errorf("#endc_configuration_update_handler.Handle - unpack failed. Error: %v", err)
 	} else {
-		logger.Infof("#endc_configuration_update_handler.Handle - Endc configuration update initiating message received")
-		logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update initiating message payload: %s", refinedMessage.PduPrint)
+		h.logger.Infof("#endc_configuration_update_handler.Handle - Endc configuration update initiating message received")
+		h.logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update initiating message payload: %s", refinedMessage.PduPrint)
 		status := C.build_pack_endc_configuration_update_ack(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
 		if status {
 			payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
-			logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update positive ack message payload: (%d) %02x", len(payload), payload)
-			response := models.NotificationResponse{RanName: request.RanName, Payload: payload, MgsType: rmrCgo.RIC_ENDC_CONF_UPDATE_ACK}
-			messageChannel <- &response
+			h.logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update positive ack message payload: (%d) %02x", len(payload), payload)
+			msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_ACK, request.RanName, payload)
+			_ = h.rmrSender.Send(msg)
 		} else {
-			logger.Errorf("#endc_configuration_update_handler.Handle - failed to build and pack endc configuration update successful outcome message. Error: %v", errorBuffer)
+			h.logger.Errorf("#endc_configuration_update_handler.Handle - failed to build and pack endc configuration update successful outcome message. Error: %v", errorBuffer)
 		}
 	}
-	printHandlingSetupResponseElapsedTimeInMs(logger, "#endc_configuration_update_handler.Handle - Summary: Elapsed time for receiving and handling endc configuration update initiating message from E2 terminator", request.StartTime)
+
+	printHandlingSetupResponseElapsedTimeInMs(h.logger, "#endc_configuration_update_handler.Handle - Summary: Elapsed time for receiving and handling endc configuration update initiating message from E2 terminator", request.StartTime)
 }

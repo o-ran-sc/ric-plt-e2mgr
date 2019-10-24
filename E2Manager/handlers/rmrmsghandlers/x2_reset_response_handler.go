@@ -23,35 +23,79 @@ package rmrmsghandlers
 import "C"
 import (
 	"e2mgr/converters"
-	"e2mgr/e2pdus"
+	"e2mgr/enums"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/utils"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type X2ResetResponseHandler struct {
-	rnibDataService services.RNibDataService
+	logger                 *logger.Logger
+	rnibDataService        services.RNibDataService
+	ranStatusChangeManager managers.IRanStatusChangeManager
+	extractor              converters.IX2ResetResponseExtractor
 }
 
-func NewX2ResetResponseHandler(rnibDataService services.RNibDataService) X2ResetResponseHandler {
+func NewX2ResetResponseHandler(logger *logger.Logger, rnibDataService services.RNibDataService, ranStatusChangeManager managers.IRanStatusChangeManager, x2ResetResponseExtractor converters.IX2ResetResponseExtractor) X2ResetResponseHandler {
 	return X2ResetResponseHandler{
-		rnibDataService: rnibDataService,
+		logger:                 logger,
+		rnibDataService:        rnibDataService,
+		ranStatusChangeManager: ranStatusChangeManager,
+		extractor:              x2ResetResponseExtractor,
 	}
 }
 
-func (src X2ResetResponseHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h X2ResetResponseHandler) Handle(request *models.NotificationRequest) {
+	ranName := request.RanName
+	h.logger.Infof("#X2ResetResponseHandler.Handle - RAN name: %s - received reset response. Payload: %x", ranName, request.Payload)
 
-	logger.Infof("#x2ResetResponseHandler.Handle - received reset response. Payload: %x", request.Payload)
-
-	if nb, rNibErr := src.rnibDataService.GetNodeb(request.RanName); rNibErr != nil {
-		logger.Errorf("#x2ResetResponseHandler.Handle - failed to retrieve nb entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
-	} else {
-		logger.Debugf("#x2ResetResponseHandler.Handle - nb entity retrieved. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		refinedMessage, err := converters.UnpackX2apPduAndRefine(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
-		if err != nil {
-			logger.Errorf("#x2ResetResponseHandler.Handle - failed to unpack reset response message. RanName %s, Payload: %s", request.RanName, request.Payload)
-		} else {
-			logger.Debugf("#x2ResetResponseHandler.Handle - reset response message payload unpacked. RanName %s, Message: %s", request.RanName, refinedMessage.PduPrint)
-		}
+	nodebInfo, err := h.rnibDataService.GetNodeb(ranName);
+	if err != nil {
+		h.logger.Errorf("#x2ResetResponseHandler.Handle - RAN name: %s - failed to retrieve nodebInfo entity. Error: %s", ranName, err)
+		return
 	}
+
+	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
+		h.logger.Warnf("#X2ResetResponseHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", nodebInfo.RanName, nodebInfo.ConnectionStatus)
+		h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		return
+	}
+
+	if nodebInfo.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
+		h.logger.Errorf("#X2ResetResponseHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", nodebInfo.RanName, nodebInfo.ConnectionStatus)
+		h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		return
+	}
+
+	isSuccessfulResetResponse, err := h.isSuccessfulResetResponse(ranName, request.Payload)
+
+	h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+
+	if err != nil || !isSuccessfulResetResponse {
+		return
+	}
+
+	_ = h.ranStatusChangeManager.Execute(rmrCgo.RAN_RESTARTED, enums.RIC_TO_RAN, nodebInfo)
+}
+
+func (h X2ResetResponseHandler) isSuccessfulResetResponse(ranName string, packedBuffer []byte) (bool, error) {
+
+	criticalityDiagnostics, err := h.extractor.ExtractCriticalityDiagnosticsFromPdu(packedBuffer)
+
+	if err != nil {
+		h.logger.Errorf("#X2ResetResponseHandler.isSuccessfulResetResponse - RAN name: %s - Failed extracting pdu: %s", ranName, err)
+		return false, err
+	}
+
+	if criticalityDiagnostics != nil {
+		h.logger.Errorf("#X2ResetResponseHandler.isSuccessfulResetResponse - RAN name: %s - Unsuccessful RESET response message. Criticality diagnostics: %s", ranName, criticalityDiagnostics)
+		return false, nil
+	}
+
+	h.logger.Infof("#X2ResetResponseHandler.isSuccessfulResetResponse - RAN name: %s - Successful RESET response message", ranName)
+	return true, nil
 }

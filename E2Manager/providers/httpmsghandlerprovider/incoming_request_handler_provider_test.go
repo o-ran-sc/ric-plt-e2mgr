@@ -24,10 +24,10 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/mocks"
-	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
@@ -35,11 +35,10 @@ import (
 	"testing"
 )
 
-func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
+	return rmrsender.NewRmrSender(log, &rmrMessenger)
 }
 
 func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
@@ -53,8 +52,9 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 		return &mocks.RnibWriterMock{}
 	}
 	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
-	ranSetupManager := managers.NewRanSetupManager(log, getRmrService(rmrMessengerMock, log), rnibDataService)
-	return NewIncomingRequestHandlerProvider(log, getRmrService(rmrMessengerMock, log), configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	rmrSender := getRmrSender(rmrMessengerMock, log)
+	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

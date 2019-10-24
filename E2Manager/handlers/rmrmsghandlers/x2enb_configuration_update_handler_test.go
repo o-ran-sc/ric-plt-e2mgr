@@ -17,52 +17,54 @@
 package rmrmsghandlers
 
 import (
-	"e2mgr/logger"
+	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-	"e2mgr/tests"
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"testing"
 	"time"
 )
 
-func TestHandleSuccessEnbConfigUpdate(t *testing.T){
-		log, err := logger.InitLogger(logger.InfoLevel)
-		if err!=nil{
-			t.Errorf("#endc_configuration_update_handler_test.TestHandleSuccessEndcConfigUpdate - failed to initialize logger, error: %s", err)
-		}
-		h := X2EnbConfigurationUpdateHandler{}
+const PackedX2EnbConfigurationUpdateAck = "200800080000010011400100"
+const PackedX2EnbConfigurationUpdateFailure = "400800080000010005400142"
 
-		payload := tests.GetPackedPayload(t)
-		mBuf := rmrCgo.NewMBuf(10370, len(payload),"RanName", &payload, &tests.DummyXAction)
-		notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now()}
-		messageChannel := make(chan *models.NotificationResponse)
-
-		go h.Handle(log, &notificationRequest, messageChannel)
-
-		response := <-messageChannel
-
-		assert.NotEmpty(t, response)
-		assert.EqualValues(t, 10081, response.MgsType)
-		assert.True(t, len(response.Payload) > 0)
+func initX2EnbConfigurationUpdateHandlerTest(t *testing.T) (X2EnbConfigurationUpdateHandler, *mocks.RmrMessengerMock) {
+	log := initLog(t)
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrSender := initRmrSender(rmrMessengerMock, log)
+	h := NewX2EnbConfigurationUpdateHandler(log, rmrSender)
+	return h, rmrMessengerMock
 }
 
-func TestHandleFailureEnbConfigUpdate(t *testing.T){
-	log, err := logger.InitLogger(logger.InfoLevel)
-	if err!=nil{
-		t.Errorf("#endc_configuration_update_handler_test.TestHandleFailureEndcConfigUpdate - failed to initialize logger, error: %s", err)
-	}
-	h := X2EnbConfigurationUpdateHandler{}
+func TestHandleX2EnbConfigUpdateSuccess(t *testing.T) {
+	h, rmrMessengerMock := initX2EnbConfigurationUpdateHandlerTest(t)
 
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, 4,"RanName", &tests.DummyPayload, &tests.DummyXAction)
+	ranName := "test"
+	xaction := []byte(ranName)
+
+	var payload []byte
+	_, _ = fmt.Sscanf(PackedX2EnbConfigurationUpdateAck, "%x", &payload)
+
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, len(payload), ranName, &payload, &xaction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now()}
-	messageChannel := make(chan *models.NotificationResponse)
+	var err error
+	rmrMessengerMock.On("SendMsg", mBuf).Return(&rmrCgo.MBuf{}, err)
+	h.Handle(&notificationRequest)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf)
+}
 
-	go h.Handle(log, &notificationRequest, messageChannel)
+func TestHandleX2EnbConfigUpdateFailure(t *testing.T) {
+	h, rmrMessengerMock := initX2EnbConfigurationUpdateHandlerTest(t)
 
-	response := <-messageChannel
+	ranName := "test"
+	xaction := []byte(ranName)
 
-	assert.NotEmpty(t, response)
-	assert.EqualValues(t, 10082, response.MgsType)
-	assert.True(t, len(response.Payload) > 0)
+	var payload []byte
+	_, _ = fmt.Sscanf(PackedX2EnbConfigurationUpdateFailure, "%x", &payload)
+
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, len(payload), ranName, &payload, &xaction)
+	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: 0, Payload: []byte{0}, StartTime: time.Now()}
+	rmrMessengerMock.On("SendMsg", mBuf).Return(&rmrCgo.MBuf{}, fmt.Errorf("send failure"))
+	h.Handle(&notificationRequest)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf)
 }

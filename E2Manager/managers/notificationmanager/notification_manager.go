@@ -19,37 +19,34 @@ package notificationmanager
 
 import (
 	"e2mgr/logger"
-	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/providers/rmrmsghandlerprovider"
 	"e2mgr/rmrCgo"
-	"e2mgr/services"
-	"fmt"
 	"time"
 )
 
 type NotificationManager struct {
+	logger                      *logger.Logger
 	notificationHandlerProvider *rmrmsghandlerprovider.NotificationHandlerProvider
 }
 
-func NewNotificationManager(rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager) *NotificationManager {
-	notificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(rnibDataService, ranReconnectionManager)
-
+func NewNotificationManager(logger *logger.Logger, notificationHandlerProvider *rmrmsghandlerprovider.NotificationHandlerProvider) *NotificationManager {
 	return &NotificationManager{
+		logger:                      logger,
 		notificationHandlerProvider: notificationHandlerProvider,
 	}
 }
 
-//TODO add NEWHandler with log
-func (m NotificationManager) HandleMessage(logger *logger.Logger, mbuf *rmrCgo.MBuf, responseChannel chan<- *models.NotificationResponse) {
+func (m NotificationManager) HandleMessage(mbuf *rmrCgo.MBuf) error {
 
 	notificationHandler, err := m.notificationHandlerProvider.GetNotificationHandler(mbuf.MType)
 
 	if err != nil {
-		logger.Errorf(fmt.Sprintf("%s", err))
-		return
+		m.logger.Errorf("#NotificationManager.HandleMessage - Error: %s", err)
+		return err
 	}
 
 	notificationRequest := models.NewNotificationRequest(mbuf.Meid, *mbuf.Payload, time.Now(), string(*mbuf.XAction))
-	go notificationHandler.Handle(logger, notificationRequest, responseChannel)
+	go notificationHandler.Handle(notificationRequest)
+	return nil
 }

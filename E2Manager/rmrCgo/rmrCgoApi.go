@@ -54,10 +54,10 @@ func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logg
 	return &r
 }
 
-func (ctx *Context) SendMsg(msg *MBuf, maxMsgSize int) (*MBuf, error) {
+func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
 	ctx.checkContextInitialized()
 	ctx.Logger.Debugf("#rmrCgoApi.SendMsg - Going to send message. MBuf: %v", *msg)
-	allocatedCMBuf := ctx.getAllocatedCRmrMBuf(ctx.Logger, msg, maxMsgSize)
+	allocatedCMBuf := ctx.getAllocatedCRmrMBuf(ctx.Logger, msg, ctx.MaxMsgSize)
 	defer C.rmr_free_msg(allocatedCMBuf)
 	state := allocatedCMBuf.state
 	if state != RMR_OK {

@@ -21,10 +21,10 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -43,7 +43,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrService := getRmrService(rmrMessengerMock, logger)
+	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
@@ -54,7 +54,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 		return writerMock
 	}
 	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
-	ranSetupManager := NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
 	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
 	return logger, rmrMessengerMock, readerMock, writerMock, ranReconnectionManager
 }
@@ -137,7 +137,7 @@ func TestConnectedRanExecuteSetupSuccess(t *testing.T) {
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
 	updatedNodebInfo.ConnectionAttempts++
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.AnythingOfType("int")).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(&rmrCgo.MBuf{}, nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
@@ -161,10 +161,8 @@ func TestConnectedRanExecuteSetupFailure(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
-// TODO: should extract to test_utils
-func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
+	return rmrsender.NewRmrSender(log, &rmrMessenger)
 }

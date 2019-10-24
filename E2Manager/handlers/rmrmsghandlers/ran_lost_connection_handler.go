@@ -25,18 +25,20 @@ import (
 
 type RanLostConnectionHandler struct {
 	ranReconnectionManager managers.IRanReconnectionManager
+	logger                 *logger.Logger
 }
 
-func NewRanLostConnectionHandler(ranReconnectionManager managers.IRanReconnectionManager) RanLostConnectionHandler {
+func NewRanLostConnectionHandler(logger *logger.Logger, ranReconnectionManager managers.IRanReconnectionManager) RanLostConnectionHandler {
 	return RanLostConnectionHandler{
+		logger:                 logger,
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
-func (handler RanLostConnectionHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h RanLostConnectionHandler) Handle(request *models.NotificationRequest) {
 
 	ranName := request.RanName
 
-	logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", ranName)
+	h.logger.Warnf("#RanLostConnectionHandler.Handle - RAN name: %s - Received lost connection notification", ranName)
 
-	_ = handler.ranReconnectionManager.ReconnectRan(ranName)
+	_ = h.ranReconnectionManager.ReconnectRan(ranName)
 }

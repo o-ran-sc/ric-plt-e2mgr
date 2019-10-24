@@ -68,6 +68,9 @@ const (
 	RIC_X2_RESET_RESP                    = C.RIC_X2_RESET_RESP
 	RIC_X2_RESET                         = C.RIC_X2_RESET
 	RIC_E2_TERM_INIT 					 = C.E2_TERM_INIT
+	RAN_CONNECTED						 = C.RAN_CONNECTED
+	RAN_RESTARTED						 = C.RAN_RESTARTED
+	RAN_RECONFIGURED					 = C.RAN_RECONFIGURED
 )
 
 const (
@@ -133,7 +136,7 @@ type Context struct {
 
 type RmrMessenger interface {
 	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) *RmrMessenger
-	SendMsg(msg *MBuf, maxMsgSize int) (*MBuf, error)
+	SendMsg(msg *MBuf) (*MBuf, error)
 	RecvMsg() (*MBuf, error)
 	RtsMsg(msg *MBuf)
 	IsReady() bool

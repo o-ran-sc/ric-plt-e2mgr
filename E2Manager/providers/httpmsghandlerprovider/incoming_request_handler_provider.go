@@ -13,7 +13,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 package httpmsghandlerprovider
 
@@ -24,16 +23,19 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type IncomingRequest string
 
 const (
-	ShutdownRequest  IncomingRequest = "Shutdown"
-	ResetRequest     IncomingRequest = "Reset"
-	X2SetupRequest   IncomingRequest = "X2SetupRequest"
-	EndcSetupRequest IncomingRequest = "EndcSetupRequest"
+	ShutdownRequest       IncomingRequest = "Shutdown"
+	ResetRequest          IncomingRequest = "Reset"
+	X2SetupRequest        IncomingRequest = "X2SetupRequest"
+	EndcSetupRequest      IncomingRequest = "EndcSetupRequest"
+	GetNodebRequest       IncomingRequest = "GetNodebRequest"
+	GetNodebIdListRequest IncomingRequest = "GetNodebIdListRequest"
 )
 
 type IncomingRequestHandlerProvider struct {
@@ -41,21 +43,23 @@ type IncomingRequestHandlerProvider struct {
 	logger     *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap: initRequestHandlerMap(logger, rmrService, config, rNibDataService, ranSetupManager),
+		requestMap: initRequestHandlerMap(logger, rmrSender, config, rNibDataService, ranSetupManager),
 		logger:     logger,
 	}
 }
 
-func initRequestHandlerMap(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
-		ShutdownRequest: httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrService, config, rNibDataService), //TODO change to pointer
-		ResetRequest:    httpmsghandlers.NewX2ResetRequestHandler(logger, rmrService, rNibDataService),
-		X2SetupRequest:    httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST),
-		EndcSetupRequest:    httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST), //TODO change to pointer
+		ShutdownRequest:  httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService), //TODO change to pointer
+		ResetRequest:     httpmsghandlers.NewX2ResetRequestHandler(logger, rmrSender, rNibDataService),
+		X2SetupRequest:   httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST),
+		EndcSetupRequest: httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST), //TODO change to pointer
+		GetNodebRequest:  httpmsghandlers.NewGetNodebRequestHandler(logger, rNibDataService),
+		GetNodebIdListRequest: httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
 	}
 }
 

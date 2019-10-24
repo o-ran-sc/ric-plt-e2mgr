@@ -49,7 +49,7 @@ func ParseConfiguration() *Configuration{
 	viper.AddConfigPath("../../resources/") //For test under Docker
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Sprintf("#http_server.parseConfiguration - failed to read configuration file: %s\n", err))
+		panic(fmt.Sprintf("#configuration.ParseConfiguration - failed to read configuration file: %s\n", err))
 	}
 
 	config := Configuration{}
@@ -60,28 +60,28 @@ func ParseConfiguration() *Configuration{
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
 	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
-	config.MaxConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
-	config.MaxConnectionAttempts = viper.GetInt("rnibRetryIntervalMs")
+	config.MaxRnibConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
+	config.RnibRetryIntervalMs = viper.GetInt("rnibRetryIntervalMs")
 	return &config
 }
 
 func (c *Configuration)fillLoggingConfig(logConfig *viper.Viper) {
 	if logConfig == nil {
-		panic(fmt.Sprintf("#http_server.fillLoggingConfig - failed to fill logging configuration: The entry 'logging' not found\n"))
+		panic(fmt.Sprintf("#configuration.fillLoggingConfig - failed to fill logging configuration: The entry 'logging' not found\n"))
 	}
 	c.Logging.LogLevel = logConfig.GetString("logLevel")
 }
 
 func (c *Configuration)fillHttpConfig(httpConfig *viper.Viper) {
 	if httpConfig == nil {
-		panic(fmt.Sprintf("#http_server.fillHttpConfig - failed to fill HTTP configuration: The entry 'http' not found\n"))
+		panic(fmt.Sprintf("#configuration.fillHttpConfig - failed to fill HTTP configuration: The entry 'http' not found\n"))
 	}
 	c.Http.Port = httpConfig.GetInt("port")
 }
 
 func (c *Configuration)fillRmrConfig(rmrConfig *viper.Viper) {
 	if rmrConfig == nil {
-		panic(fmt.Sprintf("#http_server.fillRmrConfig - failed to fill RMR configuration: The entry 'rmr' not found\n"))
+		panic(fmt.Sprintf("#configuration.fillRmrConfig - failed to fill RMR configuration: The entry 'rmr' not found\n"))
 	}
 	c.Rmr.Port = rmrConfig.GetInt("port")
 	c.Rmr.MaxMsgSize = rmrConfig.GetInt("maxMsgSize")

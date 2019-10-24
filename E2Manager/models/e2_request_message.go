@@ -42,10 +42,9 @@ func NewE2RequestMessage(transactionId string, ranIp string, ranPort uint16, ran
 	return &E2RequestMessage{transactionId: transactionId, ranIp: ranIp, ranPort: ranPort, ranName: ranName, payload: payload}
 }
 
+// TODO: this shouldn't receive logger
 func (e2RequestMessage E2RequestMessage) GetMessageAsBytes(logger *logger.Logger) []byte {
-	messageStringWithoutPayload := fmt.Sprintf("%s|%d|%s|%d|", e2RequestMessage.ranIp,
-		e2RequestMessage.ranPort, e2RequestMessage.ranName,
-		len(e2RequestMessage.payload))
+	messageStringWithoutPayload := fmt.Sprintf("%s|%d|%s|%d|", e2RequestMessage.ranIp, e2RequestMessage.ranPort, e2RequestMessage.ranName, len(e2RequestMessage.payload))
 	logger.Debugf("#e2_request_message.GetMessageAsBytes - messageStringWithoutPayload: %s", messageStringWithoutPayload)
 	messageBytesWithoutPayload := []byte(messageStringWithoutPayload)
 	return append(messageBytesWithoutPayload, e2RequestMessage.payload...)

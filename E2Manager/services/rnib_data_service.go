@@ -1,12 +1,29 @@
+//
+// Copyright 2019 AT&T Intellectual Property
+// Copyright 2019 Nokia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 package services
 
 import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"net"
 	"time"
 )
@@ -17,6 +34,7 @@ type RNibDataService interface {
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	GetNodeb(ranName string) (*entities.NodebInfo, error)
 	GetListNodebIds() ([]*entities.NbIdentity, error)
+	PingRnib() bool
 }
 
 type rNibDataService struct {
@@ -71,7 +89,7 @@ func (w *rNibDataService) SaveRanLoadInformation(inventoryName string, ranLoadIn
 }
 
 func (w *rNibDataService) GetNodeb(ranName string) (*entities.NodebInfo, error) {
-	w.logger.Infof("#RnibDataService.GetNodeb - ranName: %s", ranName)
+	w.logger.Infof("#RnibDataService.GetNodeb - RAN name: %s", ranName)
 
 	var nodeb *entities.NodebInfo = nil
 
@@ -96,6 +114,15 @@ func (w *rNibDataService) GetListNodebIds() ([]*entities.NbIdentity, error) {
 	return nodeIds, err
 }
 
+func (w *rNibDataService) PingRnib() bool {
+	err := w.retry("GetListNodebIds", func() (err error) {
+		_, err = w.rnibReaderProvider().GetListNodebIds()
+		return
+	})
+
+	return !isRnibConnectionError(err)
+}
+
 func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {
 	attempts := w.maxAttempts
 
@@ -104,7 +131,7 @@ func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {
 		if err == nil {
 			return
 		}
-		if !w.isConnError(err) {
+		if !isRnibConnectionError(err) {
 			return err
 		}
 		if i >= attempts {
@@ -117,8 +144,9 @@ func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {
 	}
 }
 
-func (w *rNibDataService) isConnError(err error) bool {
-	internalErr, ok := err.(common.InternalError)
+
+func isRnibConnectionError(err error) bool {
+	internalErr, ok := err.(*common.InternalError)
 	if !ok {
 		return false
 	}

@@ -20,8 +20,9 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
-Library    Collections
+Library     ../Scripts/find_rmr_message.py
 Library     REST        ${url}
 
 
@@ -37,7 +38,7 @@ Get request gnb
     Get Request node b enb test2
     Integer  response status  200
     String   response body ranName    test2
-    String   response body ip    10.0.2.15
+    String   response body ip    ${ip_e2adapter} 
     String   response body connectionStatus    CONNECTED
     Integer  response body port     49999
     String   response body nodeType     GNB
@@ -52,6 +53,18 @@ Get request gnb
     String   response body gnb servedNrCells 0 servedNrCellInformation choiceNrMode tdd transmissionBandwidth nrscs   SCS30
     String  response body gnb servedNrCells 0 servedNrCellInformation choiceNrMode tdd transmissionBandwidth ncnrb   NRB162
 
+prepare logs for tests
+    Remove log files
+    Save logs
+
+
+ENDC - RAN Connected message going to be sent
+    ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${RAN_CONNECTED_message_type}    ${Meid_test2}
+    Should Be Equal As Strings    ${result}      True
+
+RSM RESOURCE STATUS REQUEST message not sent
+    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test2}
+    Should Be Equal As Strings    ${result}      False
 
 
 

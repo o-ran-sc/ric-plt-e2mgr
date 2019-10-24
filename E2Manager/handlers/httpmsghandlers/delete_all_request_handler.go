@@ -25,6 +25,7 @@ import (
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/stateMachine"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"time"
@@ -32,36 +33,35 @@ import (
 
 type DeleteAllRequestHandler struct {
 	rnibDataService services.RNibDataService
-	rmrService *services.RmrService
-	config *configuration.Configuration
-	logger         *logger.Logger
+	rmrSender       *rmrsender.RmrSender
+	config          *configuration.Configuration
+	logger          *logger.Logger
 }
 
-func NewDeleteAllRequestHandler(logger *logger.Logger, rmrService *services.RmrService, config *configuration.Configuration, rnibDataService services.RNibDataService) *DeleteAllRequestHandler {
+func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService) *DeleteAllRequestHandler {
 	return &DeleteAllRequestHandler{
-		logger:         logger,
+		logger:          logger,
 		rnibDataService: rnibDataService,
-		rmrService:     rmrService,
-		config:         config,
+		rmrSender:       rmrSender,
+		config:          config,
 	}
 }
 
-func (handler *DeleteAllRequestHandler) Handle(request models.Request) error {
+func (handler *DeleteAllRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
 	err, continueFlow := handler.updateNodebStates(false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if continueFlow == false {
-		return nil
+		return nil, nil
 	}
 
-	//TODO change to rmr_request
-	response := models.NotificationResponse{MgsType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	if err := handler.rmrService.SendRmrMessage(&response); err != nil {
+	response := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
+	if err := handler.rmrSender.Send(&response); err != nil {
 		handler.logger.Errorf("#DeleteAllRequestHandler.Handle - failed to send sctp clear all message to RMR: %s", err)
-		return e2managererrors.NewRmrError()
+		return nil, e2managererrors.NewRmrError()
 	}
 
 	time.Sleep(time.Duration(handler.config.BigRedButtonTimeoutSec) * time.Second)
@@ -69,10 +69,10 @@ func (handler *DeleteAllRequestHandler) Handle(request models.Request) error {
 
 	err, _ = handler.updateNodebStates(true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (handler *DeleteAllRequestHandler) updateNodebStates(timeoutExpired bool) (error, bool) {

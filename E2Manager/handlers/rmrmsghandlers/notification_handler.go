@@ -24,7 +24,7 @@ import (
 )
 
 type NotificationHandler interface {
-	Handle(*logger.Logger, *models.NotificationRequest, chan<- *models.NotificationResponse)
+	Handle(*models.NotificationRequest)
 }
 
 //TODO: remove that

@@ -21,9 +21,8 @@ Suite Setup  Prepare Simulator For Load Information
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
-Library     Collections
 Library     Process
-Library     ${CURDIR}/loadscripts.py
+Library     ../Scripts/loadscripts.py
 Library     REST      ${url}
 Suite Teardown  Stop Simulator
 

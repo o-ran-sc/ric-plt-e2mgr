@@ -1,0 +1,4 @@
+[ 
+	{“id”: “RIC_X2_SETUP_REQ” , “rmrMessageType”: 10060, “transactionId”: “e2e$”, “payloadHeader”: “$ranIp|$ranPort|$ranName|#packedPayload|”,  “packedPayload”: "3137322e31372e302e357c353537377c74657374327c34367c0006002a000002001500080013302300fffff000140017000001f700133023fffff0000000133023000000000001" },
+	{“id”: “RIC_ENB_CONF_UPDATE_ACK_positive” ,  “rmrMessageType”: 10081, “transactionId”: “e2e$”, “payloadHeader”: “$ranIp|$ranPort|$ranName|#packedPayload|”,  “packedPayload”: "2025000a00000100f70003000000" } 
+]

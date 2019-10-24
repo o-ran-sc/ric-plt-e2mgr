@@ -32,7 +32,6 @@ Run x2 setup
     GET      /v1/nodeb/test1
     Integer  response status  200
     String   response body ranName    test1
-    String   response body ip    10.0.2.15
     Integer  response body port     5577
     String   response body connectionStatus    CONNECTED
 
@@ -43,7 +42,6 @@ Run endc setup
     GET      /v1/nodeb/test2
     Integer  response status  200
     String   response body ranName    test2
-    String   response body ip    10.0.2.15
     String   response body connectionStatus    CONNECTED
 
 

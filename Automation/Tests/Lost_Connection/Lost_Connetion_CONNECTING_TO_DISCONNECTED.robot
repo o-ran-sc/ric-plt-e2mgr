@@ -32,7 +32,7 @@ Library     REST      ${url}
 Pre Condition for Connecting - no simu
     Run And Return Rc And Output    ${stop_simu}
     ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    4
+    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
 
 Prepare Ran in Connecting connectionStatus

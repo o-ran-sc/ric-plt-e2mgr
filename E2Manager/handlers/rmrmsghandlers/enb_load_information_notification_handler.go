@@ -12,12 +12,16 @@ import (
 )
 
 type EnbLoadInformationNotificationHandler struct {
+	logger          *logger.Logger
 	rnibDataService services.RNibDataService
+	extractor       converters.IEnbLoadInformationExtractor
 }
 
-func NewEnbLoadInformationNotificationHandler(rnibDataService services.RNibDataService) EnbLoadInformationNotificationHandler {
+func NewEnbLoadInformationNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, extractor converters.IEnbLoadInformationExtractor) EnbLoadInformationNotificationHandler {
 	return EnbLoadInformationNotificationHandler{
+		logger:          logger,
 		rnibDataService: rnibDataService,
+		extractor: extractor,
 	}
 }
 
@@ -25,34 +29,34 @@ func elapsed(startTime time.Time) float64 {
 	return float64(time.Since(startTime)) / float64(time.Millisecond)
 }
 
-func (src EnbLoadInformationNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h EnbLoadInformationNotificationHandler) Handle(request *models.NotificationRequest) {
 
-	pdu, err := converters.UnpackX2apPdu(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize)
+	pdu, err := converters.UnpackX2apPdu(h.logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 
 	if err != nil {
-		logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Unpack failed. Error: %v", request.RanName, err)
+		h.logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Unpack failed. Error: %v", request.RanName, err)
 		return
 	}
 
-	logger.Debugf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Unpacked message successfully", request.RanName)
+	h.logger.Debugf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Unpacked message successfully", request.RanName)
 
 	ranLoadInformation := &entities.RanLoadInformation{LoadTimestamp: uint64(request.StartTime.UnixNano())}
 
-	err = converters.ExtractAndBuildRanLoadInformation(pdu, ranLoadInformation)
+	err = h.extractor.ExtractAndBuildRanLoadInformation(pdu, ranLoadInformation)
 
 	if (err != nil) {
-		logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Failed at ExtractAndBuildRanLoadInformation. Error: %v", request.RanName, err)
+		h.logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Failed at ExtractAndBuildRanLoadInformation. Error: %v", request.RanName, err)
 		return
 	}
 
-	logger.Debugf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully done with extracting and building RAN load information. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
+	h.logger.Debugf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully done with extracting and building RAN load information. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
 
-	rnibErr := src.rnibDataService.SaveRanLoadInformation(request.RanName, ranLoadInformation)
+	rnibErr := h.rnibDataService.SaveRanLoadInformation(request.RanName, ranLoadInformation)
 
 	if rnibErr != nil {
-		logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Failed saving RAN load information. Error: %v", request.RanName, rnibErr)
+		h.logger.Errorf("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Failed saving RAN load information. Error: %v", request.RanName, rnibErr)
 		return
 	}
 
-	logger.Infof("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully saved RAN load information to RNIB. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
+	h.logger.Infof("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully saved RAN load information to RNIB. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
 }

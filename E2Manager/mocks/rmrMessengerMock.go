@@ -32,13 +32,13 @@ func (m *RmrMessengerMock) Init(port string, maxMsgSize int, flags int, logger *
 	return args.Get(0).(*rmrCgo.RmrMessenger)
 }
 
-func (m *RmrMessengerMock) SendMsg(msg *rmrCgo.MBuf, maxMsgSize int) (*rmrCgo.MBuf, error){
-	args := m.Called(msg, maxMsgSize)
+func (m *RmrMessengerMock) SendMsg(msg *rmrCgo.MBuf) (*rmrCgo.MBuf, error){
+	args := m.Called(msg)
 	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)
 }
 
 func (m *RmrMessengerMock) RecvMsg() (*rmrCgo.MBuf, error){
-	args := m.Called( )
+	args := m.Called()
 	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)
 }
 

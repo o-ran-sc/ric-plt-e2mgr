@@ -1,0 +1,921 @@
+# ========================LICENSE_START=================================
+# O-RAN-SC
+#
+# Copyright (C) 2019 AT&T Intellectual Property and Nokia
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ========================LICENSE_END===================================
+
+openapi: 3.0.0
+info:
+  title: E2 Manager Service
+  description: E2 Manager Service APIs
+  version: 2.0.5
+servers:
+  - url: 'http://{apiRoot}/v1'
+    variables:
+      apiRoot:
+        default: 'localhost:3800'
+paths:
+  /nodeb/x2-setup:
+    post:
+      summary: X2 Setup
+      tags:
+        - nodeb
+      operationId: x2Setup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/endc-setup:
+    post:
+      tags:
+        - nodeb
+      summary: ENDC Setup
+      operationId: endcSetup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/nodeb/{ranName}':
+    get:
+      tags:
+        - nodeb
+      summary: Get RAN by name
+      operationId: getNb
+      parameters:
+        - name: ranName
+          in: path
+          required: true
+          description: Name of RAN to return
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNodebResponse'
+        '400':
+          description: The specified RAN name is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: A RAN with the specified name was not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/shutdown:
+    put:
+      tags:
+        - nodeb
+      summary: >-
+        Close all connections to the RANs
+      responses:
+        '204':
+          description: Successful operation
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/ids:
+    get:
+      tags:
+        - nodeb
+      summary: Get RANs identities list
+      operationId: getNodebIdList
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NodebIdentity'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/{ranName}/reset:
+    put:
+      tags:
+        - nodeb
+      summary: >-
+        Upon receipt of this message, 'ranName' shall abort any other ongoing procedures over X2 between the RIC and the RAN. The RAN shall delete all the context information related to the RIC, except the application level configuration data exchanged during the X2 Setup or eNB Configuration Update procedures, and release the corresponding resource.  
+      operationId: reset
+      parameters:
+        - name: ranName
+          in: path
+          required: true
+          description: Name of RAN to return
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+        required: false
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid input (invalid cause, RAN in wrong state)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: A RAN with the specified name was not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - Health Check
+      summary: E2 Manager Service Health Check
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    SetupRequest:
+      type: object
+      required:
+        - ranIp
+        - ranPort
+        - ranName
+      properties:
+        ranIp:
+          type: string
+        ranPort:
+          type: integer
+          format: uint16
+        ranName:
+          type: string
+    ResetRequest:
+      type: object
+      required:
+        - cause
+      properties:
+        cause:
+          type: string
+          enum: [misc:control-processing-overload,
+misc:hardware-failure,
+misc:om-intervention,
+misc:not-enough-user-plane-processing-resources,
+misc:unspecified,
+protocol:transfer-syntax-error,
+protocol:abstract-syntax-error-reject,
+protocol:abstract-syntax-error-ignore-and-notify,
+protocol:message-not-compatible-with-receiver-state,
+protocol:semantic-error,
+protocol:unspecified,
+protocol:abstract-syntax-error-falsely-constructed-message,
+transport:transport-resource-unavailable,
+transport:unspecified,
+radioNetwork:handover-desirable-for-radio-reasons,
+radioNetwork:time-critical-handover,
+radioNetwork:resource-optimisation-handover,
+radioNetwork:reduce-load-in-serving-cell,
+radioNetwork:partial-handover,
+radioNetwork:unknown-new-eNB-UE-X2AP-ID, 
+radioNetwork:unknown-old-eNB-UE-X2AP-ID, 
+radioNetwork:unknown-pair-of-UE-X2AP-ID,
+radioNetwork:ho-target-not-allowed,
+radioNetwork:tx2relocoverall-expiry,
+radioNetwork:trelocprep-expiry,
+radioNetwork:cell-not-available,
+radioNetwork:no-radio-resources-available-in-target-cell,
+radioNetwork:invalid-MME-GroupID,
+radioNetwork:unknown-MME-Code,
+radioNetwork:encryption-and-or-integrity-protection-algorithms-not-supported,
+radioNetwork:reportCharacteristicsEmpty,
+radioNetwork:noReportPeriodicity,
+radioNetwork:existingMeasurementID,
+radioNetwork:unknown-eNB-Measurement-ID,
+radioNetwork:measurement-temporarily-not-available,
+radioNetwork:unspecified,
+radioNetwork:load-balancing,
+radioNetwork:handover-optimisation,
+radioNetwork:value-out-of-allowed-range,
+radioNetwork:multiple-E-RAB-ID-instances,
+radioNetwork:switch-off-ongoing,
+radioNetwork:not-supported-QCI-value,
+radioNetwork:measurement-not-supported-for-the-object,
+radioNetwork:tDCoverall-expiry,
+radioNetwork:tDCprep-expiry,
+radioNetwork:action-desirable-for-radio-reasons,
+radioNetwork:reduce-load,
+radioNetwork:resource-optimisation,
+radioNetwork:time-critical-action,
+radioNetwork:target-not-allowed,
+radioNetwork:no-radio-resources-available,
+radioNetwork:invalid-QoS-combination,
+radioNetwork:encryption-algorithms-not-aupported,
+radioNetwork:procedure-cancelled,
+radioNetwork:rRM-purpose,
+radioNetwork:improve-user-bit-rate,
+radioNetwork:user-inactivity,
+radioNetwork:radio-connection-with-UE-lost,
+radioNetwork:failure-in-the-radio-interface-procedure,
+radioNetwork:bearer-option-not-supported,
+radioNetwork:mCG-Mobility,
+radioNetwork:sCG-Mobility,
+radioNetwork:count-reaches-max-value,
+radioNetwork:unknown-old-en-gNB-UE-X2AP-ID,
+radioNetwork:pDCP-Overload]
+    NodebIdentity:
+      properties:
+        globalNbId:
+          properties:
+            nbId:
+              type: string
+            plmnId:
+              type: string
+          type: object
+        inventoryName:
+          type: string
+      type: object
+    GetNodebResponse:
+      properties:
+        connectionStatus:
+          oneOf:
+            - type: string
+            - type: integer
+        enb:
+          properties:
+            enbType:
+              oneOf:
+                - type: string
+                - type: integer
+            guGroupIds:
+              items:
+                type: string
+              type: array
+            servedCells:
+              items:
+                properties:
+                  bandwidthReducedSi:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                  broadcastPlmns:
+                    items:
+                      type: string
+                    type: array
+                  cellId:
+                    type: string
+                  choiceEutraMode:
+                    properties:
+                      fdd:
+                        properties:
+                          dlTransmissionBandwidth:
+                            oneOf:
+                              - type: string
+                              - type: integer
+                          dlearFcn:
+                            type: integer
+                          ulTransmissionBandwidth:
+                            oneOf:
+                              - type: string
+                              - type: integer
+                          ulearFcn:
+                            type: integer
+                        additionalProperties: false
+                        type: object
+                      tdd:
+                        properties:
+                          additionalSpecialSubframeExtensionInfo:
+                            properties:
+                              additionalSpecialSubframePatternsExtension:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              cyclicPrefixDl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              cyclicPrefixUl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                            additionalProperties: false
+                            type: object
+                          additionalSpecialSubframeInfo:
+                            properties:
+                              additionalSpecialSubframePatterns:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              cyclicPrefixDl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              cyclicPrefixUl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                            additionalProperties: false
+                            type: object
+                          earFcn:
+                            type: integer
+                          specialSubframeInfo:
+                            properties:
+                              cyclicPrefixDl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              cyclicPrefixUl:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                              specialSubframePatterns:
+                                oneOf:
+                                  - type: string
+                                  - type: integer
+                            additionalProperties: false
+                            type: object
+                          subframeAssignment:
+                            oneOf:
+                              - type: string
+                              - type: integer
+                          transmissionBandwidth:
+                            oneOf:
+                              - type: string
+                              - type: integer
+                        additionalProperties: false
+                        type: object
+                    additionalProperties: false
+                    type: object
+                  csgId:
+                    type: string
+                  eutraMode:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                  freqBandIndicatorPriority:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                  mbmsServiceAreaIdentities:
+                    items:
+                      type: string
+                    type: array
+                  mbsfnSubframeInfos:
+                    items:
+                      properties:
+                        radioframeAllocationOffset:
+                          type: integer
+                        radioframeAllocationPeriod:
+                          oneOf:
+                            - type: string
+                            - type: integer
+                        subframeAllocation:
+                          type: string
+                        subframeAllocationType:
+                          oneOf:
+                            - type: string
+                            - type: integer
+                      additionalProperties: false
+                      type: object
+                    type: array
+                  multibandInfos:
+                    items:
+                      type: integer
+                    type: array
+                  neighbourInfos:
+                    items:
+                      properties:
+                        earFcn:
+                          type: integer
+                        ecgi:
+                          type: string
+                        pci:
+                          type: integer
+                        tac:
+                          type: string
+                      additionalProperties: false
+                      type: object
+                    type: array
+                  numberOfAntennaPorts:
+                    oneOf:
+                      - type: string
+                      - type: integer
+                  pci:
+                    type: integer
+                  prachConfiguration:
+                    properties:
+                      highSpeedFlag:
+                        type: boolean
+                      prachConfigurationIndex:
+                        type: integer
+                      prachFrequencyOffset:
+                        type: integer
+                      rootSequenceIndex:
+                        type: integer
+                      zeroCorrelationZoneConfiguration:
+                        type: integer
+                    additionalProperties: false
+                    type: object
+                  tac:
+                    type: string
+                additionalProperties: false
+                type: object
+              type: array
+          additionalProperties: false
+          type: object
+        failureType:
+          oneOf:
+            - type: string
+            - type: integer
+        globalNbId:
+          properties:
+            nbId:
+              type: string
+            plmnId:
+              type: string
+          additionalProperties: false
+          type: object
+        gnb:
+          properties:
+            servedNrCells:
+              items:
+                properties:
+                  nrNeighbourInfos:
+                    items:
+                      properties:
+                        choiceNrMode:
+                          properties:
+                            fdd:
+                              properties:
+                                dlarFcnFreqInfo:
+                                  properties:
+                                    frequencyBands:
+                                      items:
+                                        properties:
+                                          nrFrequencyBand:
+                                            type: integer
+                                          supportedSulBands:
+                                            items:
+                                              type: integer
+                                            type: array
+                                        additionalProperties: false
+                                        type: object
+                                      type: array
+                                    nrArFcn:
+                                      oneOf:
+                                        - type: integer
+                                    sulInformation:
+                                      properties:
+                                        sulArFcn:
+                                          oneOf:
+                                            - type: integer
+                                        sulTransmissionBandwidth:
+                                          properties:
+                                            ncnrb:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                            nrscs:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                          additionalProperties: false
+                                          type: object
+                                      additionalProperties: false
+                                      type: object
+                                  additionalProperties: false
+                                  type: object
+                                ularFcnFreqInfo:
+                                  properties:
+                                    frequencyBands:
+                                      items:
+                                        properties:
+                                          nrFrequencyBand:
+                                            type: integer
+                                          supportedSulBands:
+                                            items:
+                                              type: integer
+                                            type: array
+                                        additionalProperties: false
+                                        type: object
+                                      type: array
+                                    nrArFcn:
+                                      oneOf:
+                                        - type: integer
+                                    sulInformation:
+                                      properties:
+                                        sulArFcn:
+                                          oneOf:
+                                            - type: integer
+                                        sulTransmissionBandwidth:
+                                          properties:
+                                            ncnrb:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                            nrscs:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                          additionalProperties: false
+                                          type: object
+                                      additionalProperties: false
+                                      type: object
+                                  additionalProperties: false
+                                  type: object
+                              additionalProperties: false
+                              type: object
+                            tdd:
+                              properties:
+                                arFcnNrFreqInfo:
+                                  properties:
+                                    frequencyBands:
+                                      items:
+                                        properties:
+                                          nrFrequencyBand:
+                                            type: integer
+                                          supportedSulBands:
+                                            items:
+                                              type: integer
+                                            type: array
+                                        additionalProperties: false
+                                        type: object
+                                      type: array
+                                    nrArFcn:
+                                      oneOf:
+                                        - type: integer
+                                    sulInformation:
+                                      properties:
+                                        sulArFcn:
+                                          oneOf:
+                                            - type: integer
+                                        sulTransmissionBandwidth:
+                                          properties:
+                                            ncnrb:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                            nrscs:
+                                              oneOf:
+                                                - type: string
+                                                - type: integer
+                                          additionalProperties: false
+                                          type: object
+                                      additionalProperties: false
+                                      type: object
+                                  additionalProperties: false
+                                  type: object
+                              additionalProperties: false
+                              type: object
+                          additionalProperties: false
+                          type: object
+                        configuredStac:
+                          type: string
+                        nrCgi:
+                          type: string
+                        nrMode:
+                          oneOf:
+                            - type: string
+                            - type: integer
+                        nrPci:
+                          type: integer
+                        stac5g:
+                          type: string
+                      additionalProperties: false
+                      type: object
+                    type: array
+                  servedNrCellInformation:
+                    properties:
+                      cellId:
+                        type: string
+                      choiceNrMode:
+                        properties:
+                          fdd:
+                            properties:
+                              dlFreqInfo:
+                                properties:
+                                  frequencyBands:
+                                    items:
+                                      properties:
+                                        nrFrequencyBand:
+                                          type: integer
+                                        supportedSulBands:
+                                          items:
+                                            type: integer
+                                          type: array
+                                      additionalProperties: false
+                                      type: object
+                                    type: array
+                                  nrArFcn:
+                                    oneOf:
+                                      - type: integer
+                                  sulInformation:
+                                    properties:
+                                      sulArFcn:
+                                        oneOf:
+                                          - type: integer
+                                      sulTransmissionBandwidth:
+                                        properties:
+                                          ncnrb:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                          nrscs:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                        additionalProperties: false
+                                        type: object
+                                    additionalProperties: false
+                                    type: object
+                                additionalProperties: false
+                                type: object
+                              dlTransmissionBandwidth:
+                                properties:
+                                  ncnrb:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                  nrscs:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                additionalProperties: false
+                                type: object
+                              ulFreqInfo:
+                                properties:
+                                  frequencyBands:
+                                    items:
+                                      properties:
+                                        nrFrequencyBand:
+                                          type: integer
+                                        supportedSulBands:
+                                          items:
+                                            type: integer
+                                          type: array
+                                      additionalProperties: false
+                                      type: object
+                                    type: array
+                                  nrArFcn:
+                                    oneOf:
+                                      - type: integer
+                                  sulInformation:
+                                    properties:
+                                      sulArFcn:
+                                        oneOf:
+                                          - type: integer
+                                      sulTransmissionBandwidth:
+                                        properties:
+                                          ncnrb:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                          nrscs:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                        additionalProperties: false
+                                        type: object
+                                    additionalProperties: false
+                                    type: object
+                                additionalProperties: false
+                                type: object
+                              ulTransmissionBandwidth:
+                                properties:
+                                  ncnrb:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                  nrscs:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                additionalProperties: false
+                                type: object
+                            additionalProperties: false
+                            type: object
+                          tdd:
+                            properties:
+                              nrFreqInfo:
+                                properties:
+                                  frequencyBands:
+                                    items:
+                                      properties:
+                                        nrFrequencyBand:
+                                          type: integer
+                                        supportedSulBands:
+                                          items:
+                                            type: integer
+                                          type: array
+                                      additionalProperties: false
+                                      type: object
+                                    type: array
+                                  nrArFcn:
+                                    oneOf:
+                                      - type: integer
+                                  sulInformation:
+                                    properties:
+                                      sulArFcn:
+                                        oneOf:
+                                          - type: integer
+                                      sulTransmissionBandwidth:
+                                        properties:
+                                          ncnrb:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                          nrscs:
+                                            oneOf:
+                                              - type: string
+                                              - type: integer
+                                        additionalProperties: false
+                                        type: object
+                                    additionalProperties: false
+                                    type: object
+                                additionalProperties: false
+                                type: object
+                              transmissionBandwidth:
+                                properties:
+                                  ncnrb:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                  nrscs:
+                                    oneOf:
+                                      - type: string
+                                      - type: integer
+                                additionalProperties: false
+                                type: object
+                            additionalProperties: false
+                            type: object
+                        additionalProperties: false
+                        type: object
+                      configuredStac:
+                        type: string
+                      nrMode:
+                        oneOf:
+                          - type: string
+                          - type: integer
+                      nrPci:
+                        type: integer
+                      servedPlmns:
+                        items:
+                          type: string
+                        type: array
+                      stac5g:
+                        type: string
+                    additionalProperties: false
+                    type: object
+                additionalProperties: false
+                type: object
+              type: array
+          additionalProperties: false
+          type: object
+        ip:
+          type: string
+        nodeType:
+          oneOf:
+            - type: string
+            - type: integer
+        port:
+          type: integer
+        ranName:
+          type: string
+        setupFailure:
+          properties:
+            criticalityDiagnostics:
+              properties:
+                informationElementCriticalityDiagnostics:
+                  items:
+                    properties:
+                      ieCriticality:
+                        oneOf:
+                          - type: string
+                          - type: integer
+                      ieId:
+                        type: integer
+                      typeOfError:
+                        oneOf:
+                          - type: string
+                          - type: integer
+                    additionalProperties: false
+                    type: object
+                  type: array
+                procedureCode:
+                  type: integer
+                procedureCriticality:
+                  oneOf:
+                    - type: string
+                    - type: integer
+                triggeringMessage:
+                  oneOf:
+                    - type: string
+                    - type: integer
+              additionalProperties: false
+              type: object
+            miscellaneousCause:
+              oneOf:
+                - type: string
+                - type: integer
+            networkLayerCause:
+              oneOf:
+                - type: string
+                - type: integer
+            protocolCause:
+              oneOf:
+                - type: string
+                - type: integer
+            timeToWait:
+              oneOf:
+                - type: string
+                - type: integer
+            transportLayerCause:
+              oneOf:
+                - type: string
+                - type: integer
+          additionalProperties: false
+          type: object
+      additionalProperties: false
+      type: object
+    ErrorResponse:
+      type: object
+      required:
+        - errorCode
+        - errorMessage
+      properties:
+        errorCode:
+          type: string
+          description: '401 - corrupted json, 402 - validation error, 403 - RAN in wrong state, 404 - resource not found, 500 - RNIB error, 501 - internal problem, 502 - RMR error'
+        errorMessage:
+          type: string
+          description: Human readable text

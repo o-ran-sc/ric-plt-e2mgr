@@ -24,20 +24,21 @@ import (
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type RanSetupManager struct {
-	logger             *logger.Logger
+	logger          *logger.Logger
 	rnibDataService services.RNibDataService
-	rmrService         *services.RmrService
+	rmrSender       *rmrsender.RmrSender
 }
 
-func NewRanSetupManager(logger *logger.Logger, rmrService *services.RmrService, rnibDataService services.RNibDataService) *RanSetupManager {
+func NewRanSetupManager(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rnibDataService services.RNibDataService) *RanSetupManager {
 	return &RanSetupManager{
-		logger:             logger,
+		logger:          logger,
 		rnibDataService: rnibDataService,
-		rmrService:         rmrService,
+		rmrSender:       rmrSender,
 	}
 }
 
@@ -101,12 +102,17 @@ func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo, status ent
 	}
 
 	// Send the endc/x2 setup request
-	response := &models.NotificationResponse{MgsType: rmrMsgType, RanName: nodebInfo.RanName, Payload: request.GetMessageAsBytes(m.logger)}
-	if err := m.rmrService.SendRmrMessage(response); err != nil {
+	msg := models.NewRmrMessage(rmrMsgType, nodebInfo.RanName, request.GetMessageAsBytes(m.logger))
+
+	err = m.rmrSender.Send(msg)
+
+	if err != nil {
 		m.logger.Errorf("#RanSetupManager.ExecuteSetup - failed sending setup request to RMR: %s", err)
 
+		err := m.updateConnectionStatusDisconnected(nodebInfo)
+
 		// Decrement retries and connection status (disconnected)
-		if err := m.updateConnectionStatusDisconnected(nodebInfo); err != nil {
+		if err != nil {
 			return e2managererrors.NewRnibDbError()
 		}
 

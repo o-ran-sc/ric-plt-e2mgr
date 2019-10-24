@@ -1,11 +1,9 @@
-root@ric01:/opt/docker# cat Dockerfile 
 FROM python:3.6
 
 RUN python3 -m pip install robotframework \
-    && pip3 install --upgrade RESTinstance \
+    && pip install --upgrade RESTinstance \
     && pip install docker \
-    && apt-get update \
-    && apt-get install -y vim
+    && apt-get update 
 
 WORKDIR /opt
 COPY ./Scripts /opt/Scripts

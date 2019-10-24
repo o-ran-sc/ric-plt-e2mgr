@@ -18,7 +18,6 @@
 package rmrmsghandlers
 
 import (
-	"e2mgr/logger"
 	"e2mgr/models"
 	"fmt"
 	"time"
@@ -26,7 +25,7 @@ import (
 
 const (
 	FullUperPdu  string = "004c07080004001980da0100075bde017c148003d5a8205000017c180003d5a875555403331420000012883a0003547400cd20002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be0c4001ead4016e007ab50100002f8320067ab5005b8c1ead5070190c00001d637805f220000f56a081400005f020000f56a1d555400ccc508002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be044001ead4016e007ab50100002f8120067ab5005b8c1ead5070190c00000"
-	FullAperPdu string = "" // TODO: populate and use it
+	FullAperPdu  string = "" // TODO: populate and use it
 	BasicUperPdu string = "004898000400190d0000074200017c148003d5a80000"
 	BasicAperPdu string = "" // TODO: populate and use it
 	GarbagePdu   string = "12312312"
@@ -44,14 +43,14 @@ func createNotificationRequest(ranName string, transactionId string, packedPdu s
 	return models.NewNotificationRequest(ranName, packedByteSlice, time.Now(), transactionId), nil
 }
 
-func createNotificationRequestAndHandle(log *logger.Logger, ranName string, transactionId string, loadInformationHandler EnbLoadInformationNotificationHandler, pdu string) error {
+func createNotificationRequestAndHandle(ranName string, transactionId string, loadInformationHandler EnbLoadInformationNotificationHandler, pdu string) error {
 	notificationRequest, err := createNotificationRequest(ranName, transactionId, pdu)
 
 	if err != nil {
 		return err
 	}
 
-	loadInformationHandler.Handle(log, notificationRequest, nil)
+	loadInformationHandler.Handle(notificationRequest)
 	return nil
 }
 
@@ -76,7 +75,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //	var packedExampleByteSlice []byte
 //	_, err = fmt.Sscanf(FullUperPdu, "%x", &packedExampleByteSlice)
 //	notificationRequest := models.NewNotificationRequest(inventoryName, packedExampleByteSlice, time.Now(), " 881828026419")
-//	loadInformationHandler.Handle(log, notificationRequest, nil)
+//	loadInformationHandler.Handle(log, notificationRequest)
 //
 //	writerMock.AssertNumberOfCalls(t, "SaveRanLoadInformation", 1)
 //}
@@ -102,7 +101,7 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //	var packedExampleByteSlice []byte
 //	_, err = fmt.Sscanf(GarbagePdu, "%x", &packedExampleByteSlice)
 //	notificationRequest := models.NewNotificationRequest(inventoryName, packedExampleByteSlice, time.Now(), " 881828026419")
-//	loadInformationHandler.Handle(log, notificationRequest, nil)
+//	loadInformationHandler.Handle(log, notificationRequest)
 //
 //	writerMock.AssertNumberOfCalls(t, "SaveRanLoadInformation", 0)
 //}
@@ -120,13 +119,13 @@ func createNotificationRequestAndHandle(log *logger.Logger, ranName string, tran
 //	defer reader.Close()
 //	loadInformationHandler := NewEnbLoadInformationNotificationHandler(rNibWriter.GetRNibWriter)
 //
-//	err = createNotificationRequestAndHandle(log, "ranName", " 881828026419", loadInformationHandler, FullUperPdu)
+//	err = createNotificationRequestAndHandle("ranName", " 881828026419", loadInformationHandler, FullUperPdu)
 //
 //	if err != nil {
 //		t.Errorf("#setup_request_handler_test.TestLoadInformationHandlerOverrideSuccess - failed creating NotificationRequest, error: %v", err)
 //	}
 //
-//	err = createNotificationRequestAndHandle(log, "ranName", " 881828026419", loadInformationHandler, BasicUperPdu)
+//	err = createNotificationRequestAndHandle("ranName", " 881828026419", loadInformationHandler, BasicUperPdu)
 //
 //	if err != nil {
 //		t.Errorf("#setup_request_handler_test.TestLoadInformationHandlerOverrideSuccess - failed creating NotificationRequest, error: %v", err)

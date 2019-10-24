@@ -23,20 +23,36 @@ COPY . .
 ENV PATH=$PATH:/usr/local/go/bin:/usr/lib/go-1.12/bin
 #RUN git clone https://gerrit.o-ran-sc.org/r/ric-plt/lib/rmr && cd rmr/; mkdir build; cd build; /opt/bin/cmake -DDEV_PKG=1 ..; make install
 # Install RMr library and dev files
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/master/packages/debian/stretch/rmr_1.3.0_amd64.deb/download.deb
-RUN dpkg -i rmr_1.3.0_amd64.deb
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/master/packages/debian/stretch/rmr-dev_1.3.0_amd64.deb/download.deb
-RUN dpkg -i rmr-dev_1.3.0_amd64.deb
-
+RUN wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_1.10.0_amd64.deb/download.deb
+RUN dpkg -i rmr_1.10.0_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.10.0_amd64.deb/download.deb
+RUN dpkg -i rmr-dev_1.10.0_amd64.deb
 
 RUN cd asn1codec && make  
-RUN go build main/http_server.go 
+RUN go build app/main.go
 
+# Execute UT
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
+# cgocheck=2 enables expensive checks that should not miss any errors, but will cause your program to run slower.
+# clobberfree=1 causes the garbage collector to clobber the memory content of an object with bad content when it frees the object.
+# gcstoptheworld=1 disables concurrent garbage collection, making every garbage collection a stop-the-world event.
+# Setting gcstoptheworld=2 also disables concurrent sweeping after the garbage collection finishes.
+# Setting allocfreetrace=1 causes every allocation to be profiled and a stack trace printed on each object's allocation and free.
+ENV GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
+ENV RIC_ID="bbbccc-abcd0e/20"
+RUN go test ./...
 
 FROM ubuntu:16.04
+
+RUN apt-get update && apt-get install -y \
+  net-tools \
+  iputils-ping \
+  curl \
+  tcpdump
+  
 COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
-COPY --from=ubuntu /opt/E2Manager/http_server /opt/E2Manager/http_server
+COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
 COPY --from=ubuntu /opt/E2Manager/resources /opt/E2Manager/resources
 COPY --from=ubuntu /usr/local/lib/librmr_nng.so.1 /usr/local/lib/librmr_nng.so.1
 COPY --from=ubuntu /usr/local/lib/libnng.so.1 /usr/local/lib/libnng.so.1
@@ -45,4 +61,4 @@ ENV LD_LIBRARY_PATH=/usr/local/lib \
     port=3800 
 ENV RMR_SEED_RT=router.txt
 EXPOSE 3800
-CMD ["sh", "-c", "./http_server  -port=$port"]
+CMD ["sh", "-c", "./main  -port=$port"]

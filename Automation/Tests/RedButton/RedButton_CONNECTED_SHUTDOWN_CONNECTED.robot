@@ -58,7 +58,7 @@ Restart simualtor
 
     Run And Return Rc And Output    ${restart_docker_sim}
     ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    5
+    Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 
 repare Ran in Connected connectionStatus

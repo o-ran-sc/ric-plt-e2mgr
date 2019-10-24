@@ -19,12 +19,18 @@ package rmrmsghandlers
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/converters"
+	"e2mgr/e2managererrors"
+	"e2mgr/enums"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rNibWriter"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
+	"encoding/json"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -43,12 +49,31 @@ const (
 	EndcSetupFailureResponsePackedPdu = "4024001a0000030005400200000016400100001140087821a00000008040"
 )
 
-type setupResponseTestContext struct {
-	logger               *logger.Logger
-	readerMock           *mocks.RnibReaderMock
-	writerMock           *mocks.RnibWriterMock
-	rnibDataService      services.RNibDataService
+type setupSuccessResponseTestCase struct {
+	packedPdu            string
 	setupResponseManager managers.ISetupResponseManager
+	msgType              int
+	saveNodebMockError   error
+	sendMsgError         error
+	statusChangeMbuf     *rmrCgo.MBuf
+}
+
+type setupFailureResponseTestCase struct {
+	packedPdu            string
+	setupResponseManager managers.ISetupResponseManager
+	msgType              int
+	saveNodebMockError   error
+}
+
+type setupResponseTestContext struct {
+	logger                 *logger.Logger
+	readerMock             *mocks.RnibReaderMock
+	writerMock             *mocks.RnibWriterMock
+	rnibDataService        services.RNibDataService
+	setupResponseManager   managers.ISetupResponseManager
+	ranStatusChangeManager managers.IRanStatusChangeManager
+	rmrSender              *rmrsender.RmrSender
+	rmrMessengerMock       *mocks.RmrMessengerMock
 }
 
 func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupResponseTestContext {
@@ -64,48 +89,58 @@ func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupR
 	}
 	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
 
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrSender := initRmrSender(rmrMessengerMock, logger)
+
+	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
+
 	return &setupResponseTestContext{
-		logger:               logger,
-		readerMock:           readerMock,
-		writerMock:           writerMock,
-		rnibDataService:      rnibDataService,
-		setupResponseManager: manager,
+		logger:                 logger,
+		readerMock:             readerMock,
+		writerMock:             writerMock,
+		rnibDataService:        rnibDataService,
+		setupResponseManager:   manager,
+		ranStatusChangeManager: ranStatusChangeManager,
+		rmrMessengerMock:       rmrMessengerMock,
+		rmrSender:              rmrSender,
 	}
 }
 
 func TestSetupResponseGetNodebFailure(t *testing.T) {
 	notificationRequest := models.NotificationRequest{RanName: RanName}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, &managers.X2SetupResponseManager{}, testContext.ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP)
 	testContext.readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewInternalError(errors.New("Error")))
-	handler.Handle(testContext.logger, &notificationRequest, nil)
+	handler.Handle(&notificationRequest)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
 func TestSetupResponseInvalidConnectionStatus(t *testing.T) {
 	ranName := "test"
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, &managers.X2SetupResponseManager{}, testContext.ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP)
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}, rnibErr)
-	handler.Handle(testContext.logger, &notificationRequest, nil)
+	handler.Handle(&notificationRequest)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", ranName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
-func executeHandleSuccessSetupResponse(t *testing.T, packedPdu string, setupResponseManager managers.ISetupResponseManager, notificationType string, saveNodebMockReturnValue error) (*setupResponseTestContext, *entities.NodebInfo) {
+func executeHandleSetupSuccessResponse(t *testing.T, tc setupSuccessResponseTestCase) (*setupResponseTestContext, *entities.NodebInfo) {
 	var payload []byte
-	_, err := fmt.Sscanf(packedPdu, "%x", &payload)
+	_, err := fmt.Sscanf(tc.packedPdu, "%x", &payload)
 	if err != nil {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
 	notificationRequest := models.NotificationRequest{RanName: RanName, Payload: payload}
-	testContext := NewSetupResponseTestContext(setupResponseManager)
+	testContext := NewSetupResponseTestContext(tc.setupResponseManager)
 
-	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, testContext.setupResponseManager, notificationType)
+	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, testContext.setupResponseManager, testContext.ranStatusChangeManager, tc.msgType)
 
 	var rnibErr error
 
@@ -118,15 +153,63 @@ func executeHandleSuccessSetupResponse(t *testing.T, packedPdu string, setupResp
 	}
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
-	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(saveNodebMockReturnValue)
-	handler.Handle(testContext.logger, &notificationRequest, nil)
+	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
+	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
+	handler.Handle(&notificationRequest)
+
+	return testContext, nodebInfo
+}
+
+func getRanConnectedMbuf(nodeType entities.Node_Type) *rmrCgo.MBuf {
+	xaction := []byte(RanName)
+	resourceStatusPayload := models.NewResourceStatusPayload(nodeType, enums.RIC_TO_RAN)
+	resourceStatusJson, _ := json.Marshal(resourceStatusPayload)
+	return rmrCgo.NewMBuf(rmrCgo.RAN_CONNECTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xaction)
+}
+
+func executeHandleSetupFailureResponse(t *testing.T, tc setupFailureResponseTestCase) (*setupResponseTestContext, *entities.NodebInfo) {
+	var payload []byte
+	_, err := fmt.Sscanf(tc.packedPdu, "%x", &payload)
+	if err != nil {
+		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
+	}
+
+	notificationRequest := models.NotificationRequest{RanName: RanName, Payload: payload}
+	testContext := NewSetupResponseTestContext(tc.setupResponseManager)
+
+	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, testContext.setupResponseManager, testContext.ranStatusChangeManager, tc.msgType)
+
+	var rnibErr error
+
+	nodebInfo := &entities.NodebInfo{
+		ConnectionStatus:   entities.ConnectionStatus_CONNECTING,
+		ConnectionAttempts: 1,
+		RanName:            RanName,
+		Ip:                 "10.0.2.2",
+		Port:               1231,
+	}
+
+	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
+	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
+	handler.Handle(&notificationRequest)
 
 	return testContext, nodebInfo
 }
 
 func TestX2SetupResponse(t *testing.T) {
-	var rnibErr error
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, X2SetupResponsePackedPdu, &managers.X2SetupResponseManager{}, "X2 Setup Response", rnibErr)
+	logger := initLog(t)
+	var saveNodebMockError error
+	var sendMsgError error
+	tc := setupSuccessResponseTestCase{
+		X2SetupResponsePackedPdu,
+		managers.NewX2SetupResponseManager(converters.NewX2SetupResponseConverter(logger)),
+		rmrCgo.RIC_X2_SETUP_RESP,
+		saveNodebMockError,
+		sendMsgError,
+		getRanConnectedMbuf(entities.Node_ENB),
+	}
+
+	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
@@ -136,22 +219,42 @@ func TestX2SetupResponse(t *testing.T) {
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
 	assert.NotNil(t, i.Enb)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
 }
 
 func TestX2SetupFailureResponse(t *testing.T) {
-	var rnibErr error
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, X2SetupFailureResponsePackedPdu, &managers.X2SetupFailureResponseManager{}, "X2 Setup Failure Response", rnibErr)
+	logger := initLog(t)
+	var saveNodebMockError error
+	tc := setupFailureResponseTestCase{
+		X2SetupFailureResponsePackedPdu,
+		managers.NewX2SetupFailureResponseManager(converters.NewX2SetupFailureResponseConverter(logger)),
+		rmrCgo.RIC_X2_SETUP_FAILURE,
+		saveNodebMockError,
+	}
+
+	testContext, nodebInfo := executeHandleSetupFailureResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Failure_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
 func TestEndcSetupResponse(t *testing.T) {
-	var rnibErr error
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, EndcSetupResponsePackedPdu, &managers.EndcSetupResponseManager{}, "ENDC Setup Response", rnibErr)
+	var saveNodebMockError error
+	var sendMsgError error
+	tc := setupSuccessResponseTestCase{
+		EndcSetupResponsePackedPdu,
+		&managers.EndcSetupResponseManager{},
+		rmrCgo.RIC_ENDC_X2_SETUP_RESP,
+		saveNodebMockError,
+		sendMsgError,
+		getRanConnectedMbuf(entities.Node_GNB),
+	}
+
+	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
@@ -161,33 +264,84 @@ func TestEndcSetupResponse(t *testing.T) {
 
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Gnb)
 	assert.NotNil(t, i.Gnb)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
 }
+
 func TestEndcSetupFailureResponse(t *testing.T) {
-	var rnibErr error
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, EndcSetupFailureResponsePackedPdu, &managers.EndcSetupFailureResponseManager{}, "ENDC Setup Failure Response", rnibErr)
+
+	var saveNodebMockError error
+	tc := setupFailureResponseTestCase{
+		EndcSetupFailureResponsePackedPdu,
+		&managers.EndcSetupFailureResponseManager{},
+		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE,
+		saveNodebMockError,
+	}
+
+	testContext, nodebInfo := executeHandleSetupFailureResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Failure_ENDC_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
 func TestSetupResponseInvalidPayload(t *testing.T) {
+	logger := initLog(t)
 	ranName := "test"
 	notificationRequest := models.NotificationRequest{RanName: ranName, Payload: []byte("123")}
 	testContext := NewSetupResponseTestContext(nil)
-	handler := NewSetupResponseNotificationHandler(testContext.rnibDataService, &managers.X2SetupResponseManager{}, "X2 Setup Response")
+	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, managers.NewX2SetupResponseManager(converters.NewX2SetupResponseConverter(logger)), testContext.ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP)
 	var rnibErr error
 	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 1}, rnibErr)
-	handler.Handle(testContext.logger, &notificationRequest, nil)
+	handler.Handle(&notificationRequest)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", ranName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
 func TestSetupResponseSaveNodebFailure(t *testing.T) {
-	rnibErr := common.NewInternalError(errors.New("Error"))
-	testContext, nodebInfo := executeHandleSuccessSetupResponse(t, X2SetupResponsePackedPdu, &managers.X2SetupResponseManager{}, "X2 Setup Response", rnibErr)
+	logger := initLog(t)
+	saveNodebMockError := common.NewInternalError(errors.New("Error"))
+	var sendMsgError error
+	tc := setupSuccessResponseTestCase{
+		X2SetupResponsePackedPdu,
+		managers.NewX2SetupResponseManager(converters.NewX2SetupResponseConverter(logger)),
+		rmrCgo.RIC_X2_SETUP_RESP,
+		saveNodebMockError,
+		sendMsgError,
+		getRanConnectedMbuf(entities.Node_ENB),
+	}
+
+	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
+}
+
+func TestSetupResponseStatusChangeSendFailure(t *testing.T) {
+	logger := initLog(t)
+	var saveNodebMockError error
+	sendMsgError := e2managererrors.NewRmrError()
+	tc := setupSuccessResponseTestCase{
+		X2SetupResponsePackedPdu,
+		managers.NewX2SetupResponseManager(converters.NewX2SetupResponseConverter(logger)),
+		rmrCgo.RIC_X2_SETUP_RESP,
+		saveNodebMockError,
+		sendMsgError,
+		getRanConnectedMbuf(entities.Node_ENB),
+	}
+
+	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
+	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
+	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
+	assert.EqualValues(t, entities.Node_ENB, nodebInfo.NodeType)
+
+	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
+	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
+	assert.NotNil(t, i.Enb)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
 }

@@ -31,10 +31,3 @@ Get Health
     Integer     response status       200
 
 
-*** Keywords ***
-Start dockers
-     Run And Return Rc And Output    ${run_script}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    4
-
-

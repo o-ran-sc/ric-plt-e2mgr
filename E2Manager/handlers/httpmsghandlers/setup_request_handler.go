@@ -51,13 +51,13 @@ func NewSetupRequestHandler(logger *logger.Logger, rNibDataService services.RNib
 	}
 }
 
-func (handler *SetupRequestHandler) Handle(request models.Request) error {
+func (handler *SetupRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
 	setupRequest := request.(models.SetupRequest)
 
 	err := handler.validateRequestDetails(setupRequest)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	nodebInfo, err := handler.rNibDataService.GetNodeb(setupRequest.RanName)
@@ -66,15 +66,15 @@ func (handler *SetupRequestHandler) Handle(request models.Request) error {
 		if !ok {
 			handler.logger.Errorf("#SetupRequestHandler.Handle - failed to get nodeB entity for ran name: %v from RNIB. Error: %s",
 				setupRequest.RanName, err.Error())
-			return e2managererrors.NewRnibDbError()
+			return nil, e2managererrors.NewRnibDbError()
 		}
 
 		result := handler.connectNewRan(&setupRequest, handler.protocol)
-		return result
+		return nil, result
 	}
 
 	result := handler.connectExistingRan(nodebInfo)
-	return result
+	return nil, result
 }
 
 func (handler *SetupRequestHandler) connectExistingRan(nodebInfo *entities.NodebInfo) error {

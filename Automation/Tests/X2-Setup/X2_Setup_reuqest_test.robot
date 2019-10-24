@@ -20,7 +20,9 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
+Library     ../Scripts/find_rmr_message.py
 Library     REST      ${url}
 
 *** Test Cases ***
@@ -32,7 +34,7 @@ X2 - Get Nodeb
     Get Request Node B Enb test1
     Integer  response status  200
     String   response body ranName    test1
-    String   response body ip    10.0.2.15
+    String   response body ip    ${ip_gnb_simu} 
     Integer  response body port     5577
     String   response body connectionStatus    CONNECTED
     String   response body nodeType     ENB
@@ -47,6 +49,16 @@ X2 - Get Nodeb
     String   response body enb servedCells 0 choiceEutraMode fdd dlTransmissionBandwidth   BW50
 
 
+prepare logs for tests
+    Remove log files
+    Save logs
 
 
+X2 - RAN Connected message going to be sent
+    ${result}    find_rmr_message.verify_logs     ${EXECDIR}   ${e2mgr_log_filename}  ${RAN_CONNECTED_message_type}    ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+RSM RESOURCE STATUS REQUEST message sent
+    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
+    Should Be Equal As Strings    ${result}      True
 

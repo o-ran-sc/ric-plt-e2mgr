@@ -26,36 +26,38 @@ import (
 )
 
 type E2TermInitNotificationHandler struct {
+	logger                 *logger.Logger
 	rnibDataService        services.RNibDataService
 	ranReconnectionManager *managers.RanReconnectionManager
 }
 
-func NewE2TermInitNotificationHandler(ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
+		logger:                 logger,
 		rnibDataService:        rnibDataService,
 		ranReconnectionManager: ranReconnectionManager,
 	}
 }
 
-func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, request *models.NotificationRequest, messageChannel chan<- *models.NotificationResponse) {
+func (h E2TermInitNotificationHandler) Handle(request *models.NotificationRequest) {
 
-	logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
+	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
 
-	nbIdentityList, err := handler.rnibDataService.GetListNodebIds()
+	nbIdentityList, err := h.rnibDataService.GetListNodebIds()
 	if err != nil {
-		logger.Errorf("#E2TermInitNotificationHandler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
+		h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Failed to get nodes list from RNIB. Error: %s", err.Error())
 		return
 	}
 
 	if len(nbIdentityList) == 0 {
-		logger.Warnf("#E2TermInitNotificationHandler.Handle - The Nodes list in RNIB is empty")
+		h.logger.Warnf("#E2TermInitNotificationHandler.Handle - The Nodes list in RNIB is empty")
 		return
 	}
 
 	for _, nbIdentity := range nbIdentityList {
 
-		if err := handler.ranReconnectionManager.ReconnectRan(nbIdentity.InventoryName); err != nil {
-			logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", (*nbIdentity).GetInventoryName(), err.Error())
+		if err := h.ranReconnectionManager.ReconnectRan(nbIdentity.InventoryName); err != nil {
+			h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", (*nbIdentity).GetInventoryName(), err.Error())
 			_, ok := err.(*common.ResourceNotFoundError)
 			if !ok {
 				break
@@ -63,5 +65,5 @@ func (handler E2TermInitNotificationHandler) Handle(logger *logger.Logger, reque
 		}
 	}
 
-	logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
+	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
 }

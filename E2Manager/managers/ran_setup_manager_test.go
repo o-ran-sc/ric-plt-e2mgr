@@ -43,7 +43,7 @@ func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.Rnib
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrService := getRmrService(rmrMessengerMock, logger)
+	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
@@ -54,7 +54,7 @@ func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.Rnib
 		return writerMock
 	}
 	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
-	ranSetupManager := NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
 	return rmrMessengerMock, writerMock, ranSetupManager
 }
 
@@ -71,7 +71,7 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
@@ -94,7 +94,7 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	payload := e2pdus.PackedEndcX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
@@ -119,7 +119,7 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -144,7 +144,7 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -171,7 +171,7 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -196,7 +196,7 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: error, got: success")

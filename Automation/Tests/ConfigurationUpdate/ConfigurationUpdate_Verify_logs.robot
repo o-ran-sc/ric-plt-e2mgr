@@ -18,37 +18,39 @@
 
 
 *** Settings ***
+Resource   ../Resource/resource.robot
+Resource    ../Resource/scripts_variables.robot
 Library     String
 Library     OperatingSystem
 Library     Process
-Library     ${CURDIR}/verifylogs.py
+Library     ../Scripts/find_rmr_message.py
+
 
 
 *** Test Cases ***
 Verify logs - Confiugration update - Begin Tag Get
     ${Configuration}=   Grep File  ./gnb.log  <ENDCConfigurationUpdate>
-    #Log to console      ${Configuration}
     ${ConfigurationAfterStrip}=     Strip String    ${Configuration}
     Should Be Equal     ${ConfigurationAfterStrip}        <ENDCConfigurationUpdate>
 
 Verify logs - Confiugration update - End Tag Get
     ${ConfigurationEnd}=   Grep File  ./gnb.log  </ENDCConfigurationUpdate>
-    #Log to console      ${ConfigurationEnd}
     ${ConfigurationEndAfterStrip}=     Strip String    ${ConfigurationEnd}
     Should Be Equal     ${ConfigurationEndAfterStrip}        </ENDCConfigurationUpdate>
 
 Verify logs - Confiugration update - Ack Tag Begin
     ${ConfigurationAck}=   Grep File  ./gnb.log   <ENDCConfigurationUpdateAcknowledge>
-    #Log to console      ${ConfigurationEnd}
     ${ConfigurationAckAfter}=     Strip String    ${ConfigurationAck}
     Should Be Equal     ${ConfigurationAckAfter}        <ENDCConfigurationUpdateAcknowledge>
 
 Verify logs - Confiugration update - Ack Tag End
     ${ConfigurationAckEnd}=   Grep File  ./gnb.log  </ENDCConfigurationUpdateAcknowledge>
-    #Log to console      ${ConfigurationEnd}
     ${ConfigurationAckEndAfterStrip}=     Strip String    ${ConfigurationAckEnd}
     Should Be Equal     ${ConfigurationAckEndAfterStrip}        </ENDCConfigurationUpdateAcknowledge>
 
-Verify logs - e2mgr logs
-   ${result}    verifylogs.verify   ${EXECDIR}
+Verify logs - find RIC_ENDC_CONF_UPDATE
+   ${result}   find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${configurationupdate_message_type}  ${Meid_test1}
    Should Be Equal As Strings    ${result}      True
+Verify logs - find RIC_ENDC_CONF_UPDATE_ACK
+   ${result1}  find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${configurationupdate_ack_message_type}  ${Meid_test1}
+   Should Be Equal As Strings    ${result1}      True

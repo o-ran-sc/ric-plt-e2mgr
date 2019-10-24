@@ -114,7 +114,7 @@ func TestIsReadyFailure(t *testing.T) {
 //	}
 //	msg := NewMBuf(1, tests.MaxMsgSize, &tests.DummyPayload, &tests.DummyXAction)
 //	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - Going to send the message: %#v\n", msg)
-//	msgR, _ := (*msgr).SendMsg(msg, tests.MaxMsgSize)
+//	msgR, _ := (*msgr).SendMsg(msg)
 //	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The message has been sent %#v\n", msgR)
 //	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The payload: %#v\n", msgR.Payload)
 //	msgR = (*msgr).RecvMsg()

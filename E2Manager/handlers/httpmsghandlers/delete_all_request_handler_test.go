@@ -22,10 +22,10 @@ import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/models"
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -54,28 +54,28 @@ func setupTest(t *testing.T) (*logger.Logger, *configuration.Configuration, *moc
 	return log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock
 }
 
-func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T){
+func TestHandleBeforeTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	log, config, readerMock, _, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	var nbIdentityList []*entities.NbIdentity
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
 
 	expected := &e2managererrors.RnibDbError{}
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
+func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
 
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	rnibErr := &common.ResourceNotFoundError{}
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
@@ -96,18 +96,18 @@ func TestHandleAfterTimerGetListNodebIdsFailedFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3).Return(nil)
 
 	expected := &e2managererrors.RnibDbError{}
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleSuccessFlow(t *testing.T){
+func TestHandleSuccessFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
@@ -141,18 +141,18 @@ func TestHandleSuccessFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSuccessGetNextStatusFlow(t *testing.T){
+func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -173,18 +173,18 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleShuttingDownStatusFlow(t *testing.T){
+func TestHandleShuttingDownStatusFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -202,18 +202,18 @@ func TestHandleShuttingDownStatusFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleGetNodebFailedFlow(t *testing.T){
+func TestHandleGetNodebFailedFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown(will fail), ShuttingDown->Ignore, Connected->ShuttingDown
 	nbIdentityList := createIdentityList()
@@ -248,18 +248,18 @@ func TestHandleGetNodebFailedFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSaveFailedFlow(t *testing.T){
+func TestHandleSaveFailedFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
@@ -294,18 +294,18 @@ func TestHandleSaveFailedFlow(t *testing.T){
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(errRnib)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	assert.Nil(t, actual)
 }
 
-func TestHandleSendRmrFailedFlow(t *testing.T){
+func TestHandleSendRmrFailedFlow(t *testing.T) {
 	log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock := setupTest(t)
 
 	config.BigRedButtonTimeoutSec = 1
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	//Before timer: Disconnected->ShutDown, ShuttingDown->Ignore, Connected->ShuttingDown(will fail)
 	nbIdentityList := createIdentityList()
@@ -340,26 +340,26 @@ func TestHandleSendRmrFailedFlow(t *testing.T){
 
 	expected := e2managererrors.NewRmrError()
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), tests.MaxMsgSize).Return(mbuf, expected)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, expected)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 
 	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
 		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
 	}
 }
 
-func TestHandleGetListEnbIdsEmptyFlow(t *testing.T){
+func TestHandleGetListEnbIdsEmptyFlow(t *testing.T) {
 	log, config, readerMock, _, rnibDataService, rmrMessengerMock := setupTest(t)
 
-	handler := NewDeleteAllRequestHandler(log, getRmrService(rmrMessengerMock, log), config, rnibDataService)
+	handler := NewDeleteAllRequestHandler(log, getRmrSender(rmrMessengerMock, log), config, rnibDataService)
 
 	var rnibError error
 	nbIdentityList := []*entities.NbIdentity{}
 
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
 
-	actual := handler.Handle(nil)
+	_, actual := handler.Handle(nil)
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 0)
 	assert.Nil(t, actual)
 }
@@ -385,9 +385,8 @@ func initLog(t *testing.T) *logger.Logger {
 	return log
 }
 
-func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
+	return rmrsender.NewRmrSender(log, &rmrMessenger)
 }

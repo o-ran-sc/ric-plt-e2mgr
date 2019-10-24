@@ -27,7 +27,7 @@ func NewWrongStateError(activityName string, state string) *WrongStateError {
 	return &WrongStateError{
 		&BaseError{
 			Code:    403,
-			Message: fmt.Sprintf("Activity <%s> rejected. RAN current state <%s> does not allow its execution ", activityName, state) ,
+			Message: fmt.Sprintf("Activity %s rejected. RAN current state %s does not allow its execution ", activityName, state) ,
 		},
 	}
 }

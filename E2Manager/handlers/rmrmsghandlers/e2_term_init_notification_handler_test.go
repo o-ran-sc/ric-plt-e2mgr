@@ -10,6 +10,7 @@ import (
 	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -25,7 +26,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrService := getRmrService(rmrMessengerMock, logger)
+	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
 	rnibReaderProvider := func() reader.RNibReader {
@@ -36,14 +37,14 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 		return writerMock
 	}
 	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrService, rnibDataService)
+	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
-	handler := NewE2TermInitNotificationHandler(ranReconnectionManager, rnibDataService)
+	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService)
 	return logger, handler, readerMock, writerMock, rmrMessengerMock
 }
 
 func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}}
@@ -59,16 +60,16 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 	xaction := []byte(ids[0].InventoryName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[0].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
 func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}}
@@ -86,9 +87,9 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 	xaction := []byte(ids[0].InventoryName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[0].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 2)
@@ -122,9 +123,9 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	//test1 (before send +1, after failure +1), test2 (0) test3 (0)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
@@ -165,9 +166,9 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 3)
 	//test1 (+1), test2 failure (0) test3 (+1)
@@ -209,9 +210,9 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(msg0, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 2)
 	//test1 (+1), test2 failure (0) test3 (0)
@@ -221,34 +222,33 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 }
 
 func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, rnibErr)
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 }
 
 func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTest(t)
 
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, common.NewInternalError(fmt.Errorf("internal error")))
 
-	handler.Handle(log, nil, nil)
+	handler.Handle(nil)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 }
 
 // TODO: extract to test_utils
-func getRmrService(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *services.RmrService {
+func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	messageChannel := make(chan *models.NotificationResponse)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return services.NewRmrService(services.NewRmrConfig(tests.Port, tests.MaxMsgSize, tests.Flags, log), rmrMessenger, messageChannel)
+	return rmrsender.NewRmrSender(log, &rmrMessenger)
 }
 
 // TODO: extract to test_utils

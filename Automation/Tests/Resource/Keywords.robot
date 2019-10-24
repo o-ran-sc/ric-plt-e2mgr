@@ -18,7 +18,7 @@
 
 *** Settings ***
 Documentation   Keywords file
-Library     ${CURDIR}/scripts.py
+Library     ../Scripts/cleanup_db.py
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 
@@ -43,6 +43,19 @@ Get Request node b enb test2
     GET      /v1/nodeb/test2
 
 
+Remove log files
+    Remove File  ${EXECDIR}/${gnb_log_filename}
+    Remove File  ${EXECDIR}/${e2mgr_log_filename}
+    Remove File  ${EXECDIR}/${rsm_log_filename}
+    Remove File  ${EXECDIR}/${e2adapter_log_filename}
+
+Save logs
+    Sleep   1s
+    Run     ${Save_sim_log}
+    Run     ${Save_e2mgr_log}
+    Run     ${Save_rsm_log}
+    Run     ${Save_e2adapter_log}
+
 
 Post Request setup node b endc-setup
     Set Headers     ${header}
@@ -55,14 +68,14 @@ Stop Simulator
 Prepare Simulator For Load Information
      Run And Return Rc And Output    ${stop_simu}
      Run And Return Rc And Output    ${docker_Remove}
-     ${flush}  scripts.flush
+     ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${run_simu_load}
      ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    5
+     Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 Prepare Enviorment
-     ${flush}  scripts.flush
+     ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${stop_simu}
      Run And Return Rc And Output    ${docker_Remove}
@@ -70,20 +83,24 @@ Prepare Enviorment
      Run And Return Rc And Output    ${restart_e2adapter}
      Sleep  2s
      ${result}=  Run And Return Rc And Output     ${docker_command}
-     log to console   ${result}
-     Should Be Equal As Integers    ${result[1]}    5
+     Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 Start E2
      Run And Return Rc And Output    ${start_e2}
      ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    5
+     Should Be Equal As Integers    ${result[1]}    ${docker_number}
      Sleep  2s
 
-Start Redis
-     Run And Return Rc And Output    ${redis_remove}
-     Run And Return Rc And Output    ${start_redis}
+Start Dbass
+     Run And Return Rc And Output    ${dbass_remove}
+     Run And Return Rc And Output    ${dbass_start}
      ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    5
+     Should Be Equal As Integers    ${result[1]}    ${docker_number}
+
+Stop Dbass
+     Run And Return Rc And Output    ${dbass_stop}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
 
 

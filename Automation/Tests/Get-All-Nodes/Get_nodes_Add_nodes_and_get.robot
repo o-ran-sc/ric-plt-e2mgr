@@ -19,10 +19,10 @@
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Library      Process
+Library     ../Scripts/getnodes.py
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
-Library     ${CURDIR}/getnodes.py
 Library     REST      ${url}
 
 

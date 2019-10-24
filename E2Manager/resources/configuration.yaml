@@ -4,7 +4,7 @@ http:
   port: 3800
 rmr:
   port: 3801
-  maxMsgSize: 4096
+  maxMsgSize: 65536
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
 maxConnectionAttempts: 3

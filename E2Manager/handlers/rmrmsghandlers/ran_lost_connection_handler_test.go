@@ -30,8 +30,8 @@ func TestLostConnectionHandlerSuccess(t *testing.T) {
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
 	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(nil)
-	handler := NewRanLostConnectionHandler(ranReconnectionManagerMock)
-	handler.Handle(logger, &notificationRequest, nil)
+	handler := NewRanLostConnectionHandler(logger, ranReconnectionManagerMock)
+	handler.Handle(&notificationRequest)
 	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
 }
 
@@ -41,7 +41,7 @@ func TestLostConnectionHandlerFailure(t *testing.T) {
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
 	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(errors.New("error"))
-	handler := NewRanLostConnectionHandler(ranReconnectionManagerMock)
-	handler.Handle(logger, &notificationRequest, nil)
+	handler := NewRanLostConnectionHandler(logger, ranReconnectionManagerMock)
+	handler.Handle(&notificationRequest)
 	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
 }
