@@ -15,10 +15,11 @@
 // limitations under the License.
 //
 
-package models
+package models_test
 
 import (
 	"e2mgr/logger"
+	"e2mgr/models"
 	"e2mgr/tests"
 	"encoding/hex"
 	"github.com/stretchr/testify/assert"
@@ -26,12 +27,12 @@ import (
 )
 
 const transactionId = "transactionId"
-const expectedMessageAsBytesHex = "31302e302e302e337c353535357c746573747c347c01020304"
+const expectedMessageAsBytesHex = "31302e302e302e337c333830317c746573747c347c01020304"
 
 func TestNewE2RequestMessage(t *testing.T){
-	e2 :=NewE2RequestMessage(transactionId, tests.RanIp, uint16(tests.Port), tests.RanName, tests.DummyPayload)
+	e2 :=models.NewE2RequestMessage(transactionId, tests.RanIp, uint16(tests.Port), tests.RanName, tests.DummyPayload)
 	assert.NotNil(t, e2)
-	assert.IsType(t, *e2, E2RequestMessage{})
+	assert.IsType(t, *e2, models.E2RequestMessage{})
 	assert.Equal(t, tests.RanName, e2.RanName())
 	assert.Equal(t, transactionId, e2.TransactionId())
 }
@@ -42,7 +43,7 @@ func TestGetMessageAsBytes(t *testing.T){
 		t.Errorf("#nodeb_controller_test.TestHandleRequestSuccess - failed to initialize logger, error: %s", err)
 	}
 
-	e2 :=NewE2RequestMessage(transactionId, tests.RanIp, uint16(tests.Port), tests.RanName, tests.DummyPayload)
+	e2 := models.NewE2RequestMessage(transactionId, tests.RanIp, uint16(tests.Port), tests.RanName, tests.DummyPayload)
 	bytes := e2.GetMessageAsBytes(log)
 	assert.Equal(t, expectedMessageAsBytesHex, hex.EncodeToString(bytes))
 }

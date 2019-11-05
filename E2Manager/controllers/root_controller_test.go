@@ -21,12 +21,10 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"e2mgr/services"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"net/http"
@@ -41,13 +39,10 @@ func setupNodebControllerTest(t *testing.T) (services.RNibDataService, *mocks.Rn
 	}
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return &mocks.RnibWriterMock{}
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	writerMock := &mocks.RnibWriterMock{}
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	return rnibDataService, readerMock
 }
 

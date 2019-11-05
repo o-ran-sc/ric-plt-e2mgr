@@ -21,15 +21,11 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"github.com/golang/protobuf/proto"
 )
 
-var writerPool *common.Pool
-
 type rNibWriterInstance struct {
-	sdl       *common.ISdlInstance
-	namespace string
+	sdl common.ISdlInstance
 }
 
 /*
@@ -42,42 +38,22 @@ type RNibWriter interface {
 }
 
 /*
-Init initializes the infrastructure required for the RNibWriter instance
+GetRNibWriter returns reference to RNibWriter
 */
-func Init(namespace string, poolSize int) {
-	initPool(poolSize,
-		func() interface{} {
-			var sdlI common.ISdlInstance = sdlgo.NewSdlInstance(namespace, sdlgo.NewDatabase())
-			return &rNibWriterInstance{sdl: &sdlI, namespace: namespace}
-		},
-		func(obj interface{}) {
-			(*obj.(*rNibWriterInstance).sdl).Close()
-		})
+
+func GetRNibWriter(sdl common.ISdlInstance) RNibWriter {
+	return &rNibWriterInstance{sdl: sdl}
 }
 
 /*
-InitPool initializes the writer's instances pool
-*/
-func initPool(poolSize int, newObj func() interface{}, destroyObj func(interface{})) {
-	writerPool = common.NewPool(poolSize, newObj, destroyObj)
-}
-/*
-GetRNibWriter returns reference to RNibWriter
-*/
-func GetRNibWriter() RNibWriter {
-	return &rNibWriterInstance{}
-}
-/*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
-func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
-	w := writerPool.Get().(*rNibWriterInstance)
+func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
 	if isNotEmptyIdentity && entity.GetNodeType() == entities.Node_UNKNOWN {
 		return common.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
-	defer writerPool.Put(w)
 	data, err := proto.Marshal(entity)
 	if err != nil {
 		return common.NewInternalError(err)
@@ -109,7 +85,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 			return rNibErr
 		}
 	}
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -121,7 +97,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 		if err != nil {
 			return common.NewInternalError(err)
 		}
-		err = (*w.sdl).RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
+		err = w.sdl.RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
 		if err != nil {
 			return common.NewInternalError(err)
 		}
@@ -133,7 +109,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 	if err != nil {
 		return common.NewInternalError(err)
 	}
-	err = (*w.sdl).AddMember(entity.GetNodeType().String(), nbIdData)
+	err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -143,9 +119,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 /*
 UpdateNodebInfo...
 */
-func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
-	w := writerPool.Get().(*rNibWriterInstance)
-	defer writerPool.Put(w)
+func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 
 	nodebNameKey, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.GetRanName())
 
@@ -168,7 +142,7 @@ func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error 
 		pairs = append(pairs, nodebIdKey, data)
 	}
 
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -180,9 +154,7 @@ func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error 
 /*
 SaveRanLoadInformation stores ran load information for the provided ran
 */
-func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
-	w := writerPool.Get().(*rNibWriterInstance)
-	defer writerPool.Put(w)
+func (w *rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
 
 	key, rnibErr := common.ValidateAndBuildRanLoadInformationKey(inventoryName)
 
@@ -199,7 +171,7 @@ func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadI
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
 
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -209,10 +181,10 @@ func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadI
 }
 
 /*
-Close closes writer's pool
+Close the writer
 */
 func Close() {
-	writerPool.Close()
+	//Nothing to do
 }
 
 func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {

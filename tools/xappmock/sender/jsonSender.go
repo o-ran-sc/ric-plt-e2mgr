@@ -17,8 +17,6 @@
 package sender
 
 import (
-	"../frontend"
-	"../rmr"
 	"fmt"
 	"github.com/pkg/errors"
 	"log"
@@ -28,11 +26,13 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode"
+	"xappmock/models"
+	"xappmock/rmr"
 )
 
 var counter uint64
 
-func SendJsonRmrMessage(command frontend.JsonCommand /*the copy is modified locally*/, xAction *[]byte, r *rmr.Service) error {
+func SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locally*/, xAction *[]byte, r *rmr.Service) error {
 	var payload []byte
 	_, err := fmt.Sscanf(command.PackedPayload, "%x", &payload)
 	if err != nil {
@@ -44,11 +44,12 @@ func SendJsonRmrMessage(command frontend.JsonCommand /*the copy is modified loca
 		command.TransactionId = string(*xAction)
 	}
 	command.PayloadHeader = expandPayloadHeader(command.PayloadHeader, &command)
-	rmrMsgId, err := rmr.MessageIdToUint(command.RmrMessageType)
+	log.Printf("#jsonSender.SendJsonRmrMessage - command payload header: %s", command.PayloadHeader)
+	rmrMsgId, err := rmr.MessageIdToUint(command.SendRmrMessageType)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid rmr message id: %s",command.WaitForRmrMessageType))
+		return errors.New(fmt.Sprintf("invalid rmr message id: %s", command.SendRmrMessageType))
 	}
-	_, err = r.SendMessage(int(rmrMsgId), append([]byte(command.PayloadHeader), payload...), []byte(command.TransactionId))
+	_, err = r.SendMessage(int(rmrMsgId), command.Meid, append([]byte(command.PayloadHeader), payload...), []byte(command.TransactionId))
 	return err
 }
 
@@ -75,7 +76,7 @@ func expandTransactionId(id string) string {
  * Example: “payloadHeader”: “$ranIp|$ranPort|$ranName|#packedPayload|”
  */
 
-func expandPayloadHeader(header string, command *frontend.JsonCommand) string {
+func expandPayloadHeader(header string, command *models.JsonCommand) string {
 	var name strings.Builder
 	var expandedHeader strings.Builder
 
@@ -85,12 +86,17 @@ func expandPayloadHeader(header string, command *frontend.JsonCommand) string {
 		if err != nil {
 			break
 		}
+
 		switch ch {
 		case '$':
 			for {
-				ch, err = r.ReadByte()	//on error ch == 0
+				ch, err = r.ReadByte() //on error ch == 0
 				if unicode.IsDigit(rune(ch)) || unicode.IsLetter(rune(ch)) {
-					name.WriteByte(ch)
+					if name.Len() == 0 {
+						name.WriteByte(byte(unicode.ToUpper(rune(ch))))
+					} else {
+						name.WriteByte(ch)
+					}
 				} else {
 					if fieldValue := reflect.Indirect(reflect.ValueOf(command)).FieldByName(name.String()); fieldValue.IsValid() {
 						switch fieldValue.Kind() {
@@ -103,7 +109,7 @@ func expandPayloadHeader(header string, command *frontend.JsonCommand) string {
 						case reflect.Float64, reflect.Float32:
 							expandedHeader.WriteString(fmt.Sprintf("%g", fieldValue.Float()))
 						default:
-							log.Fatalf("invalid type for $%s, value must be a string, an int, a bool or a float", name.String())
+							log.Fatalf("#jsonSender.expandPayloadHeader - invalid type for $%s, value must be a string, an int, a bool or a float", name.String())
 						}
 					}
 					name.Reset()
@@ -112,15 +118,19 @@ func expandPayloadHeader(header string, command *frontend.JsonCommand) string {
 			}
 		case '#':
 			for {
-				ch, err = r.ReadByte()	//on error ch == 0
+				ch, err = r.ReadByte() //on error ch == 0
 				if unicode.IsDigit(rune(ch)) || unicode.IsLetter(rune(ch)) {
-					name.WriteByte(ch)
+					if name.Len() == 0 {
+						name.WriteByte(byte(unicode.ToUpper(rune(ch))))
+					} else {
+						name.WriteByte(ch)
+					}
 				} else {
 					if fieldValue := reflect.Indirect(reflect.ValueOf(command)).FieldByName(name.String()); fieldValue.IsValid() {
 						if fieldValue.Kind() == reflect.String {
 							expandedHeader.WriteString(strconv.FormatInt(int64(len(fieldValue.String())), 10))
 						} else {
-							log.Fatalf("invalid type for #%s, value must be a string", name.String())
+							log.Fatalf("#jsonSender.expandPayloadHeader - invalid type for #%s, value must be a string", name.String())
 						}
 					}
 					name.Reset()
@@ -142,5 +152,5 @@ func incAndGetCounter() uint64 {
 }
 
 func init() {
-	counter = uint64(time.Now().Second())
+	counter = uint64(time.Now().Unix() - 1572000000)
 }

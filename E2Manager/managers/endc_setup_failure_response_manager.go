@@ -19,20 +19,23 @@ package managers
 
 import (
 	"e2mgr/converters"
-	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
-type EndcSetupFailureResponseManager struct{}
+type EndcSetupFailureResponseManager struct {
+	converter converters.IEndcSetupFailureResponseConverter
+}
 
-func NewEndcSetupFailureResponseManager() *EndcSetupFailureResponseManager {
-	return &EndcSetupFailureResponseManager{}
+func NewEndcSetupFailureResponseManager(converter converters.IEndcSetupFailureResponseConverter) *EndcSetupFailureResponseManager {
+	return &EndcSetupFailureResponseManager{
+		converter: converter,
+	}
 }
 
 func (m *EndcSetupFailureResponseManager) PopulateNodebByPdu(logger *logger.Logger, nbIdentity *entities.NbIdentity, nodebInfo *entities.NodebInfo, payload []byte) error {
 
-	failureResponse, err := converters.UnpackEndcX2SetupFailureResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize)
+	failureResponse, err := m.converter.UnpackEndcSetupFailureResponseAndExtract(payload)
 
 	if err != nil {
 		logger.Errorf("#EndcSetupFailureResponseManager.PopulateNodebByPdu - RAN name: %s - Unpack and extract failed. Error: %v", nodebInfo.RanName, err)

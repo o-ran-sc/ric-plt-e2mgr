@@ -23,10 +23,10 @@ package converters
 // #include <x2setup_response_wrapper.h>
 import "C"
 import (
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-//	"github.com/pkg/errors"
 	"unsafe"
 )
 
@@ -35,6 +35,20 @@ const (
 	maxofNRNeighbours  = 1024
 	maxnoofNrCellBands = 32
 )
+
+type EndcSetupResponseConverter struct {
+	logger *logger.Logger
+}
+
+type IEndcSetupResponseConverter interface {
+	UnpackEndcSetupResponseAndExtract(packedBuf []byte) (*entities.GlobalNbId, *entities.Gnb, error)
+}
+
+func NewEndcSetupResponseConverter(logger *logger.Logger) *EndcSetupResponseConverter {
+	return &EndcSetupResponseConverter{
+		logger: logger,
+	}
+}
 
 func getNRFreqInfo(freqInfo C.NRFreqInfo_t) (*entities.NrFrequencyInfo, error) {
 	var info *entities.NrFrequencyInfo
@@ -57,7 +71,7 @@ func getNRFreqInfo(freqInfo C.NRFreqInfo_t) (*entities.NrFrequencyInfo, error) {
 			frequencyBand := &entities.FrequencyBandItem{NrFrequencyBand: uint32(freqBandNrItem.freqBandIndicatorNr)}
 
 			if freqBandNrItem.supportedSULBandList.list.count > 0 && freqBandNrItem.supportedSULBandList.list.count <= maxnoofNrCellBands {
-				count:= int(freqBandNrItem.supportedSULBandList.list.count)
+				count := int(freqBandNrItem.supportedSULBandList.list.count)
 				supportedSULBandList_slice := (*[1 << 30]*C.SupportedSULFreqBandItem_t)(unsafe.Pointer(freqBandNrItem.supportedSULBandList.list.array))[:count:count]
 				for _, supportedSULFreqBandItem := range supportedSULBandList_slice {
 					frequencyBand.SupportedSulBands = append(frequencyBand.SupportedSulBands, uint32(supportedSULFreqBandItem.freqBandIndicatorNr))
@@ -162,7 +176,7 @@ func getnRNeighbourInfo(neighbour_Information *C.NRNeighbour_Information_t) ([]*
 	var neighbours []*entities.NrNeighbourInformation
 
 	if neighbour_Information != nil && neighbour_Information.list.count > 0 && neighbour_Information.list.count <= maxofNRNeighbours {
-		count:=int(neighbour_Information.list.count)
+		count := int(neighbour_Information.list.count)
 		neighbour_Information_slice := (*[1 << 30]*C.NRNeighbour_Information__Member)(unsafe.Pointer(neighbour_Information.list.array))[:count:count]
 		for _, member := range neighbour_Information_slice {
 			info := &entities.NrNeighbourInformation{NrPci: uint32(member.nrpCI)}
@@ -203,7 +217,7 @@ func getServedNRCells(servedNRcellsManagementList *C.ServedNRcellsENDCX2Manageme
 	var servedNRCells []*entities.ServedNRCell
 
 	if servedNRcellsManagementList != nil && servedNRcellsManagementList.list.count > 0 && servedNRcellsManagementList.list.count <= maxCellinengNB {
-		count :=int(servedNRcellsManagementList.list.count)
+		count := int(servedNRcellsManagementList.list.count)
 		servedNRcellsENDCX2ManagementList__Member_slice := (*[1 << 30]*C.ServedNRcellsENDCX2ManagementList__Member)(unsafe.Pointer(servedNRcellsManagementList.list.array))[:count:count]
 		for _, servedNRcellsENDCX2ManagementList__Member := range servedNRcellsENDCX2ManagementList__Member_slice {
 			servedNRCellInfo := servedNRcellsENDCX2ManagementList__Member.servedNRCellInfo
@@ -223,7 +237,7 @@ func getServedNRCells(servedNRcellsManagementList *C.ServedNRcellsENDCX2Manageme
 			}
 
 			if servedNRCellInfo.broadcastPLMNs.list.count > 0 && servedNRCellInfo.broadcastPLMNs.list.count <= maxnoofBPLMNs {
-				count:=int(servedNRCellInfo.broadcastPLMNs.list.count)
+				count := int(servedNRCellInfo.broadcastPLMNs.list.count)
 				pLMN_Identity_slice := (*[1 << 30]*C.PLMN_Identity_t)(unsafe.Pointer(servedNRCellInfo.broadcastPLMNs.list.array))[:count:count]
 				for _, pLMN_Identity := range pLMN_Identity_slice {
 					servedNRCell.ServedNrCellInformation.ServedPlmns = append(servedNRCell.ServedNrCellInformation.ServedPlmns, fmt.Sprintf("%02x", C.GoBytes(unsafe.Pointer(pLMN_Identity.buf), C.int(pLMN_Identity.size))))
@@ -271,7 +285,7 @@ func endcX2SetupResponseToProtobuf(pdu *C.E2AP_PDU_t) (*entities.GlobalNbId, *en
 		if successfulOutcome != nil && successfulOutcome.value.present == C.SuccessfulOutcome__value_PR_ENDCX2SetupResponse {
 			endcX2SetupResponse := (*C.ENDCX2SetupResponse_t)(unsafe.Pointer(&successfulOutcome.value.choice[0]))
 			if endcX2SetupResponse != nil && endcX2SetupResponse.protocolIEs.list.count > 0 {
-				count:=int(endcX2SetupResponse.protocolIEs.list.count)
+				count := int(endcX2SetupResponse.protocolIEs.list.count)
 				endcX2SetupResponse_IEs_slice := (*[1 << 30]*C.ENDCX2SetupResponse_IEs_t)(unsafe.Pointer(endcX2SetupResponse.protocolIEs.list.array))[:count:count]
 				for _, endcX2SetupResponse_IE := range endcX2SetupResponse_IEs_slice {
 					if endcX2SetupResponse_IE.value.present == C.ENDCX2SetupResponse_IEs__value_PR_RespondingNodeType_EndcX2Setup {
@@ -280,7 +294,7 @@ func endcX2SetupResponseToProtobuf(pdu *C.E2AP_PDU_t) (*entities.GlobalNbId, *en
 						case C.RespondingNodeType_EndcX2Setup_PR_respond_en_gNB:
 							en_gNB_ENDCX2SetupReqAckIEs_Container := *(**C.ProtocolIE_Container_119P89_t)(unsafe.Pointer(&respondingNodeType.choice[0]))
 							if en_gNB_ENDCX2SetupReqAckIEs_Container != nil && en_gNB_ENDCX2SetupReqAckIEs_Container.list.count > 0 {
-								count:=int(en_gNB_ENDCX2SetupReqAckIEs_Container.list.count)
+								count := int(en_gNB_ENDCX2SetupReqAckIEs_Container.list.count)
 								en_gNB_ENDCX2SetupReqAckIEs_slice := (*[1 << 30]*C.En_gNB_ENDCX2SetupReqAckIEs_t)(unsafe.Pointer(en_gNB_ENDCX2SetupReqAckIEs_Container.list.array))[:count:count]
 								for _, en_gNB_ENDCX2SetupReqAckIE := range en_gNB_ENDCX2SetupReqAckIEs_slice {
 									switch en_gNB_ENDCX2SetupReqAckIE.value.present {
@@ -315,8 +329,9 @@ func endcX2SetupResponseToProtobuf(pdu *C.E2AP_PDU_t) (*entities.GlobalNbId, *en
 	return globalNbId, gnb, nil
 }
 
-func UnpackEndcX2SetupResponseAndExtract(logger *logger.Logger, allocationBufferSize int, packedBufferSize int, packedBuf []byte, maxMessageBufferSize int) (*entities.GlobalNbId, *entities.Gnb, error) {
-	pdu, err := UnpackX2apPdu(logger, allocationBufferSize, packedBufferSize, packedBuf, maxMessageBufferSize)
+func (c *EndcSetupResponseConverter) UnpackEndcSetupResponseAndExtract(packedBuf []byte) (*entities.GlobalNbId, *entities.Gnb, error) {
+	pdu, err := UnpackX2apPdu(c.logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(packedBuf), packedBuf, e2pdus.MaxAsn1CodecMessageBufferSize)
+
 	if err != nil {
 		return nil, nil, err
 	}

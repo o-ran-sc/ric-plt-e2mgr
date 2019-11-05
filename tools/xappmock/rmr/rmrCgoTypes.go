@@ -95,17 +95,15 @@ type MBuf struct {
 	XAction []byte
 }
 
-
 func (m MBuf) String() string {
 	return fmt.Sprintf("{ MType: %d, Len: %d, Meid: %q, Xaction: %q, Payload: [%x] }", m.MType, m.Len, m.Meid, m.XAction, m.Payload)
 }
 
-
 type Context struct {
-	MaxMsgSize     int
-	MaxRetries     int
-	Flags          int
-	RmrCtx         unsafe.Pointer
+	MaxMsgSize int
+	MaxRetries int
+	Flags      int
+	RmrCtx     unsafe.Pointer
 }
 
 type Messenger interface {

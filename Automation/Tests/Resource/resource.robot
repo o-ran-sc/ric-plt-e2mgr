@@ -52,15 +52,7 @@ ${restart_simu}  docker restart gnbe2_simu
 ${start_e2}  docker start e2
 ${stop_docker_e2}      docker stop e2
 ${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT
-${Save_sim_log}      docker logs gnbe2_simu > gnb.log
-${Save_e2mgr_log}   docker logs e2mgr > e2mgr.log
-${Save_rsm_log}   docker logs rsm > rsm.log
-${Save_e2adapter_log}   docker logs e2adapter > e2adapter.log
 ${403_reset_message}    "Activity X2_RESET rejected. RAN current state DISCONNECTED does not allow its execution "
-${e2mgr_log_filename}    e2mgr.log
-${gnb_log_filename}    gnb.log
-${rsm_log_filename}    rsm.log
-${e2adapter_log_filename}    e2adapter.log
 
 
 

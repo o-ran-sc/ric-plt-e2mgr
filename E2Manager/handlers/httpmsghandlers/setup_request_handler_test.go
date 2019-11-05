@@ -17,19 +17,17 @@
 package httpmsghandlers
 
 import (
-	"e2mgr/rnibBuilders"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
+	"e2mgr/rnibBuilders"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"reflect"
@@ -200,6 +198,23 @@ func TestX2SetupHandleRnibGet_Error(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 }
 
+func TestEndcSetupHandleShuttingDownRan_Error(t *testing.T) {
+	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+
+	nb := &entities.NodebInfo{RanName: "RanName", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+	readerMock.On("GetNodeb", "RanName").Return(nb, nil)
+
+	sr := models.SetupRequest{"127.0.0.1", 8080, "RanName",}
+	_, actual := handler.Handle(sr)
+
+	expected := &e2managererrors.WrongStateError{}
+	if reflect.TypeOf(actual) != reflect.TypeOf(expected) {
+		t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+	}
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
 func TestX2SetupHandleShuttingDownRan_Error(t *testing.T) {
 	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
@@ -288,18 +303,12 @@ func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
 	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 
-	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManager, protocol)

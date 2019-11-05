@@ -23,13 +23,11 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -46,14 +44,10 @@ func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.Rnib
 	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
 	return rmrMessengerMock, writerMock, ranSetupManager
 }

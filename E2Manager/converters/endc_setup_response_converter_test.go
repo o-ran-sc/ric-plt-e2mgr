@@ -18,7 +18,6 @@
 package converters
 
 import (
-	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -555,6 +554,8 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 			failure: fmt.Errorf("getList for path [successfulOutcome_t ENDCX2SetupResponse protocolIEs_t ProtocolIE_Container_elm RespondingNodeType-EndcX2Setup respond_en_gNB_t ProtocolIE_Container_elm ServedNRcellsENDCX2ManagementList ServedNRcellsENDCX2ManagementList_elm servedNRCellInfo_t nrpCI_t] failed, rc = 1" /*NO_ITEMS*/),},
 	}
 
+	converter := NewEndcSetupResponseConverter(logger)
+
 	for _, tc := range testCases {
 		t.Run(tc.packedPdu, func(t *testing.T) {
 
@@ -566,7 +567,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 				t.Errorf("convert inputPayloadAsStr to payloadAsByte. Error: %v\n", err)
 			}
 
-			key, gnb, err := UnpackEndcX2SetupResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize)
+			key, gnb, err := converter.UnpackEndcSetupResponseAndExtract(payload)
 
 			if err != nil {
 				if tc.failure == nil {

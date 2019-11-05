@@ -50,12 +50,12 @@ func TestRmrSenderSendSuccess(t *testing.T) {
 
 	ranName := "test"
 	payload := []byte("some payload")
-	xaction := []byte(ranName)
-	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xaction)
+	var xAction []byte
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction)
 	rmrMessengerMock.On("SendMsg", mbuf).Return(&rmrCgo.MBuf{}, nil)
-	rmrMsg := models.NewRmrMessage(123, ranName, payload)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	rmrSender := NewRmrSender(logger, &rmrMessenger)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)
 	assert.Nil(t, err)
 	rmrMessengerMock.AssertCalled(t, "SendMsg",mbuf)
@@ -67,12 +67,12 @@ func TestRmrSenderSendFailure(t *testing.T) {
 
 	ranName := "test"
 	payload := []byte("some payload")
-	xaction := []byte(ranName)
-	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xaction)
+	var xAction []byte
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction)
 	rmrMessengerMock.On("SendMsg", mbuf).Return(mbuf, fmt.Errorf("rmr send failure"))
-	rmrMsg := models.NewRmrMessage(123, ranName, payload)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
-	rmrSender := NewRmrSender(logger, &rmrMessenger)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)
 	rmrMessengerMock.AssertCalled(t, "SendMsg",mbuf)
 	assert.NotNil(t, err)

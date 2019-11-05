@@ -18,7 +18,6 @@
 package converters
 
 import (
-	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -74,6 +73,8 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 		/**** shares the same code with x2setup failure response to protobuf ****/
 	}
 
+	converter := NewEndcSetupFailureResponseConverter(logger)
+
 	for _, tc := range testCases {
 		t.Run(tc.packedPdu, func(t *testing.T) {
 
@@ -83,7 +84,7 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 				t.Errorf("convert inputPayloadAsStr to payloadAsByte. Error: %v\n", err)
 			}
 
-			response, err := UnpackEndcX2SetupFailureResponseAndExtract(logger, e2pdus.MaxAsn1CodecAllocationBufferSize /*allocation buffer*/, len(payload), payload, e2pdus.MaxAsn1CodecMessageBufferSize /*message buffer*/)
+			response, err := converter.UnpackEndcSetupFailureResponseAndExtract(payload)
 
 			if err != nil {
 				if tc.failure == nil {

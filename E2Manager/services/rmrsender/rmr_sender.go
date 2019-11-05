@@ -25,10 +25,10 @@ import (
 
 type RmrSender struct {
 	logger    *logger.Logger
-	messenger *rmrCgo.RmrMessenger
+	messenger rmrCgo.RmrMessenger
 }
 
-func NewRmrSender(logger *logger.Logger, messenger *rmrCgo.RmrMessenger) *RmrSender {
+func NewRmrSender(logger *logger.Logger, messenger rmrCgo.RmrMessenger) *RmrSender {
 	return &RmrSender{
 		logger:    logger,
 		messenger: messenger,
@@ -36,10 +36,9 @@ func NewRmrSender(logger *logger.Logger, messenger *rmrCgo.RmrMessenger) *RmrSen
 }
 
 func (r *RmrSender) Send(rmrMessage *models.RmrMessage) error {
-	transactionIdByteArr := []byte(rmrMessage.RanName)
-	msg := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &transactionIdByteArr)
+	msg := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
 
-	_, err := (*r.messenger).SendMsg(msg)
+	_, err := r.messenger.SendMsg(msg)
 
 	if err != nil {
 		r.logger.Errorf("#RmrSender.Send - RAN name: %s , Message type: %d - Failed sending message. Error: %v", rmrMessage.RanName, rmrMessage.MsgType, err)

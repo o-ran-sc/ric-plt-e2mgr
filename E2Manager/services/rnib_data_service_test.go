@@ -21,11 +21,9 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"strings"
@@ -45,16 +43,12 @@ func setupRnibDataServiceTestWithMaxAttempts(t *testing.T, maxAttempts int) (*rN
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: maxAttempts}
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
 
-	rnibDataService := NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := NewRnibDataService(logger, config, readerMock, writerMock)
 	assert.NotNil(t, rnibDataService)
 
 	return rnibDataService, readerMock, writerMock

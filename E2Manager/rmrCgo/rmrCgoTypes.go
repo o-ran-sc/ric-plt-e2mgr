@@ -135,10 +135,9 @@ type Context struct {
 }
 
 type RmrMessenger interface {
-	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) *RmrMessenger
+	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) RmrMessenger
 	SendMsg(msg *MBuf) (*MBuf, error)
 	RecvMsg() (*MBuf, error)
-	RtsMsg(msg *MBuf)
 	IsReady() bool
 	Close()
 }

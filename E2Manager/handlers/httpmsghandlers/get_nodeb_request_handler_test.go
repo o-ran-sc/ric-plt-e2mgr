@@ -24,7 +24,6 @@ import (
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -34,10 +33,7 @@ func setupGetNodebRequestHandlerTest(t *testing.T) (*GetNodebRequestHandler, *mo
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	rnibDataService := services.NewRnibDataService(log, config, readerProvider, nil)
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, nil)
 	handler := NewGetNodebRequestHandler(log, rnibDataService)
 	return handler, readerMock
 }

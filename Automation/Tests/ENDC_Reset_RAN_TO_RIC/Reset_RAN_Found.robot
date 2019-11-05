@@ -23,19 +23,25 @@ Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
-
-
-
+Resource    ../Resource/scripts_variables.robot
+Library     String
+Library     Process
+Library     ../Scripts/find_rmr_message.py
+Library     ../Scripts/find_error_script.py
 
 *** Test Cases ***
 
 Prepare Ran in Connected connectionStatus
-    Post Request setup node b endc-setup
+#    Post Request setup node b endc-setup
+    Set Headers     ${header}
+    POST        /v1/nodeb/endc-setup    ${json}
     Integer     response status       204
     Sleep  1s
-    GET      /v1/nodeb/test2
+#    GET      /v1/nodeb/test2
+    GET      /v1/nodeb/test1
     Integer  response status  200
-    String   response body ranName    test2
+#    String   response body ranName    test2
+    String   response body ranName    test1
     String   response body connectionStatus    CONNECTED
 
 Run Reset from RAN
@@ -46,3 +52,26 @@ Prepare logs for tests
     Remove log files
     Save logs
 
+#Verify logs - Reset Sent by e2adapter
+#    ${result}    find_error_script.find_error  ${EXECDIR}  ${e2adapter_log_filename}  ${E2ADAPTER_Setup_Resp}
+#    Should Be Equal As Strings    ${result}      True
+
+Verify logs - Reset Sent by simulator
+    ${Reset}=   Grep File  ./${gnb_log_filename}  ResetRequest has been sent
+    Should Be Equal     ${Reset}     gnbe2_simu: ResetRequest has been sent
+
+Verify logs - e2mgr logs - messege sent
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RIC_X2_RESET_REQ_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+Verify logs - e2mgr logs - messege received
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RIC_X2_RESET_RESP_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+RAN Restarted messege sent
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RAN_RESTARTED_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+RSM RESOURCE STATUS REQUEST message not sent
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test2}
+    Should Be Equal As Strings    ${result}      False

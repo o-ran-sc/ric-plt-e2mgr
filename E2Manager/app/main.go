@@ -20,7 +20,6 @@ package main
 import (
 	"e2mgr/configuration"
 	"e2mgr/controllers"
-	"e2mgr/converters"
 	"e2mgr/httpserver"
 	"e2mgr/logger"
 	"e2mgr/managers"
@@ -34,11 +33,10 @@ import (
 	"e2mgr/services/rmrsender"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
+	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"os"
 	"strconv"
 )
-
-const MAX_RNIB_POOL_INSTANCES = 4
 
 func main() {
 	config := configuration.ParseConfiguration()
@@ -48,32 +46,28 @@ func main() {
 		fmt.Printf("#app.main - failed to initialize logger, error: %s", err)
 		os.Exit(1)
 	}
-	rNibWriter.Init("e2Manager", MAX_RNIB_POOL_INSTANCES)
-	defer rNibWriter.Close()
-	reader.Init("e2Manager", MAX_RNIB_POOL_INSTANCES)
-	defer reader.Close()
-	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader, rNibWriter.GetRNibWriter)
+	db := sdlgo.NewDatabase()
+	sdl := sdlgo.NewSdlInstance("e2Manager", db)
+	defer sdl.Close()
+	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter( sdl))
 	var msgImpl *rmrCgo.Context
 	rmrMessenger := msgImpl.Init("tcp:"+strconv.Itoa(config.Rmr.Port), config.Rmr.MaxMsgSize, 0, logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager)
-	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
-	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
-	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
-	x2SetupFailureResponseConverter := converters.NewX2SetupFailureResponseConverter(logger)
-	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
-	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(logger, rnibDataService, ranReconnectionManager, ranStatusChangeManager, rmrSender, x2SetupResponseManager, x2SetupFailureResponseManager)
+	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager)
 
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)
 
-	defer (*rmrMessenger).Close()
+	defer rmrMessenger.Close()
 
 	go rmrReceiver.ListenAndHandle()
 
 	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, ranSetupManager)
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
-	httpserver.Run(config.Http.Port, rootController, nodebController)
+	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController)
 }
+
+

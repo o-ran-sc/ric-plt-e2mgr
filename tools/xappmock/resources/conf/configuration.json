@@ -1,0 +1,24 @@
+[
+  {
+    "id": "RIC_X2_SETUP_REQ",
+    "sendRmrMessageType": "10060",
+    "transactionId": "e2e$",
+    "payloadHeader": "$ranIp|$ranPort|$ranName|#packedPayload|",
+    "packedPayload": "0006002a000002001500080013302300fffff000140017000001f700133023fffff0000000133023000000000001"
+  },
+  {
+    "id": "RIC_ENB_CONF_UPDATE_ACK_positive",
+    "sendRmrMessageType": "10081",
+    "transactionId": "e2e$",
+    "packedPayload": "2025000a00000100f70003000000"
+  },
+  {
+    "id": "RIC_SUBSCRIPTION_RESPONSE",
+    "receiveRmrMessageType": "12011",
+    "transactionId": "e2e$",
+    "packedPayload": "20c9001d000003ea7e000500abba0001ea6300020001ea6c000700ea6d40020000"
+  },
+  {
+    "id": "RIC_X2_SETUP_RESPONSE"
+  }
+]

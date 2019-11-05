@@ -26,10 +26,10 @@ import (
 type RmrReceiver struct {
 	logger    *logger.Logger
 	nManager  *notificationmanager.NotificationManager
-	messenger *rmrCgo.RmrMessenger
+	messenger rmrCgo.RmrMessenger
 }
 
-func NewRmrReceiver(logger *logger.Logger, messenger *rmrCgo.RmrMessenger, nManager *notificationmanager.NotificationManager) *RmrReceiver {
+func NewRmrReceiver(logger *logger.Logger, messenger rmrCgo.RmrMessenger, nManager *notificationmanager.NotificationManager) *RmrReceiver {
 	return &RmrReceiver{
 		logger:    logger,
 		nManager:  nManager,
@@ -40,13 +40,14 @@ func NewRmrReceiver(logger *logger.Logger, messenger *rmrCgo.RmrMessenger, nMana
 func (r *RmrReceiver) ListenAndHandle() {
 
 	for {
-		mbuf, err := (*r.messenger).RecvMsg()
-		r.logger.Debugf("#RmrReceiver.ListenAndHandle - Going to handle received message: %#v\n", mbuf)
+		mbuf, err := r.messenger.RecvMsg()
 
 		if err != nil {
-			// TODO: error handling?
+			r.logger.Errorf("#RmrReceiver.ListenAndHandle - error: %s", err)
 			continue
 		}
+
+		r.logger.Debugf("#RmrReceiver.ListenAndHandle - Going to handle received message: %#v\n", mbuf)
 
 		// TODO: go routine?
 		_ = r.nManager.HandleMessage(mbuf)

@@ -29,7 +29,9 @@ ${RAN_CONNECTED_message_type}     MType: 1200
 ${RAN_RESTARTED_message_type}     MType: 1210
 ${RIC_X2_RESET_REQ_message_type}    MType: 10070
 ${RIC_X2_RESET_RESP_message_type}    MType: 10070
-${failed_to_retrieve_nodeb_message}     failed to retrieve nodeB entity. RanName: test1.
+#${failed_to_retrieve_nodeb_message}     failed to retrieve nodeB entity. RanName: test1.
+#{#RanReconnectionManager.ReconnectRan - RAN name: test1 - Failed fetching RAN from rNib. Error: dial tcp 172.17.0.2:637 #9: i/o timeout"
+${failed_to_retrieve_nodeb_message}     RAN name: test1 - Failed fetching RAN from rNib
 ${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNodeb
 ${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
 ${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message

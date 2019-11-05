@@ -35,9 +35,9 @@ import (
 Allocates an mBuf and initialize it with the content of C.rmr_mbuf_t.
 The xAction field is assigned a a value without trailing spaces.
 */
-func convertToMBuf( m *C.rmr_mbuf_t) (*MBuf, error) {
-	payloadArr := C.GoBytes(unsafe.Pointer(m.payload),C.int(m.len))
-	xActionArr := C.GoBytes(unsafe.Pointer(m.xaction),C.int(RMR_MAX_XACTION_LEN))
+func convertToMBuf(m *C.rmr_mbuf_t) (*MBuf, error) {
+	payloadArr := C.GoBytes(unsafe.Pointer(m.payload), C.int(m.len))
+	xActionArr := C.GoBytes(unsafe.Pointer(m.xaction), C.int(RMR_MAX_XACTION_LEN))
 
 	// Trim padding (space and 0)
 	xActionStr := strings.TrimRight(string(xActionArr), "\040\000")
@@ -54,7 +54,7 @@ func convertToMBuf( m *C.rmr_mbuf_t) (*MBuf, error) {
 
 	meidBuf := make([]byte, RMR_MAX_MEID_LEN)
 	if meidCstr := C.rmr_get_meid(m, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {
-		mbuf.Meid =	strings.TrimRight(string(meidBuf), "\000")
+		mbuf.Meid = strings.TrimRight(string(meidBuf), "\000")
 	}
 
 	return mbuf, nil
@@ -64,9 +64,9 @@ func convertToMBuf( m *C.rmr_mbuf_t) (*MBuf, error) {
 Allocates an C.rmr_mbuf_t and initialize it with the content of mBuf.
 The xAction field is padded with trailing spaces upto capacity
 */
-func (ctx *Context) getAllocatedCRmrMBuf( mBuf *MBuf, maxMsgSize int) (cMBuf *C.rmr_mbuf_t, rc error) {
+func (ctx *Context) getAllocatedCRmrMBuf(mBuf *MBuf, maxMsgSize int) (cMBuf *C.rmr_mbuf_t, rc error) {
 	var xActionBuf [RMR_MAX_XACTION_LEN]byte
-	var meidBuf[RMR_MAX_MEID_LEN]byte
+	var meidBuf [RMR_MAX_MEID_LEN]byte
 
 	cMBuf = C.rmr_alloc_msg(ctx.RmrCtx, C.int(maxMsgSize))
 	cMBuf.mtype = C.int(mBuf.MType)
@@ -76,13 +76,13 @@ func (ctx *Context) getAllocatedCRmrMBuf( mBuf *MBuf, maxMsgSize int) (cMBuf *C.
 	xActionLen := len(mBuf.XAction)
 
 	copy(xActionBuf[:], mBuf.XAction)
-	for i:= xActionLen; i < RMR_MAX_XACTION_LEN; i++{
+	for i := xActionLen; i < RMR_MAX_XACTION_LEN; i++ {
 		xActionBuf[i] = '\040' //space
 	}
 
 	// Add padding
 	copy(meidBuf[:], mBuf.Meid)
-	for i:= len(mBuf.Meid); i < RMR_MAX_MEID_LEN; i++{
+	for i := len(mBuf.Meid); i < RMR_MAX_MEID_LEN; i++ {
 		meidBuf[i] = 0
 	}
 
@@ -98,18 +98,18 @@ func (ctx *Context) getAllocatedCRmrMBuf( mBuf *MBuf, maxMsgSize int) (cMBuf *C.
 		return nil, errors.New(fmt.Sprintf("#rmrCgoUtils.getAllocatedCRmrMBuf - Failed to read xAction data to allocated RMR message buffer, %s", err))
 	}
 
-	len := C.rmr_bytes2meid(cMBuf,  (*C.uchar)(unsafe.Pointer(&meidBuf[0])), C.int(RMR_MAX_XACTION_LEN))
+	len := C.rmr_bytes2meid(cMBuf, (*C.uchar)(unsafe.Pointer(&meidBuf[0])), C.int(RMR_MAX_XACTION_LEN))
 	if int(len) != RMR_MAX_MEID_LEN {
 		return nil, errors.New(
 			"#rmrCgoUtils.getAllocatedCRmrMBuf - Failed to copy meid data to allocated RMR message buffer")
 	}
-	return cMBuf,nil
+	return cMBuf, nil
 }
 
 func MessageIdToUint(id string) (msgId uint64, err error) {
 	if len(id) == 0 {
 		msgId, err = 0, nil
-	} else{
+	} else {
 		msgId, err = strconv.ParseUint(id, 10, 16)
 	}
 	return

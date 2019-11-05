@@ -1,3 +1,19 @@
+//
+// Copyright 2019 AT&T Intellectual Property
+// Copyright 2019 Nokia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 package rmrmsghandlers
 
 import (
@@ -7,7 +23,6 @@ import (
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
@@ -15,7 +30,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
@@ -29,14 +43,10 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService)
@@ -248,7 +258,7 @@ func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return rmrsender.NewRmrSender(log, &rmrMessenger)
+	return rmrsender.NewRmrSender(log, rmrMessenger)
 }
 
 // TODO: extract to test_utils

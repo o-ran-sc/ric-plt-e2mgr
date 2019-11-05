@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func ProcessConfigurationFile(resourcesFolder, inputFolder,  suffix string, processor func(data []byte) error) error {
+func ProcessConfigurationFile(resourcesFolder, inputFolder, suffix string, processor func(data []byte) error) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return errors.New(err.Error())

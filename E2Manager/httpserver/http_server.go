@@ -19,13 +19,13 @@ package httpserver
 
 import (
 	"e2mgr/controllers"
+	"e2mgr/logger"
 	"fmt"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
-func Run(port int, controller controllers.IRootController, newController controllers.INodebController) {
+func Run(log *logger.Logger, port int, controller controllers.IRootController, newController controllers.INodebController) error {
 
 	router := mux.NewRouter();
 	initializeRoutes(router, controller, newController)
@@ -34,9 +34,8 @@ func Run(port int, controller controllers.IRootController, newController control
 
 	err := http.ListenAndServe(addr, router)
 
-	if err != nil {
-		log.Fatalf("#http_server.Run - Fail initiating HTTP server. Error: %v", err)
-	}
+	log.Errorf("#http_server.Run - Fail initiating HTTP server. Error: %v", err)
+	return err
 }
 
 func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController) {

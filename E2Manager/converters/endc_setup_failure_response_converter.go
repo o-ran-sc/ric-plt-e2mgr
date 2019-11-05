@@ -23,10 +23,26 @@ package converters
 // #include <x2setup_response_wrapper.h>
 import "C"
 import (
+	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"unsafe"
 )
+
+type EndcSetupFailureResponseConverter struct {
+	logger *logger.Logger
+}
+
+type IEndcSetupFailureResponseConverter interface {
+	UnpackEndcSetupFailureResponseAndExtract(packedBuf []byte) (*entities.SetupFailure, error)
+}
+
+func NewEndcSetupFailureResponseConverter(logger *logger.Logger) *EndcSetupFailureResponseConverter {
+	return &EndcSetupFailureResponseConverter{
+		logger: logger,
+	}
+}
+
 
 // Populate and return the EN-DC/X2 setup response failure structure with data from the pdu
 func endcX2SetupFailureResponseToProtobuf(pdu *C.E2AP_PDU_t) (*entities.SetupFailure, error) {
@@ -68,8 +84,8 @@ func endcX2SetupFailureResponseToProtobuf(pdu *C.E2AP_PDU_t) (*entities.SetupFai
 	return &setupFailure, nil
 }
 
-func UnpackEndcX2SetupFailureResponseAndExtract(logger *logger.Logger, allocationBufferSize int, packedBufferSize int, packedBuf []byte, maxMessageBufferSize int) (*entities.SetupFailure, error) {
-	pdu, err := UnpackX2apPdu(logger, allocationBufferSize, packedBufferSize, packedBuf, maxMessageBufferSize)
+func (c *EndcSetupFailureResponseConverter) UnpackEndcSetupFailureResponseAndExtract(packedBuf []byte) (*entities.SetupFailure, error) {
+	pdu, err := UnpackX2apPdu(c.logger, e2pdus.MaxAsn1CodecAllocationBufferSize, len(packedBuf), packedBuf, e2pdus.MaxAsn1CodecMessageBufferSize)
 	if err != nil {
 		return nil, err
 	}

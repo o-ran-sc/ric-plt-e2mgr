@@ -17,10 +17,6 @@
 
 package rmrmsghandlers
 
-// #cgo CFLAGS: -I../../asn1codec/inc/ -I../../asn1codec/e2ap_engine/
-// #cgo LDFLAGS: -L ../../asn1codec/lib/ -L../../asn1codec/e2ap_engine/ -le2ap_codec -lasncodec
-// #include <asn1codec_utils.h>
-import "C"
 import (
 	"e2mgr/converters"
 	"e2mgr/enums"
@@ -53,7 +49,7 @@ func (h X2ResetResponseHandler) Handle(request *models.NotificationRequest) {
 	ranName := request.RanName
 	h.logger.Infof("#X2ResetResponseHandler.Handle - RAN name: %s - received reset response. Payload: %x", ranName, request.Payload)
 
-	nodebInfo, err := h.rnibDataService.GetNodeb(ranName);
+	nodebInfo, err := h.rnibDataService.GetNodeb(ranName)
 	if err != nil {
 		h.logger.Errorf("#x2ResetResponseHandler.Handle - RAN name: %s - failed to retrieve nodebInfo entity. Error: %s", ranName, err)
 		return

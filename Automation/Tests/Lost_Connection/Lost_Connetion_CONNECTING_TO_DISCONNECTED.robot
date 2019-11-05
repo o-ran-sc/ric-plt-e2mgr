@@ -48,7 +48,7 @@ Prepare Ran in Connecting connectionStatus
 
 
 Verfiy Disconnected ConnectionStatus
-    Sleep    1s
+    Sleep    10s
     GET      /v1/nodeb/test1
     Integer  response status  200
     String   response body ranName    test1

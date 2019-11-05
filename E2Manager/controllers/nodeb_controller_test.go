@@ -27,7 +27,6 @@ import (
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/providers/httpmsghandlerprovider"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
@@ -36,7 +35,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -70,14 +68,10 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
+
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager)
@@ -115,8 +109,8 @@ func TestX2SetupSuccess(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
 
 	payload := e2pdus.PackedX2setupRequest
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	var xAction[]byte
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
@@ -143,8 +137,8 @@ func TestEndcSetupSuccess(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", nbUpdated).Return(nil)
 
 	payload := e2pdus.PackedEndcX2setupRequest
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	var xAction[]byte
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
@@ -377,8 +371,8 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 
 	ranName := "test1"
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
+	var xAction[]byte
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
 	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
 	writer := httptest.NewRecorder()
@@ -403,8 +397,8 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	ranName := "test1"
 	// o&m intervention
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xaction)
+	var xAction[]byte
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
 	rmrMessengerMock.On("SendMsg", msg).Return(msg, nil)
 
 	writer := httptest.NewRecorder()
@@ -478,5 +472,5 @@ func TestHandleErrorResponse(t *testing.T) {
 func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return rmrsender.NewRmrSender(log, &rmrMessenger)
+	return rmrsender.NewRmrSender(log, rmrMessenger)
 }

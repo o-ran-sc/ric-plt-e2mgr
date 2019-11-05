@@ -31,7 +31,7 @@ import (
 	"e2mgr/logger"
 )
 
-func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logger) *RmrMessenger {//TODO remove pointer from interface
+func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logger) RmrMessenger {
 	pp := C.CString(port)
 	defer C.free(unsafe.Pointer(pp))
 	logger.Debugf("#rmrCgoApi.Init - Going to initiate RMR router")
@@ -51,7 +51,7 @@ func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logg
 	// Each round is about 1000 attempts with a short sleep between each round.
 	C.rmr_set_stimeout(ctx.RmrCtx, C.int(1000))
 	r := RmrMessenger(ctx)
-	return &r
+	return r
 }
 
 func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
@@ -103,14 +103,6 @@ func (ctx *Context) RecvMsg() (*MBuf, error) {
 	tmpTid := strings.TrimSpace(transactionId)
 	ctx.Logger.Infof("[RMR -> E2 Manager] #rmrCgoApi.RecvMsg - message %v has been received for transaction id: %s", *mbuf, tmpTid)
 	return mbuf, nil
-}
-
-func (ctx *Context) RtsMsg(msg *MBuf) {
-	ctx.checkContextInitialized()
-	ctx.Logger.Debugf("#rmrCgoApi.RtsMsg - Going to return message to the sender")
-	allocatedCMBuf := C.rmr_alloc_msg(ctx.RmrCtx, C.int(ctx.MaxMsgSize))
-	defer C.rmr_free_msg(allocatedCMBuf)
-	C.rmr_rts_msg(ctx.RmrCtx, allocatedCMBuf)
 }
 
 func (ctx *Context) IsReady() bool {

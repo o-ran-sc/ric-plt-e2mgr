@@ -17,13 +17,13 @@
 package rmr
 
 import (
-	"../frontend"
 	"log"
 	"strconv"
 )
+
 // RmrService holds an instance of RMR messenger as well as its configuration
 type Service struct {
-	messenger  *Messenger
+	messenger *Messenger
 }
 
 // NewRmrService instantiates a new Rmr service instance
@@ -33,36 +33,18 @@ func NewService(rmrConfig Config, messenger Messenger) *Service {
 	}
 }
 
-func (r *Service) SendMessage(messageType int, msg []byte, transactionId []byte) (*MBuf, error){
-	log.Printf( "SendMessage (type: %d, tid: %s, msg: %v", messageType, transactionId, msg)
+func (r *Service) SendMessage(messageType int, meid string, msg []byte, transactionId []byte) (*MBuf, error) {
+	log.Printf("#rmr.Service.SendMessage - type: %d, tid: %s, msg: %v", messageType, transactionId, msg)
 	mbuf := NewMBuf(messageType, len(msg), msg, transactionId)
+	mbuf.Meid = meid
 	return (*r.messenger).SendMsg(mbuf)
 }
 
-// ListenAndHandle waits for messages coming from rmr_rcv_msg and sends it to a designated message handler
-func (r *Service) ListenAndHandle() error {
-	for {
-		mbuf, err := (*r.messenger).RecvMsg()
-
-		if err != nil {
-			return err
-		}
-
-		if _, ok := frontend.WaitedForRmrMessageType[mbuf.MType]; ok {
-			log.Printf( "ListenAndHandle Expected msg: %s", mbuf)
-			break
-		} else {
-			log.Printf( "ListenAndHandle Unexpected msg: %s", mbuf)
-		}
-	}
-	return nil
+func (r *Service) RecvMessage() (*MBuf, error) {
+	return (*r.messenger).RecvMsg()
 }
-
 
 func (r *Service) CloseContext() {
 	(*r.messenger).Close()
 
 }
-
-
-

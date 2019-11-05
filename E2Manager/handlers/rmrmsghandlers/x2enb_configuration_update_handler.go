@@ -17,10 +17,6 @@
 
 package rmrmsghandlers
 
-// #cgo CFLAGS: -I../../asn1codec/inc/ -I../../asn1codec/e2ap_engine/
-// #cgo LDFLAGS: -L ../../asn1codec/lib/ -L../../asn1codec/e2ap_engine/ -le2ap_codec -lasncodec
-// #include <asn1codec_utils.h>
-// #include <configuration_update_wrapper.h>
 import "C"
 import (
 	"e2mgr/converters"
@@ -29,7 +25,7 @@ import (
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services/rmrsender"
-	"unsafe"
+	"e2mgr/utils"
 )
 
 type X2EnbConfigurationUpdateHandler struct {
@@ -46,40 +42,23 @@ func NewX2EnbConfigurationUpdateHandler(logger *logger.Logger, rmrSender *rmrsen
 
 func (h X2EnbConfigurationUpdateHandler) Handle(request *models.NotificationRequest) {
 
-	var payloadSize C.ulong
-	payloadSize = e2pdus.MaxAsn1PackedBufferSize
-	packedBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.uchar{}
-	errorBuffer := [e2pdus.MaxAsn1PackedBufferSize]C.char{}
-
 	refinedMessage, err := converters.UnpackX2apPduAndRefine(h.logger, e2pdus.MaxAsn1CodecAllocationBufferSize, request.Len, request.Payload, e2pdus.MaxAsn1CodecMessageBufferSize)
 
 	if err != nil {
-		status := C.build_pack_x2enb_configuration_update_failure(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
-		if status {
-			payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
-			h.logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update negative ack message payload: (%d) %02x", len(payload), payload)
-			msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, request.RanName, payload)
-			_ = h.rmrSender.Send(msg)
-		} else {
-			h.logger.Errorf("#x2enb_configuration_update_handler.Handle - failed to build and pack Enb configuration update unsuccessful outcome message. Error: %v", errorBuffer)
-		}
 		h.logger.Errorf("#x2enb_configuration_update_handler.Handle - unpack failed. Error: %v", err)
 
-		printHandlingSetupResponseElapsedTimeInMs(h.logger, "#x2enb_configuration_update_handler.Handle - Summary: Elapsed time for receiving and handling enb configuration update initiating message from E2 terminator", request.StartTime)
+		msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateFailure, request.TransactionId)
+		_ = h.rmrSender.Send(msg)
+
+		h.logger.Infof("#X2EnbConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling enb configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	h.logger.Infof("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message received")
 	h.logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message payload: %s", refinedMessage.PduPrint)
 
-	status := C.build_pack_x2enb_configuration_update_ack(&payloadSize, &packedBuffer[0], e2pdus.MaxAsn1PackedBufferSize, &errorBuffer[0])
-	if status {
-		payload := (*[1 << 30]byte)(unsafe.Pointer(&packedBuffer))[:payloadSize:payloadSize]
-		h.logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update positive ack message payload: (%d) %02x", len(payload), payload)
-		msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, request.RanName, payload)
-		_ = h.rmrSender.Send(msg)
-	} else {
-		h.logger.Errorf("#x2enb_configuration_update_handler.Handle - failed to build and pack enb configuration update successful outcome message. Error: %v", errorBuffer)
-	}
-	printHandlingSetupResponseElapsedTimeInMs(h.logger, "#x2enb_configuration_update_handler.Handle - Summary: Elapsed time for receiving and handling enb configuration update initiating message from E2 terminator", request.StartTime)
+	msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateAck,request.TransactionId)
+	_ = h.rmrSender.Send(msg)
+
+	h.logger.Infof("#X2EnbConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling enb configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 }

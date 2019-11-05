@@ -21,9 +21,9 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/rNibWriter"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"net"
 	"time"
 )
@@ -38,20 +38,20 @@ type RNibDataService interface {
 }
 
 type rNibDataService struct {
-	logger             *logger.Logger
-	rnibReaderProvider func() reader.RNibReader
-	rnibWriterProvider func() rNibWriter.RNibWriter
-	maxAttempts        int
-	retryInterval      time.Duration
+	logger        *logger.Logger
+	rnibReader    reader.RNibReader
+	rnibWriter    rNibWriter.RNibWriter
+	maxAttempts   int
+	retryInterval time.Duration
 }
 
-func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReaderProvider func() reader.RNibReader, rnibWriterProvider func() rNibWriter.RNibWriter) *rNibDataService {
+func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
 	return &rNibDataService{
-		logger:             logger,
-		rnibReaderProvider: rnibReaderProvider,
-		rnibWriterProvider: rnibWriterProvider,
-		maxAttempts:        config.MaxRnibConnectionAttempts,
-		retryInterval:      time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		logger:        logger,
+		rnibReader:    rnibReader,
+		rnibWriter:    rnibWriter,
+		maxAttempts:   config.MaxRnibConnectionAttempts,
+		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
 	}
 }
 
@@ -59,7 +59,7 @@ func (w *rNibDataService) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 	w.logger.Infof("#RnibDataService.UpdateNodebInfo - nodebInfo: %s", nodebInfo)
 
 	err := w.retry("UpdateNodebInfo", func() (err error) {
-		err = w.rnibWriterProvider().UpdateNodebInfo(nodebInfo)
+		err = w.rnibWriter.UpdateNodebInfo(nodebInfo)
 		return
 	})
 
@@ -70,7 +70,7 @@ func (w *rNibDataService) SaveNodeb(nbIdentity *entities.NbIdentity, nb *entitie
 	w.logger.Infof("#RnibDataService.SaveNodeb - nbIdentity: %s, nodebInfo: %s", nbIdentity, nb)
 
 	err := w.retry("SaveNodeb", func() (err error) {
-		err = w.rnibWriterProvider().SaveNodeb(nbIdentity, nb)
+		err = w.rnibWriter.SaveNodeb(nbIdentity, nb)
 		return
 	})
 
@@ -81,7 +81,7 @@ func (w *rNibDataService) SaveRanLoadInformation(inventoryName string, ranLoadIn
 	w.logger.Infof("#RnibDataService.SaveRanLoadInformation - inventoryName: %s, ranLoadInformation: %s", inventoryName, ranLoadInformation)
 
 	err := w.retry("SaveRanLoadInformation", func() (err error) {
-		err = w.rnibWriterProvider().SaveRanLoadInformation(inventoryName, ranLoadInformation)
+		err = w.rnibWriter.SaveRanLoadInformation(inventoryName, ranLoadInformation)
 		return
 	})
 
@@ -94,7 +94,7 @@ func (w *rNibDataService) GetNodeb(ranName string) (*entities.NodebInfo, error) 
 	var nodeb *entities.NodebInfo = nil
 
 	err := w.retry("GetNodeb", func() (err error) {
-		nodeb, err = w.rnibReaderProvider().GetNodeb(ranName)
+		nodeb, err = w.rnibReader.GetNodeb(ranName)
 		return
 	})
 
@@ -107,7 +107,7 @@ func (w *rNibDataService) GetListNodebIds() ([]*entities.NbIdentity, error) {
 	var nodeIds []*entities.NbIdentity = nil
 
 	err := w.retry("GetListNodebIds", func() (err error) {
-		nodeIds, err = w.rnibReaderProvider().GetListNodebIds()
+		nodeIds, err = w.rnibReader.GetListNodebIds()
 		return
 	})
 
@@ -116,7 +116,7 @@ func (w *rNibDataService) GetListNodebIds() ([]*entities.NbIdentity, error) {
 
 func (w *rNibDataService) PingRnib() bool {
 	err := w.retry("GetListNodebIds", func() (err error) {
-		_, err = w.rnibReaderProvider().GetListNodebIds()
+		_, err = w.rnibReader.GetListNodebIds()
 		return
 	})
 
@@ -143,7 +143,6 @@ func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {
 		w.logger.Infof("#RnibDataService.retry - retrying %d %s after error: %s", i, rnibFunc, err)
 	}
 }
-
 
 func isRnibConnectionError(err error) bool {
 	internalErr, ok := err.(*common.InternalError)

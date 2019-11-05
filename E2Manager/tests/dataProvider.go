@@ -28,7 +28,7 @@ import (
 
 const (
 	MaxMsgSize  int    = 4096
-	Port        int    = 5555
+	Port        int    = 3801
 	Flags       int    = 0
 	MessageType int    = 1001
 	RanPort     uint16 = 879

@@ -18,16 +18,9 @@
 package rmrmsghandlers
 
 import (
-	"e2mgr/logger"
 	"e2mgr/models"
-	"time"
 )
 
 type NotificationHandler interface {
 	Handle(*models.NotificationRequest)
-}
-
-//TODO: remove that
-func printHandlingSetupResponseElapsedTimeInMs(logger *logger.Logger, msg string, startTime time.Time) {
-	logger.Infof("%s: %f ms", msg, float64(time.Since(startTime))/float64(time.Millisecond))
 }

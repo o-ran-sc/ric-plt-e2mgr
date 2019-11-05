@@ -17,11 +17,6 @@
 
 package rmrmsghandlers
 
-// #cgo CFLAGS: -I../../asn1codec/inc/  -I../../asn1codec/e2ap_engine/
-// #cgo LDFLAGS: -L ../../asn1codec/lib/ -L../../asn1codec/e2ap_engine/ -le2ap_codec -lasncodec
-// #include <asn1codec_utils.h>
-// #include <x2reset_response_wrapper.h>
-import "C"
 import (
 	"e2mgr/e2pdus"
 	"e2mgr/enums"
@@ -32,9 +27,7 @@ import (
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"e2mgr/utils"
-	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"unsafe"
 )
 
 type X2ResetRequestNotificationHandler struct {
@@ -78,27 +71,9 @@ func (h X2ResetRequestNotificationHandler) Handle(request *models.NotificationRe
 		return
 	}
 
-	msg, err := createX2ResetResponseNotification(request)
-	if err != nil {
-		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - %s", err)
-		return
-	}
+	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, e2pdus.PackedX2ResetResponse, request.TransactionId)
 
 	_ = h.rmrSender.Send(msg)
 	h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 	_ = h.ranStatusChangeManager.Execute(rmrCgo.RAN_RESTARTED, enums.RAN_TO_RIC, nb)
-}
-
-func createX2ResetResponseNotification(request *models.NotificationRequest) (*models.RmrMessage, error) {
-
-	packedBuffer := make([]C.uchar, e2pdus.MaxAsn1PackedBufferSize)
-	errorBuffer := make([]C.char, e2pdus.MaxAsn1CodecMessageBufferSize)
-	var payloadSize = C.ulong(e2pdus.MaxAsn1PackedBufferSize)
-
-	if status := C.build_pack_x2reset_response(&payloadSize, &packedBuffer[0], C.ulong(e2pdus.MaxAsn1CodecMessageBufferSize), &errorBuffer[0]); !status {
-		return nil, fmt.Errorf("failed to build and pack the reset response message %s ", C.GoString(&errorBuffer[0]))
-	}
-	payload := C.GoBytes(unsafe.Pointer(&packedBuffer[0]), C.int(payloadSize))
-	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, payload)
-	return msg, nil
 }

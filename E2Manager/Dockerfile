@@ -41,6 +41,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 # Setting allocfreetrace=1 causes every allocation to be profiled and a stack trace printed on each object's allocation and free.
 ENV GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
 ENV RIC_ID="bbbccc-abcd0e/20"
+ENV RMR_SEED_RT=/opt/E2Manager/router_test.txt
 RUN go test ./...
 
 FROM ubuntu:16.04

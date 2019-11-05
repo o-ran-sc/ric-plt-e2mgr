@@ -18,12 +18,14 @@
 package httpserver
 
 import (
+	"e2mgr/logger"
 	"e2mgr/mocks"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func setupRouterAndMocks() (*mux.Router, *mocks.ControllerMock, *mocks.NodebControllerMock) {
@@ -153,4 +155,31 @@ func TestRouteNotFound(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusNotFound, rr.Code, "handler returned wrong status code")
+}
+
+func TestRunError(t *testing.T) {
+	log := initLog(t)
+	err := Run(log, 1234567, &mocks.NodebControllerMock{}, &mocks.ControllerMock{})
+	assert.NotNil(t, err)
+}
+
+func TestRun(t *testing.T) {
+	log := initLog(t)
+	_, controllerMock, nodebControllerMock := setupRouterAndMocks()
+	go Run(log,11223, nodebControllerMock, controllerMock)
+
+	time.Sleep(time.Millisecond * 100)
+	resp, err := http.Get("http://localhost:11223/v1/health")
+	if err != nil {
+		t.Fatalf("failed to perform GET to http://localhost:11223/v1/health")
+	}
+	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func initLog(t *testing.T) *logger.Logger {
+	log, err := logger.InitLogger(logger.InfoLevel)
+	if err != nil {
+		t.Errorf("#initLog test - failed to initialize logger, error: %s", err)
+	}
+	return log
 }

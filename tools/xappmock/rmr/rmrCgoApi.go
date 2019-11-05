@@ -49,7 +49,7 @@ func (*Context) Init(port string, maxMsgSize int, maxRetries int, flags int) *Me
 func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
 
 	allocatedCMBuf, err := ctx.getAllocatedCRmrMBuf(msg, ctx.MaxMsgSize)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	if state := allocatedCMBuf.state; state != RMR_OK {
@@ -58,14 +58,14 @@ func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
 	}
 	defer C.rmr_free_msg(allocatedCMBuf)
 
-	for i:=0; i < ctx.MaxRetries; i++ {
+	for i := 0; i < ctx.MaxRetries; i++ {
 		currCMBuf := C.rmr_send_msg(ctx.RmrCtx, allocatedCMBuf)
 		if state := currCMBuf.state; state != RMR_OK {
 			if state != RMR_ERR_RETRY {
 				errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to send message. state: %v - %s", state, states[int(state)])
 				return nil, errors.New(errorMessage)
 			}
-			time.Sleep(100*time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		return convertToMBuf(currCMBuf)
@@ -75,11 +75,11 @@ func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
 }
 
 func (ctx *Context) RecvMsg() (*MBuf, error) {
-	allocatedCMBuf, err :=C.rmr_alloc_msg(ctx.RmrCtx, C.int(ctx.MaxMsgSize))
-	if err != nil{
+	allocatedCMBuf, err := C.rmr_alloc_msg(ctx.RmrCtx, C.int(ctx.MaxMsgSize))
+	if err != nil {
 		return nil, err
 	}
-	if state := allocatedCMBuf.state;state != RMR_OK {
+	if state := allocatedCMBuf.state; state != RMR_OK {
 		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to get allocated message. state: %v - %s", state, states[int(state)])
 		return nil, errors.New(errorMessage)
 	}
@@ -93,7 +93,6 @@ func (ctx *Context) RecvMsg() (*MBuf, error) {
 
 	return convertToMBuf(currCMBuf)
 }
-
 
 func (ctx *Context) IsReady() bool {
 	return int(C.rmr_ready(ctx.RmrCtx)) != 0

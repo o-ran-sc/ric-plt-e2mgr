@@ -38,7 +38,7 @@ Pre Condition for Connecting - no simu
 Reset - 400 http - 403 wrong state
     Post Request setup node b x-2
     Integer     response status       204
-    Sleep  1s
+    Sleep  10s
     GET      /v1/nodeb/test1
     String   response body connectionStatus    DISCONNECTED
     Set Headers     ${header}
