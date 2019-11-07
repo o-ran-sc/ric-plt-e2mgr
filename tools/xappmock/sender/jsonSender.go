@@ -45,9 +45,9 @@ func SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locall
 	}
 	command.PayloadHeader = expandPayloadHeader(command.PayloadHeader, &command)
 	log.Printf("#jsonSender.SendJsonRmrMessage - command payload header: %s", command.PayloadHeader)
-	rmrMsgId, err := rmr.MessageIdToUint(command.SendRmrMessageType)
+	rmrMsgId, err := rmr.MessageIdToUint(command.RmrMessageType)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid rmr message id: %s", command.SendRmrMessageType))
+		return errors.New(fmt.Sprintf("invalid rmr message id: %s", command.RmrMessageType))
 	}
 	_, err = r.SendMessage(int(rmrMsgId), command.Meid, append([]byte(command.PayloadHeader), payload...), []byte(command.TransactionId))
 	return err

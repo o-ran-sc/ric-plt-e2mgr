@@ -18,18 +18,19 @@
 package models
 
 type JsonCommand struct {
-	Id                    string
-	SendRmrMessageType    string
-	TransactionId         string
-	RanName               string
-	Meid                  string
-	RanIp                 string
-	RanPort               int
-	PayloadHeader         string
-	PackedPayload         string
-	Payload               string
-	Action                string
-	ReceiveRmrMessageType string
-	RepeatCount           int
-	RepeatDelayInMs       int
+	Id               string
+	RmrMessageType   string
+	SendCommandId    string
+	ReceiveCommandId string
+	TransactionId    string
+	RanName          string
+	Meid             string
+	RanIp            string
+	RanPort          int
+	PayloadHeader    string
+	PackedPayload    string
+	Payload          string
+	Action           string
+	RepeatCount      int
+	RepeatDelayInMs  int
 }

@@ -31,8 +31,8 @@ func addRmrMessageToWaitFor(rmrMessageToWaitFor string, command models.JsonComma
 }
 
 type Dispatcher struct {
-	rmrService    *rmr.Service
-	processResult models.ProcessResult
+	rmrService              *rmr.Service
+	processResult           models.ProcessResult
 }
 
 func (d *Dispatcher) GetProcessResult() models.ProcessResult {
@@ -41,7 +41,7 @@ func (d *Dispatcher) GetProcessResult() models.ProcessResult {
 
 func New(rmrService *rmr.Service) *Dispatcher {
 	return &Dispatcher{
-		rmrService: rmrService,
+		rmrService:              rmrService,
 	}
 }
 
@@ -50,26 +50,27 @@ func (d *Dispatcher) JsonCommandsDecoderCB(cmd models.JsonCommand) error {
 		return errors.New(fmt.Sprintf("invalid cmd, no id"))
 	}
 	configuration[cmd.Id] = &cmd
+	return nil
 
-	if len(cmd.ReceiveRmrMessageType) == 0 {
-		return nil
-	}
-
-	return addRmrMessageToWaitFor(cmd.ReceiveRmrMessageType, cmd)
+	//	if len(cmd.ReceiveCommandId) == 0 {
+	//		return nil
+	//	}
+	//
+	//	return addRmrMessageToWaitFor(cmd.ReceiveCommandId, cmd)
 }
 
-func (d *Dispatcher) sendNoRepeat(command models.JsonCommand) {
+func (d *Dispatcher) sendNoRepeat(command models.JsonCommand) error {
 	err := sender.SendJsonRmrMessage(command, nil, d.rmrService)
 
 	if err != nil {
-		log.Printf("Dispatcher.sendHandler - error sending rmr message: %s", err)
+		log.Printf("#Dispatcher.sendNoRepeat - error sending rmr message: %s", err)
 		d.processResult.Err = err
 		d.processResult.Stats.SentErrorCount++
-		return
+		return err
 	}
 
 	d.processResult.Stats.SentCount++
-
+	return nil
 }
 
 func (d *Dispatcher) sendWithRepeat(ctx context.Context, command models.JsonCommand) {
@@ -84,7 +85,7 @@ func (d *Dispatcher) sendWithRepeat(ctx context.Context, command models.JsonComm
 		err := sender.SendJsonRmrMessage(command, nil, d.rmrService)
 
 		if err != nil {
-			log.Printf("Dispatcher.sendHandler - error sending rmr message: %s", err)
+			log.Printf("#Dispatcher.sendWithRepeat - error sending rmr message: %s", err)
 			d.processResult.Stats.SentErrorCount++
 			continue
 		}
@@ -94,13 +95,34 @@ func (d *Dispatcher) sendWithRepeat(ctx context.Context, command models.JsonComm
 	}
 }
 
+func getReceiveRmrMessageType(receiveCommandId string) (string, error) {
+	command, ok := configuration[receiveCommandId]
+
+	if !ok {
+		return "", errors.New(fmt.Sprintf("invalid receive command id: %s", receiveCommandId))
+	}
+
+	if len(command.RmrMessageType) == 0 {
+		return "", errors.New(fmt.Sprintf("missing RmrMessageType for command id: %s", receiveCommandId))
+	}
+
+	return command.RmrMessageType, nil
+}
+
 func (d *Dispatcher) sendHandler(ctx context.Context, sendAndReceiveWg *sync.WaitGroup, command models.JsonCommand) {
 
 	defer sendAndReceiveWg.Done()
 	var listenAndHandleWg sync.WaitGroup
 
-	if len(command.ReceiveRmrMessageType) > 0 {
-		err := addRmrMessageToWaitFor(command.ReceiveRmrMessageType, command)
+	if len(command.ReceiveCommandId) > 0 {
+		rmrMessageToWaitFor, err := getReceiveRmrMessageType(command.ReceiveCommandId)
+
+		if err != nil {
+			d.processResult.Err = err
+			return
+		}
+
+		err = addRmrMessageToWaitFor(rmrMessageToWaitFor, command)
 
 		if err != nil {
 			d.processResult.Err = err
@@ -108,16 +130,21 @@ func (d *Dispatcher) sendHandler(ctx context.Context, sendAndReceiveWg *sync.Wai
 		}
 
 		listenAndHandleWg.Add(1)
-		go d.listenAndHandle(ctx, &listenAndHandleWg, command.RepeatCount)
+		go d.listenAndHandle(ctx, &listenAndHandleWg, command)
 	}
 
 	if command.RepeatCount == 0 {
-		d.sendNoRepeat(command)
+		err := d.sendNoRepeat(command)
+
+		if err != nil {
+			return
+		}
+
 	} else {
 		d.sendWithRepeat(ctx, command)
 	}
 
-	if len(command.ReceiveRmrMessageType) > 0 {
+	if len(command.ReceiveCommandId) > 0 {
 		listenAndHandleWg.Wait()
 	}
 }
@@ -126,7 +153,7 @@ func (d *Dispatcher) receiveHandler(ctx context.Context, sendAndReceiveWg *sync.
 
 	defer sendAndReceiveWg.Done()
 
-	err := addRmrMessageToWaitFor(command.ReceiveRmrMessageType, command)
+	err := addRmrMessageToWaitFor(command.RmrMessageType, command)
 
 	if err != nil {
 		d.processResult.Err = err
@@ -135,7 +162,7 @@ func (d *Dispatcher) receiveHandler(ctx context.Context, sendAndReceiveWg *sync.
 
 	var listenAndHandleWg sync.WaitGroup
 	listenAndHandleWg.Add(1) // this is due to the usage of listenAndHandle as a goroutine in the sender case
-	d.listenAndHandle(ctx, &listenAndHandleWg, command.RepeatCount)
+	d.listenAndHandle(ctx, &listenAndHandleWg, command)
 }
 
 func getMergedCommand(cmd *models.JsonCommand) (models.JsonCommand, error) {
@@ -185,7 +212,7 @@ func (d *Dispatcher) ProcessJsonCommand(ctx context.Context, cmd *models.JsonCom
 	sendAndReceiveWg.Wait()
 }
 
-func (d *Dispatcher) listenAndHandleNoRepeat(ctx context.Context) {
+func (d *Dispatcher) listenAndHandleNoRepeat(ctx context.Context, command models.JsonCommand) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -204,23 +231,25 @@ func (d *Dispatcher) listenAndHandleNoRepeat(ctx context.Context) {
 		_, ok := waitForRmrMessageType[mbuf.MType]
 
 		if !ok {
-			log.Printf("#Dispatcher.listenAndHandle - Unexpected msg: %s", mbuf)
+			log.Printf("#Dispatcher.listenAndHandleNoRepeat - Unexpected msg: %s", mbuf)
 			d.processResult.Stats.ReceivedUnexpectedCount++
 			continue
 		}
 
-		log.Printf("#Dispatcher.listenAndHandle - expected msg: %s", mbuf)
+		log.Printf("#Dispatcher.listenAndHandleNoRepeat - expected msg: %s", mbuf)
 		d.processResult.Stats.ReceivedExpectedCount++
+
+		if len(command.SendCommandId) > 0 {
+			responseCommand := configuration[command.SendCommandId] // TODO: safe getResponseCommand
+			_ = d.sendNoRepeat(*responseCommand)
+		}
+
 		return
 	}
 }
 
-func (d *Dispatcher) receive(ctx context.Context) {
-
-}
-
-func (d *Dispatcher) listenAndHandleWithRepeat(ctx context.Context, repeatCount int) {
-	for d.processResult.Stats.ReceivedExpectedCount < repeatCount {
+func (d *Dispatcher) listenAndHandleWithRepeat(ctx context.Context, command models.JsonCommand) {
+	for d.processResult.Stats.ReceivedExpectedCount < command.RepeatCount {
 		select {
 		case <-ctx.Done():
 			return
@@ -230,7 +259,7 @@ func (d *Dispatcher) listenAndHandleWithRepeat(ctx context.Context, repeatCount 
 		mbuf, err := d.rmrService.RecvMessage()
 
 		if err != nil {
-			log.Printf("#Dispatcher.listenAndHandle - error receiving message: %s", err)
+			log.Printf("#Dispatcher.listenAndHandleWithRepeat - error receiving message: %s", err)
 			d.processResult.Stats.ReceivedErrorCount++
 			continue
 		}
@@ -238,26 +267,31 @@ func (d *Dispatcher) listenAndHandleWithRepeat(ctx context.Context, repeatCount 
 		_, ok := waitForRmrMessageType[mbuf.MType]
 
 		if !ok {
-			log.Printf("#Dispatcher.listenAndHandle - Unexpected msg: %s", mbuf)
+			log.Printf("#Dispatcher.listenAndHandleWithRepeat - Unexpected msg: %s", mbuf)
 			d.processResult.Stats.ReceivedUnexpectedCount++
 			continue
 		}
 
-		log.Printf("#Dispatcher.listenAndHandle - expected msg: %s", mbuf)
+		log.Printf("#Dispatcher.listenAndHandleWithRepeat - expected msg: %s", mbuf)
 		d.processResult.Stats.ReceivedExpectedCount++
+
+		if len(command.SendCommandId) > 0 {
+			responseCommand := configuration[command.SendCommandId]
+			_ = d.sendNoRepeat(*responseCommand) // TODO: goroutine? + error handling
+		}
 	}
 }
 
-func (d *Dispatcher) listenAndHandle(ctx context.Context, listenAndHandleWg *sync.WaitGroup, repeatCount int) {
+func (d *Dispatcher) listenAndHandle(ctx context.Context, listenAndHandleWg *sync.WaitGroup, command models.JsonCommand) {
 
 	defer listenAndHandleWg.Done()
 
-	if repeatCount == 0 {
-		d.listenAndHandleNoRepeat(ctx)
+	if command.RepeatCount == 0 {
+		d.listenAndHandleNoRepeat(ctx, command)
 		return
 	}
 
-	d.listenAndHandleWithRepeat(ctx, repeatCount)
+	d.listenAndHandleWithRepeat(ctx, command)
 }
 
 func mergeConfigurationAndCommand(conf *models.JsonCommand, cmd *models.JsonCommand) {
