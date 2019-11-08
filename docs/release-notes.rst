@@ -16,9 +16,11 @@
 ..  limitations under the License.
 ..
 
+Release-Notes
+=============
 
 
-This document provides the release notes for <RELEASE> of <COMPONENT>.
+This document provides the release notes for the Amber release of E2Manager
 
 .. contents::
    :depth: 3
@@ -32,150 +34,49 @@ Version history
 | **Date**           | **Ver.**           | **Author**         | **Comment**        |
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
-| 20XX-XX-XX         | 0.1.0              |                    | First draft        |
+| 2019-10-31         | 2.0.7              | Shuky Har-Noy      | First draft        |
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
-|                    | 0.1.1              |                    |                    |
-|                    |                    |                    |                    |
-+--------------------+--------------------+--------------------+--------------------+
-|                    | 1.0                |                    |                    |
+| 2019-12-02         | 2.0.10             | Shuky Har-Noy      | Amber Release      |
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
 
 
 Summary
-=======
-
-<SUMMARIZE THE RELEASE - THE CONTENT - AND OTHER IMPORTANT HIGH LEVEL PROPERTIES>
-
-
-
+-------
+The Amber release of E2Manager supports the following flows:
+	- ENDC Setup
+	- X2 Setup
+	- ENDC Configuration Update
+	- X2 Configuration Update
+	- Reset
+	- Shutdown
+	- Load Information
 
 Release Data
-============
-<STATE RELEVANT RELEASE DATA/RECORDS>
-
-<EXAMPLE>:
+------------
 
 +--------------------------------------+--------------------------------------+
-| **Project**                          | E.g. Arno/genesis/fuel@opnfv         |
+| **Project**                          | RAN Intelligent Controller  	      |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Repo/commit-ID**                   | E.g. genesis/adf634a0d4.....         |
+| **Repo/commit-ID**                   | ric-plt/e2mgr                        |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Release designation**              | E.g. Arno RC2                        |
+| **Release designation**              | Amber                                |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Release date**                     | E.g. 2015-04-16                      |
+| **Release date**                     | 2019-12-02                           |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-| **Purpose of the delivery**          | E.g. OPNFV Internal quality assurance|
+| **Purpose of the delivery**          | open-source E2Manager      	      |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
-
-
-
-
-Feature additions
 ~~~~~~~~~~~~~~~~~~~~~~~
-<STATE ADDED FEATURES BY REFERENCE TO JIRA>
-
-<EXAMPLE>:
-
-**JIRA BACK-LOG:**
-
-+--------------------------------------+--------------------------------------+
-| **JIRA REFERENCE**                   | **SLOGAN**                           |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 		                       | 				      |
-|                                      | 				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 	                               |  				      |
-|                                      |  				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-
-Bug corrections
 ~~~~~~~~~~~~~~~~~~~~~
-
-**JIRA TICKETS:**
-
-+--------------------------------------+--------------------------------------+
-| **JIRA REFERENCE**                   | **SLOGAN**                           |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 		                       | 				      |
-|                                      | 				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 	                               |  				      |
-|                                      |  				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-
-Deliverables
 ----------------
-
-Software deliverables
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-<STATE WHAT SOFTWARE DELIVERABLES THAT ARE RELATED TO THIS VERSION, AND WHERE THOSE CAN BE RETRIEVED>
-
-<EXAMPLE>:
-
-Documentation deliverables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-<STATE WHAT DOCUMENTATION DELIVERABLES THAT ARE RELATED TO THIS VERSION, AND WHERE THOSE CAN BE RETRIEVED>
-
-<EXAMPLE>:
-
-
-Known Limitations, Issues and Workarounds
-=========================================
-
-System Limitations
 ^^^^^^^^^^^^^^^^^^^^
-<STATE ALL RELEVANT SYSTEM LIMITATIONS, IF THERE IS ANY>
-
-
-
-Known issues
 ^^^^^^^^^^^^^^^
-<STATE ALL KNOWN ISSUES WITH JIRA REFERENCE>
-
-<EXAMPLE>:
-
-**JIRA TICKETS:**
-
-+--------------------------------------+--------------------------------------+
-| **JIRA REFERENCE**                   | **SLOGAN**                           |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 		                       | 				      |
-|                                      | 				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-| 	                               |  				      |
-|                                      |  				      |
-|                                      |                                      |
-+--------------------------------------+--------------------------------------+
-
-Workarounds
 ^^^^^^^^^^^^^^^^^
-
-<STATE ALL KNOWN WORKAROUNDS TO THE ISSUES STATED ABOVE, IF THERE IS ANY>
-
-
-
-
-References
-==========
-<STATE RELEVANT REFERENCES FOR THIS RELEASE/VERSION>
-
-
-
-

@@ -15,6 +15,10 @@
 #   limitations under the License.
 #
 ##############################################################################
+#
+#   This source code is part of the near-RT RIC (RAN Intelligent Controller)
+#   platform project (RICP).
+#
 
 redis_ip_address = 'localhost'
 redis_ip_port = 6379

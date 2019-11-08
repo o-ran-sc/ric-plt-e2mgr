@@ -15,6 +15,10 @@
 #   limitations under the License.
 #
 ##############################################################################
+#
+#   This source code is part of the near-RT RIC (RAN Intelligent Controller)
+#   platform project (RICP).
+#
 
 *** Settings ***
 Documentation    endc-Setup

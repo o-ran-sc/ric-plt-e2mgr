@@ -15,6 +15,10 @@
 #   limitations under the License.
 #
 ##############################################################################
+#
+#   This source code is part of the near-RT RIC (RAN Intelligent Controller)
+#   platform project (RICP).
+#
 
 FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:3-u16.04-nng as ubuntu
 
@@ -28,7 +32,7 @@ RUN dpkg -i rmr_1.13.0_amd64.deb
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.13.0_amd64.deb/download.deb
 RUN dpkg -i rmr-dev_1.13.0_amd64.deb
 
-RUN cd asn1codec && make  
+RUN cd 3rdparty/asn1codec && make
 RUN go build app/main.go
 
 # Execute UT
