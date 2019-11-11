@@ -49,7 +49,12 @@ func SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locall
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid rmr message id: %s", command.RmrMessageType))
 	}
-	_, err = r.SendMessage(int(rmrMsgId), command.Meid, append([]byte(command.PayloadHeader), payload...), []byte(command.TransactionId))
+
+	msg := append([]byte(command.PayloadHeader), payload...)
+	messageInfo := models.GetMessageInfoAsJson(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
+	log.Printf("#rmr.Service.SendMessage - %s", messageInfo)
+
+	_, err = r.SendMessage(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
 	return err
 }
 

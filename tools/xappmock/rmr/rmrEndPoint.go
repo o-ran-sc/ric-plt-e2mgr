@@ -17,7 +17,6 @@
 package rmr
 
 import (
-	"log"
 	"strconv"
 )
 
@@ -34,7 +33,6 @@ func NewService(rmrConfig Config, messenger Messenger) *Service {
 }
 
 func (r *Service) SendMessage(messageType int, meid string, msg []byte, transactionId []byte) (*MBuf, error) {
-	log.Printf("#rmr.Service.SendMessage - type: %d, tid: %s, msg: %v", messageType, transactionId, msg)
 	mbuf := NewMBuf(messageType, len(msg), msg, transactionId)
 	mbuf.Meid = meid
 	return (*r.messenger).SendMsg(mbuf)

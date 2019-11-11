@@ -8,6 +8,19 @@
     "packedPayload": "0006002a000002001500080013302300fffff000140017000001f700133023fffff0000000133023000000000001"
   },
   {
+    "id": "RIC_ENDC_SETUP_REQ",
+    "action": "send",
+    "rmrMessageType": "10360",
+    "transactionId": "e2e$",
+    "payloadHeader": "$ranIp|$ranPort|$ranName|#packedPayload|",
+    "packedPayload": ""
+  },
+  {
+    "id": "RIC_ENDC_SETUP_RESPONSE",
+    "rmrMessageType": "10361",
+    "packedPayload": ""
+  },
+  {
     "id": "RIC_ENB_CONF_UPDATE_ACK_positive",
     "sendRmrMessageType": "10081",
     "transactionId": "e2e$",
@@ -29,7 +42,7 @@
     "id": "RIC_SUBSCRIPTION_FAILURE",
     "rmrMessageType": "12012",
     "transactionId": "e2e$",
-    "packedPayload":"40c9001f000003ea7e00050000010001ea6300020000ea6e000908ea6f400400014100"
+    "packedPayload": "40c9001f000003ea7e00050000010001ea6300020000ea6e000908ea6f400400014100"
   },
   {
     "id": "RIC_SUBSCRIPTION_DELETE_REQ",
@@ -49,9 +62,27 @@
     "packedPayload": "2006002a000002001500080002f82900007ab000140017000000630002f8290007ab00102002f829000001000133"
   },
   {
-    "id": "RIC_INDICATION_REQ",
-    "rmrMessageType": "",
+    "id": "RIC_INDICATION",
+    "rmrMessageType": "12050"
+  },
+  {
+    "id": "RESOURCE_STATUS_REQUEST",
+    "rmrMessageType": "10090",
+    "transactionId": "e2e$",
+    "packedPayload": "0009003c0000080027000300000e001c00010000260004fe000000001d400d00001f4008000a0b0cabcd8000001e4001000040400100006d4001000091400100"
+  },
+  {
+    "id": "RESOURCE_STATUS_RESPONSE",
+    "rmrMessageType": "10091",
     "packedPayload": ""
+  },
+  {
+    "id": "RESOURCE_STATUS_UPDATE",
+    "rmrMessageType": "10090"
+  },
+  {
+    "id": "LOAD_INFORMATION",
+    "rmrMessageType": "10020"
   }
 ]
 

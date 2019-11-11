@@ -17,14 +17,17 @@
 
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"go.uber.org/atomic"
+)
 
 type ProcessStats struct {
-	SentCount               int
-	SentErrorCount          int
-	ReceivedExpectedCount   int
-	ReceivedUnexpectedCount int
-	ReceivedErrorCount      int
+	SentCount               atomic.Int32
+	SentErrorCount          atomic.Int32
+	ReceivedExpectedCount   atomic.Int32
+	ReceivedUnexpectedCount atomic.Int32
+	ReceivedErrorCount      atomic.Int32
 }
 
 type ProcessResult struct {
@@ -33,7 +36,7 @@ type ProcessResult struct {
 }
 
 func (pr ProcessResult) String() string {
-	return fmt.Sprintf("\nNumber of sent messages: %d\nNumber of send errors: %d\n" +
-		"Number of expected received messages: %d\nNumber of unexpected received messages: %d\n" +
+	return fmt.Sprintf("\nNumber of sent messages: %d\nNumber of send errors: %d\n"+
+		"Number of expected received messages: %d\nNumber of unexpected received messages: %d\n"+
 		"Number of receive errors: %d\n", pr.Stats.SentCount, pr.Stats.SentErrorCount, pr.Stats.ReceivedExpectedCount, pr.Stats.ReceivedUnexpectedCount, pr.Stats.ReceivedErrorCount)
 }
