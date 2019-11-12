@@ -28,7 +28,7 @@ RUN dpkg -i rmr_1.10.0_amd64.deb
 RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.10.0_amd64.deb/download.deb
 RUN dpkg -i rmr-dev_1.10.0_amd64.deb
 
-RUN cd asn1codec && make  
+RUN cd 3rdparty/asn1codec && make
 RUN go build app/main.go
 
 # Execute UT

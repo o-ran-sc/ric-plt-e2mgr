@@ -2,8 +2,8 @@
 .vscode/launch.json
 *.o
 *.a
-E2Manager/asn1codec/e2ap_engine/converter-example
-E2Manager/asn1codec/tests/
+E2Manager/3rdparty/asn1codec/e2ap_engine/converter-example
+E2Manager/3rdparty/asn1codec/tests/
 E2Manager/cp.out
 __pycache__/ 
 *.html
