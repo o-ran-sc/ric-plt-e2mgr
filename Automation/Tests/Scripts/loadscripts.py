@@ -20,14 +20,18 @@
 import redis
 import config
 
-
-def verify_value():
+def getRedisClient():
 
     c = config.redis_ip_address
 
     p = config.redis_ip_port
 
-    r = redis.Redis(host=c, port=p, db=0)
+    return redis.Redis(host=c, port=p, db=0)
+
+
+def verify_value():
+
+    r = getRedisClient()
 
     value = "\b\x98\xf7\xdd\xa3\xc7\xb4\x83\xde\x15\x12\x11\n\x0f02f829:0007ab00"
 
@@ -39,11 +43,7 @@ def verify_value():
 
 def add():
 
-    c = config.redis_ip_address
-
-    p = config.redis_ip_port
-
-    r = redis.Redis(host=c, port=p, db=0)
+    r = getRedisClient()
 
     r.set("{e2Manager},LOAD:test1", "\b\x98\xf7\xdd\xa3\xc7\xb4\x83\xde\x15\x12\x11\n\x0f02f829:0007ab00")
 
@@ -55,13 +55,10 @@ def add():
 
 def verify():
 
-    c = config.redis_ip_address
-
-    p = config.redis_ip_port
-
-    r = redis.Redis(host=c, port=p, db=0)
+    r = getRedisClient()
 
     if r.exists("{e2Manager},LOAD:test1"):
         return True
     else:
         return False
+

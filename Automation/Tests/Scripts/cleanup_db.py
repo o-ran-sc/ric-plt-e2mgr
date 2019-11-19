@@ -29,5 +29,7 @@ def flush():
 
     r.flushall()
 
+    r.set("{rsm},CFG:GENERAL:v1.0.0" , "{\"enableResourceStatus\":true,\"partialSuccessAllowed\":true,\"prbPeriodic\":true,\"tnlLoadIndPeriodic\":true,\"wwLoadIndPeriodic\":true,\"absStatusPeriodic\":true,\"rsrpMeasurementPeriodic\":true,\"csiPeriodic\":true,\"periodicityMs\":1,\"periodicityRsrpMeasurementMs\":3,\"periodicityCsiMs\":3}")
+
     return True
 
