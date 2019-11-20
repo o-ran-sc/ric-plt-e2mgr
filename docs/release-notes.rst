@@ -90,7 +90,7 @@ Release Data
 
 
 Feature additions
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------
 <STATE ADDED FEATURES BY REFERENCE TO JIRA>
 
 <EXAMPLE>:
@@ -111,7 +111,7 @@ Feature additions
 +--------------------------------------+--------------------------------------+
 
 Bug corrections
-~~~~~~~~~~~~~~~~~~~~~
+---------------
 
 **JIRA TICKETS:**
 
@@ -129,17 +129,17 @@ Bug corrections
 +--------------------------------------+--------------------------------------+
 
 Deliverables
-----------------
+------------
 
 Software deliverables
-^^^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 <STATE WHAT SOFTWARE DELIVERABLES THAT ARE RELATED TO THIS VERSION, AND WHERE THOSE CAN BE RETRIEVED>
 
 <EXAMPLE>:
 
 Documentation deliverables
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 <STATE WHAT DOCUMENTATION DELIVERABLES THAT ARE RELATED TO THIS VERSION, AND WHERE THOSE CAN BE RETRIEVED>
 
@@ -150,13 +150,13 @@ Known Limitations, Issues and Workarounds
 =========================================
 
 System Limitations
-^^^^^^^^^^^^^^^^^^^^
+------------------
 <STATE ALL RELEVANT SYSTEM LIMITATIONS, IF THERE IS ANY>
 
 
 
 Known issues
-^^^^^^^^^^^^^^^
+------------
 <STATE ALL KNOWN ISSUES WITH JIRA REFERENCE>
 
 <EXAMPLE>:
@@ -177,7 +177,7 @@ Known issues
 +--------------------------------------+--------------------------------------+
 
 Workarounds
-^^^^^^^^^^^^^^^^^
+-----------
 
 <STATE ALL KNOWN WORKAROUNDS TO THE ISSUES STATED ABOVE, IF THERE IS ANY>
 

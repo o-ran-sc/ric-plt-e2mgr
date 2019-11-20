@@ -8,4 +8,6 @@ E2Manager/cp.out
 __pycache__/ 
 *.html
 *.log
-
+# documentation
+.tox
+docs/_build/
