@@ -32,7 +32,7 @@ This document describes how to install <Component>, it's dependencies and requir
    :local:
 
 Version history
----------------------
+---------------
 
 +--------------------+--------------------+--------------------+--------------------+
 | **Date**           | **Ver.**           | **Author**         | **Comment**        |
@@ -108,7 +108,7 @@ Following minimum hardware requirements must be met for installation of <project
 
 
 Software installation and deployment
-==========================================
+====================================
 .. <DESCRIBE THE FULL PROCEDURES FOR THE INSTALLATION OF THE O-RAN COMPONENT INSTALLATION AND DEPLOYMENT>
 
 <EXAMPLE>:
