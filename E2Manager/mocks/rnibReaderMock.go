@@ -146,3 +146,13 @@ func (m *RnibReaderMock) GetRanLoadInformation(inventoryName string) (*entities.
 
 	return args.Get(0).(*entities.RanLoadInformation), nil
 }
+
+func (m *RnibReaderMock) GetE2TInstance(e2taddress string) (*entities.E2TInstance, error) {
+	args := m.Called(e2taddress)
+	return args.Get(0).(*entities.E2TInstance), args.Error(1)
+}
+
+func (m *RnibReaderMock) GetE2TInfoList() ([]*entities.E2TInstanceInfo, error) {
+	args := m.Called()
+	return args.Get(0).([]*entities.E2TInstanceInfo), args.Error(1)
+}
