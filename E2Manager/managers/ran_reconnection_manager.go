@@ -29,25 +29,19 @@ type IRanReconnectionManager interface {
 }
 
 type RanReconnectionManager struct {
-	logger              *logger.Logger
-	config              *configuration.Configuration
-	rnibDataService     services.RNibDataService
-	ranSetupManager     *RanSetupManager
-	e2tInstancesManager IE2TInstancesManager
+	logger          *logger.Logger
+	config          *configuration.Configuration
+	rnibDataService services.RNibDataService
+	ranSetupManager *RanSetupManager
 }
 
-func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, ranSetupManager *RanSetupManager, e2tInstancesManager IE2TInstancesManager) *RanReconnectionManager {
+func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, ranSetupManager *RanSetupManager) *RanReconnectionManager {
 	return &RanReconnectionManager{
-		logger:              logger,
-		config:              config,
-		rnibDataService:     rnibDataService,
-		ranSetupManager:     ranSetupManager,
-		e2tInstancesManager: e2tInstancesManager,
+		logger:          logger,
+		config:          config,
+		rnibDataService: rnibDataService,
+		ranSetupManager: ranSetupManager,
 	}
-}
-
-func (m *RanReconnectionManager) isRanExceededConnectionAttempts(nodebInfo *entities.NodebInfo) bool {
-	return int(nodebInfo.GetConnectionAttempts()) >= m.config.MaxConnectionAttempts
 }
 
 func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
@@ -61,17 +55,7 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 	m.logger.Infof("#RanReconnectionManager.ReconnectRan - RAN name: %s - RAN's connection status: %s, RAN's connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionStatus, nodebInfo.ConnectionAttempts)
 
 	if !m.canReconnectRan(nodebInfo) {
-		err := m.setConnectionStatusOfUnconnectableRan(nodebInfo)
-
-		if err != nil {
-			return err
-		}
-
-		if m.isRanExceededConnectionAttempts(nodebInfo) {
-			return m.e2tInstancesManager.DeassociateRan(nodebInfo.RanName, nodebInfo.AssociatedE2TInstanceAddress)
-		}
-
-		return nil
+		return m.setConnectionStatusOfUnconnectableRan(nodebInfo)
 	}
 
 	err := m.ranSetupManager.ExecuteSetup(nodebInfo, entities.ConnectionStatus_CONNECTING)
@@ -120,7 +104,7 @@ func (m *RanReconnectionManager) setConnectionStatusOfUnconnectableRan(nodebInfo
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}
 
-	if m.isRanExceededConnectionAttempts(nodebInfo) {
+	if int(nodebInfo.GetConnectionAttempts()) >= m.config.MaxConnectionAttempts {
 		m.logger.Warnf("#RanReconnectionManager.ReconnectRan - RAN name: %s - Cannot reconnect RAN. Reason: RAN's connection attempts exceeded the limit (%d)", nodebInfo.RanName, m.config.MaxConnectionAttempts)
 		return m.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 	}

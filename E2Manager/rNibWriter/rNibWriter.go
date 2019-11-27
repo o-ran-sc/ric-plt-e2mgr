@@ -18,14 +18,11 @@
 package rNibWriter
 
 import (
-	"encoding/json"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/golang/protobuf/proto"
 )
-
-const E2TInfoListKey = "E2TInfoList"
 
 type rNibWriterInstance struct {
 	sdl common.ISdlInstance
@@ -38,8 +35,6 @@ type RNibWriter interface {
 	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
-	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
-	SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error
 }
 
 /*
@@ -175,52 +170,6 @@ func (w *rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoa
 
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
-
-	err = w.sdl.Set(pairs)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
-
-	return nil
-}
-
-func (w *rNibWriterInstance) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
-
-	key, rnibErr := common.ValidateAndBuildE2TInstanceKey(e2tInstance.Address)
-
-	if rnibErr != nil {
-		return rnibErr
-	}
-
-	data, err := json.Marshal(e2tInstance)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
-
-	var pairs []interface{}
-	pairs = append(pairs, key, data)
-
-	err = w.sdl.Set(pairs)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
-
-	return nil
-}
-
-func (w *rNibWriterInstance) SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error {
-
-	data, err := json.Marshal(e2tInfoList)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
-
-	var pairs []interface{}
-	pairs = append(pairs, E2TInfoListKey, data)
 
 	err = w.sdl.Set(pairs)
 

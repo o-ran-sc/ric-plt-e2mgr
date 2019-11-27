@@ -23,6 +23,7 @@ Resource   ../Resource/Keywords.robot
 Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
+Library     ../Scripts/rsmscripts.py
 Library     REST        ${url}
 
 
@@ -66,5 +67,7 @@ RSM RESOURCE STATUS REQUEST message not sent
     ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test2}
     Should Be Equal As Strings    ${result}      False
 
-
+Verify RSM RAN info exists in redis
+   ${result}=   rsmscripts.verify_rsm_ran_info
+   Should Be Equal As Strings  ${result}    False
 

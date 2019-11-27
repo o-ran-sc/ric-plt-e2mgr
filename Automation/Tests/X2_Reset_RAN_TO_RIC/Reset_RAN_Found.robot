@@ -27,7 +27,7 @@ Resource    ../Resource/scripts_variables.robot
 Library     String
 Library     Process
 Library     ../Scripts/find_rmr_message.py
-
+Library     ../Scripts/rsmscripts.py
 
 
 
@@ -69,3 +69,7 @@ RAN Restarted messege sent
 RSM RESOURCE STATUS REQUEST message sent
     ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
     Should Be Equal As Strings    ${result}      True
+
+Verify RSM RAN info exists in redis
+   ${result}=   rsmscripts.verify_rsm_ran_info
+   Should Be Equal As Strings  ${result}    True

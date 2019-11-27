@@ -72,8 +72,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	logger, config, rnibDataService, rmrSender, ranSetupManager := initTestCase(t)
 
 
-	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -102,7 +101,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, converters.NewEnbLoadInformationExtractor(logger))},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)},
-		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager)},
+		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService)},
 		{rmrCgo.RIC_X2_RESET_RESP, rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger))},
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
 	}

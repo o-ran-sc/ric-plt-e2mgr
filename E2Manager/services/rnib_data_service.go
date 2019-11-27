@@ -35,10 +35,6 @@ type RNibDataService interface {
 	GetNodeb(ranName string) (*entities.NodebInfo, error)
 	GetListNodebIds() ([]*entities.NbIdentity, error)
 	PingRnib() bool
-	GetE2TInstance(address string) (*entities.E2TInstance, error)
-	GetE2TInfoList() ([]*entities.E2TInstanceInfo, error)
-	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
-	SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error
 }
 
 type rNibDataService struct {
@@ -116,53 +112,6 @@ func (w *rNibDataService) GetListNodebIds() ([]*entities.NbIdentity, error) {
 	})
 
 	return nodeIds, err
-}
-
-func (w *rNibDataService) GetE2TInstance(address string) (*entities.E2TInstance, error) {
-	w.logger.Infof("#RnibDataService.GetE2TInstance")
-
-	var e2tInstance *entities.E2TInstance = nil
-
-	err := w.retry("GetE2TInstance", func() (err error) {
-		e2tInstance, err = w.rnibReader.GetE2TInstance(address)
-		return
-	})
-
-	return e2tInstance, err
-}
-func (w *rNibDataService) GetE2TInfoList() ([]*entities.E2TInstanceInfo, error) {
-	w.logger.Infof("#RnibDataService.GetE2TInfoList")
-
-	var e2tInfoList []*entities.E2TInstanceInfo = nil
-
-	err := w.retry("GetE2TInfoList", func() (err error) {
-		e2tInfoList, err = w.rnibReader.GetE2TInfoList()
-		return
-	})
-
-	return e2tInfoList, err
-}
-
-func (w *rNibDataService) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
-	w.logger.Infof("#RnibDataService.SaveE2TInstance")
-
-	err := w.retry("SaveE2TInstance", func() (err error) {
-		err = w.rnibWriter.SaveE2TInstance(e2tInstance)
-		return
-	})
-
-	return err
-}
-
-func (w *rNibDataService) SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error {
-	w.logger.Infof("#RnibDataService.SaveE2TInfoList")
-
-	err := w.retry("SaveE2TInfoList", func() (err error) {
-		err = w.rnibWriter.SaveE2TInfoList(e2tInfoList)
-		return
-	})
-
-	return err
 }
 
 func (w *rNibDataService) PingRnib() bool {
