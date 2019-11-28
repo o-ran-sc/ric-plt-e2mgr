@@ -101,6 +101,7 @@ func TestConnectingRanWithMaxAttemptsReconnectionDeassociateSucceeds(t *testing.
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
 	e2tInstancesManagerMock.On("DeassociateRan", ranName, e2tAddress).Return(nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
@@ -119,6 +120,7 @@ func TestConnectingRanWithMaxAttemptsReconnectionDeassociateFails(t *testing.T) 
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
 	e2tInstancesManagerMock.On("DeassociateRan", ranName, e2tAddress).Return(common.NewInternalError(errors.New("Error")))
 	err := ranReconnectionManager.ReconnectRan(ranName)
@@ -177,17 +179,10 @@ func TestConnectedRanExecuteSetupFailure(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
-func TestUnnecessaryUpdateNodebInfoStatus(t *testing.T) {
-	_, _, _, _, ranReconnectionManager, _ := initRanLostConnectionTest(t)
-	nodebInfo := &entities.NodebInfo{RanName: "ranName", GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	err := ranReconnectionManager.updateNodebInfoStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
-	assert.Nil(t, err)
-}
-
 func TestNoSetConnectionStatus(t *testing.T) {
 	_, _, _, _, ranReconnectionManager, _ := initRanLostConnectionTest(t)
 	nodebInfo := &entities.NodebInfo{RanName: "ranName", GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	err := ranReconnectionManager.setConnectionStatusOfUnconnectableRan(nodebInfo)
+	err := ranReconnectionManager.updateUnconnectableRan(nodebInfo)
 	assert.Nil(t, err)
 }
 

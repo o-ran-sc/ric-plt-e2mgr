@@ -3,6 +3,7 @@ package managers
 import (
 	"e2mgr/logger"
 	"e2mgr/services"
+	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"sync"
@@ -41,6 +42,12 @@ func (m *E2TInstancesManager) GetE2TInstance(e2tAddress string) (*entities.E2TIn
 }
 
 func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
+
+	if len(e2tAddress) == 0 {
+		m.logger.Errorf("#AddE2TInstance - Empty E2T address received")
+		return fmt.Errorf("empty E2T address")
+	}
+
 	e2tInstance := entities.NewE2TInstance(e2tAddress)
 	err := m.rnibDataService.SaveE2TInstance(e2tInstance)
 
