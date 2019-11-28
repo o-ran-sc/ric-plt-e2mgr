@@ -15,6 +15,10 @@
 #   limitations under the License.
 #
 ##############################################################################
+#
+#   This source code is part of the near-RT RIC (RAN Intelligent Controller)
+#   platform project (RICP).
+#
 CFLAGS=-Wall -Wpedantic -std=c11 -Og  -I./inc -I./src -I./e2ap_engine -DASN_DISABLE_OER_SUPPORT  -DASN_PDU_COLLECTION -D_POSIX_C_SOURCE=200809L -ggdb
 export CFLAGS
 OBJDIR=lib

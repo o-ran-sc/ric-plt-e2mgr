@@ -15,6 +15,10 @@
 #   limitations under the License.
 #
 ##############################################################################
+#
+#   This source code is part of the near-RT RIC (RAN Intelligent Controller)
+#   platform project (RICP).
+#
 
 FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:2-u16.04-nng as ubuntu
 
