@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22eeb55e_9a52bda0",
+        "filename": "docs/conf.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000067
+      },
+      "writtenOn": "2019-11-29T09:58:43Z",
+      "side": 1,
+      "message": "please delete this line",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 17
+      },
+      "revId": "f51b7a2c2f46aab7bb97ae4cb40d18fa7a8f5f16",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
