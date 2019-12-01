@@ -20,6 +20,7 @@ package models
 import (
 	"fmt"
 	"go.uber.org/atomic"
+	"time"
 )
 
 type ProcessStats struct {
@@ -31,12 +32,12 @@ type ProcessStats struct {
 }
 
 type ProcessResult struct {
-	Stats ProcessStats
-	Err   error
+	StartTime *time.Time
+	Stats     ProcessStats
+	Err       error
 }
 
-func (pr ProcessResult) String() string {
-	return fmt.Sprintf("\nNumber of sent messages: %d\nNumber of send errors: %d\n"+
-		"Number of expected received messages: %d\nNumber of unexpected received messages: %d\n"+
-		"Number of receive errors: %d\n", pr.Stats.SentCount, pr.Stats.SentErrorCount, pr.Stats.ReceivedExpectedCount, pr.Stats.ReceivedUnexpectedCount, pr.Stats.ReceivedErrorCount)
+func (ps ProcessStats) String() string {
+	return fmt.Sprintf("sent messages: %d | send errors: %d | expected received messages: %d | unexpected received messages: %d | receive errors: %d",
+		ps.SentCount, ps.SentErrorCount, ps.ReceivedExpectedCount, ps.ReceivedUnexpectedCount, ps.ReceivedErrorCount)
 }

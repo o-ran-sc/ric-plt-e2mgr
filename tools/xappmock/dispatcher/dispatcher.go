@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	"log"
 	"reflect"
 	"sync"
 	"time"
 	"xappmock/enums"
+	"xappmock/logger"
 	"xappmock/models"
 	"xappmock/rmr"
 	"xappmock/sender"
@@ -34,15 +34,19 @@ func addRmrMessageToWaitFor(rmrMessageToWaitFor string, command models.JsonComma
 type Dispatcher struct {
 	rmrService    *rmr.Service
 	processResult models.ProcessResult
+	logger        *logger.Logger
+	jsonSender    *sender.JsonSender
 }
 
 func (d *Dispatcher) GetProcessResult() models.ProcessResult {
 	return d.processResult
 }
 
-func New(rmrService *rmr.Service) *Dispatcher {
+func New(logger *logger.Logger, rmrService *rmr.Service, jsonSender *sender.JsonSender) *Dispatcher {
 	return &Dispatcher{
 		rmrService: rmrService,
+		logger:     logger,
+		jsonSender: jsonSender,
 	}
 }
 
@@ -61,10 +65,16 @@ func (d *Dispatcher) JsonCommandsDecoderCB(cmd models.JsonCommand) error {
 }
 
 func (d *Dispatcher) sendNoRepeat(command models.JsonCommand) error {
-	err := sender.SendJsonRmrMessage(command, nil, d.rmrService)
+
+	if enums.CommandAction(command.Action) == enums.SendRmrMessage && d.processResult.StartTime == nil {
+		now := time.Now()
+		d.processResult.StartTime = &now
+	}
+
+	err := d.jsonSender.SendJsonRmrMessage(command, nil, d.rmrService)
 
 	if err != nil {
-		log.Printf("#Dispatcher.sendNoRepeat - error sending rmr message: %s", err)
+		d.logger.Errorf("#Dispatcher.sendNoRepeat - error sending rmr message: %s", err)
 		d.processResult.Err = err
 		d.processResult.Stats.SentErrorCount.Inc()
 		return err
@@ -75,6 +85,12 @@ func (d *Dispatcher) sendNoRepeat(command models.JsonCommand) error {
 }
 
 func (d *Dispatcher) sendWithRepeat(ctx context.Context, command models.JsonCommand) {
+
+	if enums.CommandAction(command.Action) == enums.SendRmrMessage && d.processResult.StartTime == nil {
+		now := time.Now()
+		d.processResult.StartTime = &now
+	}
+
 	for repeatCount := command.RepeatCount; repeatCount > 0; repeatCount-- {
 
 		select {
@@ -83,10 +99,10 @@ func (d *Dispatcher) sendWithRepeat(ctx context.Context, command models.JsonComm
 		default:
 		}
 
-		err := sender.SendJsonRmrMessage(command, nil, d.rmrService)
+		err := d.jsonSender.SendJsonRmrMessage(command, nil, d.rmrService)
 
 		if err != nil {
-			log.Printf("#Dispatcher.sendWithRepeat - error sending rmr message: %s", err)
+			d.logger.Errorf("#Dispatcher.sendWithRepeat - error sending rmr message: %s", err)
 			d.processResult.Stats.SentErrorCount.Inc()
 			continue
 		}
@@ -234,23 +250,28 @@ func (d *Dispatcher) listenAndHandleNoRepeat(ctx context.Context, command models
 		mbuf, err := d.rmrService.RecvMessage()
 
 		if err != nil {
-			log.Printf("#Dispatcher.listenAndHandleNoRepeat - error receiving message: %s", err)
+			d.logger.Errorf("#Dispatcher.listenAndHandleNoRepeat - error receiving message: %s", err)
 			d.processResult.Err = err
 			d.processResult.Stats.ReceivedErrorCount.Inc()
 			return
 		}
 
-		messageInfo := models.GetMessageInfoAsJson(mbuf.MType, mbuf.Meid, mbuf.Payload, mbuf.XAction)
+		if enums.CommandAction(command.Action) == enums.ReceiveRmrMessage && d.processResult.StartTime == nil {
+			now := time.Now()
+			d.processResult.StartTime = &now
+		}
+
+		messageInfo := models.NewMessageInfo(mbuf.MType, mbuf.Meid, mbuf.Payload, mbuf.XAction)
 
 		_, ok := waitForRmrMessageType[mbuf.MType]
 
 		if !ok {
-			log.Printf("#Dispatcher.listenAndHandleNoRepeat - received unexpected msg: %s", messageInfo)
+			d.logger.Infof("#Dispatcher.listenAndHandleNoRepeat - received unexpected msg: %s", messageInfo)
 			d.processResult.Stats.ReceivedUnexpectedCount.Inc()
 			continue
 		}
 
-		log.Printf("#Dispatcher.listenAndHandleNoRepeat - received expected msg: %s", messageInfo)
+		d.logger.Infof("#Dispatcher.listenAndHandleNoRepeat - received expected msg: %s", messageInfo)
 		d.processResult.Stats.ReceivedExpectedCount.Inc()
 
 		if len(command.SendCommandId) > 0 {
@@ -292,22 +313,27 @@ func (d *Dispatcher) listenAndHandleWithRepeat(ctx context.Context, command mode
 		mbuf, err := d.rmrService.RecvMessage()
 
 		if err != nil {
-			log.Printf("#Dispatcher.listenAndHandleWithRepeat - error receiving message: %s", err)
+			d.logger.Errorf("#Dispatcher.listenAndHandleWithRepeat - error receiving message: %s", err)
 			d.processResult.Stats.ReceivedErrorCount.Inc()
 			continue
 		}
 
-		messageInfo := models.GetMessageInfoAsJson(mbuf.MType, mbuf.Meid, mbuf.Payload, mbuf.XAction)
+		if enums.CommandAction(command.Action) == enums.ReceiveRmrMessage && d.processResult.StartTime == nil {
+			now := time.Now()
+			d.processResult.StartTime = &now
+		}
+
+		messageInfo := models.NewMessageInfo(mbuf.MType, mbuf.Meid, mbuf.Payload, mbuf.XAction)
 
 		_, ok := waitForRmrMessageType[mbuf.MType]
 
 		if !ok {
-			log.Printf("#Dispatcher.listenAndHandleWithRepeat - received unexpected msg: %s", messageInfo)
+			d.logger.Infof("#Dispatcher.listenAndHandleWithRepeat - received unexpected msg: %s", messageInfo)
 			d.processResult.Stats.ReceivedUnexpectedCount.Inc()
 			continue
 		}
 
-		log.Printf("#Dispatcher.listenAndHandleWithRepeat - received expected msg: %s", messageInfo)
+		d.logger.Infof("#Dispatcher.listenAndHandleWithRepeat - received expected msg: %s", messageInfo)
 		d.processResult.Stats.ReceivedExpectedCount.Inc()
 
 		if responseCommand != nil {
