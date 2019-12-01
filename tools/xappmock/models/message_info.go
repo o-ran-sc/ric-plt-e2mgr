@@ -18,7 +18,6 @@
 package models
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -29,20 +28,21 @@ type MessageInfo struct {
 	MessageTimestamp int64  `json:"messageTimestamp"`
 	MessageType      int    `json:"messageType"`
 	Meid             string `json:"meid"`
-	Payload          string `json:"payload"`
+	Payload          []byte `json:"payload"`
 	TransactionId    string `json:"transactionId"`
 }
 
-func GetMessageInfoAsJson(messageType int, meid string, payload []byte, transactionId []byte) string {
-	messageInfo := MessageInfo{
+func NewMessageInfo(messageType int, meid string, payload []byte, transactionId []byte) MessageInfo {
+	return MessageInfo{
 		MessageTimestamp: time.Now().Unix(),
 		MessageType:      messageType,
 		Meid:             meid,
-		Payload:          fmt.Sprintf("%x", payload),
+		Payload:          payload,
 		TransactionId:    string(transactionId),
 	}
+}
 
-	jsonData, _ := json.Marshal(messageInfo)
-
-	return string(jsonData)
+func (mi MessageInfo) String() string {
+	return fmt.Sprintf("message timestamp: %d | message type: %d | meid: %s | payload: %x | transaction id: %s",
+		mi.MessageTimestamp, mi.MessageType, mi.Meid, mi.Payload, mi.TransactionId)
 }

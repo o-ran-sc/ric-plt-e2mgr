@@ -19,20 +19,31 @@ package sender
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"log"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 	"unicode"
+	"xappmock/logger"
 	"xappmock/models"
 	"xappmock/rmr"
 )
 
 var counter uint64
 
-func SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locally*/, xAction *[]byte, r *rmr.Service) error {
+type JsonSender struct {
+	logger *logger.Logger
+}
+
+func NewJsonSender(logger *logger.Logger) *JsonSender {
+	return &JsonSender{
+		logger: logger,
+	}
+}
+
+func (s *JsonSender) SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locally*/, xAction *[]byte, r *rmr.Service) error {
 	var payload []byte
 	_, err := fmt.Sscanf(command.PackedPayload, "%x", &payload)
 	if err != nil {
@@ -43,16 +54,16 @@ func SendJsonRmrMessage(command models.JsonCommand /*the copy is modified locall
 	if len(command.TransactionId) == 0 {
 		command.TransactionId = string(*xAction)
 	}
-	command.PayloadHeader = expandPayloadHeader(command.PayloadHeader, &command)
-	log.Printf("#jsonSender.SendJsonRmrMessage - command payload header: %s", command.PayloadHeader)
+	command.PayloadHeader = s.expandPayloadHeader(command.PayloadHeader, &command)
+	s.logger.Infof("#JsonSender.SendJsonRmrMessage - command payload header: %s", command.PayloadHeader)
 	rmrMsgId, err := rmr.MessageIdToUint(command.RmrMessageType)
 	if err != nil {
 		return errors.New(fmt.Sprintf("invalid rmr message id: %s", command.RmrMessageType))
 	}
 
 	msg := append([]byte(command.PayloadHeader), payload...)
-	messageInfo := models.GetMessageInfoAsJson(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
-	log.Printf("#rmr.Service.SendMessage - %s", messageInfo)
+	messageInfo := models.NewMessageInfo(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
+	s.logger.Infof("#JsonSender.SendJsonRmrMessage - going to send message: %s", messageInfo)
 
 	_, err = r.SendMessage(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
 	return err
@@ -81,7 +92,7 @@ func expandTransactionId(id string) string {
  * Example: “payloadHeader”: “$ranIp|$ranPort|$ranName|#packedPayload|”
  */
 
-func expandPayloadHeader(header string, command *models.JsonCommand) string {
+func (s *JsonSender) expandPayloadHeader(header string, command *models.JsonCommand) string {
 	var name strings.Builder
 	var expandedHeader strings.Builder
 
@@ -114,7 +125,8 @@ func expandPayloadHeader(header string, command *models.JsonCommand) string {
 						case reflect.Float64, reflect.Float32:
 							expandedHeader.WriteString(fmt.Sprintf("%g", fieldValue.Float()))
 						default:
-							log.Fatalf("#jsonSender.expandPayloadHeader - invalid type for $%s, value must be a string, an int, a bool or a float", name.String())
+							s.logger.Errorf("#JsonSender.expandPayloadHeader - invalid type for $%s, value must be a string, an int, a bool or a float", name.String())
+							os.Exit(1)
 						}
 					}
 					name.Reset()
@@ -135,7 +147,8 @@ func expandPayloadHeader(header string, command *models.JsonCommand) string {
 						if fieldValue.Kind() == reflect.String {
 							expandedHeader.WriteString(strconv.FormatInt(int64(len(fieldValue.String())), 10))
 						} else {
-							log.Fatalf("#jsonSender.expandPayloadHeader - invalid type for #%s, value must be a string", name.String())
+							s.logger.Errorf("#JsonSender.expandPayloadHeader - invalid type for #%s, value must be a string", name.String())
+							os.Exit(1)
 						}
 					}
 					name.Reset()
