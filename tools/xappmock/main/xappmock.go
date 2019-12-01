@@ -100,7 +100,7 @@ func main() {
 	pr := dispatcherDesc.GetProcessResult()
 
 	if pr.Err != nil {
-		logger.Errorf("#main - command processing Error: %s", err)
+		logger.Errorf("#main - command processing Error: %s", pr.Err)
 	}
 
 	if pr.StartTime != nil {

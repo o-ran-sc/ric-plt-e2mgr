@@ -62,10 +62,10 @@ func (s *JsonSender) SendJsonRmrMessage(command models.JsonCommand /*the copy is
 	}
 
 	msg := append([]byte(command.PayloadHeader), payload...)
-	messageInfo := models.NewMessageInfo(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
+	messageInfo := models.NewMessageInfo(int(rmrMsgId), command.RanName, msg, []byte(command.TransactionId))
 	s.logger.Infof("#JsonSender.SendJsonRmrMessage - going to send message: %s", messageInfo)
 
-	_, err = r.SendMessage(int(rmrMsgId), command.Meid, msg, []byte(command.TransactionId))
+	_, err = r.SendMessage(int(rmrMsgId), command.RanName, msg, []byte(command.TransactionId))
 	return err
 }
 

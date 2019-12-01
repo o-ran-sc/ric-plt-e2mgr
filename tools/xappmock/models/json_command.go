@@ -24,7 +24,6 @@ type JsonCommand struct {
 	ReceiveCommandId string
 	TransactionId    string
 	RanName          string
-	Meid             string
 	RanIp            string
 	RanPort          int
 	PayloadHeader    string

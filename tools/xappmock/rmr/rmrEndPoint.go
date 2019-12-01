@@ -32,9 +32,9 @@ func NewService(rmrConfig Config, messenger Messenger) *Service {
 	}
 }
 
-func (r *Service) SendMessage(messageType int, meid string, msg []byte, transactionId []byte) (*MBuf, error) {
+func (r *Service) SendMessage(messageType int, ranName string, msg []byte, transactionId []byte) (*MBuf, error) {
 	mbuf := NewMBuf(messageType, len(msg), msg, transactionId)
-	mbuf.Meid = meid
+	mbuf.Meid = ranName
 	return (*r.messenger).SendMsg(mbuf)
 }
 

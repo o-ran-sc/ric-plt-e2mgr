@@ -34,6 +34,9 @@ import (
 	"testing"
 )
 
+const e2tInstanceAddress = "10.0.2.15"
+const e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
+
 func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
 
 	logger := initLog(t)
@@ -57,32 +60,29 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 
 func TestE2TermInitGetE2TInstanceFailure(t *testing.T) {
 	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
-	e2tInstanceAddress := "10.0.2.15"
 	var e2tInstance *entities.E2TInstance
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewInternalError(fmt.Errorf("internal error")))
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertNotCalled(t, "AddE2TInstance")
 }
 
 func TestE2TermInitNewE2TInstance(t *testing.T) {
 	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
-	e2tInstanceAddress := "10.0.2.15"
 	var e2tInstance *entities.E2TInstance
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewResourceNotFoundError("not found"))
 	e2tInstance = entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("AddE2TInstance", e2tInstanceAddress).Return(nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertCalled(t, "AddE2TInstance", e2tInstanceAddress)
 }
 
 func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
 	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertCalled(t, "GetE2TInstance", e2tInstanceAddress)
 }
@@ -103,11 +103,10 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -134,11 +133,10 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName, "test2")
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -175,11 +173,10 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -223,11 +220,10 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -272,11 +268,10 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 
 	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -290,10 +285,9 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
 	_, handler, _, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
@@ -307,11 +301,10 @@ func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
 	var nodebInfo *entities.NodebInfo
 	readerMock.On("GetNodeb", "test1").Return(nodebInfo, common.NewInternalError(fmt.Errorf("internal error")))
 
-	e2tInstanceAddress := "10.0.2.15"
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1")
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInstanceAddress)}
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
 
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)

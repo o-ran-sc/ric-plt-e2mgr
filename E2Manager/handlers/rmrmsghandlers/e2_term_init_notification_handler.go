@@ -22,6 +22,7 @@ import (
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
+	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 )
 
@@ -45,7 +46,15 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 
 	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
 
-	e2tAddress := string(request.Payload) // TODO: make sure E2T sends this as the only value of the message
+	unmarshalledPayload := models.E2TermInitPayload{}
+	err :=  json.Unmarshal(request.Payload, &unmarshalledPayload)
+
+	if err != nil {
+		h.logger.Errorf("#E2TermInitNotificationHandler - Error unmarshaling E2 Term Init payload: %s", err)
+		return
+	}
+
+	e2tAddress := unmarshalledPayload.Address
 
 	e2tInstance, err := h.e2tInstancesManager.GetE2TInstance(e2tAddress)
 
