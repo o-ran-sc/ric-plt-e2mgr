@@ -19,6 +19,7 @@ package rNibWriter
 
 import (
 	"e2mgr/mocks"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -531,3 +532,116 @@ func TestGetRNibWriter(t *testing.T) {
 //			t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationInteg - Failed to save RanLoadInformation entity. Error: %v", err)
 //		}
 //}
+
+func TestSaveE2TInstanceSuccess(t *testing.T) {
+	address := "10.10.2.15:9800"
+	loadKey, validationErr := common.ValidateAndBuildE2TInstanceKey(address)
+
+	if validationErr != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSuccess - Failed to build E2T Instance key. Error: %v", validationErr)
+	}
+
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInstance := generateE2tInstance(address)
+	data, err := json.Marshal(e2tInstance)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSuccess - Failed to marshal E2tInstance entity. Error: %v", err)
+	}
+
+	var e error
+	var setExpected []interface{}
+	setExpected = append(setExpected, loadKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.SaveE2TInstance(e2tInstance)
+	assert.Nil(t, rNibErr)
+}
+
+func TestSaveE2TInstanceNullE2tInstanceFailure(t *testing.T) {
+	w, _ := initSdlInstanceMock(namespace)
+	var address string
+	e2tInstance := entities.NewE2TInstance(address)
+	err := w.SaveE2TInstance(e2tInstance)
+	assert.NotNil(t, err)
+	assert.IsType(t, &common.ValidationError{}, err)
+}
+
+func TestSaveE2TInstanceSdlFailure(t *testing.T) {
+	address := "10.10.2.15:9800"
+	loadKey, validationErr := common.ValidateAndBuildE2TInstanceKey(address)
+
+	if validationErr != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSdlFailure - Failed to build E2T Instance key. Error: %v", validationErr)
+	}
+
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInstance := generateE2tInstance(address)
+	data, err := json.Marshal(e2tInstance)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSdlFailure - Failed to marshal E2tInstance entity. Error: %v", err)
+	}
+
+	expectedErr := errors.New("expected error")
+	var setExpected []interface{}
+	setExpected = append(setExpected, loadKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
+
+	rNibErr := w.SaveE2TInstance(e2tInstance)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
+}
+
+func generateE2tInstance(address string) *entities.E2TInstance {
+	e2tInstance := entities.NewE2TInstance(address)
+
+	e2tInstance.AssociatedRanList = []string{"test1", "test2"}
+
+	return e2tInstance
+}
+
+func TestSaveE2TInfoListSuccess(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInfo := entities.NewE2TInstanceInfo(address)
+	e2tInfoList := []*entities.E2TInstanceInfo{e2tInfo}
+	data, err := json.Marshal(e2tInfoList)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSuccess - Failed to marshal E2TInfoList. Error: %v", err)
+	}
+
+	var e error
+	var setExpected []interface{}
+	setExpected = append(setExpected, E2TInfoListKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.SaveE2TInfoList(e2tInfoList)
+	assert.Nil(t, rNibErr)
+}
+
+func TestSaveE2TInfoListSdlFailure(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInfo := entities.NewE2TInstanceInfo(address)
+	e2tInfoList := []*entities.E2TInstanceInfo{e2tInfo}
+	data, err := json.Marshal(e2tInfoList)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSdlFailure - Failed to marshal E2TInfoList. Error: %v", err)
+	}
+
+	expectedErr := errors.New("expected error")
+	var setExpected []interface{}
+	setExpected = append(setExpected, E2TInfoListKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
+
+	rNibErr := w.SaveE2TInfoList(e2tInfoList)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
+}

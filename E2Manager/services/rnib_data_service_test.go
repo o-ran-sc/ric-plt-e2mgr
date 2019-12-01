@@ -268,3 +268,44 @@ func TestPingRnibOkOtherError(t *testing.T) {
 //	assert.True(t, strings.Contains(err.Error(),"connection failure", ))
 //	assert.Equal(t, nodeIds, res)
 //}
+
+func TestGetE2TInstanceConnFailure(t *testing.T) {
+	rnibDataService, readerMock, _ := setupRnibDataServiceTest(t)
+
+	address := "10.10.5.20:3200"
+	var e2tInstance *entities.E2TInstance = nil
+	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
+	readerMock.On("GetE2TInstance", address).Return(e2tInstance, mockErr)
+
+	res, err := rnibDataService.GetE2TInstance(address)
+	readerMock.AssertNumberOfCalls(t, "GetE2TInstance", 3)
+	assert.Nil(t, res)
+	assert.NotNil(t, err)
+}
+
+func TestGetE2TInstanceOkNoError(t *testing.T) {
+	rnibDataService, readerMock, _ := setupRnibDataServiceTest(t)
+
+	address := "10.10.5.20:3200"
+	e2tInstance := &entities.E2TInstance{}
+	readerMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+
+	res, err := rnibDataService.GetE2TInstance(address)
+	readerMock.AssertNumberOfCalls(t, "GetE2TInstance", 1)
+	assert.Nil(t, err)
+	assert.Equal(t, e2tInstance, res)
+}
+
+func TestGetE2TInstanceOkOtherError(t *testing.T) {
+	rnibDataService, readerMock, _ := setupRnibDataServiceTest(t)
+
+	address := "10.10.5.20:3200"
+	var e2tInstance *entities.E2TInstance = nil
+	mockErr := &common.InternalError{Err: fmt.Errorf("non connection error")}
+	readerMock.On("GetE2TInstance", address).Return(e2tInstance, mockErr)
+
+	res, err := rnibDataService.GetE2TInstance(address)
+	readerMock.AssertNumberOfCalls(t, "GetE2TInstance", 1)
+	assert.Nil(t, res)
+	assert.NotNil(t, err)
+}
