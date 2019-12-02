@@ -27,7 +27,11 @@ Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
-
+Resource    ../Resource/scripts_variables.robot
+Library     String
+Library     Process
+Library     ../Scripts/find_rmr_message.py
+Library     ../Scripts/rsmscripts.py
 
 
 
@@ -50,3 +54,26 @@ Prepare logs for tests
     Remove log files
     Save logs
 
+Verify logs - Reset Sent by simulator
+    ${Reset}=   Grep File  ./${gnb_log_filename}  ResetRequest has been sent
+    Should Be Equal     ${Reset}     gnbe2_simu: ResetRequest has been sent
+
+Verify logs - e2mgr logs - messege sent
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RIC_X2_RESET_REQ_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+Verify logs - e2mgr logs - messege received
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RIC_X2_RESET_RESP_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+RAN Restarted messege sent
+    ${result}    find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${RAN_RESTARTED_message_type}  ${Meid_test1}
+    Should Be Equal As Strings    ${result}      True
+
+RSM RESOURCE STATUS REQUEST message sent
+    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
+    Should Be Equal As Strings    ${result}      True
+
+Verify RSM RAN info exists in redis
+   ${result}=   rsmscripts.verify_rsm_ran_info_start_false
+   Should Be Equal As Strings  ${result}    True

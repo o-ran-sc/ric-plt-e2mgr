@@ -29,7 +29,6 @@ import (
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
@@ -37,7 +36,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -84,13 +82,8 @@ func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupR
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := initRmrSender(rmrMessengerMock, logger)
@@ -157,17 +150,17 @@ func executeHandleSetupSuccessResponse(t *testing.T, tc setupSuccessResponseTest
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
 	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
-	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
+	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf, true).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
 	handler.Handle(&notificationRequest)
 
 	return testContext, nodebInfo
 }
 
 func getRanConnectedMbuf(nodeType entities.Node_Type) *rmrCgo.MBuf {
-	xaction := []byte(RanName)
+	var xAction []byte
 	resourceStatusPayload := models.NewResourceStatusPayload(nodeType, enums.RIC_TO_RAN)
 	resourceStatusJson, _ := json.Marshal(resourceStatusPayload)
-	return rmrCgo.NewMBuf(rmrCgo.RAN_CONNECTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xaction)
+	return rmrCgo.NewMBuf(rmrCgo.RAN_CONNECTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xAction)
 }
 
 func executeHandleSetupFailureResponse(t *testing.T, tc setupFailureResponseTestCase) (*setupResponseTestContext, *entities.NodebInfo) {
@@ -222,7 +215,7 @@ func TestX2SetupResponse(t *testing.T) {
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
 	assert.NotNil(t, i.Enb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }
 
 func TestX2SetupFailureResponse(t *testing.T) {
@@ -246,11 +239,12 @@ func TestX2SetupFailureResponse(t *testing.T) {
 }
 
 func TestEndcSetupResponse(t *testing.T) {
+	logger := initLog(t)
 	var saveNodebMockError error
 	var sendMsgError error
 	tc := setupSuccessResponseTestCase{
 		EndcSetupResponsePackedPdu,
-		&managers.EndcSetupResponseManager{},
+		managers.NewEndcSetupResponseManager(converters.NewEndcSetupResponseConverter(logger)),
 		rmrCgo.RIC_ENDC_X2_SETUP_RESP,
 		saveNodebMockError,
 		sendMsgError,
@@ -267,15 +261,15 @@ func TestEndcSetupResponse(t *testing.T) {
 
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Gnb)
 	assert.NotNil(t, i.Gnb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }
 
 func TestEndcSetupFailureResponse(t *testing.T) {
-
+	logger := initLog(t)
 	var saveNodebMockError error
 	tc := setupFailureResponseTestCase{
 		EndcSetupFailureResponsePackedPdu,
-		&managers.EndcSetupFailureResponseManager{},
+		managers.NewEndcSetupFailureResponseManager(converters.NewEndcSetupFailureResponseConverter(logger)),
 		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE,
 		saveNodebMockError,
 	}
@@ -346,5 +340,5 @@ func TestSetupResponseStatusChangeSendFailure(t *testing.T) {
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
 	assert.NotNil(t, i.Enb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }

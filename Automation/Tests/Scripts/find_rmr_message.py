@@ -31,8 +31,12 @@ def verify_logs(directory,filename,mtype,meid):
 
     for l in f:
 
-        if l.find(mtype) > 0 and l.find(meid) > 0:
-            return True
+        if (meid is not None):
+            if l.find(mtype) > 0 and l.find(meid) > 0:
+                return True
+        else:
+            if l.find(mtype) > 0:
+                return True
 
     return False
 

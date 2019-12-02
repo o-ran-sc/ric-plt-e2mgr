@@ -11,3 +11,4 @@ __pycache__/
 # documentation
 .tox
 docs/_build/
+/.gitreview

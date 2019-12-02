@@ -40,7 +40,7 @@ func TestMarshalSuccess(t *testing.T) {
 
 	nodebInfo := entities.NodebInfo{NodeType: entities.Node_ENB}
 	var err error
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, err)
 	err  = m.Execute(rmrCgo.RAN_CONNECTED, enums.RIC_TO_RAN, &nodebInfo)
 
 	assert.Nil(t, err)

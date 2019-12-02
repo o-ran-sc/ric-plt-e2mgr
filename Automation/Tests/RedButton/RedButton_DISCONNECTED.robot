@@ -43,7 +43,7 @@ Pre Condition for Connecting - no E2ADAPTER
 Prepare Ran in Connecting connectionStatus
     Post Request setup node b endc-setup
     Integer     response status       204
-    Sleep  1s
+    Sleep  10s
     GET      /v1/nodeb/test2
     Integer  response status  200
     String   response body ranName    test2

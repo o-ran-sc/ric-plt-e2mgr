@@ -56,7 +56,7 @@ func (h X2ResetResponseHandler) Handle(request *models.NotificationRequest) {
 	ranName := request.RanName
 	h.logger.Infof("#X2ResetResponseHandler.Handle - RAN name: %s - received reset response. Payload: %x", ranName, request.Payload)
 
-	nodebInfo, err := h.rnibDataService.GetNodeb(ranName);
+	nodebInfo, err := h.rnibDataService.GetNodeb(ranName)
 	if err != nil {
 		h.logger.Errorf("#x2ResetResponseHandler.Handle - RAN name: %s - failed to retrieve nodebInfo entity. Error: %s", ranName, err)
 		return

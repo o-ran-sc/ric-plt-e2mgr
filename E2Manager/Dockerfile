@@ -20,17 +20,17 @@
 #   platform project (RICP).
 #
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:2-u16.04-nng as ubuntu
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:3-u16.04-nng as ubuntu
 
 WORKDIR /opt/E2Manager
 COPY . . 
 ENV PATH=$PATH:/usr/local/go/bin:/usr/lib/go-1.12/bin
 #RUN git clone https://gerrit.o-ran-sc.org/r/ric-plt/lib/rmr && cd rmr/; mkdir build; cd build; /opt/bin/cmake -DDEV_PKG=1 ..; make install
 # Install RMr library and dev files
-RUN wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_1.10.0_amd64.deb/download.deb
-RUN dpkg -i rmr_1.10.0_amd64.deb
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.10.0_amd64.deb/download.deb
-RUN dpkg -i rmr-dev_1.10.0_amd64.deb
+RUN wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_1.13.0_amd64.deb/download.deb
+RUN dpkg -i rmr_1.13.0_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.13.0_amd64.deb/download.deb
+RUN dpkg -i rmr-dev_1.13.0_amd64.deb
 
 RUN cd 3rdparty/asn1codec && make
 RUN go build app/main.go
@@ -45,7 +45,8 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 # Setting allocfreetrace=1 causes every allocation to be profiled and a stack trace printed on each object's allocation and free.
 ENV GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
 ENV RIC_ID="bbbccc-abcd0e/20"
-RUN go test ./...
+ENV RMR_SEED_RT=/opt/E2Manager/router_test.txt
+RUN go-acc $(go list ./... | grep -v e2mgr/mocks | grep -v e2mgr/tests |grep -v e2mgr/e2managererrors| grep -v e2mgr/enums)
 
 FROM ubuntu:16.04
 
