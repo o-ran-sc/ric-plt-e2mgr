@@ -25,7 +25,6 @@ import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
@@ -33,7 +32,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"reflect"
@@ -45,14 +43,10 @@ func setupTest(t *testing.T) (*logger.Logger, *configuration.Configuration, *moc
 	config := configuration.ParseConfiguration()
 
 	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	writerProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(log, config, readerProvider, writerProvider)
+
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	return log, config, readerMock, writerMock, rnibDataService, rmrMessengerMock
 }
@@ -144,7 +138,7 @@ func TestHandleSuccessFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -176,7 +170,7 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -205,7 +199,7 @@ func TestHandleShuttingDownStatusFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -251,7 +245,7 @@ func TestHandleGetNodebFailedFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -297,7 +291,7 @@ func TestHandleSaveFailedFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(errRnib)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -343,7 +337,7 @@ func TestHandleSendRmrFailedFlow(t *testing.T) {
 
 	expected := e2managererrors.NewRmrError()
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, expected)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, expected)
 
 	_, actual := handler.Handle(nil)
 
@@ -391,5 +385,5 @@ func initLog(t *testing.T) *logger.Logger {
 func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return rmrsender.NewRmrSender(log, &rmrMessenger)
+	return rmrsender.NewRmrSender(log, rmrMessenger)
 }

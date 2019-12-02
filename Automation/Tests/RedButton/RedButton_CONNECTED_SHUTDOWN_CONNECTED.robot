@@ -29,9 +29,6 @@ Library     Collections
 Library     REST      ${url}
 
 
-*** Variables ***
-${restart_docker_sim}      docker restart gnbe2_simu
-
 
 *** Test Cases ***
 
@@ -59,11 +56,7 @@ Verfiy Shutdown ConnectionStatus
     String   response body connectionStatus    SHUT_DOWN
 
 Restart simualtor
-
-    Run And Return Rc And Output    ${restart_docker_sim}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number}
-
+    Restart simulator
 
 repare Ran in Connected connectionStatus
     Post Request setup node b x-2

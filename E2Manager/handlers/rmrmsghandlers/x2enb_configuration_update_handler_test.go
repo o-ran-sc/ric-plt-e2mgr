@@ -43,31 +43,32 @@ func TestHandleX2EnbConfigUpdateSuccess(t *testing.T) {
 	h, rmrMessengerMock := initX2EnbConfigurationUpdateHandlerTest(t)
 
 	ranName := "test"
-	xaction := []byte(ranName)
-
+	xAction := []byte("123456aa")
 	var payload []byte
 	_, _ = fmt.Sscanf(PackedX2EnbConfigurationUpdateAck, "%x", &payload)
 
-	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, len(payload), ranName, &payload, &xaction)
-	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now()}
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, len(payload), ranName, &payload, &xAction)
+	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
+		StartTime: time.Now(), TransactionId:xAction}
 	var err error
-	rmrMessengerMock.On("SendMsg", mBuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", mBuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf, true)
 }
 
 func TestHandleX2EnbConfigUpdateFailure(t *testing.T) {
 	h, rmrMessengerMock := initX2EnbConfigurationUpdateHandlerTest(t)
 
 	ranName := "test"
-	xaction := []byte(ranName)
+	xAction := []byte("123456aa")
 
 	var payload []byte
 	_, _ = fmt.Sscanf(PackedX2EnbConfigurationUpdateFailure, "%x", &payload)
 
-	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, len(payload), ranName, &payload, &xaction)
-	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: 0, Payload: []byte{0}, StartTime: time.Now()}
-	rmrMessengerMock.On("SendMsg", mBuf).Return(&rmrCgo.MBuf{}, fmt.Errorf("send failure"))
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, len(payload), ranName, &payload, &xAction)
+	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: 0, Payload: []byte{0},
+		StartTime: time.Now(), TransactionId:xAction}
+	rmrMessengerMock.On("SendMsg", mBuf, true).Return(&rmrCgo.MBuf{}, fmt.Errorf("send failure"))
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mBuf, true)
 }

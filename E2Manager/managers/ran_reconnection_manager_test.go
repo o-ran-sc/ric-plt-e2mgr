@@ -24,14 +24,12 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -49,17 +47,35 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
+	e2tInstancesManager := NewE2TInstancesManager(rnibDataService, logger)
 	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
-	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
 	return logger, rmrMessengerMock, readerMock, writerMock, ranReconnectionManager
+}
+
+func initRanLostConnectionTestBasicMocks(t *testing.T) (*logger.Logger, *mocks.RmrMessengerMock, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *RanReconnectionManager, *mocks.E2TInstancesManagerMock) {
+	logger, err := logger.InitLogger(logger.DebugLevel)
+	if err != nil {
+		t.Errorf("#... - failed to initialize logger, error: %s", err)
+	}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	rmrSender := initRmrSender(rmrMessengerMock, logger)
+
+	readerMock := &mocks.RnibReaderMock{}
+
+	writerMock := &mocks.RnibWriterMock{}
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
+	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
+	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
+	ranReconnectionManager := NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManagerMock)
+	return logger, rmrMessengerMock, readerMock, writerMock, ranReconnectionManager, e2tInstancesManagerMock
 }
 
 func TestRanReconnectionGetNodebFailure(t *testing.T) {
@@ -100,19 +116,46 @@ func TestShuttingdownRanReconnection(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
-func TestConnectingRanWithMaxAttemptsReconnection(t *testing.T) {
+func TestConnectingRanWithMaxAttemptsReconnectionDissociateSucceeds(t *testing.T) {
 	_, _, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
 	ranName := "test"
-	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20}
+	e2tAddress := "10.0.2.15"
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: e2tAddress}
 	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address:e2tAddress, AssociatedRanList:[]string{ranName}}
+	readerMock.On("GetE2TInstance",e2tAddress).Return(e2tInstance, nil)
+	e2tInstanceToSave := * e2tInstance
+	e2tInstanceToSave .AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+}
+
+func TestConnectingRanWithMaxAttemptsReconnectionDissociateFails(t *testing.T) {
+	_, _, readerMock, writerMock, ranReconnectionManager := initRanLostConnectionTest(t)
+	ranName := "test"
+	e2tAddress := "10.0.2.15"
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: e2tAddress}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo := *origNodebInfo
+	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address:e2tAddress, AssociatedRanList:[]string{ranName}}
+	readerMock.On("GetE2TInstance",e2tAddress).Return(e2tInstance, common.NewInternalError(errors.New("Error")))
+	err := ranReconnectionManager.ReconnectRan(ranName)
+	assert.NotNil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	writerMock.AssertNotCalled(t, "SaveE2TInstance", )
 }
 
 func TestUnconnectableRanUpdateNodebInfoFailure(t *testing.T) {
@@ -140,7 +183,7 @@ func TestConnectedRanExecuteSetupSuccess(t *testing.T) {
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
 	updatedNodebInfo.ConnectionAttempts++
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
@@ -164,8 +207,15 @@ func TestConnectedRanExecuteSetupFailure(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
+func TestNoSetConnectionStatus(t *testing.T) {
+	_, _, _, _, ranReconnectionManager := initRanLostConnectionTest(t)
+	nodebInfo := &entities.NodebInfo{RanName: "ranName", GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	err := ranReconnectionManager.updateUnconnectableRan(nodebInfo)
+	assert.Nil(t, err)
+}
+
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
-	return rmrsender.NewRmrSender(log, &rmrMessenger)
+	return rmrsender.NewRmrSender(log, rmrMessenger)
 }

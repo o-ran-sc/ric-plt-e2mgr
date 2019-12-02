@@ -74,6 +74,8 @@ const (
 	RAN_CONNECTED						 = C.RAN_CONNECTED
 	RAN_RESTARTED						 = C.RAN_RESTARTED
 	RAN_RECONFIGURED					 = C.RAN_RECONFIGURED
+	E2_TERM_KEEP_ALIVE_REQ				 = C.E2_TERM_KEEP_ALIVE_REQ
+	E2_TERM_KEEP_ALIVE_RESP				 = C.E2_TERM_KEEP_ALIVE_RESP
 )
 
 const (
@@ -138,10 +140,9 @@ type Context struct {
 }
 
 type RmrMessenger interface {
-	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) *RmrMessenger
-	SendMsg(msg *MBuf) (*MBuf, error)
+	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) RmrMessenger
+	SendMsg(msg *MBuf, printLogs bool) (*MBuf, error)
 	RecvMsg() (*MBuf, error)
-	RtsMsg(msg *MBuf)
 	IsReady() bool
 	Close()
 }

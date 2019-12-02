@@ -21,5 +21,5 @@
 package models
 
 type IResponse interface {
-	Marshal() (string, error)
+	Marshal() ([]byte, error)
 }

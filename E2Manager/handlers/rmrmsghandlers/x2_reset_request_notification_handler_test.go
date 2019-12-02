@@ -33,7 +33,6 @@ import (
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"testing"
 	"time"
 )
@@ -42,10 +41,8 @@ func initX2ResetRequestNotificationHandlerTest(t *testing.T) (X2ResetRequestNoti
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
-	readerProvider := func() reader.RNibReader {
-		return readerMock
-	}
-	rnibDataService := services.NewRnibDataService(log, config, readerProvider, nil)
+
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, nil)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := initRmrSender(rmrMessengerMock, log)
@@ -55,38 +52,38 @@ func initX2ResetRequestNotificationHandlerTest(t *testing.T) (X2ResetRequestNoti
 }
 
 func getRanRestartedMbuf(nodeType entities.Node_Type, messageDirection enums.MessageDirection) *rmrCgo.MBuf {
-	xaction := []byte(RanName)
+	var xAction []byte
 	resourceStatusPayload := models.NewResourceStatusPayload(nodeType, messageDirection)
 	resourceStatusJson, _ := json.Marshal(resourceStatusPayload)
-	return rmrCgo.NewMBuf(rmrCgo.RAN_RESTARTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xaction)
+	return rmrCgo.NewMBuf(rmrCgo.RAN_RESTARTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xAction)
 }
 
 func TestHandleX2ResetRequestNotificationSuccess(t *testing.T) {
 	h, readerMock, rmrMessengerMock := initX2ResetRequestNotificationHandlerTest(t)
 	ranName := "test"
-	xaction := []byte(ranName)
-	notificationRequest := models.NewNotificationRequest(ranName, []byte{}, time.Now(), ranName)
+	xAction := []byte("123456aa")
+	notificationRequest := models.NewNotificationRequest(ranName, []byte{}, time.Now(), xAction)
 
 	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_ENB}
 	var err error
 	readerMock.On("GetNodeb", ranName).Return(nb, err)
-	resetResponseMbuf := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET_RESP, len(e2pdus.PackedX2ResetResponse), ranName, &e2pdus.PackedX2ResetResponse, &xaction)
-	rmrMessengerMock.On("SendMsg", resetResponseMbuf).Return(&rmrCgo.MBuf{}, err)
+	resetResponseMbuf := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET_RESP, len(e2pdus.PackedX2ResetResponse), ranName, &e2pdus.PackedX2ResetResponse, &xAction)
+	rmrMessengerMock.On("SendMsg", resetResponseMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RAN_TO_RIC)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", resetResponseMbuf)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", resetResponseMbuf, true)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestHandleX2ResetRequestNotificationShuttingDownStatus(t *testing.T) {
 	h, readerMock, rmrMessengerMock := initX2ResetRequestNotificationHandlerTest(t)
 	var payload []byte
 
-	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
+	xAction := []byte("123456aa")
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xAction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
-		StartTime: time.Now(), TransactionId: string(xaction)}
+		StartTime: time.Now(), TransactionId: xAction}
 
 	nb := &entities.NodebInfo{RanName: mBuf.Meid, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	var rnibErr error
@@ -100,9 +97,9 @@ func TestHandleX2ResetRequestNotificationShuttingDownStatus(t *testing.T) {
 func TestHandleX2ResetRequestNotificationDisconnectStatus(t *testing.T) {
 	h, readerMock, rmrMessengerMock := initX2ResetRequestNotificationHandlerTest(t)
 	var payload []byte
-	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
-	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	xAction := []byte("123456aa")
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xAction)
+	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: mBuf.Meid, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,}
 	var rnibErr error
 	readerMock.On("GetNodeb", mBuf.Meid).Return(nb, rnibErr)
@@ -115,10 +112,10 @@ func TestHandleX2ResetRequestNotificationGetNodebFailed(t *testing.T) {
 
 	 h, readerMock, rmrMessengerMock := initX2ResetRequestNotificationHandlerTest(t)
 	var payload []byte
-	xaction := []byte("RanName")
-	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xaction)
+	var xAction []byte
+	mBuf := rmrCgo.NewMBuf(tests.MessageType, len(payload), "RanName", &payload, &xAction)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload,
-		StartTime: time.Now(), TransactionId: string(xaction)}
+		StartTime: time.Now(), TransactionId: xAction}
 
 	var nb *entities.NodebInfo
 	rnibErr := &common.ResourceNotFoundError{}

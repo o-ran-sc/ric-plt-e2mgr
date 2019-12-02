@@ -21,20 +21,18 @@
 package rmrreceiver
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
-	"e2mgr/converters"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/managers/notificationmanager"
 	"e2mgr/mocks"
 	"e2mgr/providers/rmrmsghandlerprovider"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"testing"
 	"time"
 )
@@ -49,7 +47,7 @@ func TestListenAndHandle(t *testing.T) {
 	time.Sleep(time.Microsecond * 10)
 }
 
-func initRmrMessenger(log *logger.Logger) *rmrCgo.RmrMessenger {
+func initRmrMessenger(log *logger.Logger) rmrCgo.RmrMessenger {
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
@@ -58,32 +56,24 @@ func initRmrMessenger(log *logger.Logger) *rmrCgo.RmrMessenger {
 	var buf *rmrCgo.MBuf
 	e := fmt.Errorf("test error")
 	rmrMessengerMock.On("RecvMsg").Return(buf, e)
-	return &rmrMessenger
+	return rmrMessenger
 }
 
 func initRmrReceiver(logger *logger.Logger) *RmrReceiver {
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
+	httpClient := &mocks.HttpClientMock{}
 
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	rmrMessenger := initRmrMessenger(logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
-	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
-	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
-	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
-	x2SetupFailureResponseConverter := converters.NewX2SetupFailureResponseConverter(logger)
-	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
-	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider(logger, rnibDataService, ranReconnectionManager, ranStatusChangeManager, rmrSender, x2SetupResponseManager, x2SetupFailureResponseManager )
+	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
+	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
+	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	return NewRmrReceiver(logger, rmrMessenger, notificationManager)
 }

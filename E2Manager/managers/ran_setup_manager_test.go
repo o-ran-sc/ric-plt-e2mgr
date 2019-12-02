@@ -26,13 +26,11 @@ import (
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/mocks"
-	"e2mgr/rNibWriter"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -49,14 +47,10 @@ func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.Rnib
 	rmrSender := initRmrSender(rmrMessengerMock, logger)
 
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
+
 	writerMock := &mocks.RnibWriterMock{}
-	rnibWriterProvider := func() rNibWriter.RNibWriter {
-		return writerMock
-	}
-	rnibDataService := services.NewRnibDataService(logger, config, rnibReaderProvider, rnibWriterProvider)
+
+	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := NewRanSetupManager(logger, rmrSender, rnibDataService)
 	return rmrMessengerMock, writerMock, ranSetupManager
 }
@@ -74,7 +68,7 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
@@ -97,7 +91,7 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	payload := e2pdus.PackedEndcX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
 		t.Errorf("want: success, got: error: %s", err)
@@ -122,7 +116,7 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -147,7 +141,7 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -174,7 +168,7 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	payload := []byte{0}
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, fmt.Errorf("send failure"))
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: failure, got: success")
@@ -199,7 +193,7 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(ranName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
 		t.Errorf("want: error, got: success")
