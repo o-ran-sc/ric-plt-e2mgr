@@ -57,7 +57,7 @@ Release Data
 ------------
 
 +--------------------------------------+--------------------------------------+
-| **Project**                          | RAN Intelligent Controller  		              |
+| **Project**                          | RAN Intelligent Controller  	      |
 |                                      |                                      |
 +--------------------------------------+--------------------------------------+
 | **Repo/commit-ID**                   | ric-plt/e2mgr                        |
