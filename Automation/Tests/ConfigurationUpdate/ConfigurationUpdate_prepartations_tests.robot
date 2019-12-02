@@ -27,7 +27,10 @@ Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     REST      ${url}
-
+Resource    ../Resource/scripts_variables.robot
+Library     String
+Library     Process
+Library     ../Scripts/find_rmr_message.py
 
 
 *** Test Cases ***
@@ -45,8 +48,32 @@ Prepare logs for tests
     Remove log files
     Save logs
 
+Verify logs - Confiugration update - Begin Tag Get
+    ${Configuration}=   Grep File  ./${gnb_log_filename}  <ENDCConfigurationUpdate>
+    ${ConfigurationAfterStrip}=     Strip String    ${Configuration}
+    Should Be Equal     ${ConfigurationAfterStrip}        <ENDCConfigurationUpdate>
 
+Verify logs - Confiugration update - End Tag Get
+    ${ConfigurationEnd}=   Grep File  ./${gnb_log_filename}  </ENDCConfigurationUpdate>
+    ${ConfigurationEndAfterStrip}=     Strip String    ${ConfigurationEnd}
+    Should Be Equal     ${ConfigurationEndAfterStrip}        </ENDCConfigurationUpdate>
 
+Verify logs - Confiugration update - Ack Tag Begin
+    ${ConfigurationAck}=   Grep File  ./${gnb_log_filename}   <ENDCConfigurationUpdateAcknowledge>
+    ${ConfigurationAckAfter}=     Strip String    ${ConfigurationAck}
+    Should Be Equal     ${ConfigurationAckAfter}        <ENDCConfigurationUpdateAcknowledge>
+
+Verify logs - Confiugration update - Ack Tag End
+    ${ConfigurationAckEnd}=   Grep File  ./${gnb_log_filename}  </ENDCConfigurationUpdateAcknowledge>
+    ${ConfigurationAckEndAfterStrip}=     Strip String    ${ConfigurationAckEnd}
+    Should Be Equal     ${ConfigurationAckEndAfterStrip}        </ENDCConfigurationUpdateAcknowledge>
+
+Verify logs - find RIC_ENDC_CONF_UPDATE
+   ${result}   find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${configurationupdate_message_type}  ${Meid_test1}
+   Should Be Equal As Strings    ${result}      True
+Verify logs - find RIC_ENDC_CONF_UPDATE_ACK
+   ${result1}  find_rmr_message.verify_logs  ${EXECDIR}  ${e2mgr_log_filename}  ${configurationupdate_ack_message_type}  ${Meid_test1}
+   Should Be Equal As Strings    ${result1}      True
 
 
 

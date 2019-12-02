@@ -20,7 +20,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 2.0.5
+  version: 3.0.3
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -205,6 +205,26 @@ paths:
       responses:
         '200':
           description: OK
+  /e2t/list:
+    get:
+      tags:
+        - e2t
+      summary: Gets a list of all E2T Instances address and their associated RANs
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/E2tIdentity'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     SetupRequest:
@@ -916,6 +936,30 @@ radioNetwork:pDCP-Overload]
         errorCode:
           type: string
           description: '401 - corrupted json, 402 - validation error, 403 - RAN in wrong state, 404 - resource not found, 500 - RNIB error, 501 - internal problem, 502 - RMR error'
+        errorMessage:
+          type: string
+          description: Human readable text
+    E2tIdentity:
+      type: object
+      required:
+        - e2tAddress
+        - ranNames
+      properties:
+        e2tAddress:
+          type: string
+        ranNames:
+          items:
+            type: string
+          type: array
+    E2tErrorResponse:
+      type: object
+      required:
+        - errorCode
+        - errorMessage
+      properties:
+        errorCode:
+          type: string
+          description: '500 - RNIB error, 501 - internal problem'
         errorMessage:
           type: string
           description: Human readable text

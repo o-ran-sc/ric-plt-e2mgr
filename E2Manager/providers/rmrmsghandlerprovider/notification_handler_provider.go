@@ -21,6 +21,8 @@
 package rmrmsghandlerprovider
 
 import (
+	"e2mgr/clients"
+	"e2mgr/configuration"
 	"e2mgr/converters"
 	"e2mgr/handlers/rmrmsghandlers"
 	"e2mgr/logger"
@@ -35,28 +37,13 @@ type NotificationHandlerProvider struct {
 	notificationHandlers map[int]rmrmsghandlers.NotificationHandler
 }
 
-func NewNotificationHandlerProvider(logger *logger.Logger, rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager, ranStatusChangeManager *managers.RanStatusChangeManager, rmrSender *rmrsender.RmrSender, x2SetupResponseManager *managers.X2SetupResponseManager, x2SetupFailureResponseManager *managers.X2SetupFailureResponseManager) *NotificationHandlerProvider {
+func NewNotificationHandlerProvider() *NotificationHandlerProvider {
 	return &NotificationHandlerProvider{
-		notificationHandlers: initNotificationHandlersMap(logger, rnibDataService, ranReconnectionManager, ranStatusChangeManager, rmrSender, x2SetupResponseManager, x2SetupFailureResponseManager),
+		notificationHandlers: map[int]rmrmsghandlers.NotificationHandler{},
 	}
 }
 
-func initNotificationHandlersMap(logger *logger.Logger, rnibDataService services.RNibDataService, ranReconnectionManager *managers.RanReconnectionManager, ranStatusChangeManager *managers.RanStatusChangeManager, rmrSender *rmrsender.RmrSender, x2SetupResponseManager *managers.X2SetupResponseManager, x2SetupFailureResponseManager *managers.X2SetupFailureResponseManager) map[int]rmrmsghandlers.NotificationHandler {
-	return map[int]rmrmsghandlers.NotificationHandler{
-		rmrCgo.RIC_X2_SETUP_RESP:           rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP),
-		rmrCgo.RIC_X2_SETUP_FAILURE:        rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupFailureResponseManager, nil, rmrCgo.RIC_X2_SETUP_FAILURE),
-		rmrCgo.RIC_ENDC_X2_SETUP_RESP:      rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, managers.NewEndcSetupResponseManager(), ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_RESP),
-		rmrCgo.RIC_ENDC_X2_SETUP_FAILURE:   rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, managers.NewEndcSetupFailureResponseManager(), nil, rmrCgo.RIC_ENDC_X2_SETUP_FAILURE),
-		rmrCgo.RIC_SCTP_CONNECTION_FAILURE: rmrmsghandlers.NewRanLostConnectionHandler(logger, ranReconnectionManager),
-		rmrCgo.RIC_ENB_LOAD_INFORMATION:    rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, converters.NewEnbLoadInformationExtractor(logger)),
-		rmrCgo.RIC_ENB_CONF_UPDATE:         rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender),
-		rmrCgo.RIC_ENDC_CONF_UPDATE:        rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender),
-		rmrCgo.RIC_X2_RESET_RESP:           rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger)),
-		rmrCgo.RIC_X2_RESET:                rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender),
-		rmrCgo.RIC_E2_TERM_INIT:            rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService),
-	}
-}
-
+// TODO: check whether it has been initialized
 func (provider NotificationHandlerProvider) GetNotificationHandler(messageType int) (rmrmsghandlers.NotificationHandler, error) {
 	handler, ok := provider.notificationHandlers[messageType]
 
@@ -65,4 +52,54 @@ func (provider NotificationHandlerProvider) GetNotificationHandler(messageType i
 	}
 
 	return handler, nil
+}
+
+func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrmsghandlers.NotificationHandler) {
+	provider.notificationHandlers[msgType] = handler
+}
+
+func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) {
+
+	// Init converters
+	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
+	x2SetupFailureResponseConverter := converters.NewX2SetupFailureResponseConverter(logger)
+	endcSetupResponseConverter := converters.NewEndcSetupResponseConverter(logger)
+	endcSetupFailureResponseConverter := converters.NewEndcSetupFailureResponseConverter(logger)
+	enbLoadInformationExtractor := converters.NewEnbLoadInformationExtractor(logger)
+	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
+
+	// Init managers
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager, e2tInstancesManager)
+	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
+	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
+	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
+	endcSetupResponseManager := managers.NewEndcSetupResponseManager(endcSetupResponseConverter)
+	endcSetupFailureResponseManager := managers.NewEndcSetupFailureResponseManager(endcSetupFailureResponseConverter)
+
+	// Init handlers
+	x2SetupResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP)
+	x2SetupFailureResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupFailureResponseManager, nil, rmrCgo.RIC_X2_SETUP_FAILURE)
+	endcSetupResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_RESP)
+	endcSetupFailureResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupFailureResponseManager, nil, rmrCgo.RIC_ENDC_X2_SETUP_FAILURE)
+	ranLostConnectionHandler := rmrmsghandlers.NewRanLostConnectionHandler(logger, ranReconnectionManager)
+	enbLoadInformationNotificationHandler := rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, enbLoadInformationExtractor)
+	x2EnbConfigurationUpdateHandler := rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)
+	endcConfigurationUpdateHandler := rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)
+	x2ResetResponseHandler := rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, x2ResetResponseExtractor)
+	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
+	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager, routingManagerClient)
+	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
+
+	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
+	provider.Register(rmrCgo.RIC_X2_SETUP_FAILURE, x2SetupFailureResponseHandler)
+	provider.Register(rmrCgo.RIC_ENDC_X2_SETUP_RESP, endcSetupResponseHandler)
+	provider.Register(rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, endcSetupFailureResponseHandler)
+	provider.Register(rmrCgo.RIC_SCTP_CONNECTION_FAILURE, ranLostConnectionHandler)
+	provider.Register(rmrCgo.RIC_ENB_LOAD_INFORMATION, enbLoadInformationNotificationHandler)
+	provider.Register(rmrCgo.RIC_ENB_CONF_UPDATE, x2EnbConfigurationUpdateHandler)
+	provider.Register(rmrCgo.RIC_ENDC_CONF_UPDATE, endcConfigurationUpdateHandler)
+	provider.Register(rmrCgo.RIC_X2_RESET_RESP, x2ResetResponseHandler)
+	provider.Register(rmrCgo.RIC_X2_RESET, x2ResetRequestNotificationHandler)
+	provider.Register(rmrCgo.RIC_E2_TERM_INIT, e2TermInitNotificationHandler)
+	provider.Register(rmrCgo.E2_TERM_KEEP_ALIVE_RESP, e2TKeepAliveResponseHandler)
 }

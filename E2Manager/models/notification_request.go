@@ -27,10 +27,10 @@ type NotificationRequest struct {
 	Len           int
 	Payload       []byte
 	StartTime     time.Time
-	TransactionId string
+	TransactionId []byte
 }
 
-func NewNotificationRequest(ranName string, payload []byte, startTime time.Time, transactionId string) *NotificationRequest {
+func NewNotificationRequest(ranName string, payload []byte, startTime time.Time, transactionId []byte) *NotificationRequest {
 	return &NotificationRequest{
 		ranName,
 		len(payload),

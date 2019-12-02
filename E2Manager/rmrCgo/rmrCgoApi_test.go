@@ -18,46 +18,37 @@
 //  platform project (RICP).
 
 
-package rmrCgo
+package rmrCgo_test
 
 import (
-	"e2mgr/logger"
-	"e2mgr/tests"
 	"bytes"
+	"e2mgr/logger"
+	"e2mgr/rmrCgo"
+	"e2mgr/tests"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"strconv"
 	"testing"
-	"time"
 )
 
 var (
-	log     *logger.Logger
-	msgr *RmrMessenger
+	log  *logger.Logger
+	msgr rmrCgo.RmrMessenger
 )
 
-func TestLogger(t *testing.T){
-	var err error
-	log, err = logger.InitLogger(logger.DebugLevel)
-	if err != nil {
-		t.Errorf("#rmrCgoApi_test.TestLogger - failed to initialize logger, error: %s", err)
-	}
-	data :=  map[string]interface{}{"messageType": 1001, "ranIp":"10.0.0.3", "ranPort": 879, "ranName":"test1"}
+func TestLogger(t *testing.T) {
+	log := initLog(t)
+	data := map[string]interface{}{"messageType": 1001, "ranIp": "10.0.0.3", "ranPort": 879, "ranName": "test1"}
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(data)
 	req := tests.GetHttpRequest()
 	boo, _ := ioutil.ReadAll(req.Body)
-	log.Debugf("#rmrCgoApi_test.TestLogger - request header: %v\n; request body: %s\n", req.Header, string(boo))
+	log.Debugf("#rmr_c_go_api_test.TestLogger - request header: %v\n; request body: %s\n", req.Header, string(boo))
 }
 
-
 func TestNewMBufSuccess(t *testing.T) {
-	var err error
-	log, err = logger.InitLogger(logger.DebugLevel)
-	if err != nil {
-		t.Errorf("#rmrCgoApi_test.TestNewMBufSuccess - failed to initialize logger, error: %s", err)
-	}
-	msg := NewMBuf(tests.MessageType, len(tests.DummyPayload),"RanName", &tests.DummyPayload, &tests.DummyXAction)
+	msg := rmrCgo.NewMBuf(tests.MessageType, len(tests.DummyPayload), "RanName", &tests.DummyPayload, &tests.DummyXAction)
 	assert.NotNil(t, msg)
 	assert.NotEmpty(t, msg.Payload)
 	assert.NotEmpty(t, msg.XAction)
@@ -66,80 +57,81 @@ func TestNewMBufSuccess(t *testing.T) {
 	assert.Equal(t, msg.Len, len(tests.DummyPayload))
 }
 
-func TestInitFailure(t *testing.T) {
-	var err error
-	log, err = logger.InitLogger(logger.DebugLevel)
-	if err != nil {
-		t.Errorf("#rmrCgoApi_test.TestInitFailure - failed to initialize logger, error: %s", err)
+func TestIsReadySuccess(t *testing.T) {
+	log := initLog(t)
+
+	initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
+	if msgr == nil || !msgr.IsReady() {
+		t.Errorf("#rmr_c_go_api_test.TestIsReadySuccess - The rmr router is not ready")
 	}
-	go initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
-	time.Sleep(time.Second)
-	if msgr != nil {
-		t.Errorf("The rmr router is ready, should be not ready")
+	msgr.Close()
+}
+func TestSendRecvMsgSuccess(t *testing.T) {
+	log := initLog(t)
+
+	initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
+	if msgr == nil || !msgr.IsReady() {
+		t.Errorf("#rmr_c_go_api_test.TestSendRecvMsgSuccess - The rmr router is not ready")
 	}
+	msg := rmrCgo.NewMBuf(1, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
+	log.Debugf("#rmr_c_go_api_test.TestSendRecvMsgSuccess - Going to send the message: %#v\n", msg)
+	result, err := msgr.SendMsg(msg, true)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+
+	msgR, err := msgr.RecvMsg()
+
+	assert.Nil(t, err)
+	assert.NotNil(t, msgR)
+	msgr.Close()
 }
 
-//func TestInitSuccess(t *testing.T) {
-//	var err error
-//	log, err = logger.InitLogger(true)
-//	if err != nil {
-//		t.Errorf("#rmrCgoApi_test.TestInitSuccess - failed to initialize logger, error: %s", err)
-//	}
-//	go initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
-//	time.Sleep(time.Second)
-//	if msgr == nil {
-//		t.Errorf("The rmr router is not ready, should be ready")
-//	}
-//}
+func TestSendMsgRmrInvalidMsgNumError(t *testing.T) {
+	log := initLog(t)
 
-func TestIsReadyFailure(t *testing.T) {
-	var err error
-	log, err = logger.InitLogger(logger.InfoLevel)
-	if err != nil {
-		t.Errorf("#rmrCgoApi_test.TestIsReadyFailure - failed to initialize logger, error: %s", err)
+	initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
+	if msgr == nil || !msgr.IsReady() {
+		t.Errorf("#rmr_c_go_api_test.TestSendMsgRmrInvalidMsgNumError - The rmr router is not ready")
 	}
 
-	go initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
-	time.Sleep(time.Second)
-	assert.True(t, msgr == nil || !(*msgr).IsReady())
+	msg := rmrCgo.NewMBuf(10, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
+	log.Debugf("#rmr_c_go_api_test.TestSendMsgRmrInvalidMsgNumError - Going to send the message: %#v\n", msg)
+	result, err := msgr.SendMsg(msg, true)
+
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+
+	msgr.Close()
 }
 
-//func TestSendRecvMsgSuccess(t *testing.T) {
-//	var err error
-//	log, err = logger.InitLogger(true)
-//	if err != nil {
-//		t.Errorf("#rmrCgoApi_test.TestSendRecvMsgSuccess - failed to initialize logger, error: %s", err)
-//	}
-//	go initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
-//	time.Sleep(time.Second)
-//	if msgr == nil || !(*msgr).IsReady()  {
-//		t.Errorf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The rmr router is not ready")
-//	}
-//	msg := NewMBuf(1, tests.MaxMsgSize, &tests.DummyPayload, &tests.DummyXAction)
-//	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - Going to send the message: %#v\n", msg)
-//	msgR, _ := (*msgr).SendMsg(msg)
-//	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The message has been sent %#v\n", msgR)
-//	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The payload: %#v\n", msgR.Payload)
-//	msgR = (*msgr).RecvMsg()
-//	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The message has been received: %#v\n", msgR)
-//	log.Debugf("#rmrCgoApi_test.TestSendRecvMsgSuccess - The payload: %#v\n", msgR.Payload)
-//	(*msgr).Close()
-//}
+func TestSendMsgRmrInvalidPortError(t *testing.T) {
+	log := initLog(t)
 
-//func TestIsReadySuccess(t *testing.T) {
-//	var err error
-//	log, err = logger.InitLogger(true)
-//	if err != nil {
-//		t.Errorf("#rmrCgoApi_test.TestIsReadySuccess - The rmr router is not ready")
-//	}
-//	go initRmr(tests.GetPort(), tests.MaxMsgSize, tests.Flags, log)
-//	time.Sleep(time.Second)
-//	if msgr == nil || !(*msgr).IsReady()  {
-//		t.Errorf("#rmrCgoApi_test.TestIsReadySuccess - The rmr router is not ready")
-//	}
-//}
+	initRmr("tcp:"+strconv.Itoa(5555), tests.MaxMsgSize, tests.Flags, log)
+	if msgr == nil || !msgr.IsReady() {
+		t.Errorf("#rmr_c_go_api_test.TestSendMsgRmrInvalidPortError - The rmr router is not ready")
+	}
 
-func initRmr(port string, maxMsgSize int, flags int, log *logger.Logger){
-	var ctx *Context
+	msg := rmrCgo.NewMBuf(1, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
+	log.Debugf("#rmr_c_go_api_test.TestSendMsgRmrInvalidPortError - Going to send the message: %#v\n", msg)
+	result, err := msgr.SendMsg(msg, true)
+
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+
+	msgr.Close()
+}
+
+func initRmr(port string, maxMsgSize int, flags int, log *logger.Logger) {
+	var ctx *rmrCgo.Context
 	msgr = ctx.Init(port, maxMsgSize, flags, log)
+}
+
+func initLog(t *testing.T) *logger.Logger {
+	log, err := logger.InitLogger(logger.DebugLevel)
+	if err != nil {
+		t.Errorf("#rmr_c_go_api_test.initLog - failed to initialize logger, error: %s", err)
+	}
+	return log
 }

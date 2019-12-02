@@ -81,7 +81,9 @@ func (handler *X2ResetRequestHandler) Handle(request models.Request) (models.IRe
 		return nil, e2managererrors.NewWrongStateError(X2_RESET_ACTIVITY_NAME, entities.ConnectionStatus_name[int32(nodeb.ConnectionStatus)])
 	}
 
-	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET, resetRequest.RanName, payload)
+	var xAction []byte
+
+	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET, resetRequest.RanName, payload, xAction)
 
 	err = handler.rmrSender.Send(msg)
 

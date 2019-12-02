@@ -21,18 +21,17 @@
 package rNibWriter
 
 import (
+	"encoding/json"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"github.com/golang/protobuf/proto"
 )
 
-var writerPool *common.Pool
+const E2TAddressesKey = "E2TAddresses"
 
 type rNibWriterInstance struct {
-	sdl       *common.ISdlInstance
-	namespace string
+	sdl common.ISdlInstance
 }
 
 /*
@@ -42,45 +41,27 @@ type RNibWriter interface {
 	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
+	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
+	SaveE2TAddresses(addresses []string) error
 }
 
-/*
-Init initializes the infrastructure required for the RNibWriter instance
-*/
-func Init(namespace string, poolSize int) {
-	initPool(poolSize,
-		func() interface{} {
-			var sdlI common.ISdlInstance = sdlgo.NewSdlInstance(namespace, sdlgo.NewDatabase())
-			return &rNibWriterInstance{sdl: &sdlI, namespace: namespace}
-		},
-		func(obj interface{}) {
-			(*obj.(*rNibWriterInstance).sdl).Close()
-		})
-}
-
-/*
-InitPool initializes the writer's instances pool
-*/
-func initPool(poolSize int, newObj func() interface{}, destroyObj func(interface{})) {
-	writerPool = common.NewPool(poolSize, newObj, destroyObj)
-}
 /*
 GetRNibWriter returns reference to RNibWriter
 */
-func GetRNibWriter() RNibWriter {
-	return &rNibWriterInstance{}
+
+func GetRNibWriter(sdl common.ISdlInstance) RNibWriter {
+	return &rNibWriterInstance{sdl: sdl}
 }
+
 /*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
-func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
-	w := writerPool.Get().(*rNibWriterInstance)
+func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
 	if isNotEmptyIdentity && entity.GetNodeType() == entities.Node_UNKNOWN {
 		return common.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
-	defer writerPool.Put(w)
 	data, err := proto.Marshal(entity)
 	if err != nil {
 		return common.NewInternalError(err)
@@ -112,7 +93,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 			return rNibErr
 		}
 	}
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -124,7 +105,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 		if err != nil {
 			return common.NewInternalError(err)
 		}
-		err = (*w.sdl).RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
+		err = w.sdl.RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
 		if err != nil {
 			return common.NewInternalError(err)
 		}
@@ -136,7 +117,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 	if err != nil {
 		return common.NewInternalError(err)
 	}
-	err = (*w.sdl).AddMember(entity.GetNodeType().String(), nbIdData)
+	err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -146,9 +127,7 @@ func (*rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *en
 /*
 UpdateNodebInfo...
 */
-func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
-	w := writerPool.Get().(*rNibWriterInstance)
-	defer writerPool.Put(w)
+func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 
 	nodebNameKey, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.GetRanName())
 
@@ -171,7 +150,7 @@ func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error 
 		pairs = append(pairs, nodebIdKey, data)
 	}
 
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -183,9 +162,7 @@ func (*rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error 
 /*
 SaveRanLoadInformation stores ran load information for the provided ran
 */
-func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
-	w := writerPool.Get().(*rNibWriterInstance)
-	defer writerPool.Put(w)
+func (w *rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
 
 	key, rnibErr := common.ValidateAndBuildRanLoadInformationKey(inventoryName)
 
@@ -202,7 +179,53 @@ func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadI
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
 
-	err = (*w.sdl).Set(pairs)
+	err = w.sdl.Set(pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func (w *rNibWriterInstance) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
+
+	key, rnibErr := common.ValidateAndBuildE2TInstanceKey(e2tInstance.Address)
+
+	if rnibErr != nil {
+		return rnibErr
+	}
+
+	data, err := json.Marshal(e2tInstance)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	var pairs []interface{}
+	pairs = append(pairs, key, data)
+
+	err = w.sdl.Set(pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func (w *rNibWriterInstance) SaveE2TAddresses(addresses []string) error {
+
+	data, err := json.Marshal(addresses)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	var pairs []interface{}
+	pairs = append(pairs, E2TAddressesKey, data)
+
+	err = w.sdl.Set(pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -212,10 +235,10 @@ func (*rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoadI
 }
 
 /*
-Close closes writer's pool
+Close the writer
 */
 func Close() {
-	writerPool.Close()
+	//Nothing to do
 }
 
 func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {

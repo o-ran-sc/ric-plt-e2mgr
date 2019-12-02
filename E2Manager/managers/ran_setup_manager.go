@@ -37,6 +37,10 @@ type RanSetupManager struct {
 	rmrSender       *rmrsender.RmrSender
 }
 
+type IRanSetupManager interface {
+	ExecuteSetup(nodebInfo *entities.NodebInfo, status entities.ConnectionStatus) error
+}
+
 func NewRanSetupManager(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rnibDataService services.RNibDataService) *RanSetupManager {
 	return &RanSetupManager{
 		logger:          logger,
@@ -105,7 +109,8 @@ func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo, status ent
 	}
 
 	// Send the endc/x2 setup request
-	msg := models.NewRmrMessage(rmrMsgType, nodebInfo.RanName, request.GetMessageAsBytes(m.logger))
+	var xAction []byte
+	msg := models.NewRmrMessage(rmrMsgType, nodebInfo.RanName, request.GetMessageAsBytes(m.logger), xAction)
 
 	err = m.rmrSender.Send(msg)
 

@@ -35,6 +35,7 @@ func (m *RanStatusChangeManager) Execute(msgType int, msgDirection enums.Message
 		return err
 	}
 
-	rmrMessage := models.NewRmrMessage(msgType, nodebInfo.RanName, resourceStatusJson)
+	var xAction []byte
+	rmrMessage := models.NewRmrMessage(msgType, nodebInfo.RanName, resourceStatusJson, xAction)
 	return m.rmrSender.Send(rmrMessage)
 }

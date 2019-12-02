@@ -3,6 +3,7 @@ FROM python:3.6
 RUN python3 -m pip install robotframework \
     && pip install --upgrade RESTinstance \
     && pip install docker \
+    && pip install -U robotframework-requests\
     && apt-get update 
 
 WORKDIR /opt
