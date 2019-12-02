@@ -20,7 +20,7 @@ Release-Notes
 =============
 
 
-This document provides the release notes for the Amber Release of E2Manager
+This document provides the release notes for the Amber release of E2Manager
 
 .. contents::
    :depth: 3
@@ -44,7 +44,7 @@ Version history
 
 Summary
 -------
-The Amber release of E2Manager supports The following flows:
+The Amber release of E2Manager supports the following flows:
 	- ENDC Setup
 	- X2 Setup
 	- ENDC Configuration Update
