@@ -33,10 +33,6 @@ Suite Teardown  Delete All Sessions
 Run setup
     Prepare Ran In Connected Status
 
-prepare logs for tests
-    Remove log files
-    Save logs
-
 Put Http Start Request To RSM
     Put Request Resource Status Start
     Integer  response status  204
@@ -49,6 +45,10 @@ Verify RSM Enable Resource Status Is True In General Configuration In Redis
     ${result}=   rsmscripts.verify_general_config_enable_resource_status_true
     Should Be Equal As Strings  ${result}    True
     
-#Verify RSM Resource Status Request Message Sent
-#${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
-#Should Be Equal As Strings    ${result}      False
+prepare logs for RSM tests
+    Remove log files
+    Save logs
+
+Verify RSM Resource Status Request Message Sent
+    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
+    Should Be Equal As Strings    ${result}      True
