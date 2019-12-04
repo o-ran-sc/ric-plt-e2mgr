@@ -71,5 +71,5 @@ RSM RESOURCE STATUS REQUEST message sent
     Should Be Equal As Strings    ${result}      True
 
 Verify RSM RAN info exists in redis
-   ${result}=   rsmscripts.verify_rsm_ran_info
+   ${result}=   rsmscripts.verify_rsm_ran_info_start_false
    Should Be Equal As Strings  ${result}    True

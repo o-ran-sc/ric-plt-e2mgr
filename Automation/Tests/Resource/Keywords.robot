@@ -32,6 +32,14 @@ Post Request setup node b x-2
     POST        /v1/nodeb/x2-setup    ${json}
 
 
+Put Request Resource Status Start
+    Set Headers     ${header}
+    PUT        /v1/general/resourcestatus  ${resource_status_start_json}
+
+
+Put Request Resource Status Stop
+    Set Headers     ${header}
+    PUT        /v1/general/resourcestatus  ${resource_status_stop_json}
 
 Get Request node b enb test1
     Sleep    1s
@@ -102,8 +110,11 @@ Prepare Enviorment
      ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${stop_simu}
+     Run And Return Rc And Output    ${stop_e2e_simu}
      Run And Return Rc And Output    ${docker_Remove}
+     Run And Return Rc And Output    ${docker_remove_e2e_simu}
      Run And Return Rc And Output    ${run_simu_regular}
+     Run And Return Rc And Output    ${run_e2e_simu_regular}
      Run And Return Rc And Output    ${restart_e2adapter}
      Sleep  2s
      ${result}=  Run And Return Rc And Output     ${docker_command}

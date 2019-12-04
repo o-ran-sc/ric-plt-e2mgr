@@ -17,46 +17,40 @@
 ##############################################################################
 
 *** Settings ***
-Suite Setup  Prepare Enviorment
-Resource    ../Resource/scripts_variables.robot
+Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
+Resource   ../Resource/scripts_variables.robot
+Resource   resource_status_keywords.robot
+Library    ../Scripts/rsmscripts.py
 Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/rsmscripts.py
-Library     REST      ${url}
+Library    OperatingSystem
+Library    REST      ${url_rsm}
+Suite Teardown  Delete All Sessions
 
 
 *** Test Cases ***
-Prepare Ran in Connected connectionStatus
-    Post Request setup node b x-2
-    Integer     response status       204
-    Sleep  1s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    CONNECTED
+Run setup
+    rsmscripts.set_general_config_resource_status_false
 
+    Prepare Ran In Connected Status
 
-Send Reset reqeust with cause
-    Set Headers     ${header}
-    PUT    /v1/nodeb/test1/reset    ${resetcausejson}
+Put Http Stop Request To RSM
+    Put Request Resource Status Stop
     Integer  response status  204
 
+Verify RSM RAN Info Status Is Stop And True In Redis
+    ${result}=   rsmscripts.verify_rsm_ran_info_stop_true
+    Should Be Equal As Strings  ${result}    True
 
-Prepare logs for tests
+Verify RSM Enable Resource Status Is False In General Configuration In Redis
+    ${result}=   rsmscripts.verify_general_config_enable_resource_status_false
+    Should Be Equal As Strings  ${result}    True
+    
+prepare logs for tests
     Remove log files
     Save logs
 
-
-RAN Restarted messege sent
-    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${e2mgr_log_filename}  ${RAN_RESTARTED_message_type}    ${Meid_test1}
-    Should Be Equal As Strings    ${result}      True
-
-RSM RESOURCE STATUS REQUEST message sent
+Verify RSM Resource Status Request Message Sent
     ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
-    Should Be Equal As Strings    ${result}      True
-
-Verify RSM RAN info exists in redis
-   ${result}=   rsmscripts.verify_rsm_ran_info_start_false
-   Should Be Equal As Strings  ${result}    True
+    Should Be Equal As Strings    ${result}      False
