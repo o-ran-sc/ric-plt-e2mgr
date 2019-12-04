@@ -43,7 +43,6 @@ ${stop_e2e_simu}  docker stop e2e_simu
 ${stop_simu}  docker stop gnbe2_simu
 ${run_simu_regular}  docker run -d --name gnbe2_simu --env gNBipv4=localhost  --env gNBport=36422 --env duration=600000000000 --env indicationReportRate=0 --env indicationInsertRate=0 -p 5577:36422/sctp snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/gnbe2_simu:1.0.6
 ${run_e2e_simu_regular}  docker run -d --name e2e_simu -p 36422:36422 --net host -it snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/e2sim:1.4.0 sh -c "./build/e2sim 10.0.2.15 36422"
-${docker_e2e_simu_remove}    docker rm e2e_simu
 ${docker_Remove}    docker rm gnbe2_simu
 ${docker_remove_e2e_simu}    docker rm e2e_simu
 ${docker_restart}   docker restart e2mgr
