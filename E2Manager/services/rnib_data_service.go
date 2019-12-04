@@ -36,9 +36,10 @@ type RNibDataService interface {
 	GetListNodebIds() ([]*entities.NbIdentity, error)
 	PingRnib() bool
 	GetE2TInstance(address string) (*entities.E2TInstance, error)
-	GetE2TInfoList() ([]*entities.E2TInstanceInfo, error)
+	GetE2TInstances(addresses []string) ([]*entities.E2TInstance, error)
+	GetE2TAddresses() ([]string, error)
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
-	SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error
+	SaveE2TAddresses(addresses []string) error
 }
 
 type rNibDataService struct {
@@ -130,17 +131,31 @@ func (w *rNibDataService) GetE2TInstance(address string) (*entities.E2TInstance,
 
 	return e2tInstance, err
 }
-func (w *rNibDataService) GetE2TInfoList() ([]*entities.E2TInstanceInfo, error) {
-	w.logger.Infof("#RnibDataService.GetE2TInfoList")
 
-	var e2tInfoList []*entities.E2TInstanceInfo = nil
+func (w *rNibDataService) GetE2TInstances(addresses []string) ([]*entities.E2TInstance, error) {
+	w.logger.Infof("#RnibDataService.GetE2TInstances")
 
-	err := w.retry("GetE2TInfoList", func() (err error) {
-		e2tInfoList, err = w.rnibReader.GetE2TInfoList()
+	var e2tInstances []*entities.E2TInstance = nil
+
+	err := w.retry("GetE2TInstance", func() (err error) {
+		e2tInstances, err = w.rnibReader.GetE2TInstances(addresses)
 		return
 	})
 
-	return e2tInfoList, err
+	return e2tInstances, err
+}
+
+func (w *rNibDataService) GetE2TAddresses() ([]string, error) {
+	w.logger.Infof("#RnibDataService.GetE2TAddresses")
+
+	var e2tAddresses []string = nil
+
+	err := w.retry("GetE2TAddresses", func() (err error) {
+		e2tAddresses, err = w.rnibReader.GetE2TAddresses()
+		return
+	})
+
+	return e2tAddresses, err
 }
 
 func (w *rNibDataService) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
@@ -154,11 +169,11 @@ func (w *rNibDataService) SaveE2TInstance(e2tInstance *entities.E2TInstance) err
 	return err
 }
 
-func (w *rNibDataService) SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error {
-	w.logger.Infof("#RnibDataService.SaveE2TInfoList")
+func (w *rNibDataService) SaveE2TAddresses(addresses []string) error {
+	w.logger.Infof("#RnibDataService.SaveE2TAddresses")
 
-	err := w.retry("SaveE2TInfoList", func() (err error) {
-		err = w.rnibWriter.SaveE2TInfoList(e2tInfoList)
+	err := w.retry("SaveE2TAddresses", func() (err error) {
+		err = w.rnibWriter.SaveE2TAddresses(addresses)
 		return
 	})
 

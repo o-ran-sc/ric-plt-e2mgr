@@ -103,12 +103,12 @@ func TestConnectingRanWithMaxAttemptsReconnectionDeassociateSucceeds(t *testing.
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
-	e2tInstancesManagerMock.On("DeassociateRan", ranName, e2tAddress).Return(nil)
+	e2tInstancesManagerMock.On("DissociateRan", ranName, e2tAddress).Return(nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
-	e2tInstancesManagerMock.AssertCalled(t, "DeassociateRan", ranName, e2tAddress)
+	e2tInstancesManagerMock.AssertCalled(t, "DissociateRan", ranName, e2tAddress)
 }
 
 func TestConnectingRanWithMaxAttemptsReconnectionDeassociateFails(t *testing.T) {
@@ -122,12 +122,12 @@ func TestConnectingRanWithMaxAttemptsReconnectionDeassociateFails(t *testing.T) 
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
-	e2tInstancesManagerMock.On("DeassociateRan", ranName, e2tAddress).Return(common.NewInternalError(errors.New("Error")))
+	e2tInstancesManagerMock.On("DissociateRan", ranName, e2tAddress).Return(common.NewInternalError(errors.New("Error")))
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.NotNil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
-	e2tInstancesManagerMock.AssertCalled(t, "DeassociateRan", ranName, e2tAddress)
+	e2tInstancesManagerMock.AssertCalled(t, "DissociateRan", ranName, e2tAddress)
 }
 
 func TestUnconnectableRanUpdateNodebInfoFailure(t *testing.T) {

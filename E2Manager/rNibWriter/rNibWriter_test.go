@@ -607,9 +607,8 @@ func TestSaveE2TInfoListSuccess(t *testing.T) {
 	address := "10.10.2.15:9800"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
-	e2tInfo := entities.NewE2TInstanceInfo(address)
-	e2tInfoList := []*entities.E2TInstanceInfo{e2tInfo}
-	data, err := json.Marshal(e2tInfoList)
+	e2tAddresses := []string{address}
+	data, err := json.Marshal(e2tAddresses)
 
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSuccess - Failed to marshal E2TInfoList. Error: %v", err)
@@ -617,10 +616,10 @@ func TestSaveE2TInfoListSuccess(t *testing.T) {
 
 	var e error
 	var setExpected []interface{}
-	setExpected = append(setExpected, E2TInfoListKey, data)
+	setExpected = append(setExpected, E2TAddressesKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
 
-	rNibErr := w.SaveE2TInfoList(e2tInfoList)
+	rNibErr := w.SaveE2TAddresses(e2tAddresses)
 	assert.Nil(t, rNibErr)
 }
 
@@ -628,9 +627,8 @@ func TestSaveE2TInfoListSdlFailure(t *testing.T) {
 	address := "10.10.2.15:9800"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
-	e2tInfo := entities.NewE2TInstanceInfo(address)
-	e2tInfoList := []*entities.E2TInstanceInfo{e2tInfo}
-	data, err := json.Marshal(e2tInfoList)
+	e2tAddresses := []string{address}
+	data, err := json.Marshal(e2tAddresses)
 
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSdlFailure - Failed to marshal E2TInfoList. Error: %v", err)
@@ -638,10 +636,10 @@ func TestSaveE2TInfoListSdlFailure(t *testing.T) {
 
 	expectedErr := errors.New("expected error")
 	var setExpected []interface{}
-	setExpected = append(setExpected, E2TInfoListKey, data)
+	setExpected = append(setExpected, E2TAddressesKey, data)
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
 
-	rNibErr := w.SaveE2TInfoList(e2tInfoList)
+	rNibErr := w.SaveE2TAddresses(e2tAddresses)
 	assert.NotNil(t, rNibErr)
 	assert.IsType(t, &common.InternalError{}, rNibErr)
 }

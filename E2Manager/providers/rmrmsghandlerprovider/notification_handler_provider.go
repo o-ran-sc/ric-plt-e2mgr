@@ -54,7 +54,7 @@ func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrms
 	provider.notificationHandlers[msgType] = handler
 }
 
-func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager) {
+func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager) {
 
 	// Init converters
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -65,7 +65,6 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
-	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager, e2tInstancesManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)

@@ -67,8 +67,9 @@ func initRmrReceiver(logger *logger.Logger) *RmrReceiver {
 	rmrMessenger := initRmrMessenger(logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
+	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	return NewRmrReceiver(logger, rmrMessenger, notificationManager)
 }

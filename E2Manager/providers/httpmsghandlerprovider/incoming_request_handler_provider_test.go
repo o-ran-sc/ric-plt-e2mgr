@@ -48,7 +48,8 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
+	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

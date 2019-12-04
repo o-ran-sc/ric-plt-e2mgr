@@ -41,8 +41,8 @@ func (m *E2TInstancesManagerMock) RemoveE2TInstance(e2tInstance *entities.E2TIns
 	return args.Error(0)
 }
 
-func (m *E2TInstancesManagerMock) SelectE2TInstance(e2tInstance *entities.E2TInstance) (string, error) {
-	args := m.Called(e2tInstance)
+func (m *E2TInstancesManagerMock) SelectE2TInstance() (string, error) {
+	args := m.Called()
 	return args.String(0), args.Error(1)
 }
 
@@ -51,8 +51,14 @@ func (m *E2TInstancesManagerMock) AssociateRan(ranName string, e2tAddress string
 	return args.Error(0)
 
 }
-func (m *E2TInstancesManagerMock) DeassociateRan(ranName string, e2tAddress string) error {
+func (m *E2TInstancesManagerMock) DissociateRan(ranName string, e2tAddress string) error {
 	args := m.Called(ranName, e2tAddress)
 	return args.Error(0)
 
+}
+
+func (m *E2TInstancesManagerMock) GetE2TInstances() ([]*entities.E2TInstance, error) {
+	args := m.Called()
+
+	return args.Get(0).([]*entities.E2TInstance), args.Error(1)
 }

@@ -28,8 +28,9 @@ func initNotificationManagerTest(t *testing.T) (*logger.Logger, *mocks.RnibReade
 	rmrSender := initRmrSender(&mocks.RmrMessengerMock{}, logger)
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
+	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
 	notificationManager := NewNotificationManager(logger, rmrNotificationHandlerProvider )
 	return logger, readerMock, notificationManager
 }

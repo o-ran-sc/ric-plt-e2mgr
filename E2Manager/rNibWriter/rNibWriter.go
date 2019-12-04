@@ -25,7 +25,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-const E2TInfoListKey = "E2TInfoList"
+const E2TAddressesKey = "E2TAddresses"
 
 type rNibWriterInstance struct {
 	sdl common.ISdlInstance
@@ -39,7 +39,7 @@ type RNibWriter interface {
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
-	SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error
+	SaveE2TAddresses(addresses []string) error
 }
 
 /*
@@ -211,16 +211,16 @@ func (w *rNibWriterInstance) SaveE2TInstance(e2tInstance *entities.E2TInstance) 
 	return nil
 }
 
-func (w *rNibWriterInstance) SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error {
+func (w *rNibWriterInstance) SaveE2TAddresses(addresses []string) error {
 
-	data, err := json.Marshal(e2tInfoList)
+	data, err := json.Marshal(addresses)
 
 	if err != nil {
 		return common.NewInternalError(err)
 	}
 
 	var pairs []interface{}
-	pairs = append(pairs, E2TInfoListKey, data)
+	pairs = append(pairs, E2TAddressesKey, data)
 
 	err = w.sdl.Set(pairs)
 

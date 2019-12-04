@@ -43,21 +43,21 @@ type IncomingRequestHandlerProvider struct {
 	logger     *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap: initRequestHandlerMap(logger, rmrSender, config, rNibDataService, ranSetupManager),
+		requestMap: initRequestHandlerMap(logger, rmrSender, config, rNibDataService, ranSetupManager, e2tInstancesManager),
 		logger:     logger,
 	}
 }
 
-func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager,e2tInstancesManager managers.IE2TInstancesManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
 		ShutdownRequest:  httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService), //TODO change to pointer
 		ResetRequest:     httpmsghandlers.NewX2ResetRequestHandler(logger, rmrSender, rNibDataService),
-		X2SetupRequest:   httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST),
-		EndcSetupRequest: httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST), //TODO change to pointer
+		X2SetupRequest:   httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, e2tInstancesManager),
+		EndcSetupRequest: httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, e2tInstancesManager),
 		GetNodebRequest:  httpmsghandlers.NewGetNodebRequestHandler(logger, rNibDataService),
 		GetNodebIdListRequest: httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
 	}

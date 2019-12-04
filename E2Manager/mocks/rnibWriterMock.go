@@ -68,8 +68,8 @@ func (rnibWriterMock *RnibWriterMock) SaveE2TInstance(e2tInstance *entities.E2TI
 	return args.Error(0)
 }
 
-func (rnibWriterMock *RnibWriterMock) SaveE2TInfoList(e2tInfoList []*entities.E2TInstanceInfo) error {
-	args := rnibWriterMock.Called(e2tInfoList)
+func (rnibWriterMock *RnibWriterMock) SaveE2TAddresses(addresses []string) error {
+	args := rnibWriterMock.Called(addresses)
 
 	return args.Error(0)
 }

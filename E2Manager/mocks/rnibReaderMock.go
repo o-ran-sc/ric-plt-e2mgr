@@ -29,7 +29,6 @@ func (m *RnibReaderMock) GetNodeb(inventoryName string) (*entities.NodebInfo, er
 	args := m.Called(inventoryName)
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).(*entities.NodebInfo), errArg.(error);
 	}
@@ -41,7 +40,6 @@ func (m *RnibReaderMock) GetNodebByGlobalNbId(nodeType entities.Node_Type, globa
 	args := m.Called(nodeType, globalNbId)
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).(*entities.NodebInfo), errArg.(error);
 	}
@@ -53,7 +51,6 @@ func (m *RnibReaderMock) GetCellList(inventoryName string) (*entities.Cells, err
 	args := m.Called(inventoryName)
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).(*entities.Cells), errArg.(error);
 	}
@@ -65,7 +62,6 @@ func (m *RnibReaderMock) GetListGnbIds() ([]*entities.NbIdentity, error) {
 	args := m.Called()
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).([]*entities.NbIdentity), errArg.(error);
 	}
@@ -77,7 +73,6 @@ func (m *RnibReaderMock) GetListEnbIds() ([]*entities.NbIdentity, error) {
 	args := m.Called()
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).([]*entities.NbIdentity), errArg.(error);
 	}
@@ -90,7 +85,6 @@ func (m *RnibReaderMock) GetCountGnbList() (int, error) {
 	args := m.Called()
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Int(0), errArg.(error);
 	}
@@ -103,7 +97,6 @@ func (m *RnibReaderMock) GetCell(inventoryName string, pci uint32) (*entities.Ce
 	args := m.Called(inventoryName, pci)
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).(*entities.Cell), errArg.(error);
 	}
@@ -115,7 +108,6 @@ func (m *RnibReaderMock) GetCellById(cellType entities.Cell_Type, cellId string)
 	args := m.Called(cellType, cellId)
 
 	errArg := args.Get(1);
-
 	if errArg != nil {
 		return args.Get(0).(*entities.Cell), errArg.(error);
 	}
@@ -152,7 +144,12 @@ func (m *RnibReaderMock) GetE2TInstance(e2taddress string) (*entities.E2TInstanc
 	return args.Get(0).(*entities.E2TInstance), args.Error(1)
 }
 
-func (m *RnibReaderMock) GetE2TInfoList() ([]*entities.E2TInstanceInfo, error) {
+func (m *RnibReaderMock) GetE2TInstances(addresses []string) ([]*entities.E2TInstance, error) {
+	args := m.Called(addresses)
+	return args.Get(0).([]*entities.E2TInstance), args.Error(1)
+}
+
+func (m *RnibReaderMock) GetE2TAddresses() ([]string, error) {
 	args := m.Called()
-	return args.Get(0).([]*entities.E2TInstanceInfo), args.Error(1)
+	return args.Get(0).([]string), args.Error(1)
 }
