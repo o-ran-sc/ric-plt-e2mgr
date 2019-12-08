@@ -36,13 +36,13 @@ const (
 type SetupRequestHandler struct {
 	rNibDataService     services.RNibDataService
 	logger              *logger.Logger
-	ranSetupManager     *managers.RanSetupManager
+	ranSetupManager     managers.IRanSetupManager
 	protocol            entities.E2ApplicationProtocol
 	e2tInstancesManager managers.IE2TInstancesManager
 }
 
 func NewSetupRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService,
-	ranSetupManager *managers.RanSetupManager, protocol entities.E2ApplicationProtocol, e2tInstancesManager managers.IE2TInstancesManager) *SetupRequestHandler {
+	ranSetupManager managers.IRanSetupManager, protocol entities.E2ApplicationProtocol, e2tInstancesManager managers.IE2TInstancesManager) *SetupRequestHandler {
 	return &SetupRequestHandler{
 		logger:              logger,
 		rNibDataService:     rNibDataService,
@@ -52,35 +52,40 @@ func NewSetupRequestHandler(logger *logger.Logger, rNibDataService services.RNib
 	}
 }
 
-func (handler *SetupRequestHandler) Handle(request models.Request) (models.IResponse, error) {
+func (h *SetupRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
 	setupRequest := request.(models.SetupRequest)
 
-	err := handler.validateRequestDetails(setupRequest)
+	err := h.validateRequestDetails(setupRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	nodebInfo, err := handler.rNibDataService.GetNodeb(setupRequest.RanName)
+	nodebInfo, err := h.rNibDataService.GetNodeb(setupRequest.RanName)
 
 	if err != nil {
 		_, ok := err.(*common.ResourceNotFoundError)
 		if !ok {
-			handler.logger.Errorf("#SetupRequestHandler.Handle - failed to get nodeB entity for ran name: %v from RNIB. Error: %s",
-				setupRequest.RanName, err.Error())
+			h.logger.Errorf("#SetupRequestHandler.Handle - failed to get nodeB entity for ran name: %v from RNIB. Error: %s", setupRequest.RanName, err)
 			return nil, e2managererrors.NewRnibDbError()
 		}
 
-		result := handler.connectNewRan(&setupRequest, handler.protocol)
+		result := h.connectNewRan(&setupRequest, h.protocol)
+		return nil, result
+	}
+
+	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
+		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN: %s in wrong state (%s)", nodebInfo.RanName, entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
+		result := e2managererrors.NewWrongStateError(h.getActivityName(h.protocol), entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
 		return nil, result
 	}
 
 	if len(nodebInfo.AssociatedE2TInstanceAddress) != 0 {
-		result := handler.connectExistingRanWithAssociatedE2TAddress(nodebInfo)
+		result := h.connectExistingRanWithAssociatedE2TAddress(nodebInfo)
 		return nil, result
 	}
 
-	result := handler.connectExistingRanWithoutAssociatedE2TAddress(nodebInfo)
+	result := h.connectExistingRanWithoutAssociatedE2TAddress(nodebInfo)
 	return nil, result
 }
 
@@ -107,7 +112,21 @@ func (h *SetupRequestHandler) connectExistingRanWithoutAssociatedE2TAddress(node
 	e2tAddress, err := h.e2tInstancesManager.SelectE2TInstance()
 
 	if err != nil {
-		//TODO: handle
+		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithoutAssociatedE2TAddress - RAN name: %s - failed selecting E2T instance", nodebInfo.RanName)
+
+		// TODO: reset connection attempts?
+
+		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_DISCONNECTED {
+			return err
+		}
+
+		nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+		updateError := h.rNibDataService.UpdateNodebInfo(nodebInfo)
+
+		if updateError != nil {
+			h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithoutAssociatedE2TAddress - RAN name: %s - failed updating nodeb. error: %s", nodebInfo.RanName, updateError)
+		}
+
 		return err
 	}
 
@@ -115,7 +134,7 @@ func (h *SetupRequestHandler) connectExistingRanWithoutAssociatedE2TAddress(node
 
 	if err != nil {
 		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithoutAssociatedE2TAddress - RAN name: %s - failed associating ran to e2t address %s. error: %s", nodebInfo.RanName, e2tAddress, err)
-		return e2managererrors.NewRnibDbError()
+		return err
 	}
 
 	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
@@ -135,19 +154,11 @@ func (h *SetupRequestHandler) connectExistingRanWithoutAssociatedE2TAddress(node
 }
 
 func (h *SetupRequestHandler) connectExistingRanWithAssociatedE2TAddress(nodebInfo *entities.NodebInfo) error {
-
-	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
-		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN: %s in wrong state (%s)", nodebInfo.RanName, entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
-		return e2managererrors.NewWrongStateError(h.getActivityName(h.protocol), entities.ConnectionStatus_name[int32(nodebInfo.ConnectionStatus)])
-	}
-
 	status := entities.ConnectionStatus_CONNECTING
 	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_CONNECTED {
 		status = nodebInfo.ConnectionStatus
 	}
-
 	nodebInfo.ConnectionAttempts = 0
-
 	err := h.rNibDataService.UpdateNodebInfo(nodebInfo)
 
 	if err != nil {
@@ -156,6 +167,7 @@ func (h *SetupRequestHandler) connectExistingRanWithAssociatedE2TAddress(nodebIn
 	}
 
 	h.logger.Infof("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN name: %s - successfully updated nodeb in rNib", nodebInfo.RanName)
+
 
 	result := h.ranSetupManager.ExecuteSetup(nodebInfo, status)
 	return result
@@ -166,7 +178,7 @@ func (h *SetupRequestHandler) connectNewRan(request *models.SetupRequest, protoc
 	e2tAddress, err := h.e2tInstancesManager.SelectE2TInstance()
 
 	if err != nil {
-		//TODO: handle
+		h.logger.Errorf("#SetupRequestHandler.connectNewRan - RAN name: %s - failed selecting E2T instance", request.RanName)
 		return err
 	}
 
@@ -174,7 +186,7 @@ func (h *SetupRequestHandler) connectNewRan(request *models.SetupRequest, protoc
 
 	if err != nil {
 		h.logger.Errorf("#SetupRequestHandler.connectNewRan - RAN name: %s - failed associating ran to e2t address %s. error: %s", request.RanName, e2tAddress, err)
-		return e2managererrors.NewRnibDbError()
+		return err
 	}
 
 	nodebInfo, nodebIdentity := createInitialNodeInfo(request, protocol, e2tAddress)

@@ -1,9 +1,26 @@
+//
+// Copyright 2019 AT&T Intellectual Property
+// Copyright 2019 Nokia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 package managers
 
 import (
+	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/services"
-	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"math"
@@ -69,7 +86,6 @@ func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error)
 	}
 
 	return e2tInstances, nil
-
 }
 
 func findActiveE2TInstanceWithMinimumAssociatedRans(e2tInstances []*entities.E2TInstance) *entities.E2TInstance {
@@ -87,11 +103,6 @@ func findActiveE2TInstanceWithMinimumAssociatedRans(e2tInstances []*entities.E2T
 }
 
 func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
-
-	if len(e2tAddress) == 0 {
-		m.logger.Errorf("#AddE2TInstance - Empty E2T address received")
-		return fmt.Errorf("empty E2T address")
-	}
 
 	e2tInstance := entities.NewE2TInstance(e2tAddress)
 	err := m.rnibDataService.SaveE2TInstance(e2tInstance)
@@ -170,21 +181,20 @@ func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 	e2tInstances, err := m.GetE2TInstances()
 
 	if err != nil {
-		//TODO: handle
-		return "", err
+		m.logger.Errorf("#E2TInstancesManager.SelectE2TInstance - failed retrieving E2T instances. error: %s", err)
+		return "", e2managererrors.NewRnibDbError()
 	}
 
 	if len(e2tInstances) == 0 {
-		//TODO: handle
-		return "", err
+		m.logger.Errorf("#E2TInstancesManager.SelectE2TInstance - No E2T instance found")
+		return "", e2managererrors.NewE2TInstanceAbsenceError()
 	}
 
 	min := findActiveE2TInstanceWithMinimumAssociatedRans(e2tInstances)
 
 	if min == nil {
 		m.logger.Errorf("#SelectE2TInstance - No active E2T instance found")
-		//TODO: handle
-		return "", fmt.Errorf("No active E2T instance found")
+		return "", e2managererrors.NewE2TInstanceAbsenceError()
 	}
 
 	return min.Address, nil
@@ -199,7 +209,7 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 
 	if err != nil {
 		m.logger.Errorf("#AssociateRan - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
-		return err
+		return e2managererrors.NewRnibDbError()
 	}
 
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, ranName)
@@ -208,7 +218,7 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 
 	if err != nil {
 		m.logger.Errorf("#AssociateRan - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
-		return err
+		return e2managererrors.NewRnibDbError()
 	}
 
 	return nil

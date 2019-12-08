@@ -56,6 +56,11 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 
 	e2tAddress := unmarshalledPayload.Address
 
+	if len(e2tAddress) == 0 {
+		h.logger.Errorf("#E2TermInitNotificationHandler - Empty E2T address received")
+		return
+	}
+
 	e2tInstance, err := h.e2tInstancesManager.GetE2TInstance(e2tAddress)
 
 	if err != nil {

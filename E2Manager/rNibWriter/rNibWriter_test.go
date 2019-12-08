@@ -463,76 +463,6 @@ func TestGetRNibWriter(t *testing.T) {
 	assert.NotEmpty(t, received)
 }
 
-//Integration tests
-//
-//func TestSaveEnbGnbInteg(t *testing.T){
-//	for i := 0; i<10; i++{
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		nb := entities.NodebInfo{}
-//		nb.NodeType = entities.Node_ENB
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb.Ip = "localhost"
-//		nb.Port = uint32(5656 + i)
-//		enb := entities.Enb{}
-//		cell1 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",111 + i), Pci:uint32(11 + i)}
-//		cell2 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",222 + i), Pci:uint32(22 + i)}
-//		cell3 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",333 + i), Pci:uint32(33 + i)}
-//		enb.ServedCells = []*entities.ServedCellInfo{cell1, cell2, cell3}
-//		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
-//		plmnId := 0x02f828
-//		nbId := 0x4a952a0a
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
-//		err := w.SaveNodeb(nbIdentity, &nb)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//
-//		nb1 := entities.NodebInfo{}
-//		nb1.NodeType = entities.Node_GNB
-//		nb1.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb1.Ip = "localhost"
-//		nb1.Port =  uint32(6565 + i)
-//		gnb := entities.Gnb{}
-//		gCell1 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",1111 + i), NrPci:uint32(1 + i)}}
-//		gCell2 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",2222 + i), NrPci:uint32(2 + i)}}
-//		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
-//		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
-//		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
-//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
-//		err = w.SaveNodeb(nbIdentity, &nb1)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//	}
-//}
-//
-//func TestSaveNbRanNamesInteg(t *testing.T){
-//	for i := 0; i<10; i++{
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		nb := entities.NodebInfo{}
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTING
-//		nb.Ip = "localhost"
-//		nb.Port = uint32(5656 + i)
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameOnly%d" ,i)}
-//		err := w.SaveNodeb(nbIdentity, &nb)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//	}
-//}
-//
-//func TestSaveRanLoadInformationInteg(t *testing.T){
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		ranLoadInformation := generateRanLoadInformation()
-//		err := w.SaveRanLoadInformation("ran_integ", ranLoadInformation)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationInteg - Failed to save RanLoadInformation entity. Error: %v", err)
-//		}
-//}
-
 func TestSaveE2TInstanceSuccess(t *testing.T) {
 	address := "10.10.2.15:9800"
 	loadKey, validationErr := common.ValidateAndBuildE2TInstanceKey(address)
@@ -643,3 +573,73 @@ func TestSaveE2TInfoListSdlFailure(t *testing.T) {
 	assert.NotNil(t, rNibErr)
 	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
+
+//Integration tests
+//
+//func TestSaveEnbGnbInteg(t *testing.T){
+//	for i := 0; i<10; i++{
+//		Init("e2Manager", 1)
+//		w := GetRNibWriter()
+//		nb := entities.NodebInfo{}
+//		nb.NodeType = entities.Node_ENB
+//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+//		nb.Ip = "localhost"
+//		nb.Port = uint32(5656 + i)
+//		enb := entities.Enb{}
+//		cell1 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",111 + i), Pci:uint32(11 + i)}
+//		cell2 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",222 + i), Pci:uint32(22 + i)}
+//		cell3 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",333 + i), Pci:uint32(33 + i)}
+//		enb.ServedCells = []*entities.ServedCellInfo{cell1, cell2, cell3}
+//		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
+//		plmnId := 0x02f828
+//		nbId := 0x4a952a0a
+//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
+//		err := w.SaveNodeb(nbIdentity, &nb)
+//		if err != nil{
+//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+//		}
+//
+//		nb1 := entities.NodebInfo{}
+//		nb1.NodeType = entities.Node_GNB
+//		nb1.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+//		nb1.Ip = "localhost"
+//		nb1.Port =  uint32(6565 + i)
+//		gnb := entities.Gnb{}
+//		gCell1 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",1111 + i), NrPci:uint32(1 + i)}}
+//		gCell2 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",2222 + i), NrPci:uint32(2 + i)}}
+//		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
+//		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
+//		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
+//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
+//		err = w.SaveNodeb(nbIdentity, &nb1)
+//		if err != nil{
+//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+//		}
+//	}
+//}
+//
+//func TestSaveNbRanNamesInteg(t *testing.T){
+//	for i := 0; i<10; i++{
+//		Init("e2Manager", 1)
+//		w := GetRNibWriter()
+//		nb := entities.NodebInfo{}
+//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTING
+//		nb.Ip = "localhost"
+//		nb.Port = uint32(5656 + i)
+//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameOnly%d" ,i)}
+//		err := w.SaveNodeb(nbIdentity, &nb)
+//		if err != nil{
+//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
+//		}
+//	}
+//}
+//
+//func TestSaveRanLoadInformationInteg(t *testing.T){
+//		Init("e2Manager", 1)
+//		w := GetRNibWriter()
+//		ranLoadInformation := generateRanLoadInformation()
+//		err := w.SaveRanLoadInformation("ran_integ", ranLoadInformation)
+//		if err != nil{
+//			t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationInteg - Failed to save RanLoadInformation entity. Error: %v", err)
+//		}
+//}

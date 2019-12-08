@@ -66,6 +66,13 @@ func TestE2TermInitUnmarshalPayloadFailure(t *testing.T) {
 	e2tInstancesManagerMock.AssertNotCalled(t, "AddE2TInstance")
 }
 
+func TestE2TermInitEmptyE2TAddress(t *testing.T) {
+	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte("{\"address\":\"\"}")}
+	handler.Handle(notificationRequest)
+	e2tInstancesManagerMock.AssertNotCalled(t, "GetE2TInstance")
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddE2TInstance")
+}
 
 func TestE2TermInitGetE2TInstanceFailure(t *testing.T) {
 	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
