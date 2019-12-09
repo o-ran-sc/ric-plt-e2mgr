@@ -533,7 +533,7 @@ func generateE2tInstance(address string) *entities.E2TInstance {
 	return e2tInstance
 }
 
-func TestSaveE2TInfoListSuccess(t *testing.T) {
+func TestSaveE2TAddressesSuccess(t *testing.T) {
 	address := "10.10.2.15:9800"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
@@ -553,7 +553,7 @@ func TestSaveE2TInfoListSuccess(t *testing.T) {
 	assert.Nil(t, rNibErr)
 }
 
-func TestSaveE2TInfoListSdlFailure(t *testing.T) {
+func TestSaveE2TAddressesSdlFailure(t *testing.T) {
 	address := "10.10.2.15:9800"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 

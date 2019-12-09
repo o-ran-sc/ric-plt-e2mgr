@@ -84,7 +84,7 @@ func TestX2SetupHandleInvalidIpError(t *testing.T) {
 	readerMock.AssertNotCalled(t, "GetNodeb")
 }
 
-func TestX2SetupHandleGetNodebFailure(t *testing.T) {
+func TestSetupGetNodebFailure(t *testing.T) {
 	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	rnibErr := &common.ValidationError{}
@@ -243,7 +243,7 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectNoInstanceErrorUpdateFailu
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
-func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorDisconnected(t *testing.T) {
+func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t *testing.T) {
 	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress:"", ConnectionStatus:entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", RanName).Return(nb , nil)
@@ -326,7 +326,7 @@ func TestSetupExistingRanWithAssocE2TInstanceUpdateNodebFailure(t *testing.T) {
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
-func TestSetupExistingConnectedRanWithAssocE2TInstanceSuccess(t *testing.T) {
+func TestSetupExistingRanWithAssocE2TInstanceConnectedSuccess(t *testing.T) {
 	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", RanName).Return(nb , nil)

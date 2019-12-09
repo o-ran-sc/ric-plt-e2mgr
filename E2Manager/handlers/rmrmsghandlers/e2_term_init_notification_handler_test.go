@@ -103,7 +103,7 @@ func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
 	e2tInstancesManagerMock.AssertCalled(t, "GetE2TInstance", e2tInstanceAddress)
 }
 
-func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
+func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
@@ -130,11 +130,9 @@ func TestE2TerminInitHandlerSuccessOneRan(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
-func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
+func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
-
-
 	var initialNodeb0 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var initialNodeb1 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb0, rnibErr)
@@ -160,7 +158,7 @@ func TestE2TerminInitHandlerSuccessTwoRans(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 2)
 }
 
-func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
+func TestE2TermInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
@@ -202,7 +200,7 @@ func TestE2TerminInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
-func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
+func TestE2TermInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
 	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
@@ -250,7 +248,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) 
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 2)
 }
 
-func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *testing.T) {
+func TestE2TermInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *testing.T) {
 	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
@@ -298,7 +296,7 @@ func TestE2TerminInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *te
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
-func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
+func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
 	_, handler, _, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
@@ -311,7 +309,7 @@ func TestE2TerminInitHandlerSuccessZeroRans(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 }
 
-func TestE2TerminInitHandlerFailureGetListNodebIds(t *testing.T) {
+func TestE2TermInitHandlerFailureGetListNodebIds(t *testing.T) {
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 
 	var nodebInfo *entities.NodebInfo

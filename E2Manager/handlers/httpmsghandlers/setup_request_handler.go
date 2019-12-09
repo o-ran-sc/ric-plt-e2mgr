@@ -114,13 +114,12 @@ func (h *SetupRequestHandler) connectExistingRanWithoutAssociatedE2TAddress(node
 	if err != nil {
 		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithoutAssociatedE2TAddress - RAN name: %s - failed selecting E2T instance", nodebInfo.RanName)
 
-		// TODO: reset connection attempts?
-
-		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_DISCONNECTED {
+		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_DISCONNECTED && nodebInfo.ConnectionAttempts == 0 {
 			return err
 		}
 
 		nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+		nodebInfo.ConnectionAttempts = 0
 		updateError := h.rNibDataService.UpdateNodebInfo(nodebInfo)
 
 		if updateError != nil {

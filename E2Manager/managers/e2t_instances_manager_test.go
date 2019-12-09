@@ -49,30 +49,6 @@ func TestAddNewE2TInstanceGetE2TAddressesInternalFailure(t *testing.T) {
 	rnibReaderMock.AssertNotCalled(t, "SaveE2TAddresses")
 }
 
-func TestAddNewE2TInstanceNoE2TAddresses(t *testing.T) {
-	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
-	e2tAddresses := []string{}
-	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, common.NewResourceNotFoundError(""))
-	e2tAddresses = append(e2tAddresses, E2TAddress)
-	rnibWriterMock.On("SaveE2TAddresses", e2tAddresses).Return(nil)
-	err := e2tInstancesManager.AddE2TInstance(E2TAddress)
-	assert.Nil(t, err)
-	rnibWriterMock.AssertCalled(t, "SaveE2TAddresses", e2tAddresses)
-}
-
-func TestAddNewE2TInstanceEmptyE2TAddresses(t *testing.T) {
-	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
-	e2tAddresses := []string{}
-	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
-	e2tAddresses = append(e2tAddresses, E2TAddress)
-	rnibWriterMock.On("SaveE2TAddresses", e2tAddresses).Return(nil)
-	err := e2tInstancesManager.AddE2TInstance(E2TAddress)
-	assert.Nil(t, err)
-	rnibWriterMock.AssertCalled(t, "SaveE2TAddresses", e2tAddresses)
-}
-
 func TestAddNewE2TInstanceSaveE2TAddressesFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
@@ -84,14 +60,39 @@ func TestAddNewE2TInstanceSaveE2TAddressesFailure(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestGetE2TInstanceSuccess(t *testing.T) {
-	rnibReaderMock, _, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	address := "10.10.2.15:9800"
-	e2tInstance := entities.NewE2TInstance(address)
-	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
-	res, err := e2tInstancesManager.GetE2TInstance(address)
+func TestAddNewE2TInstanceNoE2TAddressesSuccess(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+	e2tAddresses := []string{}
+	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, common.NewResourceNotFoundError(""))
+	e2tAddresses = append(e2tAddresses, E2TAddress)
+	rnibWriterMock.On("SaveE2TAddresses", e2tAddresses).Return(nil)
+	err := e2tInstancesManager.AddE2TInstance(E2TAddress)
 	assert.Nil(t, err)
-	assert.Equal(t, e2tInstance, res)
+	rnibWriterMock.AssertCalled(t, "SaveE2TAddresses", e2tAddresses)
+}
+
+func TestAddNewE2TInstanceEmptyE2TAddressesSuccess(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+	e2tAddresses := []string{}
+	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tAddresses = append(e2tAddresses, E2TAddress)
+	rnibWriterMock.On("SaveE2TAddresses", e2tAddresses).Return(nil)
+	err := e2tInstancesManager.AddE2TInstance(E2TAddress)
+	assert.Nil(t, err)
+	rnibWriterMock.AssertCalled(t, "SaveE2TAddresses", e2tAddresses)
+}
+
+func TestAddNewE2TInstanceExistingE2TAddressesSuccess(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+	E2TAddresses := []string{"10.0.1.15:3030"}
+	rnibReaderMock.On("GetE2TAddresses").Return(E2TAddresses, nil)
+	E2TAddresses = append(E2TAddresses, E2TAddress)
+	rnibWriterMock.On("SaveE2TAddresses", E2TAddresses).Return(nil)
+	err := e2tInstancesManager.AddE2TInstance(E2TAddress)
+	assert.Nil(t, err)
 }
 
 func TestGetE2TInstanceFailure(t *testing.T) {
@@ -103,20 +104,14 @@ func TestGetE2TInstanceFailure(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestAssociateRanSuccess(t *testing.T) {
-	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	e2tInstance  := entities.NewE2TInstance(E2TAddress)
-	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
-
-	updateE2TInstance := *e2tInstance
-	updateE2TInstance.AssociatedRanList = append(updateE2TInstance.AssociatedRanList, "test1")
-
-	rnibWriterMock.On("SaveE2TInstance", &updateE2TInstance).Return(nil)
-
-	err := e2tInstancesManager.AssociateRan("test1", E2TAddress)
+func TestGetE2TInstanceSuccess(t *testing.T) {
+	rnibReaderMock, _, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+	res, err := e2tInstancesManager.GetE2TInstance(address)
 	assert.Nil(t, err)
-	rnibReaderMock.AssertExpectations(t)
-	rnibWriterMock.AssertExpectations(t)
+	assert.Equal(t, e2tInstance, res)
 }
 
 func TestAssociateRanGetInstanceFailure(t *testing.T) {
@@ -142,17 +137,17 @@ func TestAssociateRanSaveInstanceFailure(t *testing.T) {
 	rnibWriterMock.AssertExpectations(t)
 }
 
-func TestDissociateRanSuccess(t *testing.T) {
+func TestAssociateRanSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-
-	e2tInstance := entities.NewE2TInstance(E2TAddress)
-	e2tInstance.AssociatedRanList = []string{"test0","test1"}
-	updatedE2TInstance := *e2tInstance
-	updatedE2TInstance.AssociatedRanList = []string{"test0"}
+	e2tInstance  := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
-	rnibWriterMock.On("SaveE2TInstance", &updatedE2TInstance).Return(nil)
 
-	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
+	updateE2TInstance := *e2tInstance
+	updateE2TInstance.AssociatedRanList = append(updateE2TInstance.AssociatedRanList, "test1")
+
+	rnibWriterMock.On("SaveE2TInstance", &updateE2TInstance).Return(nil)
+
+	err := e2tInstancesManager.AssociateRan("test1", E2TAddress)
 	assert.Nil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
@@ -177,6 +172,22 @@ func TestDissociateRanSaveInstanceFailure(t *testing.T) {
 
 	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
 	assert.NotNil(t, err)
+	rnibReaderMock.AssertExpectations(t)
+	rnibWriterMock.AssertExpectations(t)
+}
+
+func TestDissociateRanSuccess(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	e2tInstance := entities.NewE2TInstance(E2TAddress)
+	e2tInstance.AssociatedRanList = []string{"test0","test1"}
+	updatedE2TInstance := *e2tInstance
+	updatedE2TInstance.AssociatedRanList = []string{"test0"}
+	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
+	rnibWriterMock.On("SaveE2TInstance", &updatedE2TInstance).Return(nil)
+
+	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
+	assert.Nil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
 }
