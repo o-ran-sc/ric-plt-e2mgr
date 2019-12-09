@@ -32,6 +32,14 @@ Post Request setup node b x-2
     POST        /v1/nodeb/x2-setup    ${json}
 
 
+Put Request Resource Status Start
+    Set Headers     ${header}
+    PUT        /v1/general/resourcestatus  ${resource_status_start_json}
+
+
+Put Request Resource Status Stop
+    Set Headers     ${header}
+    PUT        /v1/general/resourcestatus  ${resource_status_stop_json}
 
 Get Request node b enb test1
     Sleep    1s
@@ -48,6 +56,7 @@ Remove log files
     Remove File  ${EXECDIR}/${e2mgr_log_filename}
     Remove File  ${EXECDIR}/${e2t_log_filename}
     Remove File  ${EXECDIR}/${rsm_log_filename}
+    Remove File  ${EXECDIR}/${e2e_simu_log_filename}
     Remove File  ${EXECDIR}/${e2adapter_log_filename}
 
 Save logs
@@ -56,6 +65,7 @@ Save logs
     Run     ${Save_e2mgr_log}
     Run     ${Save_e2t_log}
     Run     ${Save_rsm_log}
+    Run     ${Save_e2e_simu_log}
     Run     ${Save_e2adapter_log}
 
 
@@ -82,28 +92,35 @@ Prepare Enviorment
      ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
      ${gnb_log_filename}      Evaluate      "gnb.${SUITE NAME}.log".replace(" ","-")
      ${rsm_log_filename}      Evaluate      "rsm.${SUITE NAME}.log".replace(" ","-")
+     ${e2e_simu_log_filename}      Evaluate      "e2esimu.${SUITE NAME}.log".replace(" ","-")
      ${e2adapter_log_filename}    Evaluate  "e2adapter.${SUITE NAME}.log".replace(" ","-")
      ${Save_sim_log}          Evaluate   'docker logs --since ${starting_timestamp} gnbe2_simu > ${gnb_log_filename}'
      ${Save_e2mgr_log}        Evaluate   'docker logs --since ${starting_timestamp} e2mgr > ${e2mgr_log_filename}'
      ${Save_e2t_log}          Evaluate   'docker logs --since ${starting_timestamp} e2 > ${e2t_log_filename}'
      ${Save_rsm_log}          Evaluate   'docker logs --since ${starting_timestamp} rsm > ${rsm_log_filename}'
+     ${Save_e2e_simu_log}     Evaluate   'docker logs --since ${starting_timestamp} e2esimu > ${e2e_simu_log_filename}'
      ${Save_e2adapter_log}    Evaluate   'docker logs --since ${starting_timestamp} e2adapter > ${e2adapter_log_filename}'
      Set Suite Variable  ${e2t_log_filename}  
      Set Suite Variable  ${e2mgr_log_filename}  
      Set Suite Variable  ${gnb_log_filename}   
      Set Suite Variable  ${rsm_log_filename}  
+     Set Suite Variable  ${e2e_simu_log_filename} 
      Set Suite Variable  ${e2adapter_log_filename} 
      Set Suite Variable  ${Save_sim_log}
      Set Suite Variable  ${Save_e2mgr_log}
      Set Suite Variable  ${Save_e2t_log}
      Set Suite Variable  ${Save_rsm_log}
+     Set Suite Variable  ${Save_e2e_simu_log}
      Set Suite Variable  ${Save_e2adapter_log}
 	
      ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${stop_simu}
+     Run And Return Rc And Output    ${stop_e2e_simu}
      Run And Return Rc And Output    ${docker_Remove}
+     Run And Return Rc And Output    ${docker_remove_e2e_simu}
      Run And Return Rc And Output    ${run_simu_regular}
+     Run And Return Rc And Output    ${run_e2e_simu_regular}
      Run And Return Rc And Output    ${restart_e2adapter}
      Sleep  2s
      ${result}=  Run And Return Rc And Output     ${docker_command}
