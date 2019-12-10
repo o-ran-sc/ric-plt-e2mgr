@@ -29,7 +29,7 @@ def getRedisClientDecodeResponse():
     return redis.Redis(host=c, port=p, db=0, decode_responses=True)
 
 
-def verify_db_e2t_addresses():
+def verify_e2t_addresses_key():
 
     r = getRedisClientDecodeResponse()
     
@@ -38,7 +38,7 @@ def verify_db_e2t_addresses():
     return r.get("{e2Manager},E2TAddresses") == value
 
 
-def verify_db_e2t_instance():
+def verify_e2t_instance_key():
 
     r = getRedisClientDecodeResponse()
 
