@@ -54,7 +54,14 @@ func (m *E2TInstancesManager) GetE2TInstance(e2tAddress string) (*entities.E2TIn
 	e2tInstance, err := m.rnibDataService.GetE2TInstance(e2tAddress)
 
 	if err != nil {
-		m.logger.Errorf("#GetE2TInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+
+		_, ok := err.(*common.ResourceNotFoundError)
+
+		if !ok {
+			m.logger.Errorf("#GetE2TInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+		} else {
+			m.logger.Infof("#GetE2TInstance - E2T Instance address: %s not found on DB", e2tAddress)
+		}
 	}
 
 	return e2tInstance, err
@@ -136,7 +143,7 @@ func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
 		return err
 	}
 
-	m.logger.Infof("#AddE2TInstance - E2T Instance address: %s - successfully completed", e2tInstance.Address)
+	m.logger.Infof("#AddE2TInstance - E2T Instance address: %s - successfully added E2T instance", e2tInstance.Address)
 	return nil
 }
 
@@ -170,6 +177,7 @@ func (m *E2TInstancesManager) DissociateRan(ranName string, e2tAddress string) e
 		return err
 	}
 
+	m.logger.Infof("#DissociateRan - successfully dissociated RAN %s from E2T %s", ranName, e2tInstance.Address)
 	return nil
 }
 
@@ -197,6 +205,7 @@ func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 		return "", e2managererrors.NewE2TInstanceAbsenceError()
 	}
 
+	m.logger.Infof("#SelectE2TInstance - successfully selected E2T instance. address: %s", min.Address)
 	return min.Address, nil
 }
 
@@ -221,5 +230,6 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 		return e2managererrors.NewRnibDbError()
 	}
 
+	m.logger.Infof("#AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tInstance.Address)
 	return nil
 }
