@@ -51,10 +51,11 @@ ${restart_e2e_simu}  docker restart e2e_simu
 ${restart_e2adapter}  docker restart e2adapter
 ${restart_rsm}  docker restart rsm
 ${start_e2}  docker start e2
-${stop_docker_e2}      docker stop e2
+${stop_e2}      docker stop e2
 ${dbass_start}   docker run -d --name dbass -p 6379:6379 --env DBAAS_SERVICE_HOST=10.0.2.15  snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/dbass:1.0.0
 ${dbass_remove}    docker rm dbass
 ${dbass_stop}      docker stop dbass
+${restart_simu}  docker restart gnbe2_simu
 ${start_e2}  docker start e2
 ${stop_docker_e2}      docker stop e2
 ${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT

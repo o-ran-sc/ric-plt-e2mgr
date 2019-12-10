@@ -16,24 +16,5 @@
 #
 ##############################################################################
 
-
-def verify_logs(directory,filename,mtype,meid):
-
-    path = '/'
-
-    file_path = directory + path + filename
-
-    f = open(file_path, 'r')
-
-    for l in f:
-
-        if (meid is not None):
-            if l.find(mtype) > 0 and l.find(meid) > 0:
-                return True
-        else:
-            if l.find(mtype) > 0:
-                return True
-
-    return False
-
-
+*** Settings ***
+Documentation    E2Term-Initialization

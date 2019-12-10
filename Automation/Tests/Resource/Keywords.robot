@@ -132,6 +132,12 @@ Start E2
      Should Be Equal As Integers    ${result[1]}    ${docker_number}
      Sleep  2s
 
+Stop E2
+     Run And Return Rc And Output    ${stop_e2}
+     ${result}=  Run And Return Rc And Output     ${docker_command}
+     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+     Sleep  2s
+
 Start Dbass
      Run And Return Rc And Output    ${dbass_remove}
      Run And Return Rc And Output    ${dbass_start}

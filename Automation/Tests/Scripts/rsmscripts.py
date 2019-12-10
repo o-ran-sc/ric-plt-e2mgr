@@ -18,7 +18,6 @@
 
 import config
 import redis
-import cleanup_db
 import json
 
 
@@ -41,67 +40,58 @@ def verify_rsm_ran_info_start_false():
     
     value = "{\"ranName\":\"test1\",\"enb1MeasurementId\":1,\"enb2MeasurementId\":0,\"action\":\"start\",\"actionStatus\":false}"
 
-    if r.get("{rsm},RAN:test1") == value:
-        return True
-    else:
-        return False
+    return r.get("{rsm},RAN:test1") == value
 
 
 def verify_rsm_ran_info_start_true():
 
     r = getRedisClientDecodeResponse()
-    
+
     rsmInfoStr = r.get("{rsm},RAN:test1")
     rsmInfoJson = json.loads(rsmInfoStr)
 
     response = rsmInfoJson["ranName"] == "test1" and rsmInfoJson["enb1MeasurementId"] == 1 and rsmInfoJson["enb2MeasurementId"] != 1 and rsmInfoJson["action"] == "start" and rsmInfoJson["actionStatus"] == True
 
-    return response       
+    return response
 
 
 def verify_rsm_ran_info_stop_false():
 
     r = getRedisClientDecodeResponse()
-    
+
     rsmInfoStr = r.get("{rsm},RAN:test1")
     rsmInfoJson = json.loads(rsmInfoStr)
 
     response = rsmInfoJson["ranName"] == "test1" and rsmInfoJson["enb1MeasurementId"] == 1 and rsmInfoJson["action"] == "stop" and rsmInfoJson["actionStatus"] == False
 
-    return response       
+    return response
 
 
 def verify_rsm_ran_info_stop_true():
 
     r = getRedisClientDecodeResponse()
-    
+
     rsmInfoStr = r.get("{rsm},RAN:test1")
     rsmInfoJson = json.loads(rsmInfoStr)
 
     response = rsmInfoJson["ranName"] == "test1" and rsmInfoJson["action"] == "stop" and rsmInfoJson["actionStatus"] == True
 
-    return response         
-      
+    return response
+
 def verify_general_config_enable_resource_status_true():
 
     r = getRedisClientDecodeResponse()
-    
+
     configStr = r.get("{rsm},CFG:GENERAL:v1.0.0")
     configJson = json.loads(configStr)
 
-    if configJson["enableResourceStatus"] == True:
-        return True
-    else:
-        return False
+    return configJson["enableResourceStatus"] == True
 
 def verify_general_config_enable_resource_status_false():
 
     r = getRedisClientDecodeResponse()
-    
+
     configStr = r.get("{rsm},CFG:GENERAL:v1.0.0")
     configJson = json.loads(configStr)
 
-    if configJson["enableResourceStatus"] == False:
-        return True
-    else:
-        return False
+    return configJson["enableResourceStatus"] == False
