@@ -17,6 +17,7 @@
 ##############################################################################
 import config
 import redis
+import time
 
 
 def flush():
@@ -33,7 +34,7 @@ def flush():
 
     r.set("{e2Manager},E2TAddresses", "[\"e2t.att.com:38000\"]")
 
-    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":1575974678854116185,\"state\":\"ACTIVE\"}")
+    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int(time.time())) + ",\"state\":\"ACTIVE\"}")
 
     return True
 
