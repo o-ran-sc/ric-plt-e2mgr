@@ -58,6 +58,7 @@ ${dbass_stop}      docker stop dbass
 ${restart_simu}  docker restart gnbe2_simu
 ${start_e2}  docker start e2
 ${stop_docker_e2}      docker stop e2
+${restart_docker_sim}      docker restart gnbe2_simu
 ${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT
 ${403_reset_message}    "Activity X2_RESET rejected. RAN current state DISCONNECTED does not allow its execution "
 

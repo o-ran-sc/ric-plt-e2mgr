@@ -77,6 +77,7 @@ Stop Simulator
     Run And Return Rc And Output    ${stop_simu}
 
 
+
 Prepare Simulator For Load Information
      Run And Return Rc And Output    ${stop_simu}
      Run And Return Rc And Output    ${docker_Remove}
@@ -148,6 +149,12 @@ Stop Dbass
      Run And Return Rc And Output    ${dbass_stop}
      ${result}=  Run And Return Rc And Output     ${docker_command}
      Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+
+Restart simulator
+
+    Run And Return Rc And Output    ${restart_docker_sim}
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 
 
