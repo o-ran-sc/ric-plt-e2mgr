@@ -55,6 +55,8 @@ func main() {
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
+	e2tShutdownManager := managers.NewE2TShutdownManager(logger, rnibDataService, e2tInstancesManager)
+	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(logger, rmrSender, e2tInstancesManager, e2tShutdownManager, config)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
 	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
 
@@ -64,11 +66,10 @@ func main() {
 	defer rmrMessenger.Close()
 
 	go rmrReceiver.ListenAndHandle()
+	go e2tKeepAliveWorker.Execute()
 
 	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager)
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
 	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController)
 }
-
-

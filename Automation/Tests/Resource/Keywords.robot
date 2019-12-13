@@ -92,13 +92,13 @@ Prepare Enviorment
      ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
      ${gnb_log_filename}      Evaluate      "gnb.${SUITE NAME}.log".replace(" ","-")
      ${rsm_log_filename}      Evaluate      "rsm.${SUITE NAME}.log".replace(" ","-")
-     ${e2e_simu_log_filename}      Evaluate      "e2esimu.${SUITE NAME}.log".replace(" ","-")
+     ${e2e_simu_log_filename}      Evaluate      "e2e_simu.${SUITE NAME}.log".replace(" ","-")
      ${e2adapter_log_filename}    Evaluate  "e2adapter.${SUITE NAME}.log".replace(" ","-")
      ${Save_sim_log}          Evaluate   'docker logs --since ${starting_timestamp} gnbe2_simu > ${gnb_log_filename}'
      ${Save_e2mgr_log}        Evaluate   'docker logs --since ${starting_timestamp} e2mgr > ${e2mgr_log_filename}'
      ${Save_e2t_log}          Evaluate   'docker logs --since ${starting_timestamp} e2 > ${e2t_log_filename}'
      ${Save_rsm_log}          Evaluate   'docker logs --since ${starting_timestamp} rsm > ${rsm_log_filename}'
-     ${Save_e2e_simu_log}     Evaluate   'docker logs --since ${starting_timestamp} e2esimu > ${e2e_simu_log_filename}'
+     ${Save_e2e_simu_log}     Evaluate   'docker logs --since ${starting_timestamp} e2e_simu > ${e2e_simu_log_filename}'
      ${Save_e2adapter_log}    Evaluate   'docker logs --since ${starting_timestamp} e2adapter > ${e2adapter_log_filename}'
      Set Suite Variable  ${e2t_log_filename}  
      Set Suite Variable  ${e2mgr_log_filename}  

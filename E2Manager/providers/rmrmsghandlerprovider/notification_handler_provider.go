@@ -84,6 +84,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseHandler := rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, x2ResetResponseExtractor)
 	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
 	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager)
+	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
 	provider.Register(rmrCgo.RIC_X2_SETUP_FAILURE, x2SetupFailureResponseHandler)
@@ -96,4 +97,5 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	provider.Register(rmrCgo.RIC_X2_RESET_RESP, x2ResetResponseHandler)
 	provider.Register(rmrCgo.RIC_X2_RESET, x2ResetRequestNotificationHandler)
 	provider.Register(rmrCgo.RIC_E2_TERM_INIT, e2TermInitNotificationHandler)
+	provider.Register(rmrCgo.E2_TERM_KEEP_ALIVE_RESP, e2TKeepAliveResponseHandler)
 }

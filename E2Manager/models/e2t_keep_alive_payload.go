@@ -16,7 +16,6 @@
 //
 package models
 
-type E2TermInitPayload struct {
+type E2TKeepAlivePayload struct {
 	Address string     `json:"address"`
-	Fqdn string     `json:"fqdn"`
 }

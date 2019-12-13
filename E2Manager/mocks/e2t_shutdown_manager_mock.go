@@ -14,9 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-package models
+package mocks
 
-type E2TermInitPayload struct {
-	Address string     `json:"address"`
-	Fqdn string     `json:"fqdn"`
+import (
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/stretchr/testify/mock"
+)
+
+type E2TShutdownManagerMock struct {
+	mock.Mock
+}
+
+func (m *E2TShutdownManagerMock) Shutdown(e2tInstance *entities.E2TInstance) error {
+	args := m.Called(e2tInstance)
+	return args.Error(0)
 }

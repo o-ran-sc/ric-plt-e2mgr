@@ -72,9 +72,9 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RIC_TO_RAN)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestX2ResetResponseSuccessEmptyIEs(t *testing.T) {
@@ -91,9 +91,9 @@ func TestX2ResetResponseSuccessEmptyIEs(t *testing.T) {
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RIC_TO_RAN)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestX2ResetResponseShuttingDown(t *testing.T) {

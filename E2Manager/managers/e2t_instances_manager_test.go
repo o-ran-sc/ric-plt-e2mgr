@@ -1,3 +1,19 @@
+//
+// Copyright 2019 AT&T Intellectual Property
+// Copyright 2019 Nokia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 package managers
 
 import (
@@ -275,6 +291,73 @@ func TestSelectE2TInstancesSuccess(t *testing.T) {
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
 }
+
+func TestResetKeepAliveTimestampGetInternalFailure(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, common.NewInternalError(errors.New("Error")))
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+
+	err := e2tInstancesManager.ResetKeepAliveTimestamp(address)
+	assert.NotNil(t, err)
+	rnibReaderMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
+func TestAResetKeepAliveTimestampSaveInternalFailure(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
+
+	err := e2tInstancesManager.ResetKeepAliveTimestamp(address)
+	assert.NotNil(t, err)
+}
+
+func TestResetKeepAliveTimestampSuccess(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+
+	err := e2tInstancesManager.ResetKeepAliveTimestamp(address)
+	assert.Nil(t, err)
+	rnibReaderMock.AssertCalled(t, "GetE2TInstance", address)
+	rnibWriterMock.AssertNumberOfCalls(t, "SaveE2TInstance", 1)
+}
+
+func TestResetKeepAliveTimestampToBeDeleted(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	e2tInstance.State = entities.ToBeDeleted
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+
+	err := e2tInstancesManager.ResetKeepAliveTimestamp(address)
+	assert.Nil(t, err)
+	rnibReaderMock.AssertCalled(t, "GetE2TInstance", address)
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
+/*func TestResetKeepAliveTimestampRoutingManagerFailure(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	address := "10.10.2.15:9800"
+	e2tInstance := entities.NewE2TInstance(address)
+	e2tInstance.State = entities.RoutingManagerFailure
+	rnibReaderMock.On("GetE2TInstance", address).Return(e2tInstance, nil)
+
+	err := e2tInstancesManager.ResetKeepAliveTimestamp(address)
+	assert.Nil(t, err)
+	rnibReaderMock.AssertCalled(t, "GetE2TInstance", address)
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}*/
 
 func TestRemoveE2TInstance(t *testing.T) {
 	_, _, e2tInstancesManager := initE2TInstancesManagerTest(t)

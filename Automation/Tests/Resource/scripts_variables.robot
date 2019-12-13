@@ -36,6 +36,8 @@ ${failed_to_retrieve_nodeb_message}     RAN name: test1 - Failed fetching RAN fr
 ${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNodeb
 ${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
 ${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
+${E2_TERM_KEEP_ALIVE_REQ_message_type_successfully_sent}     Message type: 1101 - Successfully sent RMR message
+${e2_is_dead_message_printed}     E2TShutdownManager.Shutdown - E2T e2t.att.com:38000 is Dead, RIP
 ${RAN_NAME_test1}    RAN name: test1
 ${RAN_NAME_test2}    RAN name: test2
 ${E2ADAPTER_Setup_Resp}    Send dummy ENDCX2SetupResponse to RIC

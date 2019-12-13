@@ -33,19 +33,21 @@ type Configuration struct {
 		Port       int
 		MaxMsgSize int
 	}
-	NotificationResponseBuffer int
-	BigRedButtonTimeoutSec     int
-	MaxConnectionAttempts      int
-	MaxRnibConnectionAttempts  int
-	RnibRetryIntervalMs		   int
+	NotificationResponseBuffer   int
+	BigRedButtonTimeoutSec       int
+	MaxConnectionAttempts        int
+	MaxRnibConnectionAttempts    int
+	RnibRetryIntervalMs          int
+	KeepAliveResponseTimeoutMs int
+	KeepAliveDelayMs             int
 }
 
-func ParseConfiguration() *Configuration{
+func ParseConfiguration() *Configuration {
 	viper.SetConfigType("yaml")
 	viper.SetConfigName("configuration")
 	viper.AddConfigPath("E2Manager/resources/")
-	viper.AddConfigPath("./resources/")  //For production
-	viper.AddConfigPath("../resources/") //For test under Docker
+	viper.AddConfigPath("./resources/")     //For production
+	viper.AddConfigPath("../resources/")    //For test under Docker
 	viper.AddConfigPath("../../resources/") //For test under Docker
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -62,28 +64,29 @@ func ParseConfiguration() *Configuration{
 	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
 	config.MaxRnibConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
 	config.RnibRetryIntervalMs = viper.GetInt("rnibRetryIntervalMs")
+	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
+	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	return &config
 }
 
-func (c *Configuration)fillLoggingConfig(logConfig *viper.Viper) {
+func (c *Configuration) fillLoggingConfig(logConfig *viper.Viper) {
 	if logConfig == nil {
 		panic(fmt.Sprintf("#configuration.fillLoggingConfig - failed to fill logging configuration: The entry 'logging' not found\n"))
 	}
 	c.Logging.LogLevel = logConfig.GetString("logLevel")
 }
 
-func (c *Configuration)fillHttpConfig(httpConfig *viper.Viper) {
+func (c *Configuration) fillHttpConfig(httpConfig *viper.Viper) {
 	if httpConfig == nil {
 		panic(fmt.Sprintf("#configuration.fillHttpConfig - failed to fill HTTP configuration: The entry 'http' not found\n"))
 	}
 	c.Http.Port = httpConfig.GetInt("port")
 }
 
-func (c *Configuration)fillRmrConfig(rmrConfig *viper.Viper) {
+func (c *Configuration) fillRmrConfig(rmrConfig *viper.Viper) {
 	if rmrConfig == nil {
 		panic(fmt.Sprintf("#configuration.fillRmrConfig - failed to fill RMR configuration: The entry 'rmr' not found\n"))
 	}
 	c.Rmr.Port = rmrConfig.GetInt("port")
 	c.Rmr.MaxMsgSize = rmrConfig.GetInt("maxMsgSize")
 }
-

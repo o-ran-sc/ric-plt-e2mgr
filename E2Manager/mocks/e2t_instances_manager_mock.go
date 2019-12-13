@@ -62,3 +62,15 @@ func (m *E2TInstancesManagerMock) GetE2TInstances() ([]*entities.E2TInstance, er
 
 	return args.Get(0).([]*entities.E2TInstance), args.Error(1)
 }
+
+func (m *E2TInstancesManagerMock) GetE2TInstancesNoLogs() ([]*entities.E2TInstance, error) {
+	args := m.Called()
+
+	return args.Get(0).([]*entities.E2TInstance), args.Error(1)
+}
+
+func (m *E2TInstancesManagerMock) ResetKeepAliveTimestamp(e2tAddress string) error {
+	args := m.Called(e2tAddress)
+	return args.Error(0)
+
+}
