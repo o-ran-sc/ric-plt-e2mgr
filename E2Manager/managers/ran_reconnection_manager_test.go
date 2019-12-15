@@ -92,7 +92,7 @@ func TestShuttingdownRanReconnection(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
-func TestConnectingRanWithMaxAttemptsReconnectionDeassociateSucceeds(t *testing.T) {
+func TestConnectingRanWithMaxAttemptsReconnectionDissociateSucceeds(t *testing.T) {
 	_, _, readerMock, writerMock, ranReconnectionManager, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	ranName := "test"
 	e2tAddress := "10.0.2.15"
@@ -111,7 +111,7 @@ func TestConnectingRanWithMaxAttemptsReconnectionDeassociateSucceeds(t *testing.
 	e2tInstancesManagerMock.AssertCalled(t, "DissociateRan", ranName, e2tAddress)
 }
 
-func TestConnectingRanWithMaxAttemptsReconnectionDeassociateFails(t *testing.T) {
+func TestConnectingRanWithMaxAttemptsReconnectionDissociateFails(t *testing.T) {
 	_, _, readerMock, writerMock, ranReconnectionManager, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	ranName := "test"
 	e2tAddress := "10.0.2.15"
