@@ -35,7 +35,7 @@ func TestHandleSuccessfulDefaultCause(t *testing.T) {
 	var xAction[]byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
 
-	rmrMessengerMock.On("SendMsg", msg).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
@@ -52,7 +52,7 @@ func TestHandleSuccessfulRequestedCause(t *testing.T) {
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
 	var xAction[]byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
-	rmrMessengerMock.On("SendMsg", msg).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
@@ -119,7 +119,7 @@ func TestHandleFailureRmrError(t *testing.T) {
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	var xAction[]byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
-	rmrMessengerMock.On("SendMsg", msg).Return(&rmrCgo.MBuf{}, fmt.Errorf("rmr error"))
+	rmrMessengerMock.On("SendMsg", msg, true).Return(&rmrCgo.MBuf{}, fmt.Errorf("rmr error"))
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)

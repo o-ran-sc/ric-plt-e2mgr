@@ -10,3 +10,5 @@ bigRedButtonTimeoutSec: 5
 maxConnectionAttempts: 3
 maxRnibConnectionAttempts: 3
 rnibRetryIntervalMs: 10
+keepAliveResponseTimeoutMs: 1500
+keepAliveDelayMs: 500

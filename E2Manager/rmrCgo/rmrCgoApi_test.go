@@ -72,7 +72,7 @@ func TestSendRecvMsgSuccess(t *testing.T) {
 	}
 	msg := rmrCgo.NewMBuf(1, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
 	log.Debugf("#rmr_c_go_api_test.TestSendRecvMsgSuccess - Going to send the message: %#v\n", msg)
-	result, err := msgr.SendMsg(msg)
+	result, err := msgr.SendMsg(msg, true)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
@@ -94,7 +94,7 @@ func TestSendMsgRmrInvalidMsgNumError(t *testing.T) {
 
 	msg := rmrCgo.NewMBuf(10, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
 	log.Debugf("#rmr_c_go_api_test.TestSendMsgRmrInvalidMsgNumError - Going to send the message: %#v\n", msg)
-	result, err := msgr.SendMsg(msg)
+	result, err := msgr.SendMsg(msg, true)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, result)
@@ -112,7 +112,7 @@ func TestSendMsgRmrInvalidPortError(t *testing.T) {
 
 	msg := rmrCgo.NewMBuf(1, tests.MaxMsgSize, "test 1", &tests.DummyPayload, &tests.DummyXAction)
 	log.Debugf("#rmr_c_go_api_test.TestSendMsgRmrInvalidPortError - Going to send the message: %#v\n", msg)
-	result, err := msgr.SendMsg(msg)
+	result, err := msgr.SendMsg(msg, true)
 
 	assert.NotNil(t, err)
 	assert.Nil(t, result)

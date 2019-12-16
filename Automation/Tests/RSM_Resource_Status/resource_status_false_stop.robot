@@ -51,6 +51,6 @@ prepare logs for tests
     Remove log files
     Save logs
 
-Verify RSM Resource Status Request Message Sent
+Verify RSM Resource Status Request Message Not Sent
     ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
     Should Be Equal As Strings    ${result}      False

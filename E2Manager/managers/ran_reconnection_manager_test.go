@@ -155,7 +155,7 @@ func TestConnectedRanExecuteSetupSuccess(t *testing.T) {
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTING
 	updatedNodebInfo.ConnectionAttempts++
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, nil)
 	err := ranReconnectionManager.ReconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)

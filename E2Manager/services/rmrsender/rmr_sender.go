@@ -38,7 +38,7 @@ func NewRmrSender(logger *logger.Logger, messenger rmrCgo.RmrMessenger) *RmrSend
 func (r *RmrSender) Send(rmrMessage *models.RmrMessage) error {
 	msg := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
 
-	_, err := r.messenger.SendMsg(msg)
+	_, err := r.messenger.SendMsg(msg, true)
 
 	if err != nil {
 		r.logger.Errorf("#RmrSender.Send - RAN name: %s , Message type: %d - Failed sending message. Error: %v", rmrMessage.RanName, rmrMessage.MsgType, err)
@@ -46,5 +46,18 @@ func (r *RmrSender) Send(rmrMessage *models.RmrMessage) error {
 	}
 
 	r.logger.Infof("#RmrSender.Send - RAN name: %s , Message type: %d - Successfully sent RMR message", rmrMessage.RanName, rmrMessage.MsgType)
+	return nil
+}
+
+func (r *RmrSender) SendWithoutLogs(rmrMessage *models.RmrMessage) error {
+	msg := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+
+	_, err := r.messenger.SendMsg(msg, false)
+
+	if err != nil {
+		r.logger.Errorf("#RmrSender.Send - RAN name: %s , Message type: %d - Failed sending message. Error: %v", rmrMessage.RanName, rmrMessage.MsgType, err)
+		return err
+	}
+
 	return nil
 }

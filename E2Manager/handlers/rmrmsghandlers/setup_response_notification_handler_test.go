@@ -147,7 +147,7 @@ func executeHandleSetupSuccessResponse(t *testing.T, tc setupSuccessResponseTest
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
 	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
-	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
+	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf, true).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
 	handler.Handle(&notificationRequest)
 
 	return testContext, nodebInfo
@@ -212,7 +212,7 @@ func TestX2SetupResponse(t *testing.T) {
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
 	assert.NotNil(t, i.Enb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }
 
 func TestX2SetupFailureResponse(t *testing.T) {
@@ -258,7 +258,7 @@ func TestEndcSetupResponse(t *testing.T) {
 
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Gnb)
 	assert.NotNil(t, i.Gnb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }
 
 func TestEndcSetupFailureResponse(t *testing.T) {
@@ -337,5 +337,5 @@ func TestSetupResponseStatusChangeSendFailure(t *testing.T) {
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
 	i, _ := nodebInfo.Configuration.(*entities.NodebInfo_Enb)
 	assert.NotNil(t, i.Enb)
-	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf)
+	testContext.rmrMessengerMock.AssertCalled(t, "SendMsg", tc.statusChangeMbuf, true)
 }

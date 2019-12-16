@@ -135,7 +135,7 @@ func TestHandleSuccessFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -167,7 +167,7 @@ func TestHandleSuccessGetNextStatusFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -196,7 +196,7 @@ func TestHandleShuttingDownStatusFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb1AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -242,7 +242,7 @@ func TestHandleGetNodebFailedFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(nil)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -288,7 +288,7 @@ func TestHandleSaveFailedFlow(t *testing.T) {
 	writerMock.On("SaveNodeb", mock.Anything, updatedNb3AfterTimer).Return(errRnib)
 
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, nil)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, nil)
 
 	_, actual := handler.Handle(nil)
 
@@ -334,7 +334,7 @@ func TestHandleSendRmrFailedFlow(t *testing.T) {
 
 	expected := e2managererrors.NewRmrError()
 	mbuf := rmrCgo.NewMBuf(tests.MessageType, tests.MaxMsgSize, "RanName", &tests.DummyPayload, &tests.DummyXAction)
-	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf))).Return(mbuf, expected)
+	rmrMessengerMock.On("SendMsg", mock.AnythingOfType(fmt.Sprintf("%T", mbuf)), true).Return(mbuf, expected)
 
 	_, actual := handler.Handle(nil)
 

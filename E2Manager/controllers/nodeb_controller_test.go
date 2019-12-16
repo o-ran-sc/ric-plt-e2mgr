@@ -116,7 +116,7 @@ func TestX2SetupSuccess(t *testing.T) {
 	var xAction []byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
@@ -148,7 +148,7 @@ func TestEndcSetupSuccess(t *testing.T) {
 	var xAction[]byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
@@ -421,7 +421,7 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	var xAction []byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
-	rmrMessengerMock.On("SendMsg", msg).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
 	writer := httptest.NewRecorder()
 

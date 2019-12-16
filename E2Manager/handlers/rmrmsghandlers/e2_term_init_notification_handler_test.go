@@ -117,7 +117,7 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	xaction := []byte(RanName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -145,7 +145,7 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 	xaction := []byte(RanName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName, "test2")
@@ -185,7 +185,7 @@ func TestE2TermInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, fmt.Errorf("RMR Error"))
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg0, fmt.Errorf("RMR Error"))
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")
@@ -232,7 +232,7 @@ func TestE2TermInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg0, nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")
@@ -280,7 +280,7 @@ func TestE2TermInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *test
 	//xaction = []byte(ids[1].InventoryName)
 	//msg1 := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ids[1].InventoryName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg0, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg0, nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, "test1", "test2", "test3")

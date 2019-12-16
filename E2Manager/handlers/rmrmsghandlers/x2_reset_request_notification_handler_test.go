@@ -65,12 +65,12 @@ func TestHandleX2ResetRequestNotificationSuccess(t *testing.T) {
 	var err error
 	readerMock.On("GetNodeb", ranName).Return(nb, err)
 	resetResponseMbuf := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET_RESP, len(e2pdus.PackedX2ResetResponse), ranName, &e2pdus.PackedX2ResetResponse, &xAction)
-	rmrMessengerMock.On("SendMsg", resetResponseMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", resetResponseMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RAN_TO_RIC)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", resetResponseMbuf)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", resetResponseMbuf, true)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestHandleX2ResetRequestNotificationShuttingDownStatus(t *testing.T) {

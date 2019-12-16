@@ -54,7 +54,7 @@ func (*Context) Init(port string, maxMsgSize int, flags int, logger *logger.Logg
 	return r
 }
 
-func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
+func (ctx *Context) SendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
 	ctx.checkContextInitialized()
 	ctx.Logger.Debugf("#rmrCgoApi.SendMsg - Going to send message. MBuf: %v", *msg)
 	allocatedCMBuf := ctx.getAllocatedCRmrMBuf(ctx.Logger, msg, ctx.MaxMsgSize)
@@ -65,21 +65,21 @@ func (ctx *Context) SendMsg(msg *MBuf) (*MBuf, error) {
 		return nil, errors.New(errorMessage)
 	}
 
-	//TODO: if debug enabled
-	transactionId := string(*msg.XAction)
-	tmpTid := strings.TrimSpace(transactionId)
-	ctx.Logger.Infof("[E2 Manager -> RMR] #rmrCgoApi.SendMsg - Going to send message %v for transaction id: %s", *msg, tmpTid)
+	if printLogs {
+		//TODO: if debug enabled
+		transactionId := string(*msg.XAction)
+		tmpTid := strings.TrimSpace(transactionId)
+		ctx.Logger.Infof("[E2 Manager -> RMR] #rmrCgoApi.SendMsg - Going to send message %v for transaction id: %s", *msg, tmpTid)
+	}
 
 	currCMBuf := C.rmr_send_msg(ctx.RmrCtx, allocatedCMBuf)
 	state = currCMBuf.state
-	ctx.Logger.Debugf("#rmrCgoApi.SendMsg - The current message  state: %v, message buffer:%v", state, currCMBuf)
 
 	if state != RMR_OK {
 		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to send message. state: %v - %s", state, states[int(state)])
 		return nil, errors.New(errorMessage)
 	}
 
-	ctx.Logger.Debugf("#rmrCgoApi.SendMsg - The message has been sent successfully ")
 	return convertToMBuf(ctx.Logger, currCMBuf), nil
 }
 
@@ -99,9 +99,13 @@ func (ctx *Context) RecvMsg() (*MBuf, error) {
 	}
 
 	mbuf := convertToMBuf(ctx.Logger, currCMBuf)
-	transactionId := string(*mbuf.XAction)
-	tmpTid := strings.TrimSpace(transactionId)
-	ctx.Logger.Infof("[RMR -> E2 Manager] #rmrCgoApi.RecvMsg - message %v has been received for transaction id: %s", *mbuf, tmpTid)
+
+	if mbuf.MType != E2_TERM_KEEP_ALIVE_RESP {
+
+		transactionId := string(*mbuf.XAction)
+		tmpTid := strings.TrimSpace(transactionId)
+		ctx.Logger.Infof("[RMR -> E2 Manager] #rmrCgoApi.RecvMsg - message %v has been received for transaction id: %s", *mbuf, tmpTid)
+	}
 	return mbuf, nil
 }
 
