@@ -161,11 +161,11 @@ func (h *SetupRequestHandler) connectExistingRanWithAssociatedE2TAddress(nodebIn
 	err := h.rNibDataService.UpdateNodebInfo(nodebInfo)
 
 	if err != nil {
-		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN name: %s - failed updating nodeb in rNib. error: %s", nodebInfo.RanName, err)
+		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN name: %s - failed resetting connection attempts of RAN. error: %s", nodebInfo.RanName, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
-	h.logger.Infof("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN name: %s - successfully updated nodeb in rNib", nodebInfo.RanName)
+	h.logger.Infof("#SetupRequestHandler.connectExistingRanWithAssociatedE2TAddress - RAN name: %s - successfully reset connection attempts of RAN", nodebInfo.RanName)
 
 
 	result := h.ranSetupManager.ExecuteSetup(nodebInfo, status)
