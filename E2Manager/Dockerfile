@@ -23,10 +23,10 @@ COPY . .
 ENV PATH=$PATH:/usr/local/go/bin:/usr/lib/go-1.12/bin
 #RUN git clone https://gerrit.o-ran-sc.org/r/ric-plt/lib/rmr && cd rmr/; mkdir build; cd build; /opt/bin/cmake -DDEV_PKG=1 ..; make install
 # Install RMr library and dev files
-RUN wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_1.12.0_amd64.deb/download.deb
-RUN dpkg -i rmr_1.12.0_amd64.deb
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.12.0_amd64.deb/download.deb
-RUN dpkg -i rmr-dev_1.12.0_amd64.deb
+RUN wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_1.13.0_amd64.deb/download.deb
+RUN dpkg -i rmr_1.13.0_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_1.13.0_amd64.deb/download.deb
+RUN dpkg -i rmr-dev_1.13.0_amd64.deb
 
 RUN cd asn1codec && make  
 RUN go build app/main.go
