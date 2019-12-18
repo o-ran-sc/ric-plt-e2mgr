@@ -128,6 +128,38 @@ func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error)
 	return e2tInstances, nil
 }
 
+func (m *E2TInstancesManager) ResetKeepAliveTimestampsForAllE2TInstances() {
+
+	e2tInstances, err := m.GetE2TInstances()
+
+	if err != nil {
+		m.logger.Errorf("E2TInstancesManager.ResetKeepAliveTimestampForAllE2TInstances - Couldn't reset timestamps due to a DB error")
+		return
+	}
+
+	if len(e2tInstances) == 0 {
+		m.logger.Infof("E2TInstancesManager.ResetKeepAliveTimestampForAllE2TInstances - No instances, ignoring reset")
+		return
+	}
+
+	for _, v := range e2tInstances {
+
+		if v.State != entities.Active {
+			continue
+		}
+
+		v.KeepAliveTimestamp = time.Now().UnixNano()
+
+		err := m.rnibDataService.SaveE2TInstance(v)
+
+		if err != nil {
+			m.logger.Errorf("E2TInstancesManager.ResetKeepAliveTimestampForAllE2TInstances - E2T address: %s - failed resetting e2t instance keep alive timestamp. error: %s", v.Address, err)
+		}
+	}
+
+	m.logger.Infof("E2TInstancesManager.ResetKeepAliveTimestampForAllE2TInstances - Done with reset")
+}
+
 func findActiveE2TInstanceWithMinimumAssociatedRans(e2tInstances []*entities.E2TInstance) *entities.E2TInstance {
 	var minInstance *entities.E2TInstance
 	minAssociatedRanCount := math.MaxInt32
@@ -154,7 +186,6 @@ func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
 		m.logger.Errorf("#E2TInstancesManager.AddE2TInstance - E2T Instance address: %s - Failed saving E2T instance. error: %s", e2tInstance.Address, err)
 		return err
 	}
-
 
 	e2tAddresses, err := m.rnibDataService.GetE2TAddresses()
 

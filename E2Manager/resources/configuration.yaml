@@ -12,3 +12,4 @@ maxRnibConnectionAttempts: 3
 rnibRetryIntervalMs: 10
 keepAliveResponseTimeoutMs: 1500
 keepAliveDelayMs: 500
+routingManagerBaseUrl: http://iltlv740.intl.att.com:8080/ric/v1/handles/v1/

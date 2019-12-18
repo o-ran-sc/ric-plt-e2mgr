@@ -143,7 +143,7 @@ func TestAssociateRanGetInstanceFailure(t *testing.T) {
 
 func TestAssociateRanSaveInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	e2tInstance1  := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for test")))
 
@@ -155,7 +155,7 @@ func TestAssociateRanSaveInstanceFailure(t *testing.T) {
 
 func TestAssociateRanSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	e2tInstance  := entities.NewE2TInstance(E2TAddress)
+	e2tInstance := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
 
 	updateE2TInstance := *e2tInstance
@@ -182,7 +182,7 @@ func TestDissociateRanGetInstanceFailure(t *testing.T) {
 func TestDissociateRanSaveInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
-	e2tInstance1  := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for test")))
 
@@ -196,7 +196,7 @@ func TestDissociateRanSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
 	e2tInstance := entities.NewE2TInstance(E2TAddress)
-	e2tInstance.AssociatedRanList = []string{"test0","test1"}
+	e2tInstance.AssociatedRanList = []string{"test0", "test1"}
 	updatedE2TInstance := *e2tInstance
 	updatedE2TInstance.AssociatedRanList = []string{"test0"}
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
@@ -235,7 +235,7 @@ func TestSelectE2TInstancesGetE2TInstancesFailure(t *testing.T) {
 
 	addresses := []string{E2TAddress}
 	rnibReaderMock.On("GetE2TAddresses").Return(addresses, nil)
-	rnibReaderMock.On("GetE2TInstances",addresses ).Return([]*entities.E2TInstance{}, common.NewInternalError(fmt.Errorf("for test")))
+	rnibReaderMock.On("GetE2TInstances", addresses).Return([]*entities.E2TInstance{}, common.NewInternalError(fmt.Errorf("for test")))
 	address, err := e2tInstancesManager.SelectE2TInstance()
 	assert.NotNil(t, err)
 	assert.Empty(t, address)
@@ -248,7 +248,7 @@ func TestSelectE2TInstancesEmptyE2TInstancesList(t *testing.T) {
 
 	addresses := []string{E2TAddress}
 	rnibReaderMock.On("GetE2TAddresses").Return(addresses, nil)
-	rnibReaderMock.On("GetE2TInstances",addresses ).Return([]*entities.E2TInstance{}, nil)
+	rnibReaderMock.On("GetE2TInstances", addresses).Return([]*entities.E2TInstance{}, nil)
 	address, err := e2tInstancesManager.SelectE2TInstance()
 	assert.NotNil(t, err)
 	assert.Empty(t, address)
@@ -258,16 +258,16 @@ func TestSelectE2TInstancesEmptyE2TInstancesList(t *testing.T) {
 
 func TestSelectE2TInstancesNoActiveE2TInstance(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	addresses := []string{E2TAddress,E2TAddress2}
+	addresses := []string{E2TAddress, E2TAddress2}
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	e2tInstance1.State = entities.ToBeDeleted
-	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
+	e2tInstance1.AssociatedRanList = []string{"test1", "test2", "test3"}
 	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
 	e2tInstance2.State = entities.ToBeDeleted
-	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
+	e2tInstance2.AssociatedRanList = []string{"test4", "test5", "test6", "test7"}
 
 	rnibReaderMock.On("GetE2TAddresses").Return(addresses, nil)
-	rnibReaderMock.On("GetE2TInstances",addresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
+	rnibReaderMock.On("GetE2TInstances", addresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
 	address, err := e2tInstancesManager.SelectE2TInstance()
 	assert.NotNil(t, err)
 	assert.Equal(t, "", address)
@@ -277,14 +277,14 @@ func TestSelectE2TInstancesNoActiveE2TInstance(t *testing.T) {
 
 func TestSelectE2TInstancesSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	addresses := []string{E2TAddress,E2TAddress2}
+	addresses := []string{E2TAddress, E2TAddress2}
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
-	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
+	e2tInstance1.AssociatedRanList = []string{"test1", "test2", "test3"}
 	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
-	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
+	e2tInstance2.AssociatedRanList = []string{"test4", "test5", "test6", "test7"}
 
 	rnibReaderMock.On("GetE2TAddresses").Return(addresses, nil)
-	rnibReaderMock.On("GetE2TInstances",addresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
+	rnibReaderMock.On("GetE2TInstances", addresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
 	address, err := e2tInstancesManager.SelectE2TInstance()
 	assert.Nil(t, err)
 	assert.Equal(t, E2TAddress, address)
@@ -361,7 +361,62 @@ func TestResetKeepAliveTimestampRoutingManagerFailure(t *testing.T) {
 
 func TestRemoveE2TInstance(t *testing.T) {
 	_, _, e2tInstancesManager := initE2TInstancesManagerTest(t)
-	e2tInstance1  := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	err := e2tInstancesManager.RemoveE2TInstance(e2tInstance1)
 	assert.Nil(t, err)
+}
+
+func TestResetKeepAliveTimestampsForAllE2TInstancesGetE2TInstancesFailure(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	rnibReaderMock.On("GetE2TAddresses").Return([]string{}, common.NewInternalError(errors.New("Error")))
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
+func TestResetKeepAliveTimestampsForAllE2TInstancesNoInstances(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	rnibReaderMock.On("GetE2TAddresses").Return([]string{}, nil)
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
+func TestResetKeepAliveTimestampsForAllE2TInstancesNoActiveInstances(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	e2tAddresses := []string{E2TAddress, E2TAddress2}
+	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1.State = entities.ToBeDeleted
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2.State = entities.RoutingManagerFailure
+	rnibReaderMock.On("GetE2TInstances", e2tAddresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
+func TestResetKeepAliveTimestampsForAllE2TInstancesOneActiveInstance(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	e2tAddresses := []string{E2TAddress, E2TAddress2}
+	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1.State = entities.Active
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2.State = entities.ToBeDeleted
+	rnibReaderMock.On("GetE2TInstances", e2tAddresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+	rnibWriterMock.AssertNumberOfCalls(t, "SaveE2TInstance",1)
+}
+
+func TestResetKeepAliveTimestampsForAllE2TInstancesSaveE2TInstanceFailure(t *testing.T) {
+	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+	e2tAddresses := []string{E2TAddress, E2TAddress2}
+	rnibReaderMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1.State = entities.Active
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2.State = entities.ToBeDeleted
+	rnibReaderMock.On("GetE2TInstances", e2tAddresses).Return([]*entities.E2TInstance{e2tInstance1, e2tInstance2}, nil)
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+	rnibWriterMock.AssertNumberOfCalls(t, "SaveE2TInstance",1)
 }

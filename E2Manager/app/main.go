@@ -63,6 +63,8 @@ func main() {
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)
 
+	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
+
 	defer rmrMessenger.Close()
 
 	go rmrReceiver.ListenAndHandle()
