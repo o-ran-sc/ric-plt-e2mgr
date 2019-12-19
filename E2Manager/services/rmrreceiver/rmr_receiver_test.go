@@ -18,6 +18,7 @@
 package rmrreceiver
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/managers"
@@ -59,17 +60,17 @@ func initRmrReceiver(logger *logger.Logger) *RmrReceiver {
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
-
 	writerMock := &mocks.RnibWriterMock{}
-
+	httpClient := &mocks.HttpClientMock{}
 
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	rmrMessenger := initRmrMessenger(logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
+	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	return NewRmrReceiver(logger, rmrMessenger, notificationManager)
 }

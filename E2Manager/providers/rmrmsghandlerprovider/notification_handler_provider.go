@@ -18,6 +18,7 @@
 package rmrmsghandlerprovider
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/converters"
 	"e2mgr/handlers/rmrmsghandlers"
@@ -54,7 +55,7 @@ func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrms
 	provider.notificationHandlers[msgType] = handler
 }
 
-func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager) {
+func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) {
 
 	// Init converters
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -83,7 +84,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	endcConfigurationUpdateHandler := rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)
 	x2ResetResponseHandler := rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, x2ResetResponseExtractor)
 	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
-	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager)
+	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager, routingManagerClient)
 	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
