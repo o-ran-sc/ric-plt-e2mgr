@@ -18,6 +18,7 @@
 package main
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/controllers"
 	"e2mgr/httpserver"
@@ -34,6 +35,7 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
+	"net/http"
 	"os"
 	"strconv"
 )
@@ -57,8 +59,9 @@ func main() {
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	e2tShutdownManager := managers.NewE2TShutdownManager(logger, rnibDataService, e2tInstancesManager)
 	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(logger, rmrSender, e2tInstancesManager, e2tShutdownManager, config)
+	routingManagerClient := clients.NewRoutingManagerClient(logger, config, &http.Client{})
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
 
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)

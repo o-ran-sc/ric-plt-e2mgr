@@ -292,6 +292,43 @@ func TestSelectE2TInstancesSuccess(t *testing.T) {
 	rnibWriterMock.AssertExpectations(t)
 }
 
+func TestActivateE2TInstanceSuccess(t *testing.T) {
+	_, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1.State = entities.RoutingManagerFailure
+	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
+
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+
+	err := e2tInstancesManager.ActivateE2TInstance(e2tInstance1)
+	assert.Nil(t, err)
+	assert.Equal(t, entities.Active, e2tInstance1.State)
+	rnibWriterMock.AssertExpectations(t)
+}
+
+func TestActivateE2TInstance_RnibError(t *testing.T) {
+	_, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1.State = entities.RoutingManagerFailure
+	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
+
+	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
+
+	err := e2tInstancesManager.ActivateE2TInstance(e2tInstance1)
+	assert.NotNil(t, err)
+}
+
+func TestActivateE2TInstance_NoInstance(t *testing.T) {
+	_, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
+
+	err := e2tInstancesManager.ActivateE2TInstance(nil)
+
+	assert.NotNil(t, err)
+	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
+}
+
 func TestResetKeepAliveTimestampGetInternalFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 

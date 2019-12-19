@@ -43,6 +43,7 @@ type IE2TInstancesManager interface {
 	SelectE2TInstance() (string, error)
 	AssociateRan(ranName string, e2tAddress string) error
 	DissociateRan(ranName string, e2tAddress string) error
+	ActivateE2TInstance(e2tInstance *entities.E2TInstance) error
 	ResetKeepAliveTimestamp(e2tAddress string) error
 }
 
@@ -295,6 +296,26 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 	}
 
 	m.logger.Infof("#E2TInstancesManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tInstance.Address)
+	return nil
+}
+
+func (h E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error{
+
+	if e2tInstance == nil {
+		h.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - e2tInstance empty")
+		return e2managererrors.NewInternalError()
+	}
+
+	h.logger.Infof("#E2TInstancesManager.ActivateE2TInstance - E2T Address: %s - activate E2T instance", e2tInstance.Address)
+
+	e2tInstance.State = entities.Active
+	e2tInstance.KeepAliveTimestamp = time.Now().UnixNano()
+
+	err := h.rnibDataService.SaveE2TInstance(e2tInstance)
+	if err != nil {
+		h.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tInstance.Address, err)
+		return err
+	}
 	return nil
 }
 

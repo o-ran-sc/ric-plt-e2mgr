@@ -21,13 +21,20 @@
 package clients
 
 import (
+	"bytes"
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/mocks"
+	"e2mgr/models"
+	"encoding/json"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 )
 
 const E2TAddress = "10.0.2.15:38000"
+const RanName = "test1"
 
 // TODO: add response Body and dont check for nil in prod code. itll always be populated
 
@@ -41,6 +48,41 @@ func initRoutingManagerClientTest(t *testing.T) (*RoutingManagerClient, *mocks.H
 	return rmClient, httpClientMock, config
 }
 
+func TestAssociateRanToE2TInstance_Success(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManagerBaseUrl + AssociateRanToE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: 201}, nil)
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.Nil(t, err)
+}
+
+func TestAssociateRanToE2TInstance_RoutingManagerError(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManagerBaseUrl + AssociateRanToE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, "application/json", body).Return(nil, errors.New("Error"))
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.Nil(t, err)
+}
+
+func TestAssociateRanToE2TInstance_RoutingManager_400(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManagerBaseUrl + AssociateRanToE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: 400}, nil)
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.Nil(t, err)
+}
 //func TestAddE2TInstanceSuccess(t *testing.T) {
 //	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 //

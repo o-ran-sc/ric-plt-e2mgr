@@ -37,7 +37,7 @@ import (
 const e2tInstanceAddress = "10.0.2.15"
 const e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
 
-func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
+func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock, *mocks.RoutingManagerClientMock) {
 
 	logger := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
@@ -49,13 +49,17 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 
 	writerMock := &mocks.RnibWriterMock{}
 
+	routingManagerClientMock := &mocks.RoutingManagerClientMock{}
+
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
+
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManagerMock)
-	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManagerMock)
-	return logger, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock
+	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock)
+
+	return logger, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock
 }
 
 func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock) {
@@ -69,18 +73,19 @@ func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.
 	readerMock := &mocks.RnibReaderMock{}
 
 	writerMock := &mocks.RnibWriterMock{}
+	routingManagerClientMock := &mocks.RoutingManagerClientMock{}
 
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
-	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager)
+	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager, routingManagerClientMock)
 	return logger, handler, readerMock, writerMock, rmrMessengerMock
 }
 
 func TestE2TermInitUnmarshalPayloadFailure(t *testing.T) {
-	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, _, _, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte("asd")}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertNotCalled(t, "GetE2TInstance")
@@ -88,7 +93,7 @@ func TestE2TermInitUnmarshalPayloadFailure(t *testing.T) {
 }
 
 func TestE2TermInitEmptyE2TAddress(t *testing.T) {
-	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte("{\"address\":\"\"}")}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertNotCalled(t, "GetE2TInstance")
@@ -96,7 +101,7 @@ func TestE2TermInitEmptyE2TAddress(t *testing.T) {
 }
 
 func TestE2TermInitGetE2TInstanceFailure(t *testing.T) {
-	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var e2tInstance *entities.E2TInstance
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewInternalError(fmt.Errorf("internal error")))
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
@@ -115,18 +120,35 @@ func TestE2TermInitGetE2TInstanceDbFailure(t *testing.T) {
 }
 
 func TestE2TermInitNewE2TInstance(t *testing.T) {
-	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, _, _, e2tInstancesManagerMock, routingManagerClient := initRanLostConnectionTest(t)
 	var e2tInstance *entities.E2TInstance
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewResourceNotFoundError("not found"))
 	e2tInstance = entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("AddE2TInstance", e2tInstanceAddress).Return(nil)
+	routingManagerClient.On("AddE2TInstance", e2tInstanceAddress).Return(nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
+	routingManagerClient.AssertCalled(t, "AddE2TInstance", e2tInstanceAddress)
 	e2tInstancesManagerMock.AssertCalled(t, "AddE2TInstance", e2tInstanceAddress)
 }
 
+func TestE2TermInitNewE2TInstance_RoutingManagerError(t *testing.T) {
+	_, handler, _, _, _, e2tInstancesManagerMock, routingManagerClient := initRanLostConnectionTest(t)
+	var e2tInstance *entities.E2TInstance
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewResourceNotFoundError("not found"))
+	e2tInstance = entities.NewE2TInstance(e2tInstanceAddress)
+	e2tInstancesManagerMock.On("AddE2TInstance", e2tInstanceAddress).Return(nil)
+	routingManagerClient.On("AddE2TInstance", e2tInstanceAddress).Return(fmt.Errorf("error"))
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
+
+	handler.Handle(notificationRequest)
+
+	routingManagerClient.AssertCalled(t, "AddE2TInstance", e2tInstanceAddress)
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddE2TInstance", e2tInstanceAddress)
+}
+
 func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
-	_, handler, _, _, _, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
@@ -135,7 +157,7 @@ func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -161,35 +183,101 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 }
 
-func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 
-	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(RanName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything).Return(msg, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
+	e2tInstance.State = entities.ToBeDeleted
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
 
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	writerMock.AssertNotCalled(t, "UpdateNodebInfo")
 	rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
+func TestE2TermInitHandlerSuccessOneRan_RoutingManagerFailure(t *testing.T) {
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	var rnibErr error
+
+	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
+
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+
+	payload := e2pdus.PackedX2setupRequest
+	xaction := []byte(RanName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
+
+	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
+	e2tInstance.State = entities.RoutingManagerFailure
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("ActivateE2TInstance", e2tInstance).Return(nil)
+	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
+
+	handler.Handle(notificationRequest)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
+}
+
+func TestE2TermInitHandlerSuccessOneRan_RoutingManagerFailure_Error(t *testing.T) {
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	var rnibErr error
+
+	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
+
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+
+	payload := e2pdus.PackedX2setupRequest
+	xaction := []byte(RanName)
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction)
+
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
+
+	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
+	e2tInstance.State = entities.RoutingManagerFailure
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("ActivateE2TInstance", e2tInstance).Return(fmt.Errorf(" Error "))
+	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
+
+	handler.Handle(notificationRequest)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
+}
+
 func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 	var initialNodeb0 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var initialNodeb1 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -217,7 +305,7 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	var rnibErr error
 	var initialNodeb0 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var initialNodeb1 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -246,7 +334,7 @@ func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
@@ -288,7 +376,7 @@ func TestE2TermInitHandlerSuccessThreeRansFirstRmrFailure(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
@@ -336,7 +424,7 @@ func TestE2TermInitHandlerSuccessThreeRansSecondNotFoundFailure(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *testing.T) {
-	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	log, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 	var rnibErr error
 
 	ids := []*entities.NbIdentity{{InventoryName: "test1"}, {InventoryName: "test2"}, {InventoryName: "test3"}}
@@ -384,7 +472,7 @@ func TestE2TermInitHandlerSuccessThreeRansSecondRnibInternalErrorFailure(t *test
 }
 
 func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
-	_, handler, _, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, _, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
@@ -397,7 +485,7 @@ func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
 }
 
 func TestE2TermInitHandlerFailureGetNodebInternalError(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 
 	var nodebInfo *entities.NodebInfo
 	readerMock.On("GetNodeb", "test1").Return(nodebInfo, common.NewInternalError(fmt.Errorf("internal error")))
@@ -413,7 +501,7 @@ func TestE2TermInitHandlerFailureGetNodebInternalError(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessTwoRansSecondIsDisconnected(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	var rnibErr error
 	var initialNodeb0 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var initialNodeb1 = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}

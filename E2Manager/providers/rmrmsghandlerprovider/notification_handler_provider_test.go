@@ -18,6 +18,7 @@
 package rmrmsghandlerprovider
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/converters"
 	"e2mgr/handlers/rmrmsghandlers"
@@ -38,40 +39,26 @@ import (
  * Verify support for known providers.
  */
 
-func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, services.RNibDataService, *rmrsender.RmrSender, *managers.RanSetupManager, managers.IE2TInstancesManager) {
+func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, services.RNibDataService, *rmrsender.RmrSender, *managers.RanSetupManager, managers.IE2TInstancesManager, clients.IRoutingManagerClient) {
 	logger := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
+	httpClient := &mocks.HttpClientMock{}
 
 	rmrSender := initRmrSender(&mocks.RmrMessengerMock{}, logger)
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
+	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
 
-	//ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager)
-	//ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
-	//
-	//x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
-	//x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
-	//
-	//x2SetupFailureResponseConverter := converters.NewX2SetupFailureResponseConverter(logger)
-	//x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
-	//
-	//endcSetupResponseConverter := converters.NewEndcSetupResponseConverter(logger)
-	//endcSetupResponseManager := managers.NewEndcSetupResponseManager(endcSetupResponseConverter)
-	//
-	//
-	//endcSetupFailureResponseConverter := converters.NewEndcSetupFailureResponseConverter(logger)
-	//endcSetupFailureResponseManager := managers.NewEndcSetupFailureResponseManager(endcSetupFailureResponseConverter)
-
-	return logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager
+	return logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient
 }
 
 func TestGetNotificationHandlerSuccess(t *testing.T) {
 
-	logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager := initTestCase(t)
+	logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient := initTestCase(t)
 
 	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
@@ -102,7 +89,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, converters.NewEnbLoadInformationExtractor(logger))},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)},
-		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager)},
+		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, rnibDataService, e2tInstancesManager, routingManagerClient)},
 		{rmrCgo.E2_TERM_KEEP_ALIVE_RESP, rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)},
 		{rmrCgo.RIC_X2_RESET_RESP, rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger))},
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
@@ -111,7 +98,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	for _, tc := range testCases {
 
 		provider := NewNotificationHandlerProvider()
-		provider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
+		provider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			handler, err := provider.GetNotificationHandler(tc.msgType)
 			if err != nil {
@@ -140,9 +127,9 @@ func TestGetNotificationHandlerFailure(t *testing.T) {
 	}
 	for _, tc := range testCases {
 
-		logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager := initTestCase(t)
+		logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient := initTestCase(t)
 		provider := NewNotificationHandlerProvider()
-		provider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager)
+		provider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
 		t.Run(fmt.Sprintf("%d", tc.msgType), func(t *testing.T) {
 			_, err := provider.GetNotificationHandler(tc.msgType)
 			if err == nil {

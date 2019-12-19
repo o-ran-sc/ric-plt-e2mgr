@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package clients
 
 import (
@@ -33,7 +32,9 @@ import (
 )
 
 const (
-	AddE2TInstanceApiSuffix = "e2t"
+	AddE2TInstanceApiSuffix            = "e2t"
+	AssociateRanToE2TInstanceApiSuffix = "associate-ran-to-e2t"
+	DissociateRanE2TInstanceApiSuffix  = "dissociate-ran"
 )
 
 type RoutingManagerClient struct {
@@ -44,6 +45,8 @@ type RoutingManagerClient struct {
 
 type IRoutingManagerClient interface {
 	AddE2TInstance(e2tAddress string) error
+	AssociateRanToE2TInstance(e2tAddress string, ranName string) error
+	DissociateRanE2TInstance(e2tAddress string, ranName string) error
 }
 
 func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Configuration, httpClient HttpClient) *RoutingManagerClient {
@@ -55,8 +58,30 @@ func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Config
 }
 
 func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
-	data := models.NewRoutingManagerE2TData(e2tAddress)
 
+	data := models.NewRoutingManagerE2TData(e2tAddress)
+	url := c.config.RoutingManagerBaseUrl + AddE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) AssociateRanToE2TInstance(e2tAddress string, ranName string) error {
+
+	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	url := c.config.RoutingManagerBaseUrl + AssociateRanToE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) DissociateRanE2TInstance(e2tAddress string, ranName string) error {
+
+	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	url := c.config.RoutingManagerBaseUrl + DissociateRanE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) PostMessage(data *models.RoutingManagerE2TData, url string) error {
 	marshaled, err := json.Marshal(data)
 
 	if err != nil {
@@ -64,9 +89,8 @@ func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
 	}
 
 	body := bytes.NewBuffer(marshaled)
-	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.AddE2TInstance - request body: %+v", body)
+	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.PostMessage - request body: %+v", body)
 
-	url := c.config.RoutingManagerBaseUrl + AddE2TInstanceApiSuffix
 	resp, err := c.httpClient.Post(url, "application/json", body)
 
 	if err != nil {
@@ -82,10 +106,10 @@ func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
 	}
 
 	if resp.StatusCode != http.StatusOK { // TODO: shall we check for != 201?
-		c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - failure. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
+		c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - failure. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
 		return e2managererrors.NewRoutingManagerError(fmt.Errorf("Invalid data")) // TODO: which error shall we return?
 	}
 
-	c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - success. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
+	c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - success. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
 	return nil
 }
