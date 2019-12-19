@@ -43,23 +43,22 @@ func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionMana
 }
 
 func (h E2TermInitNotificationHandler) Handle(request *models.NotificationRequest) {
-
-	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Handling E2_TERM_INIT")
-
 	unmarshalledPayload := models.E2TermInitPayload{}
 	err :=  json.Unmarshal(request.Payload, &unmarshalledPayload)
 
 	if err != nil {
-		h.logger.Errorf("#E2TermInitNotificationHandler - Error unmarshaling E2 Term Init payload: %s", err)
+		h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Error unmarshaling E2 Term Init payload: %s", err)
 		return
 	}
 
 	e2tAddress := unmarshalledPayload.Address
 
 	if len(e2tAddress) == 0 {
-		h.logger.Errorf("#E2TermInitNotificationHandler - Empty E2T address received")
+		h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Empty E2T address received")
 		return
 	}
+
+	h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T address: %s - handling E2_TERM_INIT", e2tAddress)
 
 	e2tInstance, err := h.e2tInstancesManager.GetE2TInstance(e2tAddress)
 

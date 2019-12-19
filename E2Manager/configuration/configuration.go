@@ -33,6 +33,9 @@ type Configuration struct {
 		Port       int
 		MaxMsgSize int
 	}
+	RoutingManager struct {
+		BaseUrl	   string
+	}
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
 	MaxConnectionAttempts        int
@@ -40,7 +43,6 @@ type Configuration struct {
 	RnibRetryIntervalMs          int
 	KeepAliveResponseTimeoutMs 	 int
 	KeepAliveDelayMs             int
-	RoutingManagerBaseUrl		 string
 }
 
 func ParseConfiguration() *Configuration {
@@ -56,10 +58,10 @@ func ParseConfiguration() *Configuration {
 	}
 
 	config := Configuration{}
-	config.fillRmrConfig(viper.Sub("rmr"))
-	config.fillHttpConfig(viper.Sub("http"))
-	config.fillLoggingConfig(viper.Sub("logging"))
-
+	config.populateRmrConfig(viper.Sub("rmr"))
+	config.populateHttpConfig(viper.Sub("http"))
+	config.populateLoggingConfig(viper.Sub("logging"))
+	config.populateRoutingManagerConfig(viper.Sub("routingManager"))
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
 	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
@@ -67,28 +69,34 @@ func ParseConfiguration() *Configuration {
 	config.RnibRetryIntervalMs = viper.GetInt("rnibRetryIntervalMs")
 	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
-	config.RoutingManagerBaseUrl = viper.GetString("routingManagerBaseUrl")
 	return &config
 }
 
-func (c *Configuration) fillLoggingConfig(logConfig *viper.Viper) {
+func (c *Configuration) populateLoggingConfig(logConfig *viper.Viper) {
 	if logConfig == nil {
-		panic(fmt.Sprintf("#configuration.fillLoggingConfig - failed to fill logging configuration: The entry 'logging' not found\n"))
+		panic(fmt.Sprintf("#configuration.populateLoggingConfig - failed to populate logging configuration: The entry 'logging' not found\n"))
 	}
 	c.Logging.LogLevel = logConfig.GetString("logLevel")
 }
 
-func (c *Configuration) fillHttpConfig(httpConfig *viper.Viper) {
+func (c *Configuration) populateHttpConfig(httpConfig *viper.Viper) {
 	if httpConfig == nil {
-		panic(fmt.Sprintf("#configuration.fillHttpConfig - failed to fill HTTP configuration: The entry 'http' not found\n"))
+		panic(fmt.Sprintf("#configuration.populateHttpConfig - failed to populate HTTP configuration: The entry 'http' not found\n"))
 	}
 	c.Http.Port = httpConfig.GetInt("port")
 }
 
-func (c *Configuration) fillRmrConfig(rmrConfig *viper.Viper) {
+func (c *Configuration) populateRmrConfig(rmrConfig *viper.Viper) {
 	if rmrConfig == nil {
-		panic(fmt.Sprintf("#configuration.fillRmrConfig - failed to fill RMR configuration: The entry 'rmr' not found\n"))
+		panic(fmt.Sprintf("#configuration.populateRmrConfig - failed to populate RMR configuration: The entry 'rmr' not found\n"))
 	}
 	c.Rmr.Port = rmrConfig.GetInt("port")
 	c.Rmr.MaxMsgSize = rmrConfig.GetInt("maxMsgSize")
+}
+
+func (c *Configuration) populateRoutingManagerConfig(rmConfig *viper.Viper) {
+	if rmConfig == nil {
+		panic(fmt.Sprintf("#configuration.populateRoutingManagerConfig - failed to populate Routing Manager configuration: The entry 'routingManager' not found\n"))
+	}
+	c.RoutingManager.BaseUrl = rmConfig.GetString("baseUrl")
 }

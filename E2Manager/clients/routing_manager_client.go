@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package clients
 
 import (
@@ -28,7 +27,6 @@ import (
 	"e2mgr/models"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -66,26 +64,21 @@ func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
 	body := bytes.NewBuffer(marshaled)
 	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.AddE2TInstance - request body: %+v", body)
 
-	url := c.config.RoutingManagerBaseUrl + AddE2TInstanceApiSuffix
+	url := c.config.RoutingManager.BaseUrl + AddE2TInstanceApiSuffix
 	resp, err := c.httpClient.Post(url, "application/json", body)
 
 	if err != nil {
+		c.logger.Errorf("#RoutingManagerClient.AddE2TInstance - failed sending request. error: %s", err)
 		return e2managererrors.NewRoutingManagerError(err)
 	}
 
 	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return e2managererrors.NewRoutingManagerError(err)
+	if resp.StatusCode == http.StatusCreated {
+		c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - success. http status code: %d", resp.StatusCode)
+		return nil
 	}
 
-	if resp.StatusCode != http.StatusOK { // TODO: shall we check for != 201?
-		c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - failure. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
-		return e2managererrors.NewRoutingManagerError(fmt.Errorf("Invalid data")) // TODO: which error shall we return?
-	}
-
-	c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - success. http status code: %d, response body: %s", resp.StatusCode, string(respBody))
-	return nil
+	c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - failure. http status code: %d", resp.StatusCode)
+	return e2managererrors.NewRoutingManagerError(fmt.Errorf("invalid data"))
 }

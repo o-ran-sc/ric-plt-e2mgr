@@ -138,10 +138,10 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
-	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedX2setupRequest
@@ -165,10 +165,10 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock := initRanLostConnectionTest(t)
 	var rnibErr error
 
-	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedX2setupRequest

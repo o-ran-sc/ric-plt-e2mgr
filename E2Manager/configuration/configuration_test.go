@@ -69,6 +69,7 @@ func TestRmrConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http":    map[string]interface{}{"port": 3800},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -78,7 +79,7 @@ func TestRmrConfigNotFoundFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestRmrConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.fillRmrConfig - failed to fill RMR configuration: The entry 'rmr' not found\n", func() { ParseConfiguration() })
+	assert.PanicsWithValue(t, "#configuration.populateRmrConfig - failed to populate RMR configuration: The entry 'rmr' not found\n", func() { ParseConfiguration() })
 }
 
 func TestLoggingConfigNotFoundFailure(t *testing.T) {
@@ -97,6 +98,7 @@ func TestLoggingConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"rmr":  map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"http": map[string]interface{}{"port": 3800},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -106,7 +108,7 @@ func TestLoggingConfigNotFoundFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestRmrConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.fillLoggingConfig - failed to fill logging configuration: The entry 'logging' not found\n",
+	assert.PanicsWithValue(t, "#configuration.populateLoggingConfig - failed to populate logging configuration: The entry 'logging' not found\n",
 		func() { ParseConfiguration() })
 }
 
@@ -126,6 +128,7 @@ func TestHttpConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -135,6 +138,36 @@ func TestHttpConfigNotFoundFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestHttpConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.fillHttpConfig - failed to fill HTTP configuration: The entry 'http' not found\n",
+	assert.PanicsWithValue(t, "#configuration.populateHttpConfig - failed to populate HTTP configuration: The entry 'http' not found\n",
+		func() { ParseConfiguration() })
+}
+
+func TestRoutingManagerConfigNotFoundFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestRoutingManagerConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestRoutingManagerConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestRoutingManagerConfigNotFoundFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestRoutingManagerConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.populateRoutingManagerConfig - failed to populate Routing Manager configuration: The entry 'routingManager' not found\n",
 		func() { ParseConfiguration() })
 }
