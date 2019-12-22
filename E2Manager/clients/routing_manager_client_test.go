@@ -17,6 +17,7 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
+
 package clients
 
 import (
@@ -34,8 +35,8 @@ import (
 )
 
 const E2TAddress = "10.0.2.15:38000"
+const RanName = "test1"
 
-// TODO: add response Body and dont check for nil in prod code. itll always be populated
 
 func initRoutingManagerClientTest(t *testing.T) (*RoutingManagerClient, *mocks.HttpClientMock, *configuration.Configuration) {
 	logger := initLog(t)
@@ -81,6 +82,82 @@ func TestAddE2TInstanceFailure(t *testing.T) {
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
 	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
 	err := rmClient.AddE2TInstance(E2TAddress)
+	assert.NotNil(t, err)
+}
+
+func TestAssociateRanToE2TInstance_Success(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.Nil(t, err)
+}
+
+func TestAssociateRanToE2TInstance_RoutingManagerError(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.NotNil(t, err)
+}
+
+func TestAssociateRanToE2TInstance_RoutingManager_400(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
+	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
+	assert.NotNil(t, err)
+}
+
+func TestDissociateRanE2TInstance_Success(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
+	err := rmClient.DissociateRanE2TInstance(E2TAddress, RanName)
+	assert.Nil(t, err)
+}
+
+func TestDissociateRanE2TInstance_RoutingManagerError(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
+	err := rmClient.DissociateRanE2TInstance(E2TAddress, RanName)
+	assert.NotNil(t, err)
+}
+
+func TestDissociateRanE2TInstance_RoutingManager_400(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
+	err := rmClient.DissociateRanE2TInstance(E2TAddress, RanName)
 	assert.NotNil(t, err)
 }
 

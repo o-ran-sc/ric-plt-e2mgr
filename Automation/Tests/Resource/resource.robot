@@ -21,8 +21,8 @@ Documentation    Resource file
 
 
 *** Variables ***
-${docker_number}    7
-${docker_number-1}    6
+${docker_number}    8
+${docker_number-1}    7
 ${ip_gnb_simu}	10.0.2.15
 ${ip_e2adapter}	10.0.2.15
 ${url}   http://localhost:3800
@@ -56,7 +56,6 @@ ${dbass_start}   docker run -d --name dbass -p 6379:6379 --env DBAAS_SERVICE_HOS
 ${dbass_remove}    docker rm dbass
 ${dbass_stop}      docker stop dbass
 ${restart_simu}  docker restart gnbe2_simu
-${start_e2}  docker start e2
 ${stop_docker_e2}      docker stop e2
 ${restart_docker_sim}      docker restart gnbe2_simu
 ${Run_Config}       docker exec gnbe2_simu pkill gnbe2_simu -INT

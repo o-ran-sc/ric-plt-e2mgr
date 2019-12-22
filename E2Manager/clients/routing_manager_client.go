@@ -26,12 +26,13 @@ import (
 	"e2mgr/logger"
 	"e2mgr/models"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
 const (
-	AddE2TInstanceApiSuffix = "e2t"
+	AddE2TInstanceApiSuffix            = "e2t"
+	AssociateRanToE2TInstanceApiSuffix = "associate-ran-to-e2t"
+	DissociateRanE2TInstanceApiSuffix  = "dissociate-ran"
 )
 
 type RoutingManagerClient struct {
@@ -42,6 +43,8 @@ type RoutingManagerClient struct {
 
 type IRoutingManagerClient interface {
 	AddE2TInstance(e2tAddress string) error
+	AssociateRanToE2TInstance(e2tAddress string, ranName string) error
+	DissociateRanE2TInstance(e2tAddress string, ranName string) error
 }
 
 func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Configuration, httpClient HttpClient) *RoutingManagerClient {
@@ -53,32 +56,53 @@ func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Config
 }
 
 func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
-	data := models.NewRoutingManagerE2TData(e2tAddress)
 
+	data := models.NewRoutingManagerE2TData(e2tAddress)
+	url := c.config.RoutingManager.BaseUrl + AddE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) AssociateRanToE2TInstance(e2tAddress string, ranName string) error {
+
+	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	url := c.config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) DissociateRanE2TInstance(e2tAddress string, ranName string) error {
+
+	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	url := c.config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) PostMessage(data *models.RoutingManagerE2TData, url string) error {
 	marshaled, err := json.Marshal(data)
 
 	if err != nil {
-		return e2managererrors.NewRoutingManagerError(err)
+		return e2managererrors.NewRoutingManagerError()
 	}
 
 	body := bytes.NewBuffer(marshaled)
-	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.AddE2TInstance - request body: %+v", body)
+	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.PostMessage - url: %s, request body: %+v", url, body)
 
-	url := c.config.RoutingManager.BaseUrl + AddE2TInstanceApiSuffix
 	resp, err := c.httpClient.Post(url, "application/json", body)
 
 	if err != nil {
-		c.logger.Errorf("#RoutingManagerClient.AddE2TInstance - failed sending request. error: %s", err)
-		return e2managererrors.NewRoutingManagerError(err)
+		c.logger.Errorf("#RoutingManagerClient.PostMessage - failed sending request. error: %s", err)
+		return e2managererrors.NewRoutingManagerError()
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - success. http status code: %d", resp.StatusCode)
+	if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices {
+		c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - success. http status code: %d", resp.StatusCode)
 		return nil
 	}
 
-	c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.AddE2TInstance - failure. http status code: %d", resp.StatusCode)
-	return e2managererrors.NewRoutingManagerError(fmt.Errorf("invalid data"))
+	c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - failure. http status code: %d", resp.StatusCode)
+	return e2managererrors.NewRoutingManagerError()
 }

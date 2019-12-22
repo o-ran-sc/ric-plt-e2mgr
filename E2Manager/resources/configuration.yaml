@@ -6,7 +6,7 @@ rmr:
   port: 3801
   maxMsgSize: 65536
 routingManager:
-  baseUrl: http://iltlv740.intl.att.com:8080/ric/v1/handles/
+  baseUrl: http://10.0.2.15:12020/ric/v1/handles/v1/
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
 maxConnectionAttempts: 3

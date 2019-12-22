@@ -18,12 +18,14 @@
 package rmrmsghandlers
 
 import (
+	"e2mgr/clients"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type E2TermInitNotificationHandler struct {
@@ -31,20 +33,22 @@ type E2TermInitNotificationHandler struct {
 	rnibDataService        services.RNibDataService
 	ranReconnectionManager *managers.RanReconnectionManager
 	e2tInstancesManager    managers.IE2TInstancesManager
+	routingManagerClient   clients.IRoutingManagerClient
 }
 
-func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
 		logger:                 logger,
 		rnibDataService:        rnibDataService,
 		ranReconnectionManager: ranReconnectionManager,
 		e2tInstancesManager:    e2tInstancesManager,
+		routingManagerClient:   routingManagerClient,
 	}
 }
 
 func (h E2TermInitNotificationHandler) Handle(request *models.NotificationRequest) {
 	unmarshalledPayload := models.E2TermInitPayload{}
-	err :=  json.Unmarshal(request.Payload, &unmarshalledPayload)
+	err := json.Unmarshal(request.Payload, &unmarshalledPayload)
 
 	if err != nil {
 		h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Error unmarshaling E2 Term Init payload: %s", err)
@@ -70,7 +74,7 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 			return
 		}
 
-		_ = h.e2tInstancesManager.AddE2TInstance(e2tAddress)
+		h.HandleNewE2TInstance(e2tAddress)
 		return
 	}
 
@@ -79,16 +83,45 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 		return
 	}
 
+	if e2tInstance.State == entities.ToBeDeleted{
+		h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T Address: %s - E2T instance status is: %s, ignore", e2tInstance.Address, e2tInstance.State)
+		return
+	}
+
+	if e2tInstance.State == entities.RoutingManagerFailure {
+		err := h.e2tInstancesManager.ActivateE2TInstance(e2tInstance)
+		if err != nil {
+			return
+		}
+	}
+
+	h.HandleExistingE2TInstance(e2tInstance)
+
+	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
+}
+
+func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *entities.E2TInstance) {
+
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
 		if err := h.ranReconnectionManager.ReconnectRan(ranName); err != nil {
-			h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", ranName, err)
+			h.logger.Errorf("#E2TermInitNotificationHandler.HandleExistingE2TInstance - Ran name: %s - connection attempt failure, error: %s", ranName, err)
 			_, ok := err.(*common.ResourceNotFoundError)
 			if !ok {
 				break
 			}
 		}
 	}
+}
 
-	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
+func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string) {
+
+	err := h.routingManagerClient.AddE2TInstance(e2tAddress)
+
+	if err != nil{
+		h.logger.Errorf("#E2TermInitNotificationHandler.HandleNewE2TInstance - e2t address: %s - routing manager failure", e2tAddress)
+		return
+	}
+
+	_ = h.e2tInstancesManager.AddE2TInstance(e2tAddress)
 }

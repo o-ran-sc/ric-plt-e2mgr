@@ -17,21 +17,13 @@
 
 package e2managererrors
 
-import "fmt"
-
 type RoutingManagerError struct {
-	*BaseError
 }
 
-func NewRoutingManagerError(err error) *RoutingManagerError {
-	return &RoutingManagerError{
-		&BaseError{
-			Code:    511,
-			Message: fmt.Sprintf("Routing manager error: %s", err),
-		},
-	}
+func NewRoutingManagerError() *RoutingManagerError {
+	return &RoutingManagerError{}
 }
 
 func (e *RoutingManagerError) Error() string {
-	return e.Message
+	return "Routing Manager Error"
 }
