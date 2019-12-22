@@ -7,6 +7,8 @@ gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.27 h1:nvZDzuB/SYKDuF1
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.27/go.mod h1:Fh23KkroYw5CRBh39WzZzxpKSkpQWL3scdzGnMngLo8=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.28 h1:+8Nn+Jn/AvhwBI1LtLsNS1PtOGAOYUHdicOrMn/8mmU=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.28/go.mod h1:Fh23KkroYw5CRBh39WzZzxpKSkpQWL3scdzGnMngLo8=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.27 h1:sWjlU/wBiWIBeSixnr9etCqtNmS2LW8jv+x2JGpf2eI=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.27/go.mod h1:vZ/335+rRSQW82wcbc80fNNICSK3TiCqIxmkqeC2Pfo=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.28 h1:AaYvK59fxDXQUV9NCo6WuxDOvBQbnRU3WTPyJaYhkkg=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.28/go.mod h1:vZ/335+rRSQW82wcbc80fNNICSK3TiCqIxmkqeC2Pfo=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.0 h1:+P3XuWKSaMbzh5PNtrW9gkZlCN0hKrZq+Cn8JetwBys=

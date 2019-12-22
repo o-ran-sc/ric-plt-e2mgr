@@ -184,7 +184,7 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
-	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var rnibErr error
 
 	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -201,7 +201,7 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	readerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 
 	handler.Handle(notificationRequest)
