@@ -105,7 +105,7 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
 		if err := h.ranReconnectionManager.ReconnectRan(ranName); err != nil {
-			h.logger.Errorf("#E2TermInitNotificationHandler.Handle - Ran name: %s - connection attempt failure, error: %s", ranName, err)
+			h.logger.Errorf("#E2TermInitNotificationHandler.HandleExistingE2TInstance - Ran name: %s - connection attempt failure, error: %s", ranName, err)
 			_, ok := err.(*common.ResourceNotFoundError)
 			if !ok {
 				break
@@ -119,7 +119,7 @@ func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string) {
 	err := h.routingManagerClient.AddE2TInstance(e2tAddress)
 
 	if err != nil{
-		h.logger.Errorf("#E2TermInitNotificationHandler.HandleNewE2TInstance - e2t address: %s - routing manager call failure, error: %s", e2tAddress, err)
+		h.logger.Errorf("#E2TermInitNotificationHandler.HandleNewE2TInstance - e2t address: %s - routing manager failure", e2tAddress)
 		return
 	}
 

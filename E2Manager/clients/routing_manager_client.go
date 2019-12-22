@@ -87,18 +87,18 @@ func (c *RoutingManagerClient) PostMessage(data *models.RoutingManagerE2TData, u
 	}
 
 	body := bytes.NewBuffer(marshaled)
-	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.PostMessage - request body: %+v, url: %s", body, url)
+	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.PostMessage - url: %s, request body: %+v", url, body)
 
 	resp, err := c.httpClient.Post(url, "application/json", body)
 
 	if err != nil {
-		c.logger.Errorf("#RoutingManagerClient.AddE2TInstance - failed sending request. error: %s", err)
+		c.logger.Errorf("#RoutingManagerClient.PostMessage - failed sending request. error: %s", err)
 		return e2managererrors.NewRoutingManagerError()
 	}
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
+	if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices {
 		c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - success. http status code: %d", resp.StatusCode)
 		return nil
 	}
