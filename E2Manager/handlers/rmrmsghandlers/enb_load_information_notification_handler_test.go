@@ -34,7 +34,7 @@ const (
 	GarbagePdu   string = "12312312"
 )
 
-func createNotificationRequest(ranName string, transactionId string, packedPdu string) (*models.NotificationRequest, error) {
+func createNotificationRequest(ranName string, transactionId []byte, packedPdu string) (*models.NotificationRequest, error) {
 	var packedByteSlice []byte
 
 	_, err := fmt.Sscanf(packedPdu, "%x", &packedByteSlice)
@@ -46,7 +46,7 @@ func createNotificationRequest(ranName string, transactionId string, packedPdu s
 	return models.NewNotificationRequest(ranName, packedByteSlice, time.Now(), transactionId), nil
 }
 
-func createNotificationRequestAndHandle(ranName string, transactionId string, loadInformationHandler EnbLoadInformationNotificationHandler, pdu string) error {
+func createNotificationRequestAndHandle(ranName string, transactionId []byte, loadInformationHandler EnbLoadInformationNotificationHandler, pdu string) error {
 	notificationRequest, err := createNotificationRequest(ranName, transactionId, pdu)
 
 	if err != nil {

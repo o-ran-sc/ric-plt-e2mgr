@@ -64,3 +64,15 @@ func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName strin
 
 	return nil
 }
+
+func (rnibWriterMock *RnibWriterMock) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
+	args := rnibWriterMock.Called(e2tInstance)
+
+	return args.Error(0)
+}
+
+func (rnibWriterMock *RnibWriterMock) SaveE2TAddresses(addresses []string) error {
+	args := rnibWriterMock.Called(addresses)
+
+	return args.Error(0)
+}

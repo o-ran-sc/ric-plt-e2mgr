@@ -30,13 +30,13 @@ type RmrMessengerMock struct {
 	mock.Mock
 }
 
-func (m *RmrMessengerMock) Init(port string, maxMsgSize int, flags int, logger *logger.Logger) *rmrCgo.RmrMessenger{
+func (m *RmrMessengerMock) Init(port string, maxMsgSize int, flags int, logger *logger.Logger) rmrCgo.RmrMessenger{
 	args := m.Called(port, maxMsgSize, flags, logger)
-	return args.Get(0).(*rmrCgo.RmrMessenger)
+	return args.Get(0).(rmrCgo.RmrMessenger)
 }
 
-func (m *RmrMessengerMock) SendMsg(msg *rmrCgo.MBuf) (*rmrCgo.MBuf, error){
-	args := m.Called(msg)
+func (m *RmrMessengerMock) SendMsg(msg *rmrCgo.MBuf, printLogs bool) (*rmrCgo.MBuf, error){
+	args := m.Called(msg, printLogs)
 	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)
 }
 

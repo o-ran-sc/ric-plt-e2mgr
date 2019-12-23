@@ -33,7 +33,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"testing"
 	"time"
 )
@@ -51,11 +50,8 @@ func initX2ResetResponseHandlerTest(t *testing.T) (X2ResetResponseHandler, *mock
 		t.Errorf("#initX2ResetResponseHandlerTest - failed to initialize logger, error: %s", err)
 	}
 	readerMock := &mocks.RnibReaderMock{}
-	rnibReaderProvider := func() reader.RNibReader {
-		return readerMock
-	}
 
-	rnibDataService := services.NewRnibDataService(log, config, rnibReaderProvider, nil)
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, nil)
 
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := initRmrSender(rmrMessengerMock, log)
@@ -73,15 +69,15 @@ func TestX2ResetResponseSuccess(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RIC_TO_RAN)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestX2ResetResponseSuccessEmptyIEs(t *testing.T) {
@@ -92,15 +88,15 @@ func TestX2ResetResponseSuccessEmptyIEs(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
 	ranRestartedMbuf := getRanRestartedMbuf(nb.NodeType, enums.RIC_TO_RAN)
-	rmrMessengerMock.On("SendMsg", ranRestartedMbuf).Return(&rmrCgo.MBuf{}, err)
+	rmrMessengerMock.On("SendMsg", ranRestartedMbuf, true).Return(&rmrCgo.MBuf{}, err)
 	h.Handle(&notificationRequest)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", ranRestartedMbuf, true)
 }
 
 func TestX2ResetResponseShuttingDown(t *testing.T) {
@@ -111,8 +107,8 @@ func TestX2ResetResponseShuttingDown(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
@@ -128,8 +124,8 @@ func TestX2ResetResponseInvalidConnectionStatus(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
@@ -145,8 +141,8 @@ func TestX2ResetResponseError(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)
@@ -163,8 +159,8 @@ func TestX2ResetResponseGetNodebFailure(t *testing.T) {
 		t.Fatalf("Failed converting packed pdu. Error: %v\n", err)
 	}
 
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 
 	var nb *entities.NodebInfo
 	rnibErr := common.NewResourceNotFoundError("nodeb not found")
@@ -178,8 +174,8 @@ func TestX2ResetResponseUnpackFailure(t *testing.T) {
 	h, readerMock, rmrMessengerMock := initX2ResetResponseHandlerTest(t)
 
 	payload := []byte("Invalid payload")
-	xaction := []byte(RanName)
-	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: string(xaction)}
+	var xAction []byte
+	notificationRequest := models.NotificationRequest{RanName: RanName, Len: len(payload), Payload: payload, StartTime: time.Now(), TransactionId: xAction}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_ENB}
 	var rnibErr error
 	readerMock.On("GetNodeb", RanName).Return(nb, rnibErr)

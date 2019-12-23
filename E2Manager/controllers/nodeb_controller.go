@@ -176,7 +176,7 @@ func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http
 
 	c.logger.Infof("[E2 Manager -> Client] #NodebController.handleRequest - response: %s", result)
 	writer.Header().Set("Content-Type", "application/json")
-	writer.Write([]byte(result))
+	writer.Write(result)
 }
 
 func (c *NodebController) validateRequestHeader(header *http.Header) error {
@@ -228,7 +228,10 @@ func (c *NodebController) handleErrorResponse(err error, writer http.ResponseWri
 			e2Error, _ := err.(*e2managererrors.ResourceNotFoundError)
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusNotFound
-
+		case *e2managererrors.E2TInstanceAbsenceError:
+			e2Error, _ := err.(*e2managererrors.E2TInstanceAbsenceError)
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
+			httpError = http.StatusServiceUnavailable
 		default:
 			e2Error := e2managererrors.NewInternalError()
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}

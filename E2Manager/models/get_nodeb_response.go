@@ -36,14 +36,14 @@ func NewGetNodebResponse(nodebInfo *entities.NodebInfo) *GetNodebResponse {
 	}
 }
 
-func (response *GetNodebResponse) Marshal() (string, error) {
+func (response *GetNodebResponse) Marshal() ([]byte, error) {
 	m := jsonpb.Marshaler{}
 	result, err := m.MarshalToString(response.nodebInfo)
 
 	if err != nil {
-		return "", e2managererrors.NewInternalError()
+		return nil, e2managererrors.NewInternalError()
 	}
 
-	return result, nil
+	return []byte(result), nil
 
 }

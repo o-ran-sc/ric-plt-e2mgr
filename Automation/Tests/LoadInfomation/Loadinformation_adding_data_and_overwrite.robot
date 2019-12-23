@@ -50,7 +50,7 @@ Trigger X-2 Setup for load information
     String   response body connectionStatus    CONNECTED
 
 
-Verify Load information does exist in redis
+Verify Load information exists in redis
    ${result}=   loadscripts.verify_value
    Should Be Equal As Strings  ${result}    True
 

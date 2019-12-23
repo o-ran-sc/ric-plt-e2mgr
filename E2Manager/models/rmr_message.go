@@ -20,24 +20,18 @@
 
 package models
 
-import (
-	"e2mgr/logger"
-)
-
 type RmrMessage struct {
 	MsgType int
 	RanName string
 	Payload []byte
+	XAction []byte
 }
 
-func NewRmrMessage(msgType int, ranName string, payload []byte) *RmrMessage {
+func NewRmrMessage(msgType int, ranName string, payload []byte, xAction []byte) *RmrMessage {
 	return &RmrMessage{
 		MsgType: msgType,
 		RanName: ranName,
 		Payload: payload,
+		XAction: xAction,
 	}
-}
-
-func (response RmrMessage) GetMessageAsBytes(logger *logger.Logger) []byte {
-	return response.Payload
 }

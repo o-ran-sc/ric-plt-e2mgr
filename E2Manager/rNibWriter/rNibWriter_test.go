@@ -22,6 +22,7 @@ package rNibWriter
 
 import (
 	"e2mgr/mocks"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -32,55 +33,19 @@ import (
 	"time"
 )
 
-func TestInitRNibWriter(t *testing.T) {
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	available, created := writerPool.Stats()
-	assert.Equal(t, available, 0, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, created, 0, "number of created objects in the writerPool should be 0")
-	w := GetRNibWriter()
-	assert.NotNil(t, w)
-}
-
-func TestInitPool(t *testing.T) {
-	writerPool = nil
-	sdlInstanceMock := new(mocks.MockSdlInstance)
-	initPool(1, func() interface{} {
-		sdlI := common.ISdlInstance(sdlInstanceMock)
-		return &rNibWriterInstance{sdl: &sdlI, namespace: namespace}
-	},
-		func(obj interface{}) {
-		},
-	)
-	assert.NotNil(t, writerPool)
-	assert.NotNil(t, writerPool.New)
-	assert.NotNil(t, writerPool.Destroy)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
+func initSdlInstanceMock(namespace string) (w RNibWriter, sdlInstanceMock *mocks.MockSdlInstance) {
+	sdlInstanceMock = new(mocks.MockSdlInstance)
+	w = GetRNibWriter(sdlInstanceMock)
+	return
 }
 
 var namespace = "namespace"
-
-func initSdlInstanceMock(namespace string, poolSize int) *mocks.MockSdlInstance {
-	sdlInstanceMock := new(mocks.MockSdlInstance)
-	initPool(poolSize, func() interface{} {
-		sdlI := common.ISdlInstance(sdlInstanceMock)
-		return &rNibWriterInstance{sdl: &sdlI, namespace: namespace}
-	},
-		func(obj interface{}) {
-		},
-	)
-	return sdlInstanceMock
-}
 
 func TestUpdateNodebInfoSuccess(t *testing.T) {
 	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := &entities.NodebInfo{}
 	nodebInfo.RanName = inventoryName
 	nodebInfo.GlobalNbId = &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}
@@ -110,9 +75,7 @@ func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
 	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := &entities.NodebInfo{}
 	data, err := proto.Marshal(nodebInfo)
 	if err != nil {
@@ -136,9 +99,7 @@ func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
 
 func TestUpdateNodebInfoMissingGlobalNbId(t *testing.T) {
 	inventoryName := "name"
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := &entities.NodebInfo{}
 	nodebInfo.RanName = inventoryName
 	data, err := proto.Marshal(nodebInfo)
@@ -160,9 +121,7 @@ func TestUpdateNodebInfoMissingGlobalNbId(t *testing.T) {
 func TestSaveEnb(t *testing.T) {
 	name := "name"
 	ranName := "RAN:" + name
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
 	nb.NodeType = entities.Node_ENB
 	nb.ConnectionStatus = 1
@@ -210,9 +169,7 @@ func TestSaveEnb(t *testing.T) {
 
 func TestSaveEnbCellIdValidationFailure(t *testing.T) {
 	name := "name"
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
 	nb.NodeType = entities.Node_ENB
 	nb.ConnectionStatus = 1
@@ -231,9 +188,7 @@ func TestSaveEnbCellIdValidationFailure(t *testing.T) {
 }
 
 func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
 	nb.NodeType = entities.Node_ENB
 	nb.ConnectionStatus = 1
@@ -251,35 +206,9 @@ func TestSaveEnbInventoryNameValidationFailure(t *testing.T) {
 	assert.Equal(t, "#utils.ValidateAndBuildNodeBNameKey - an empty inventory name received", rNibErr.Error())
 }
 
-func TestSaveEnbOnClosedPool(t *testing.T) {
-	name := "name"
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
-	nb := entities.NodebInfo{}
-	nb.NodeType = entities.Node_ENB
-	nb.ConnectionStatus = 1
-	nb.Ip = "localhost"
-	nb.Port = 5656
-	enb := entities.Enb{}
-	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
-	data, err := proto.Marshal(&nb)
-	if err != nil {
-		t.Errorf("#rNibWriter_test.TestSaveEnbOnClosedPool - Failed to marshal NodeB entity. Error: %v", err)
-	}
-	setExpected := []interface{}{name, data}
-	var e error
-	sdlInstanceMock.On("Set", setExpected).Return(e)
-	writerPool.Close()
-	nbIdentity := &entities.NbIdentity{}
-	assert.Panics(t, func() { w.SaveNodeb(nbIdentity, &nb) })
-}
-
 func TestSaveGnbCellIdValidationFailure(t *testing.T) {
 	name := "name"
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
 	nb.NodeType = entities.Node_GNB
 	nb.ConnectionStatus = 1
@@ -301,9 +230,7 @@ func TestSaveGnbCellIdValidationFailure(t *testing.T) {
 func TestSaveGnb(t *testing.T) {
 	name := "name"
 	ranName := "RAN:" + name
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
 	nb.NodeType = entities.Node_GNB
 	nb.ConnectionStatus = 1
@@ -357,9 +284,7 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationSuccess - Failed to build ran load infromation key. Error: %v", validationErr)
 	}
 
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
 	ranLoadInformation := generateRanLoadInformation()
 	data, err := proto.Marshal(ranLoadInformation)
@@ -379,9 +304,7 @@ func TestSaveRanLoadInformationSuccess(t *testing.T) {
 
 func TestSaveRanLoadInformationMarshalNilFailure(t *testing.T) {
 	inventoryName := "name2"
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 
 	expectedErr := common.NewInternalError(errors.New("proto: Marshal called with nil"))
 	err := w.SaveRanLoadInformation(inventoryName, nil)
@@ -390,9 +313,7 @@ func TestSaveRanLoadInformationMarshalNilFailure(t *testing.T) {
 
 func TestSaveRanLoadInformationEmptyInventoryNameFailure(t *testing.T) {
 	inventoryName := ""
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 
 	err := w.SaveRanLoadInformation(inventoryName, nil)
 	assert.NotNil(t, err)
@@ -408,9 +329,7 @@ func TestSaveRanLoadInformationSdlFailure(t *testing.T) {
 		t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationSuccess - Failed to build ran load infromation key. Error: %v", validationErr)
 	}
 
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
 	ranLoadInformation := generateRanLoadInformation()
 	data, err := proto.Marshal(ranLoadInformation)
@@ -503,9 +422,7 @@ func generateRanLoadInformation() *entities.RanLoadInformation {
 }
 
 func TestSaveNilEntityFailure(t *testing.T) {
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 	expectedErr := common.NewInternalError(errors.New("proto: Marshal called with nil"))
 	nbIdentity := &entities.NbIdentity{}
 	actualErr := w.SaveNodeb(nbIdentity, nil)
@@ -513,9 +430,7 @@ func TestSaveNilEntityFailure(t *testing.T) {
 }
 
 func TestSaveUnknownTypeEntityFailure(t *testing.T) {
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, _ := initSdlInstanceMock(namespace)
 	expectedErr := common.NewValidationError("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 ")
 	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nb := &entities.NodebInfo{}
@@ -530,9 +445,7 @@ func TestSaveEntityFailure(t *testing.T) {
 	plmnId := "02f829"
 	nbId := "4a952a0a"
 
-	writerPool = nil
-	sdlInstanceMock := initSdlInstanceMock(namespace, 1)
-	w := GetRNibWriter()
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	gnb := entities.NodebInfo{}
 	gnb.NodeType = entities.Node_GNB
 	data, err := proto.Marshal(&gnb)
@@ -548,77 +461,120 @@ func TestSaveEntityFailure(t *testing.T) {
 	assert.NotEmpty(t, rNibErr)
 }
 
-func TestGetRNibWriterPoolNotInitializedFailure(t *testing.T) {
-	writerPool = nil
-	assert.Panics(t, func() { GetRNibWriter().SaveNodeb(nil,nil) })
-}
-
 func TestGetRNibWriter(t *testing.T) {
-	writerPool = nil
-	initSdlInstanceMock(namespace, 1)
-	received := GetRNibWriter()
-	assert.Empty(t, received)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
-	writerPool.Close()
+	received, _ := initSdlInstanceMock(namespace)
+	assert.NotEmpty(t, received)
 }
 
-func TestClose(t *testing.T) {
-	writerPool = nil
-	instanceMock := initSdlInstanceMock(namespace, 2)
-	w1 := GetRNibWriter()
-	w2 := GetRNibWriter()
-	writerPool.Put(w1)
-	writerPool.Put(w2)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 2, available, "number of available objects in the writerPool should be 2")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
+func TestSaveE2TInstanceSuccess(t *testing.T) {
+	address := "10.10.2.15:9800"
+	loadKey, validationErr := common.ValidateAndBuildE2TInstanceKey(address)
+
+	if validationErr != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSuccess - Failed to build E2T Instance key. Error: %v", validationErr)
+	}
+
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInstance := generateE2tInstance(address)
+	data, err := json.Marshal(e2tInstance)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSuccess - Failed to marshal E2tInstance entity. Error: %v", err)
+	}
+
 	var e error
-	instanceMock.On("Close").Return(e)
-	Close()
-	available, created = writerPool.Stats()
-	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
+	var setExpected []interface{}
+	setExpected = append(setExpected, loadKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.SaveE2TInstance(e2tInstance)
+	assert.Nil(t, rNibErr)
 }
 
-func TestCloseOnClosedPoolFailure(t *testing.T) {
-	writerPool = nil
-	instanceMock := initSdlInstanceMock(namespace, 1)
-	w1 := GetRNibWriter()
-	writerPool.Put(w1)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 1, available, "number of available objects in the writerPool should be 1")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
+func TestSaveE2TInstanceNullE2tInstanceFailure(t *testing.T) {
+	w, _ := initSdlInstanceMock(namespace)
+	var address string
+	e2tInstance := entities.NewE2TInstance(address)
+	err := w.SaveE2TInstance(e2tInstance)
+	assert.NotNil(t, err)
+	assert.IsType(t, &common.ValidationError{}, err)
+}
+
+func TestSaveE2TInstanceSdlFailure(t *testing.T) {
+	address := "10.10.2.15:9800"
+	loadKey, validationErr := common.ValidateAndBuildE2TInstanceKey(address)
+
+	if validationErr != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSdlFailure - Failed to build E2T Instance key. Error: %v", validationErr)
+	}
+
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tInstance := generateE2tInstance(address)
+	data, err := json.Marshal(e2tInstance)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInstanceSdlFailure - Failed to marshal E2tInstance entity. Error: %v", err)
+	}
+
+	expectedErr := errors.New("expected error")
+	var setExpected []interface{}
+	setExpected = append(setExpected, loadKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
+
+	rNibErr := w.SaveE2TInstance(e2tInstance)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
+}
+
+func generateE2tInstance(address string) *entities.E2TInstance {
+	e2tInstance := entities.NewE2TInstance(address)
+
+	e2tInstance.AssociatedRanList = []string{"test1", "test2"}
+
+	return e2tInstance
+}
+
+func TestSaveE2TAddressesSuccess(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tAddresses := []string{address}
+	data, err := json.Marshal(e2tAddresses)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSuccess - Failed to marshal E2TInfoList. Error: %v", err)
+	}
+
 	var e error
-	instanceMock.On("Close").Return(e)
-	Close()
-	assert.Panics(t, func() { Close() })
+	var setExpected []interface{}
+	setExpected = append(setExpected, E2TAddressesKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.SaveE2TAddresses(e2tAddresses)
+	assert.Nil(t, rNibErr)
 }
 
-func TestCloseFailure(t *testing.T) {
-	writerPool = nil
-	instanceMock := initSdlInstanceMock(namespace, 2)
-	w1 := GetRNibWriter()
-	writerPool.Put(w1)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 1, available, "number of available objects in the writerPool should be 1")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
-	e := errors.New("expected error")
-	instanceMock.On("Close").Return(e)
-	Close()
-	available, created = writerPool.Stats()
-	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-}
+func TestSaveE2TAddressesSdlFailure(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 
-func TestInit(t *testing.T) {
-	writerPool = nil
-	Init("", 1)
-	assert.NotNil(t, writerPool)
-	assert.NotNil(t, writerPool.New)
-	assert.NotNil(t, writerPool.Destroy)
-	available, created := writerPool.Stats()
-	assert.Equal(t, 0, available, "number of available objects in the writerPool should be 0")
-	assert.Equal(t, 0, created, "number of created objects in the writerPool should be 0")
+	e2tAddresses := []string{address}
+	data, err := json.Marshal(e2tAddresses)
+
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveE2TInfoListSdlFailure - Failed to marshal E2TInfoList. Error: %v", err)
+	}
+
+	expectedErr := errors.New("expected error")
+	var setExpected []interface{}
+	setExpected = append(setExpected, E2TAddressesKey, data)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
+
+	rNibErr := w.SaveE2TAddresses(e2tAddresses)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
 
 //Integration tests
