@@ -133,7 +133,7 @@ Prepare Enviorment
      Run And Return Rc And Output    ${run_simu_regular}
      Run And Return Rc And Output    ${run_e2e_simu_regular}
      Run And Return Rc And Output    ${restart_e2adapter}
-     Sleep  2s
+     Sleep  3s
      ${result}=  Run And Return Rc And Output     ${docker_command}
      Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
