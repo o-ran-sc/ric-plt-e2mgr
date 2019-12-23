@@ -25,10 +25,10 @@ import (
 	"net/http"
 )
 
-func Run(log *logger.Logger, port int, controller controllers.IRootController, newController controllers.INodebController) error {
+func Run(log *logger.Logger, port int, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) error {
 
 	router := mux.NewRouter();
-	initializeRoutes(router, controller, newController)
+	initializeRoutes(router, rootController, nodebController, e2tController)
 
 	addr := fmt.Sprintf(":%d", port)
 
@@ -38,7 +38,7 @@ func Run(log *logger.Logger, port int, controller controllers.IRootController, n
 	return err
 }
 
-func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController) {
+func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) {
 	r := router.PathPrefix("/v1").Subrouter()
 	r.HandleFunc("/health", rootController.HandleHealthCheckRequest).Methods("GET")
 
@@ -49,4 +49,7 @@ func initializeRoutes(router *mux.Router, rootController controllers.IRootContro
 	rr.HandleFunc("/{ranName}/reset", nodebController.X2Reset).Methods("PUT")
 	rr.HandleFunc("/x2-setup", nodebController.X2Setup).Methods("POST")
 	rr.HandleFunc("/endc-setup", nodebController.EndcSetup).Methods("POST")
+
+	rrr := r.PathPrefix("/e2t").Subrouter()
+	rrr.HandleFunc("/list", e2tController.GetE2TInstances).Methods("GET")
 }

@@ -79,8 +79,10 @@ func (m *E2TInstancesManager) GetE2TInstancesNoLogs() ([]*entities.E2TInstance, 
 
 		if !ok {
 			m.logger.Errorf("#E2TInstancesManager.GetE2TInstancesNoLogs - Failed retrieving E2T addresses. error: %s", err)
+			return nil, e2managererrors.NewRnibDbError()
 		}
-		return nil, err
+
+		return []*entities.E2TInstance{}, nil
 	}
 
 	if len(e2tAddresses) == 0 {
@@ -105,8 +107,16 @@ func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error)
 	e2tAddresses, err := m.rnibDataService.GetE2TAddresses()
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.GetE2TInstances - Failed retrieving E2T addresses. error: %s", err)
-		return nil, err
+
+		_, ok := err.(*common.ResourceNotFoundError)
+
+		if !ok {
+			m.logger.Errorf("#E2TInstancesManager.GetE2TInstances - Failed retrieving E2T addresses. error: %s", err)
+			return nil, e2managererrors.NewRnibDbError()
+		}
+
+		m.logger.Infof("#E2TInstancesManager.GetE2TInstances - Empty E2T addresses list")
+		return []*entities.E2TInstance{}, nil
 	}
 
 	if len(e2tAddresses) == 0 {
@@ -118,7 +128,7 @@ func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error)
 
 	if err != nil {
 		m.logger.Errorf("#E2TInstancesManager.GetE2TInstances - Failed retrieving E2T instances list. error: %s", err)
-		return e2tInstances, err
+		return e2tInstances, e2managererrors.NewRnibDbError()
 	}
 
 	if len(e2tInstances) == 0 {
@@ -255,7 +265,7 @@ func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 	e2tInstances, err := m.GetE2TInstances()
 
 	if err != nil {
-		return "", e2managererrors.NewRnibDbError()
+		return "", err
 	}
 
 	if len(e2tInstances) == 0 {

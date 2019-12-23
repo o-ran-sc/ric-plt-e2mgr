@@ -173,7 +173,7 @@ func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http
 
 	c.logger.Infof("[E2 Manager -> Client] #NodebController.handleRequest - response: %s", result)
 	writer.Header().Set("Content-Type", "application/json")
-	writer.Write([]byte(result))
+	writer.Write(result)
 }
 
 func (c *NodebController) validateRequestHeader(header *http.Header) error {

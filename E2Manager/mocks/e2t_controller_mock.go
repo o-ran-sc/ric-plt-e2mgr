@@ -15,8 +15,21 @@
 // limitations under the License.
 //
 
-package models
+package mocks
 
-type IResponse interface {
-	Marshal() ([]byte, error)
+import (
+	"github.com/stretchr/testify/mock"
+	"net/http"
+)
+
+type E2TControllerMock struct {
+	mock.Mock
+}
+
+func (m *E2TControllerMock) HandleRequest(writer http.ResponseWriter, request *http.Request) {
+	m.Called()
+}
+
+func (m *E2TControllerMock) GetE2TInstances(writer http.ResponseWriter, request *http.Request) {
+	m.Called()
 }

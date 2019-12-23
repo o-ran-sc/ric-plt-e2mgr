@@ -33,13 +33,13 @@ func NewGetNodebIdListResponse(nodebIdList []*entities.NbIdentity) *GetNodebIdLi
 	}
 }
 
-func (response *GetNodebIdListResponse) Marshal() (string, error) {
+func (response *GetNodebIdListResponse) Marshal() ([]byte, error) {
 	pmList := utils.ConvertNodebIdListToProtoMessageList(response.nodebIdList)
 	result, err := utils.MarshalProtoMessageListToJsonArray(pmList)
 
 	if err != nil {
-		return "", e2managererrors.NewInternalError();
+		return nil, e2managererrors.NewInternalError();
 	}
 
-	return result, nil
+	return []byte(result), nil
 }

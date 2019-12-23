@@ -76,5 +76,6 @@ func main() {
 	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager)
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
-	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController)
+	e2tController := controllers.NewE2TController(logger, httpMsgHandlerProvider)
+	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController, e2tController)
 }

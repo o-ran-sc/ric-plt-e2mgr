@@ -15,8 +15,17 @@
 // limitations under the License.
 //
 
-package models
+package mocks
 
-type IResponse interface {
-	Marshal() ([]byte, error)
+import (
+	"github.com/stretchr/testify/mock"
+	"net/http"
+)
+
+type RootControllerMock struct {
+	mock.Mock
+}
+
+func (rc *RootControllerMock) HandleHealthCheckRequest(writer http.ResponseWriter, request *http.Request) {
+	rc.Called()
 }

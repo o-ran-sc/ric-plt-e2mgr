@@ -17,6 +17,33 @@
 
 package models
 
-type IResponse interface {
-	Marshal() ([]byte, error)
+import (
+	"e2mgr/e2managererrors"
+	"encoding/json"
+)
+
+type E2TInstancesResponse []*E2TInstanceResponseModel
+
+type E2TInstanceResponseModel struct {
+	E2TAddress string   `json:"e2tAddress"`
+	RanNames   []string `json:"ranNames"`
+}
+
+func NewE2TInstanceResponseModel(e2tAddress string, ranNames []string) *E2TInstanceResponseModel {
+	return &E2TInstanceResponseModel{
+		E2TAddress: e2tAddress,
+		RanNames:   ranNames,
+	}
+}
+
+func (response E2TInstancesResponse) Marshal() ([]byte, error) {
+
+	data, err := json.Marshal(response)
+
+	if err != nil {
+		return nil, e2managererrors.NewInternalError()
+	}
+
+	return data, nil
+
 }

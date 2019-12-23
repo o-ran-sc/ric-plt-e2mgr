@@ -28,29 +28,29 @@ import (
 	"time"
 )
 
-func setupRouterAndMocks() (*mux.Router, *mocks.ControllerMock, *mocks.NodebControllerMock) {
-	controllerMock := &mocks.ControllerMock{}
-	controllerMock.On("Shutdown").Return(nil)
-	controllerMock.On("X2Reset").Return(nil)
-	controllerMock.On("X2Setup").Return(nil)
-	controllerMock.On("EndcSetup").Return(nil)
-	controllerMock.On("GetNodeb").Return(nil)
-	controllerMock.On("GetNodebIdList").Return(nil)
-
-
+func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.NodebControllerMock, *mocks.E2TControllerMock) {
+	rootControllerMock := &mocks.RootControllerMock{}
+	rootControllerMock.On("HandleHealthCheckRequest").Return(nil)
 
 	nodebControllerMock := &mocks.NodebControllerMock{}
+	nodebControllerMock.On("Shutdown").Return(nil)
+	nodebControllerMock.On("X2Reset").Return(nil)
+	nodebControllerMock.On("X2Setup").Return(nil)
+	nodebControllerMock.On("EndcSetup").Return(nil)
+	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
-	nodebControllerMock.On("GetNodeb").Return(nil) // TODO: remove
-	nodebControllerMock.On("HandleHealthCheckRequest").Return(nil)
+
+	e2tControllerMock := &mocks.E2TControllerMock{}
+
+	e2tControllerMock.On("GetE2TInstances").Return(nil)
 
 	router := mux.NewRouter()
-	initializeRoutes(router, nodebControllerMock, controllerMock)
-	return router, controllerMock, nodebControllerMock
+	initializeRoutes(router, rootControllerMock, nodebControllerMock, e2tControllerMock)
+	return router, rootControllerMock, nodebControllerMock, e2tControllerMock
 }
 
 func TestRoutePostEndcSetup(t *testing.T) {
-	router, controllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("POST", "/v1/nodeb/endc-setup", nil)
 	if err != nil {
@@ -59,11 +59,11 @@ func TestRoutePostEndcSetup(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	controllerMock.AssertNumberOfCalls(t,"EndcSetup", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "EndcSetup", 1)
 }
 
 func TestRoutePostX2Setup(t *testing.T) {
-	router, controllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("POST", "/v1/nodeb/x2-setup", nil)
 	if err != nil {
@@ -72,11 +72,11 @@ func TestRoutePostX2Setup(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	controllerMock.AssertNumberOfCalls(t,"X2Setup", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "X2Setup", 1)
 }
 
 func TestRouteGetNodebIds(t *testing.T) {
-	router, controllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/ids", nil)
 	if err != nil {
@@ -85,11 +85,11 @@ func TestRouteGetNodebIds(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	controllerMock.AssertNumberOfCalls(t, "GetNodebIdList", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "GetNodebIdList", 1)
 }
 
 func TestRouteGetNodebRanName(t *testing.T) {
-	router, controllerMock,_ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/ran1", nil)
 	if err != nil {
@@ -100,11 +100,11 @@ func TestRouteGetNodebRanName(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
 	assert.Equal(t, "ran1", rr.Body.String(), "handler returned wrong body")
-	controllerMock.AssertNumberOfCalls(t, "GetNodeb", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "GetNodeb", 1)
 }
 
 func TestRouteGetHealth(t *testing.T) {
-	router, _, nodebControllerMock := setupRouterAndMocks()
+	router, rootControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/health", nil)
 	if err != nil {
@@ -113,11 +113,11 @@ func TestRouteGetHealth(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	nodebControllerMock.AssertNumberOfCalls(t, "HandleHealthCheckRequest", 1)
+	rootControllerMock.AssertNumberOfCalls(t, "HandleHealthCheckRequest", 1)
 }
 
 func TestRoutePutNodebShutdown(t *testing.T) {
-	router, controllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/shutdown", nil)
 	if err != nil {
@@ -126,11 +126,11 @@ func TestRoutePutNodebShutdown(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
-	controllerMock.AssertNumberOfCalls(t, "Shutdown", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "Shutdown", 1)
 }
 
 func TestRoutePutNodebResetRanName(t *testing.T) {
-	router, controllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/ran1/reset", nil)
 	if err != nil {
@@ -141,11 +141,11 @@ func TestRoutePutNodebResetRanName(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
 	assert.Equal(t, "ran1", rr.Body.String(), "handler returned wrong body")
-	controllerMock.AssertNumberOfCalls(t, "X2Reset", 1)
+	nodebControllerMock.AssertNumberOfCalls(t, "X2Reset", 1)
 }
 
 func TestRouteNotFound(t *testing.T) {
-	router, _, _ := setupRouterAndMocks()
+	router, _, _,_ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/no/such/route", nil)
 	if err != nil {
@@ -159,14 +159,14 @@ func TestRouteNotFound(t *testing.T) {
 
 func TestRunError(t *testing.T) {
 	log := initLog(t)
-	err := Run(log, 1234567, &mocks.NodebControllerMock{}, &mocks.ControllerMock{})
+	err := Run(log, 1234567, &mocks.RootControllerMock{}, &mocks.NodebControllerMock{}, &mocks.E2TControllerMock{})
 	assert.NotNil(t, err)
 }
 
 func TestRun(t *testing.T) {
 	log := initLog(t)
-	_, controllerMock, nodebControllerMock := setupRouterAndMocks()
-	go Run(log,11223, nodebControllerMock, controllerMock)
+	_, rootControllerMock, nodebControllerMock, e2tControllerMock := setupRouterAndMocks()
+	go Run(log, 11223, rootControllerMock, nodebControllerMock, e2tControllerMock)
 
 	time.Sleep(time.Millisecond * 100)
 	resp, err := http.Get("http://localhost:11223/v1/health")
