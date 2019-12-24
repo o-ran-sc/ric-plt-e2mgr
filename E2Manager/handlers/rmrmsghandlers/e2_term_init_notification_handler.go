@@ -25,7 +25,6 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
-	"e2mgr/services"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -33,16 +32,14 @@ import (
 
 type E2TermInitNotificationHandler struct {
 	logger                 *logger.Logger
-	rnibDataService        services.RNibDataService
 	ranReconnectionManager *managers.RanReconnectionManager
 	e2tInstancesManager    managers.IE2TInstancesManager
 	routingManagerClient   clients.IRoutingManagerClient
 }
 
-func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
 		logger:                 logger,
-		rnibDataService:        rnibDataService,
 		ranReconnectionManager: ranReconnectionManager,
 		e2tInstancesManager:    e2tInstancesManager,
 		routingManagerClient:   routingManagerClient,
