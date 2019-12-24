@@ -1,0 +1,75 @@
+//
+// Copyright 2019 AT&T Intellectual Property
+// Copyright 2019 Nokia
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//  This source code is part of the near-RT RIC (RAN Intelligent Controller)
+//  platform project (RICP).
+
+package managers
+
+import (
+	"e2mgr/clients"
+	"e2mgr/logger"
+	"e2mgr/services"
+)
+
+type E2TAssociationManager struct {
+	logger             *logger.Logger
+	rnibDataService    services.RNibDataService
+	e2tInstanceManager IE2TInstancesManager
+	rmClient           clients.IRoutingManagerClient
+}
+
+func NewE2TAssociationManager(logger *logger.Logger, rnibDataService services.RNibDataService, e2tInstanceManager IE2TInstancesManager, rmClient clients.IRoutingManagerClient) *E2TAssociationManager {
+	return &E2TAssociationManager{
+		logger:             logger,
+		rnibDataService:    rnibDataService,
+		e2tInstanceManager: e2tInstanceManager,
+		rmClient:           rmClient,
+	}
+}
+
+func (m *E2TAssociationManager) AssociateRan(e2tAddress string, ranName string) error {
+	m.logger.Infof("#E2TAssociationManager.AssociateRan - Associating RAN %s to E2T Instance address: %s", ranName, e2tAddress)
+
+	err := m.rmClient.AssociateRanToE2TInstance(e2tAddress, ranName)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RoutingManager failure: Failed to associate RAN %s to E2T %s. Error: %s", ranName, e2tAddress, err)
+		return err
+	}
+
+	nodebInfo, rnibErr := m.rnibDataService.GetNodeb(ranName)
+
+	if rnibErr != nil {
+		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed fetching RAN from rNib. Error: %s", ranName, rnibErr)
+		return rnibErr
+	}
+
+	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
+	nodebInfo.ConnectionAttempts = 0
+	rnibErr = m.rnibDataService.UpdateNodebInfo(nodebInfo)
+	if rnibErr != nil {
+		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to update RAN.AssociatedE2TInstanceAddress in rNib. Error: %s", ranName, rnibErr)
+		return rnibErr
+	}
+
+	err = m.e2tInstanceManager.AddRanToInstance(ranName, e2tAddress)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to add RAN to E2T instance %s. Error: %s", ranName, e2tAddress, err)
+		return err
+	}
+	m.logger.Infof("#E2TAssociationManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tAddress)
+	return nil
+}

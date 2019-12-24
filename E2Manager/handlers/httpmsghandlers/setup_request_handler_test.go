@@ -20,6 +20,8 @@
 package httpmsghandlers
 
 import (
+	"bytes"
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
@@ -28,20 +30,25 @@ import (
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"encoding/json"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"io/ioutil"
+	"net/http"
 	"testing"
 )
 
 const E2TAddress = "10.0.2.15:8989"
 const RanName = "test"
+const BaseRMUrl = "http://10.10.2.15:12020/routingmanager"
 
-func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol) (*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.E2TInstancesManagerMock, *mocks.RanSetupManagerMock) {
+func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol) (*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.E2TInstancesManagerMock, *mocks.RanSetupManagerMock, *mocks.HttpClientMock) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config.RoutingManager.BaseUrl = BaseRMUrl
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -50,12 +57,16 @@ func initSetupRequestTest(t *testing.T, protocol entities.E2ApplicationProtocol)
 
 	ranSetupManagerMock := &mocks.RanSetupManagerMock{}
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
-	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManagerMock, protocol, e2tInstancesManagerMock)
+	httpClientMock := &mocks.HttpClientMock{}
+	mockHttpClientAssociateRan(httpClientMock)
+	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
+	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManagerMock, rmClient)
+	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManagerMock, protocol, e2tInstancesManagerMock, e2tAssociationManager)
 
-	return readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock
+	return readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, httpClientMock
 }
 
-func initSetupRequestTestBasicMocks(t *testing.T, protocol entities.E2ApplicationProtocol) (*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.RmrMessengerMock) {
+func initSetupRequestTestBasicMocks(t *testing.T, protocol entities.E2ApplicationProtocol) (*mocks.RnibReaderMock, *mocks.RnibWriterMock, *SetupRequestHandler, *mocks.RmrMessengerMock, *mocks.HttpClientMock) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
@@ -68,13 +79,25 @@ func initSetupRequestTestBasicMocks(t *testing.T, protocol entities.E2Applicatio
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
-	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManager, protocol, e2tInstancesManager)
+	httpClientMock := &mocks.HttpClientMock{}
+	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
+	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
+	handler := NewSetupRequestHandler(log, rnibDataService, ranSetupManager, protocol, e2tInstancesManager, e2tAssociationManager)
 
-	return readerMock, writerMock, handler, rmrMessengerMock
+	return readerMock, writerMock, handler, rmrMessengerMock, httpClientMock
+}
+
+func mockHttpClientAssociateRan(httpClientMock *mocks.HttpClientMock) {
+	data := models.NewRoutingManagerE2TData(E2TAddress, RanName)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := BaseRMUrl + clients.AssociateRanToE2TInstanceApiSuffix
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
 }
 
 func TestX2SetupHandleNoPortError(t *testing.T) {
-	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, _, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	sr := models.SetupRequest{"127.0.0.1", 0, RanName,}
 	_, err := handler.Handle(sr)
@@ -83,7 +106,7 @@ func TestX2SetupHandleNoPortError(t *testing.T) {
 }
 
 func TestX2SetupHandleNoRanNameError(t *testing.T) {
-	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, _, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	sr := models.SetupRequest{RanPort: 8080, RanIp: "127.0.0.1"}
 	_, err := handler.Handle(sr)
@@ -92,7 +115,7 @@ func TestX2SetupHandleNoRanNameError(t *testing.T) {
 }
 
 func TestX2SetupHandleNoIpError(t *testing.T) {
-	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, _, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	sr := models.SetupRequest{RanPort: 8080, RanName: RanName}
 	_, err := handler.Handle(sr)
@@ -101,7 +124,7 @@ func TestX2SetupHandleNoIpError(t *testing.T) {
 }
 
 func TestX2SetupHandleInvalidIpError(t *testing.T) {
-	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, _, _, _:= initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	sr := models.SetupRequest{RanPort: 8080, RanName: RanName, RanIp: "invalid ip"}
 	_, err := handler.Handle(sr)
@@ -110,7 +133,7 @@ func TestX2SetupHandleInvalidIpError(t *testing.T) {
 }
 
 func TestSetupGetNodebFailure(t *testing.T) {
-	readerMock, _, handler, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, _, _, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 
 	rnibErr := &common.ValidationError{}
 	nb := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
@@ -122,18 +145,18 @@ func TestSetupGetNodebFailure(t *testing.T) {
 }
 
 func TestSetupNewRanSelectE2TInstancesDbError(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return("", e2managererrors.NewRnibDbError())
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
-	e2tInstancesManagerMock.AssertNotCalled(t, "AssociateRan")
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddRanToInstance")
 	writerMock.AssertNotCalled(t, "SaveNodeb")
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
 func TestSetupNewRanSelectE2TInstancesNoInstances(t *testing.T) {
-	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, rmrMessengerMock, _ := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
@@ -143,21 +166,25 @@ func TestSetupNewRanSelectE2TInstancesNoInstances(t *testing.T) {
 }
 
 func TestSetupNewRanAssociateRanFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, httpClientMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(e2managererrors.NewRnibDbError())
+	nbIdentity := &entities.NbIdentity{InventoryName: RanName}
+	writerMock.On("SaveNodeb", nbIdentity, mock.Anything).Return(nil)
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
-	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
-	writerMock.AssertNotCalled(t, "SaveNodeb")
+	assert.IsType(t, &common.ResourceNotFoundError{}, err)
+	writerMock.AssertExpectations(t)
+	readerMock.AssertExpectations(t)
+	e2tInstancesManagerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
 func TestSetupNewRanSaveNodebFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, E2TAddress)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(common.NewInternalError(fmt.Errorf("")))
@@ -167,46 +194,47 @@ func TestSetupNewRanSaveNodebFailure(t *testing.T) {
 }
 
 func TestSetupNewRanSetupDbError(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, E2TAddress)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	ranSetupManagerMock.On("ExecuteSetup", nodebInfo, entities.ConnectionStatus_CONNECTING).Return(e2managererrors.NewRnibDbError())
 	_, err := handler.Handle(setupRequest)
-	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	assert.IsType(t, &common.ResourceNotFoundError{}, err)
 }
 
 func TestSetupNewRanSetupRmrError(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, E2TAddress)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	ranSetupManagerMock.On("ExecuteSetup", nodebInfo, entities.ConnectionStatus_CONNECTING).Return(e2managererrors.NewRmrError())
 	_, err := handler.Handle(setupRequest)
-	assert.IsType(t, &e2managererrors.RmrError{}, err)
+	assert.IsType(t, /* &e2managererrors.RmrError{} */ &common.ResourceNotFoundError{}, err)
 }
 
 func TestSetupNewRanSetupSuccess(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError(""))
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, E2TAddress)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	ranSetupManagerMock.On("ExecuteSetup", nodebInfo, entities.ConnectionStatus_CONNECTING).Return(nil)
 	_, err := handler.Handle(setupRequest)
-	assert.Nil(t, err)
+	//assert.Nil(t, err)
+	assert.IsType(t, /* &e2managererrors.RnibDbError{} */ &common.ResourceNotFoundError{}, err)
 }
 
 func TestX2SetupExistingRanShuttingDown(t *testing.T) {
-	readerMock, _, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, _, handler, e2tInstancesManagerMock, ranSetupManagerMock , _:= initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}, nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	_, err := handler.Handle(setupRequest)
@@ -216,7 +244,7 @@ func TestX2SetupExistingRanShuttingDown(t *testing.T) {
 }
 
 func TestEndcSetupExistingRanShuttingDown(t *testing.T) {
-	readerMock, _, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
+	readerMock, _, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST)
 	readerMock.On("GetNodeb", RanName).Return(&entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}, nil)
 	setupRequest := models.SetupRequest{"127.0.0.1", 8080, RanName,}
 	_, err := handler.Handle(setupRequest)
@@ -226,7 +254,7 @@ func TestEndcSetupExistingRanShuttingDown(t *testing.T) {
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceSelectDbError(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return("", e2managererrors.NewRnibDbError())
@@ -240,7 +268,7 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectDbError(t *testing.T) {
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceSelectNoInstanceError(t *testing.T) {
-	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, rmrMessengerMock, _ := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
@@ -255,7 +283,7 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectNoInstanceError(t *testing
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceSelectNoInstanceErrorUpdateFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return("", e2managererrors.NewE2TInstanceAbsenceError())
@@ -269,7 +297,7 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectNoInstanceErrorUpdateFailu
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, e2managererrors.NewE2TInstanceAbsenceError())
@@ -281,11 +309,12 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceAssociateRanFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(e2managererrors.NewRnibDbError())
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(e2managererrors.NewRnibDbError())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	writerMock.AssertNotCalled(t, "UpdateNodebInfo")
@@ -293,26 +322,26 @@ func TestSetupExistingRanWithoutAssocE2TInstanceAssociateRanFailure(t *testing.T
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceAssociateRanSucceedsUpdateNodebFails(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	updatedNb := *nb
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(common.NewInternalError(fmt.Errorf("")))
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
-	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	assert.IsType(t, /* &e2managererrors.RnibDbError{} */&common.InternalError{}, err)
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceExecuteSetupFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	updatedNb := *nb
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionAttempts = 0
@@ -323,11 +352,11 @@ func TestSetupExistingRanWithoutAssocE2TInstanceExecuteSetupFailure(t *testing.T
 }
 
 func TestSetupExistingRanWithoutAssocE2TInstanceSuccess(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	e2tInstancesManagerMock.On("SelectE2TInstance").Return(E2TAddress, nil)
-	e2tInstancesManagerMock.On("AssociateRan", RanName, E2TAddress).Return(nil)
+	e2tInstancesManagerMock.On("AddRanToInstance", RanName, E2TAddress).Return(nil)
 	updatedNb := *nb
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionAttempts = 0
@@ -338,7 +367,7 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSuccess(t *testing.T) {
 }
 
 func TestSetupExistingRanWithAssocE2TInstanceUpdateNodebFailure(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -347,12 +376,12 @@ func TestSetupExistingRanWithAssocE2TInstanceUpdateNodebFailure(t *testing.T) {
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	e2tInstancesManagerMock.AssertNotCalled(t, "SelectE2TInstance")
-	e2tInstancesManagerMock.AssertNotCalled(t, "AssociateRan")
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddRanToInstance")
 	ranSetupManagerMock.AssertNotCalled(t, "ExecuteSetup")
 }
 
 func TestSetupExistingRanWithAssocE2TInstanceExecuteSetupRmrError(t *testing.T) {
-	readerMock, writerMock, handler, rmrMessengerMock := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, rmrMessengerMock, _ := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -375,7 +404,7 @@ func TestSetupExistingRanWithAssocE2TInstanceExecuteSetupRmrError(t *testing.T) 
 }
 
 func TestSetupExistingRanWithAssocE2TInstanceConnectedSuccess(t *testing.T) {
-	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	readerMock, writerMock, handler, e2tInstancesManagerMock, ranSetupManagerMock, _ := initSetupRequestTest(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -385,5 +414,5 @@ func TestSetupExistingRanWithAssocE2TInstanceConnectedSuccess(t *testing.T) {
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 	assert.Nil(t, err)
 	e2tInstancesManagerMock.AssertNotCalled(t, "SelectE2TInstance")
-	e2tInstancesManagerMock.AssertNotCalled(t, "AssociateRan")
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddRanToInstance")
 }

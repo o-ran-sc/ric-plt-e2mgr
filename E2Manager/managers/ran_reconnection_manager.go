@@ -72,7 +72,7 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 		}
 
 		if m.isRanExceededConnectionAttempts(nodebInfo) {
-			return m.e2tInstancesManager.DissociateRan(nodebInfo.RanName, e2tAddress)
+			return m.e2tInstancesManager.RemoveRanFromInstance(nodebInfo.RanName, e2tAddress)
 		}
 
 		return nil

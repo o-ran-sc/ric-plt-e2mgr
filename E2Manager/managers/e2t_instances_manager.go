@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//  This source code is part of the near-RT RIC (RAN Intelligent Controller)
+//  platform project (RICP).
 
 package managers
 
@@ -41,8 +43,8 @@ type IE2TInstancesManager interface {
 	AddE2TInstance(e2tAddress string) error
 	RemoveE2TInstance(e2tInstance *entities.E2TInstance) error
 	SelectE2TInstance() (string, error)
-	AssociateRan(ranName string, e2tAddress string) error
-	DissociateRan(ranName string, e2tAddress string) error
+	AddRanToInstance(ranName string, e2tAddress string) error
+	RemoveRanFromInstance(ranName string, e2tAddress string) error
 	ActivateE2TInstance(e2tInstance *entities.E2TInstance) error
 	ResetKeepAliveTimestamp(e2tAddress string) error
 }
@@ -223,7 +225,7 @@ func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
 	return nil
 }
 
-func (m *E2TInstancesManager) DissociateRan(ranName string, e2tAddress string) error {
+func (m *E2TInstancesManager) RemoveRanFromInstance(ranName string, e2tAddress string) error {
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
@@ -231,7 +233,7 @@ func (m *E2TInstancesManager) DissociateRan(ranName string, e2tAddress string) e
 	e2tInstance, err := m.rnibDataService.GetE2TInstance(e2tAddress)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.DissociateRan - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.RemoveRanFromInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
 		return err
 	}
 
@@ -249,11 +251,11 @@ func (m *E2TInstancesManager) DissociateRan(ranName string, e2tAddress string) e
 	err = m.rnibDataService.SaveE2TInstance(e2tInstance)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.DissociateRan - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.RemoveRanFromInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
 		return err
 	}
 
-	m.logger.Infof("#E2TInstancesManager.DissociateRan - successfully dissociated RAN %s from E2T %s", ranName, e2tInstance.Address)
+	m.logger.Infof("#E2TInstancesManager.RemoveRanFromInstance - successfully dissociated RAN %s from E2T %s", ranName, e2tInstance.Address)
 	return nil
 }
 
@@ -284,7 +286,7 @@ func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 	return min.Address, nil
 }
 
-func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) error {
+func (m *E2TInstancesManager) AddRanToInstance(ranName string, e2tAddress string) error {
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
@@ -292,7 +294,7 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 	e2tInstance, err := m.rnibDataService.GetE2TInstance(e2tAddress)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.AssociateRan - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.AddRanToInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
@@ -301,29 +303,29 @@ func (m *E2TInstancesManager) AssociateRan(ranName string, e2tAddress string) er
 	err = m.rnibDataService.SaveE2TInstance(e2tInstance)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.AssociateRan - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.AddRanToInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
-	m.logger.Infof("#E2TInstancesManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tInstance.Address)
+	m.logger.Infof("#E2TInstancesManager.AddRanToInstance - RAN %s was added successfully to E2T %s", ranName, e2tInstance.Address)
 	return nil
 }
 
-func (h E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error{
+func (m E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error{
 
 	if e2tInstance == nil {
-		h.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - e2tInstance empty")
+		m.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - e2tInstance empty")
 		return e2managererrors.NewInternalError()
 	}
 
-	h.logger.Infof("#E2TInstancesManager.ActivateE2TInstance - E2T Address: %s - activate E2T instance", e2tInstance.Address)
+	m.logger.Infof("#E2TInstancesManager.ActivateE2TInstance - E2T Address: %s - activate E2T instance", e2tInstance.Address)
 
 	e2tInstance.State = entities.Active
 	e2tInstance.KeepAliveTimestamp = time.Now().UnixNano()
 
-	err := h.rnibDataService.SaveE2TInstance(e2tInstance)
+	err := m.rnibDataService.SaveE2TInstance(e2tInstance)
 	if err != nil {
-		h.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tInstance.Address, err)
+		m.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tInstance.Address, err)
 		return err
 	}
 	return nil

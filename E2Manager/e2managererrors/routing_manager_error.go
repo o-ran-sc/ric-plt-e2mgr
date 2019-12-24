@@ -18,12 +18,18 @@
 package e2managererrors
 
 type RoutingManagerError struct {
+	*BaseError
 }
 
 func NewRoutingManagerError() *RoutingManagerError {
-	return &RoutingManagerError{}
+	return &RoutingManagerError{
+		&BaseError{
+			Code:    511,
+			Message: "No Routing Manager Available",
+		},
+	}
 }
 
 func (e *RoutingManagerError) Error() string {
-	return "Routing Manager Error"
+	return e.Message
 }

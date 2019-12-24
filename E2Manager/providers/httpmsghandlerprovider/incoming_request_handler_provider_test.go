@@ -21,6 +21,7 @@
 package httpmsghandlerprovider
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/handlers/httpmsghandlers"
@@ -46,13 +47,17 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config.RoutingManager.BaseUrl = "http://10.10.2.15:12020/routingmanager"
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
+	httpClientMock := &mocks.HttpClientMock{}
+	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
+	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

@@ -14,6 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//  This source code is part of the near-RT RIC (RAN Intelligent Controller)
+//  platform project (RICP).
+
 package managers
 
 import (
@@ -130,30 +133,30 @@ func TestGetE2TInstanceSuccess(t *testing.T) {
 	assert.Equal(t, e2tInstance, res)
 }
 
-func TestAssociateRanGetInstanceFailure(t *testing.T) {
+func TestAddRanToInstanceGetInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
 	var e2tInstance1 *entities.E2TInstance
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, common.NewInternalError(fmt.Errorf("for test")))
 
-	err := e2tInstancesManager.AssociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
 	assert.NotNil(t, err)
 	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
 }
 
-func TestAssociateRanSaveInstanceFailure(t *testing.T) {
+func TestAddRanToInstanceSaveInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for test")))
 
-	err := e2tInstancesManager.AssociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
 	assert.NotNil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
 }
 
-func TestAssociateRanSuccess(t *testing.T) {
+func TestAddRanToInstanceSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 	e2tInstance := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
@@ -163,36 +166,36 @@ func TestAssociateRanSuccess(t *testing.T) {
 
 	rnibWriterMock.On("SaveE2TInstance", &updateE2TInstance).Return(nil)
 
-	err := e2tInstancesManager.AssociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
 	assert.Nil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
 }
 
-func TestDissociateRanGetInstanceFailure(t *testing.T) {
+func TestRemoveRanFromInstanceGetInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
 	var e2tInstance1 *entities.E2TInstance
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, common.NewInternalError(fmt.Errorf("for test")))
-	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.RemoveRanFromInstance("test1", E2TAddress)
 	assert.NotNil(t, err)
 	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
 }
 
-func TestDissociateRanSaveInstanceFailure(t *testing.T) {
+func TestRemoveRanFromInstanceSaveInstanceFailure(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for test")))
 
-	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.RemoveRanFromInstance("test1", E2TAddress)
 	assert.NotNil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
 }
 
-func TestDissociateRanSuccess(t *testing.T) {
+func TestRemoveRanFromInstanceSuccess(t *testing.T) {
 	rnibReaderMock, rnibWriterMock, e2tInstancesManager := initE2TInstancesManagerTest(t)
 
 	e2tInstance := entities.NewE2TInstance(E2TAddress)
@@ -202,7 +205,7 @@ func TestDissociateRanSuccess(t *testing.T) {
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
 	rnibWriterMock.On("SaveE2TInstance", &updatedE2TInstance).Return(nil)
 
-	err := e2tInstancesManager.DissociateRan("test1", E2TAddress)
+	err := e2tInstancesManager.RemoveRanFromInstance("test1", E2TAddress)
 	assert.Nil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)

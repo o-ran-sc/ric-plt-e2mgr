@@ -22,6 +22,7 @@ package controllers
 
 import (
 	"bytes"
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/e2pdus"
@@ -78,7 +79,10 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	rmrSender := getRmrSender(rmrMessengerMock, log)
 	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	e2tInstancesManager := &mocks.E2TInstancesManagerMock{}
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager)
+	httpClientMock := &mocks.HttpClientMock{}
+	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
+	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
 }
