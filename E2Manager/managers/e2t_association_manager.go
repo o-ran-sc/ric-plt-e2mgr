@@ -73,3 +73,34 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, ranName string) 
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tAddress)
 	return nil
 }
+
+func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string) error {
+	m.logger.Infof("#E2TAssociationManager.DissociateRan - Dissociating RAN %s from E2T Instance address: %s", ranName, e2tAddress)
+
+	nodebInfo, rnibErr := m.rnibDataService.GetNodeb(ranName)
+	if rnibErr != nil {
+		m.logger.Errorf("#E2TAssociationManager.DissociateRan - RAN name: %s - Failed fetching RAN from rNib. Error: %s", ranName, rnibErr)
+		return rnibErr
+	}
+
+	nodebInfo.AssociatedE2TInstanceAddress = ""
+	rnibErr = m.rnibDataService.UpdateNodebInfo(nodebInfo)
+	if rnibErr != nil {
+		m.logger.Errorf("#E2TAssociationManager.DissociateRan - RAN name: %s - Failed to update RAN.AssociatedE2TInstanceAddress in rNib. Error: %s", ranName, rnibErr)
+		return rnibErr
+	}
+
+	err := m.e2tInstanceManager.RemoveRanFromInstance(ranName, e2tAddress)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.DissociateRan - RAN name: %s - Failed to remove RAN from E2T instance %s. Error: %s", ranName, e2tAddress, err)
+		return err
+	}
+
+	err = m.rmClient.DissociateRanE2TInstance(e2tAddress, ranName)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.DissociateRan - RoutingManager failure: Failed to dissociate RAN %s from E2T %s. Error: %s", ranName, e2tAddress, err)
+	} else {
+		m.logger.Infof("#E2TAssociationManager.DissociateRan - successfully dissociated RAN %s from E2T %s", ranName, e2tAddress)
+	}
+	return nil
+}

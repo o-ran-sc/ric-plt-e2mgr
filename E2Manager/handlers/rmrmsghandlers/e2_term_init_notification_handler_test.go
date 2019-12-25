@@ -64,8 +64,9 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock)
 
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManagerMock)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tAssociationManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManagerMock, routingManagerClientMock)
 
 	return logger, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock
@@ -89,7 +90,8 @@ func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager)
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
+	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tAssociationManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)
 	return logger, config, handler, readerMock, writerMock, rmrMessengerMock, httpClientMock
 }

@@ -65,7 +65,7 @@ func main() {
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, &http.Client{})
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient, e2tAssociationManager)
 
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)
