@@ -16,7 +16,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-////
 package rmrmsghandlers
 
 import (

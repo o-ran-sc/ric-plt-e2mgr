@@ -16,6 +16,10 @@
 # limitations under the License.
 # ========================LICENSE_END===================================
 
+# This source code is part of the near-RT RIC (RAN Intelligent Controller)
+# platform project (RICP).
+
+
 openapi: 3.0.0
 info:
   title: E2 Manager Service
