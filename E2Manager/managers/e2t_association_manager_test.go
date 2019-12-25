@@ -37,12 +37,10 @@ import (
 )
 
 const RanName = "test"
-const BaseRMUrl = "http://10.10.2.15:12020/routingmanager"
 
 func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
-	config.RoutingManager.BaseUrl = BaseRMUrl
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -56,11 +54,10 @@ func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks
 	return manager, readerMock, writerMock, httpClientMock
 }
 
-func mockHttpClientAssociateRan(httpClientMock *mocks.HttpClientMock, isSuccessful bool) {
+func mockHttpClient(httpClientMock *mocks.HttpClientMock, apiSuffix string, isSuccessful bool) {
 	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
-	url := BaseRMUrl + clients.AssociateRanToE2TInstanceApiSuffix
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
 	var respStatusCode int
 	if isSuccessful {
@@ -68,12 +65,12 @@ func mockHttpClientAssociateRan(httpClientMock *mocks.HttpClientMock, isSuccessf
 	} else {
 		respStatusCode = http.StatusBadRequest
 	}
-	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: respStatusCode, Body: respBody}, nil)
+	httpClientMock.On("Post", apiSuffix, "application/json", body).Return(&http.Response{StatusCode: respStatusCode, Body: respBody}, nil)
 }
 
 func TestAssociateRanSuccess(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, true)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionAttempts: 1}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -96,7 +93,7 @@ func TestAssociateRanSuccess(t *testing.T) {
 
 func TestAssociateRanRoutingManagerError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, false)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, false)
 
 	err := manager.AssociateRan(E2TAddress, RanName)
 
@@ -109,7 +106,7 @@ func TestAssociateRanRoutingManagerError(t *testing.T) {
 
 func TestAssociateRanGetNodebError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, true)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	var nb *entities.NodebInfo
 	readerMock.On("GetNodeb", RanName).Return(nb, e2managererrors.NewRnibDbError())
 
@@ -124,7 +121,7 @@ func TestAssociateRanGetNodebError(t *testing.T) {
 
 func TestAssociateRanUpdateNodebError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, true)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionAttempts: 1}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -143,7 +140,7 @@ func TestAssociateRanUpdateNodebError(t *testing.T) {
 
 func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, true)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionAttempts: 1}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -164,7 +161,7 @@ func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 
 func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-	mockHttpClientAssociateRan(httpClientMock, true)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionAttempts: 1}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
@@ -181,6 +178,125 @@ func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanSuccess(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	mockHttpClient(httpClientMock, clients.DissociateRanE2TInstanceApiSuffix, true)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionAttempts: 1}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	updatedNb := *nb
+	updatedNb.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	e2tInstance := &entities.E2TInstance{Address: E2TAddress}
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
+	updatedE2tInstance := *e2tInstance
+	updatedE2tInstance.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.Nil(t, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanGetNodebError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	var nb *entities.NodebInfo
+	readerMock.On("GetNodeb", RanName).Return(nb, e2managererrors.NewRnibDbError())
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanUpdateNodebError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionAttempts: 1}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	updatedNb := *nb
+	updatedNb.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNb).Return(e2managererrors.NewRnibDbError())
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanGetE2tInstanceError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionAttempts: 1}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	updatedNb := *nb
+	updatedNb.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	var e2tInstance *entities.E2TInstance
+	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, errors.New("test"))
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanSaveE2tInstanceError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionAttempts: 1}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	updatedNb := *nb
+	updatedNb.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	e2tInstance := &entities.E2TInstance{Address: E2TAddress}
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
+	updatedE2tInstance := *e2tInstance
+	updatedE2tInstance.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(errors.New("test"))
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestDissociateRanRoutingManagerError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	mockHttpClient(httpClientMock, clients.DissociateRanE2TInstanceApiSuffix, false)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionAttempts: 1}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	updatedNb := *nb
+	updatedNb.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	e2tInstance := &entities.E2TInstance{Address: E2TAddress}
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
+	updatedE2tInstance := *e2tInstance
+	updatedE2tInstance.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
+
+	err := manager.DissociateRan(E2TAddress, RanName)
+
+	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)

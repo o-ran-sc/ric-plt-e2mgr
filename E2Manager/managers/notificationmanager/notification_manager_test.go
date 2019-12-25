@@ -49,8 +49,9 @@ func initNotificationManagerTest(t *testing.T) (*logger.Logger, *mocks.RnibReade
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager,routingManagerClient)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager,routingManagerClient, e2tAssociationManager)
 	notificationManager := NewNotificationManager(logger, rmrNotificationHandlerProvider )
 	return logger, readerMock, notificationManager
 }

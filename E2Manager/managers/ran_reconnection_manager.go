@@ -32,20 +32,20 @@ type IRanReconnectionManager interface {
 }
 
 type RanReconnectionManager struct {
-	logger              *logger.Logger
-	config              *configuration.Configuration
-	rnibDataService     services.RNibDataService
-	ranSetupManager     *RanSetupManager
-	e2tInstancesManager IE2TInstancesManager
+	logger                *logger.Logger
+	config                *configuration.Configuration
+	rnibDataService       services.RNibDataService
+	ranSetupManager       *RanSetupManager
+	e2tAssociationManager *E2TAssociationManager
 }
 
-func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, ranSetupManager *RanSetupManager, e2tInstancesManager IE2TInstancesManager) *RanReconnectionManager {
+func NewRanReconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, ranSetupManager *RanSetupManager, e2tAssociationManager *E2TAssociationManager) *RanReconnectionManager {
 	return &RanReconnectionManager{
-		logger:              logger,
-		config:              config,
-		rnibDataService:     rnibDataService,
-		ranSetupManager:     ranSetupManager,
-		e2tInstancesManager: e2tInstancesManager,
+		logger:                logger,
+		config:                config,
+		rnibDataService:       rnibDataService,
+		ranSetupManager:       ranSetupManager,
+		e2tAssociationManager: e2tAssociationManager,
 	}
 }
 
@@ -72,7 +72,7 @@ func (m *RanReconnectionManager) ReconnectRan(inventoryName string) error {
 		}
 
 		if m.isRanExceededConnectionAttempts(nodebInfo) {
-			return m.e2tInstancesManager.RemoveRanFromInstance(nodebInfo.RanName, e2tAddress)
+			return m.e2tAssociationManager.DissociateRan(e2tAddress, nodebInfo.RanName)
 		}
 
 		return nil

@@ -235,7 +235,7 @@ func (m *E2TInstancesManager) RemoveRanFromInstance(ranName string, e2tAddress s
 
 	if err != nil {
 		m.logger.Errorf("#E2TInstancesManager.RemoveRanFromInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
-		return err
+		return e2managererrors.NewRnibDbError()
 	}
 
 	i := 0 // output index
@@ -253,7 +253,7 @@ func (m *E2TInstancesManager) RemoveRanFromInstance(ranName string, e2tAddress s
 
 	if err != nil {
 		m.logger.Errorf("#E2TInstancesManager.RemoveRanFromInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
-		return err
+		return e2managererrors.NewRnibDbError()
 	}
 
 	m.logger.Infof("#E2TInstancesManager.RemoveRanFromInstance - successfully dissociated RAN %s from E2T %s", ranName, e2tInstance.Address)
