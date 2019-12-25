@@ -88,7 +88,7 @@ func TestAddE2TInstanceFailure(t *testing.T) {
 func TestAssociateRanToE2TInstance_Success(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
@@ -101,7 +101,7 @@ func TestAssociateRanToE2TInstance_Success(t *testing.T) {
 func TestAssociateRanToE2TInstance_RoutingManagerError(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
@@ -113,7 +113,7 @@ func TestAssociateRanToE2TInstance_RoutingManagerError(t *testing.T) {
 func TestAssociateRanToE2TInstance_RoutingManager_400(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
@@ -126,7 +126,7 @@ func TestAssociateRanToE2TInstance_RoutingManager_400(t *testing.T) {
 func TestDissociateRanE2TInstance_Success(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
@@ -139,7 +139,7 @@ func TestDissociateRanE2TInstance_Success(t *testing.T) {
 func TestDissociateRanE2TInstance_RoutingManagerError(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
@@ -151,7 +151,7 @@ func TestDissociateRanE2TInstance_RoutingManagerError(t *testing.T) {
 func TestDissociateRanE2TInstance_RoutingManager_400(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.NewRoutingManagerE2TData(E2TAddress,RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix

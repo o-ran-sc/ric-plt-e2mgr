@@ -65,7 +65,7 @@ func (c *RoutingManagerClient) AddE2TInstance(e2tAddress string) error {
 
 func (c *RoutingManagerClient) AssociateRanToE2TInstance(e2tAddress string, ranName string) error {
 
-	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(e2tAddress, ranName)}
 	url := c.config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
 
 	return c.PostMessage(data, url)
@@ -73,13 +73,21 @@ func (c *RoutingManagerClient) AssociateRanToE2TInstance(e2tAddress string, ranN
 
 func (c *RoutingManagerClient) DissociateRanE2TInstance(e2tAddress string, ranName string) error {
 
-	data := models.NewRoutingManagerE2TData(e2tAddress, ranName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(e2tAddress, ranName)}
 	url := c.config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
 
 	return c.PostMessage(data, url)
 }
 
-func (c *RoutingManagerClient) PostMessage(data *models.RoutingManagerE2TData, url string) error {
+func (c *RoutingManagerClient) DissociateAllRans(e2tAddresses []string) error {
+
+	data := mapE2TAddressesToE2DataList(e2tAddresses)
+	url := c.config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
+
+	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) PostMessage(data interface{}, url string) error {
 	marshaled, err := json.Marshal(data)
 
 	if err != nil {
@@ -105,4 +113,14 @@ func (c *RoutingManagerClient) PostMessage(data *models.RoutingManagerE2TData, u
 
 	c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - failure. http status code: %d", resp.StatusCode)
 	return e2managererrors.NewRoutingManagerError()
+}
+
+func mapE2TAddressesToE2DataList(e2tAddresses []string) models.RoutingManagerE2TDataList {
+	e2tDataList := make(models.RoutingManagerE2TDataList, len(e2tAddresses))
+
+	for i, v := range e2tAddresses {
+		e2tDataList[i] = models.NewRoutingManagerE2TData(v)
+	}
+
+	return e2tDataList
 }

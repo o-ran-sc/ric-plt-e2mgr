@@ -88,7 +88,7 @@ func initSetupRequestTestBasicMocks(t *testing.T, protocol entities.E2Applicatio
 }
 
 func mockHttpClientAssociateRan(httpClientMock *mocks.HttpClientMock) {
-	data := models.NewRoutingManagerE2TData(E2TAddress, RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := BaseRMUrl + clients.AssociateRanToE2TInstanceApiSuffix
