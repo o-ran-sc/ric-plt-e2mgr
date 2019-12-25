@@ -55,7 +55,7 @@ func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks
 }
 
 func mockHttpClient(httpClientMock *mocks.HttpClientMock, apiSuffix string, isSuccessful bool) {
-	data := models.NewRoutingManagerE2TData(E2TAddress, RanName)
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
