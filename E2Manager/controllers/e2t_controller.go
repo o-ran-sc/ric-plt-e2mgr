@@ -65,12 +65,6 @@ func (c *E2TController) handleRequest(writer http.ResponseWriter, header *http.H
 		return
 	}
 
-	if response == nil {
-		writer.WriteHeader(http.StatusNoContent)
-		c.logger.Infof("[E2 Manager -> Client] #E2TController.handleRequest - status response: %v", http.StatusNoContent)
-		return
-	}
-
 	result, err := response.Marshal()
 
 	if err != nil {
@@ -108,10 +102,6 @@ func (c *E2TController) handleErrorResponse(err error, writer http.ResponseWrite
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(httpError)
 	_, err = writer.Write(errorResponse)
-
-	if err != nil {
-		c.logger.Errorf("#E2TController.handleErrorResponse - Cannot send response. writer:%v", writer)
-	}
 }
 
 func (c *E2TController) prettifyRequest(request *http.Request) string {

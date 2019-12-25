@@ -249,10 +249,6 @@ func (c *NodebController) handleErrorResponse(err error, writer http.ResponseWri
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(httpError)
 	_, err = writer.Write(errorResponse)
-
-	if err != nil {
-		c.logger.Errorf("#NodebController.handleErrorResponse - Cannot send response. writer:%v", writer)
-	}
 }
 
 func (c *NodebController) prettifyRequest(request *http.Request) string {
