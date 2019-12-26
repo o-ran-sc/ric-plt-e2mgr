@@ -416,3 +416,25 @@ func TestSetupExistingRanWithAssocE2TInstanceConnectedSuccess(t *testing.T) {
 	e2tInstancesManagerMock.AssertNotCalled(t, "SelectE2TInstance")
 	e2tInstancesManagerMock.AssertNotCalled(t, "AddRanToInstance")
 }
+
+func TestSetupExistingRanWithoutAssocE2TInstanceExecuteRoutingManagerError(t *testing.T) {
+	readerMock, writerMock, handler, _, httpClientMock := initSetupRequestTestBasicMocks(t, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: "", ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	readerMock.On("GetNodeb", RanName).Return(nb, nil)
+	addresses := []string{E2TAddress}
+	readerMock.On("GetE2TAddresses").Return(addresses, nil)
+	e2tInstance := &entities.E2TInstance{Address: E2TAddress, State: entities.Active}
+	readerMock.On("GetE2TInstances", addresses).Return([]*entities.E2TInstance{e2tInstance}, nil)
+
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Post", clients.AssociateRanToE2TInstanceApiSuffix, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
+
+	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
+	writerMock.AssertExpectations(t)
+	readerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}

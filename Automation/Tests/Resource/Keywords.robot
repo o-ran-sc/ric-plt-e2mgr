@@ -83,7 +83,6 @@ Stop Simulator
     Run And Return Rc And Output    ${stop_simu}
 
 
-
 Prepare Simulator For Load Information
      Run And Return Rc And Output    ${stop_simu}
      Run And Return Rc And Output    ${docker_Remove}
@@ -166,7 +165,11 @@ Restart simulator
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
+Start RoutingManager Simulator
+    Run And Return Rc And Output    ${start_routingmanager_sim}
 
+Stop RoutingManager Simulator
+    Run And Return Rc And Output    ${stop_routingmanager_sim}
 
 
 
