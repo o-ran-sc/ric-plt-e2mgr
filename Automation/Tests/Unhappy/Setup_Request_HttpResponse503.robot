@@ -24,11 +24,12 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
+Library     ../Scripts/e2mdbscripts.py
 Library     REST      ${url}
 Suite Teardown   Start RoutingManager Simulator
 
 *** Test Cases ***
-ENDC-setup - 500 http - 500 RNIB error
+ENDC-setup - 503 http - 511 No Routing Manager Available
     Stop RoutingManager Simulator
     Set Headers     ${header}
     POST     /v1/nodeb/x2-setup    ${json}
@@ -36,4 +37,6 @@ ENDC-setup - 500 http - 500 RNIB error
     Integer  response body errorCode            511
     String   response body errorMessage     No Routing Manager Available
 
-
+Verify RAN is NOT associated with E2T instance
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test1    e2t.att.com:38000
+   Should Be True    ${result} == False

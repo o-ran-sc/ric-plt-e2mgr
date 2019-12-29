@@ -23,6 +23,7 @@ import (
 	"e2mgr/clients"
 	"e2mgr/logger"
 	"e2mgr/services"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type E2TAssociationManager struct {
@@ -41,7 +42,8 @@ func NewE2TAssociationManager(logger *logger.Logger, rnibDataService services.RN
 	}
 }
 
-func (m *E2TAssociationManager) AssociateRan(e2tAddress string, ranName string) error {
+func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entities.NodebInfo) error {
+	ranName := nodebInfo.RanName
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - Associating RAN %s to E2T Instance address: %s", ranName, e2tAddress)
 
 	err := m.rmClient.AssociateRanToE2TInstance(e2tAddress, ranName)
@@ -50,16 +52,9 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, ranName string) 
 		return err
 	}
 
-	nodebInfo, rnibErr := m.rnibDataService.GetNodeb(ranName)
-
-	if rnibErr != nil {
-		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed fetching RAN from rNib. Error: %s", ranName, rnibErr)
-		return rnibErr
-	}
-
 	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
 	nodebInfo.ConnectionAttempts = 0
-	rnibErr = m.rnibDataService.UpdateNodebInfo(nodebInfo)
+	rnibErr := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if rnibErr != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to update RAN.AssociatedE2TInstanceAddress in rNib. Error: %s", ranName, rnibErr)
 		return rnibErr

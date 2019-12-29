@@ -108,10 +108,13 @@ func TestConnectingRanWithMaxAttemptsReconnectionDissociateSucceeds(t *testing.T
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: E2TAddress}
 	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
-	updatedNodebInfo := *origNodebInfo
-	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:[]string{ranName}}
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
 	e2tInstanceToSave := * e2tInstance
@@ -130,10 +133,13 @@ func TestConnectingRanWithMaxAttemptsReconnectionDissociateFails(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: e2tAddress}
 	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
-	updatedNodebInfo := *origNodebInfo
-	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	updatedNodebInfo.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address:e2tAddress, AssociatedRanList:[]string{ranName}}
 	readerMock.On("GetE2TInstance",e2tAddress).Return(e2tInstance, common.NewInternalError(errors.New("Error")))
 	err := ranReconnectionManager.ReconnectRan(ranName)

@@ -95,7 +95,7 @@ func (c *RoutingManagerClient) PostMessage(data interface{}, url string) error {
 	}
 
 	body := bytes.NewBuffer(marshaled)
-	c.logger.Infof("[E2M -> Routing Manager] #RoutingManagerClient.PostMessage - url: %s, request body: %+v", url, body)
+	c.logger.Infof("[E2 Manager -> Routing Manager] #RoutingManagerClient.PostMessage - url: %s, request body: %+v", url, body)
 
 	resp, err := c.httpClient.Post(url, "application/json", body)
 
@@ -107,11 +107,11 @@ func (c *RoutingManagerClient) PostMessage(data interface{}, url string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices {
-		c.logger.Infof("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - success. http status code: %d", resp.StatusCode)
+		c.logger.Infof("[Routing Manager -> E2 Manager] #RoutingManagerClient.PostMessage - success. http status code: %d", resp.StatusCode)
 		return nil
 	}
 
-	c.logger.Errorf("[Routing Manager -> E2M] #RoutingManagerClient.PostMessage - failure. http status code: %d", resp.StatusCode)
+	c.logger.Errorf("[Routing Manager -> E2 Manager] #RoutingManagerClient.PostMessage - failure. http status code: %d", resp.StatusCode)
 	return e2managererrors.NewRoutingManagerError()
 }
 

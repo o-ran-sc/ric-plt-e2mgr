@@ -94,13 +94,9 @@ func (m *RanReconnectionManager) canReconnectRan(nodebInfo *entities.NodebInfo) 
 		int(nodebInfo.GetConnectionAttempts()) < m.config.MaxConnectionAttempts
 }
 
-func (m *RanReconnectionManager) updateNodebInfo(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus, resetE2tAddress bool) error {
+func (m *RanReconnectionManager) updateNodebInfo(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) error {
 
 	nodebInfo.ConnectionStatus = connectionStatus;
-
-	if resetE2tAddress {
-		nodebInfo.AssociatedE2TInstanceAddress = ""
-	}
 
 	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 
@@ -123,12 +119,12 @@ func (m *RanReconnectionManager) updateUnconnectableRan(nodebInfo *entities.Node
 
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
 		m.logger.Warnf("#RanReconnectionManager.updateUnconnectableRan - RAN name: %s - Cannot reconnect RAN. Reason: connection status is SHUTTING_DOWN", nodebInfo.RanName)
-		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_SHUT_DOWN, false)
+		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}
 
 	if m.isRanExceededConnectionAttempts(nodebInfo) {
 		m.logger.Warnf("#RanReconnectionManager.updateUnconnectableRan - RAN name: %s - Cannot reconnect RAN. Reason: RAN's connection attempts exceeded the limit (%d)", nodebInfo.RanName, m.config.MaxConnectionAttempts)
-		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_DISCONNECTED, true)
+		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 	}
 
 	return nil
