@@ -33,6 +33,13 @@ def verify_ran_is_associated_with_e2t_instance(ranName, e2tAddress):
     assocRanList = e2tInstanceDic.get("associatedRanList")
     return ranName in assocRanList
 
+def populate_e2t_instances_in_e2m_db_for_get_e2t_instances_tc():
+    r = getRedisClientDecodeResponse()
+    r.set("{e2Manager},E2TAddresses", "[\"e2t.att.com:38000\",\"e2t.att.com:38001\"]")
+    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[\"test1\",\"test2\",\"test3\"],\"keepAliveTimestamp\":1577619310484022369,\"state\":\"ACTIVE\"}")
+    r.set("{e2Manager},E2TInstance:e2t.att.com:38001", "{\"address\":\"e2t.att.com:38001\",\"associatedRanList\":[],\"keepAliveTimestamp\":1577619310484022369,\"state\":\"ACTIVE\"}")
+    return True
+
 # def dissociate_ran_from_e2tInstance(ranName, e2tAddress):
 #     r = getRedisClientDecodeResponse()
 #     e2tInstanceJson = r.get("{e2Manager},E2TInstance:"+e2tAddress)
