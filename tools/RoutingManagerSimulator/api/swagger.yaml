@@ -158,7 +158,7 @@ paths:
           description: "Xapp list received"
         "400":
           description: "Invalid data"
-  /handles/v1/e2t:
+  /handles/e2t:
     post:
       tags:
       - "handle"
@@ -213,7 +213,7 @@ paths:
           description: "new e2t instance is considered and platform routes are established"
         "400":
           description: "Invalid data"
-  /handles/v1/associate-ran-to-e2t:
+  /handles/associate-ran-to-e2t:
     post:
       tags:
       - "handle"
@@ -239,7 +239,7 @@ paths:
           description: "e2t ran mapping recieved, platform routes"
         "400":
           description: "Invalid data"
-  /handles/v1/dissociate-ran:
+  /handles/dissociate-ran:
     post:
       tags:
       - "handle"
