@@ -54,6 +54,9 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entit
 
 	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
 	nodebInfo.ConnectionAttempts = 0
+
+
+	m.logger.Infof("test test test test")
 	rnibErr := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if rnibErr != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to update RAN.AssociatedE2TInstanceAddress in rNib. Error: %s", ranName, rnibErr)
