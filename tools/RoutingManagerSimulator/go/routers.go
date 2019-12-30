@@ -77,21 +77,21 @@ var routes = Routes{
 	Route{
 		"AssociateRanToE2tHandle",
 		strings.ToUpper("Post"),
-		"/ric/v1/handles/v1/associate-ran-to-e2t",
+		"/ric/v1/handles/associate-ran-to-e2t",
 		AssociateRanToE2tHandle,
 	},
 
 	Route{
 		"CreateNewE2tHandle",
 		strings.ToUpper("Post"),
-		"/ric/v1/handles/v1/e2t",
+		"/ric/v1/handles/e2t",
 		CreateNewE2tHandle,
 	},
 
 	Route{
 		"DeleteE2tHandle",
 		strings.ToUpper("Delete"),
-		"/ric/v1/handles/v1/e2t",
+		"/ric/v1/handles/e2t",
 		DeleteE2tHandle,
 	},
 
@@ -105,7 +105,7 @@ var routes = Routes{
 	Route{
 		"DissociateRan",
 		strings.ToUpper("Post"),
-		"/ric/v1/handles/v1/dissociate-ran",
+		"/ric/v1/handles/dissociate-ran",
 		DissociateRan,
 	},
 
