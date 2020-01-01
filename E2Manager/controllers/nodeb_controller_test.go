@@ -66,7 +66,7 @@ type controllerGetNodebIdListTestContext struct {
 	expectedJsonResponse string
 }
 
-func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
+func  setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
 	log := initLog(t)
 	config := configuration.ParseConfiguration()
 
@@ -82,7 +82,7 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager)
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
 }
@@ -136,7 +136,6 @@ func TestX2SetupSuccess(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
 
-
 func TestEndcSetupSuccess(t *testing.T) {
 
 	controller, readerMock, writerMock, rmrMessengerMock, _ := setupControllerTest(t)
@@ -169,11 +168,8 @@ func TestEndcSetupSuccess(t *testing.T) {
 }
 
 func TestShutdownHandlerRnibError(t *testing.T) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
-
-	rnibErr := &common.ResourceNotFoundError{}
-	var nbIdentityList []*entities.NbIdentity
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibErr)
+	controller, _, _, _, e2tInstancesManagerMock:= setupControllerTest(t)
+	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, e2managererrors.NewRnibDbError())
 
 	writer := httptest.NewRecorder()
 
@@ -312,11 +308,9 @@ func TestHeaderValidationFailed(t *testing.T) {
 }
 
 func TestShutdownStatusNoContent(t *testing.T) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
-
-	var rnibError error
-	nbIdentityList := []*entities.NbIdentity{}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, rnibError)
+	controller, readerMock, _, _, e2tInstancesManagerMock := setupControllerTest(t)
+	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, nil)
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, nil)
 
 	writer := httptest.NewRecorder()
 	controller.Shutdown(writer, tests.GetHttpRequest())

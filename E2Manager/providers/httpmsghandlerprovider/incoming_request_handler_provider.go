@@ -20,6 +20,7 @@
 package httpmsghandlerprovider
 
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/handlers/httpmsghandlers"
@@ -47,18 +48,18 @@ type IncomingRequestHandlerProvider struct {
 	logger     *logger.Logger
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, e2tAssociationManager *managers.E2TAssociationManager) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, e2tAssociationManager *managers.E2TAssociationManager, rmClient clients.IRoutingManagerClient) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap: initRequestHandlerMap(logger, rmrSender, config, rNibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager),
+		requestMap: initRequestHandlerMap(logger, rmrSender, config, rNibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient),
 		logger:     logger,
 	}
 }
 
-func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, e2tAssociationManager *managers.E2TAssociationManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, e2tAssociationManager *managers.E2TAssociationManager, rmClient clients.IRoutingManagerClient) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
-		ShutdownRequest:  httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService), //TODO change to pointer
+		ShutdownRequest:  httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient),
 		ResetRequest:     httpmsghandlers.NewX2ResetRequestHandler(logger, rmrSender, rNibDataService),
 		X2SetupRequest:   httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_X2_SETUP_REQUEST, e2tInstancesManager, e2tAssociationManager),
 		EndcSetupRequest: httpmsghandlers.NewSetupRequestHandler(logger, rNibDataService, ranSetupManager, entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, e2tInstancesManager, e2tAssociationManager),

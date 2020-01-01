@@ -57,7 +57,7 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

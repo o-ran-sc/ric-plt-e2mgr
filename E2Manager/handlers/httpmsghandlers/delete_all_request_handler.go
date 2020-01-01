@@ -17,161 +17,163 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package httpmsghandlers
 
 import "C"
 import (
+	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
-	"e2mgr/stateMachine"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"time"
 )
 
 type DeleteAllRequestHandler struct {
-	rnibDataService services.RNibDataService
-	rmrSender       *rmrsender.RmrSender
-	config          *configuration.Configuration
-	logger          *logger.Logger
+	rnibDataService     services.RNibDataService
+	rmrSender           *rmrsender.RmrSender
+	config              *configuration.Configuration
+	logger              *logger.Logger
+	e2tInstancesManager managers.IE2TInstancesManager
+	rmClient            clients.IRoutingManagerClient
 }
 
-func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService) *DeleteAllRequestHandler {
+func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient) *DeleteAllRequestHandler {
 	return &DeleteAllRequestHandler{
-		logger:          logger,
-		rnibDataService: rnibDataService,
-		rmrSender:       rmrSender,
-		config:          config,
+		logger:              logger,
+		rnibDataService:     rnibDataService,
+		rmrSender:           rmrSender,
+		config:              config,
+		e2tInstancesManager: e2tInstancesManager,
+		rmClient:            rmClient,
 	}
 }
 
-func (handler *DeleteAllRequestHandler) Handle(request models.Request) (models.IResponse, error) {
+func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
-	err, continueFlow := handler.updateNodebStates(false)
+	e2tAddresses, err := h.e2tInstancesManager.GetE2TAddresses()
+
 	if err != nil {
 		return nil, err
 	}
 
-	if continueFlow == false {
-		return nil, nil
+	if len(e2tAddresses) == 0 {
+		err, _ = h.updateNodebs(h.updateNodebInfoForceShutdown)
+		return nil, err
 	}
 
-	response := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	if err := handler.rmrSender.Send(&response); err != nil {
-		handler.logger.Errorf("#DeleteAllRequestHandler.Handle - failed to send sctp clear all message to RMR: %s", err)
+	err = h.rmClient.DissociateAllRans(e2tAddresses)
+
+	if err != nil {
+		h.logger.Warnf("#DeleteAllRequestHandler.Handle - routing manager failure. continue flow.")
+	}
+
+	err, allRansAreShutDown := h.updateNodebs(h.updateNodebInfoShuttingDown)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = h.e2tInstancesManager.ClearRansOfAllE2TInstances()
+
+	if err != nil {
+		return nil, err
+	}
+
+	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
+
+	err = h.rmrSender.Send(&rmrMessage)
+
+	if err != nil {
+		h.logger.Errorf("#DeleteAllRequestHandler.Handle - failed to send sctp clear all message to RMR: %s", err)
 		return nil, e2managererrors.NewRmrError()
 	}
 
-	time.Sleep(time.Duration(handler.config.BigRedButtonTimeoutSec) * time.Second)
-	handler.logger.Infof("#DeleteAllRequestHandler.Handle - timer expired")
-
-	err, _ = handler.updateNodebStates(true)
-	if err != nil {
-		return nil, err
+	if allRansAreShutDown {
+		return nil, nil
 	}
 
-	return nil, nil
+	time.Sleep(time.Duration(h.config.BigRedButtonTimeoutSec) * time.Second)
+	h.logger.Infof("#DeleteAllRequestHandler.Handle - timer expired")
+
+	err, _ = h.updateNodebs(h.updateNodebInfoShutDown)
+	return nil, err
 }
 
-func (handler *DeleteAllRequestHandler) updateNodebStates(timeoutExpired bool) (error, bool) {
-	nbIdentityList, err := handler.rnibDataService.GetListNodebIds()
+func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.NodebInfo) error) (error, bool) {
+	nbIdentityList, err := h.rnibDataService.GetListNodebIds()
 
 	if err != nil {
-		handler.logger.Errorf("#DeleteAllRequestHandler.updateNodebStates - failed to get nodes list from RNIB. Error: %s", err.Error())
+		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodes list from rNib. Error: %s", err)
 		return e2managererrors.NewRnibDbError(), false
 	}
 
-	if len(nbIdentityList) == 0 {
-		return nil, false
-	}
+	allRansAreShutdown := true
 
-	numOfRanToShutDown := 0
 	for _, nbIdentity := range nbIdentityList {
-
-		node, err := handler.rnibDataService.GetNodeb((*nbIdentity).GetInventoryName())
+		node, err := h.rnibDataService.GetNodeb(nbIdentity.InventoryName)
 
 		if err != nil {
-			handler.logger.Errorf("#DeleteAllRequestHandler.updateNodebStates - failed to get nodeB entity for ran name: %v from RNIB. Error: %s",
-				(*nbIdentity).GetInventoryName(), err.Error())
+			h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodeB entity for ran name: %s from rNib. error: %s", nbIdentity.InventoryName, err)
 			continue
 		}
 
-		if timeoutExpired {
+		if node.ConnectionStatus != entities.ConnectionStatus_SHUT_DOWN {
+			allRansAreShutdown = false
+		}
 
-			if handler.saveNodebShutDownState(nbIdentity, node) {
-				numOfRanToShutDown++
-			}
-			continue
-		}
-		if handler.saveNodebNextState(nbIdentity, node) {
-			numOfRanToShutDown++
-		}
+		_ = updateCb(node)
 	}
 
-	if numOfRanToShutDown > 0 {
-		handler.logger.Infof("#DeleteAllRequestHandler.updateNodebStates - update nodebs states in RNIB completed")
-	} else {
-		handler.logger.Infof("#DeleteAllRequestHandler.updateNodebStates - nodebs states are not updated ")
-		return nil, false
-	}
+	return nil, allRansAreShutdown
 
-	return nil, true
 }
 
-func (handler *DeleteAllRequestHandler) saveNodebNextState(nbIdentity *entities.NbIdentity, node *entities.NodebInfo) bool {
-
-	if node.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
-		return true
-	}
-
-	nextStatus, res := stateMachine.NodeNextStateDeleteAll(node.ConnectionStatus)
-	if res == false {
-		return false
-	}
-
-	node.ConnectionStatus = nextStatus
-
-	err := handler.rnibDataService.SaveNodeb(nbIdentity, node)
-
-	if err != nil {
-		handler.logger.Errorf("#DeleteAllRequestHandler.saveNodebNextState - failed to save nodeB entity for inventory name: %v to RNIB. Error: %s",
-			(*nbIdentity).GetInventoryName(), err.Error())
-		return false
-	}
-
-	if handler.logger.DebugEnabled() {
-		handler.logger.Debugf("#DeleteAllRequestHandler.saveNodebNextState - connection status of inventory name: %v changed to %v",
-			(*nbIdentity).GetInventoryName(), nextStatus.String())
-	}
-	return true
+func (h *DeleteAllRequestHandler) updateNodebInfoForceShutdown(node *entities.NodebInfo) error {
+	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, true)
 }
 
-func (handler *DeleteAllRequestHandler) saveNodebShutDownState(nbIdentity *entities.NbIdentity, node *entities.NodebInfo) bool {
-
+func (h *DeleteAllRequestHandler) updateNodebInfoShuttingDown(node *entities.NodebInfo) error {
 	if node.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
-		return false
+		return nil
+	}
+
+	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUTTING_DOWN, true)
+}
+
+func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebInfo) error {
+	if node.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
+		return nil
 	}
 
 	if node.ConnectionStatus != entities.ConnectionStatus_SHUTTING_DOWN {
-		handler.logger.Errorf("#DeleteAllRequestHandler.saveNodebShutDownState - ignore, status is not Shutting Down, inventory name: %v ", (*nbIdentity).GetInventoryName())
-		return false
+		h.logger.Warnf("#DeleteAllRequestHandler.updateNodebInfoShutDown - RAN name: %s - ignore, status is not Shutting Down", node.RanName)
+		return nil
 	}
 
-	node.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
+	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, false)
+}
 
-	err := handler.rnibDataService.SaveNodeb(nbIdentity, node)
+func (h *DeleteAllRequestHandler) updateNodebInfo(node *entities.NodebInfo, connectionStatus entities.ConnectionStatus, resetAssociatedE2TAddress bool) error {
+	node.ConnectionStatus = connectionStatus
+
+	if resetAssociatedE2TAddress {
+		node.AssociatedE2TInstanceAddress = ""
+	}
+
+	err := h.rnibDataService.UpdateNodebInfo(node)
 
 	if err != nil {
-		handler.logger.Errorf("#DeleteAllRequestHandler.saveNodebShutDownState - failed to save nodeB entity for inventory name: %v to RNIB. Error: %s",
-			(*nbIdentity).GetInventoryName(), err.Error())
-		return false
+		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s - failed saving nodeB entity to rNib. error: %s", node.RanName, err)
+		return err
 	}
 
-	handler.logger.Errorf("#DeleteAllRequestHandler.saveNodebShutDownState - Shut Down , inventory name: %v ", (*nbIdentity).GetInventoryName())
-	return true
+	h.logger.Infof("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s, connection status: %s", node.RanName, connectionStatus)
+	return nil
+
 }

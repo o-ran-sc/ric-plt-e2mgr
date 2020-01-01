@@ -38,6 +38,7 @@ type E2TInstancesManager struct {
 }
 
 type IE2TInstancesManager interface {
+	GetE2TAddresses() ([]string, error)
 	GetE2TInstance(e2tAddress string) (*entities.E2TInstance, error)
 	GetE2TInstances() ([]*entities.E2TInstance, error)
 	GetE2TInstancesNoLogs() ([]*entities.E2TInstance, error)
@@ -48,6 +49,7 @@ type IE2TInstancesManager interface {
 	RemoveRanFromInstance(ranName string, e2tAddress string) error
 	ActivateE2TInstance(e2tInstance *entities.E2TInstance) error
 	ResetKeepAliveTimestamp(e2tAddress string) error
+	ClearRansOfAllE2TInstances() error
 }
 
 func NewE2TInstancesManager(rnibDataService services.RNibDataService, logger *logger.Logger) *E2TInstancesManager {
@@ -106,7 +108,7 @@ func (m *E2TInstancesManager) GetE2TInstancesNoLogs() ([]*entities.E2TInstance, 
 	return e2tInstances, nil
 }
 
-func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error) {
+func (m *E2TInstancesManager) GetE2TAddresses() ([]string, error) {
 	e2tAddresses, err := m.rnibDataService.GetE2TAddresses()
 
 	if err != nil {
@@ -114,12 +116,20 @@ func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error)
 		_, ok := err.(*common.ResourceNotFoundError)
 
 		if !ok {
-			m.logger.Errorf("#E2TInstancesManager.GetE2TInstances - Failed retrieving E2T addresses. error: %s", err)
+			m.logger.Errorf("#E2TInstancesManager.GetE2TAddresses - Failed retrieving E2T addresses. error: %s", err)
 			return nil, e2managererrors.NewRnibDbError()
 		}
 
-		m.logger.Infof("#E2TInstancesManager.GetE2TInstances - Empty E2T addresses list")
-		return []*entities.E2TInstance{}, nil
+	}
+
+	return e2tAddresses, nil
+}
+
+func (m *E2TInstancesManager) GetE2TInstances() ([]*entities.E2TInstance, error) {
+	e2tAddresses, err := m.GetE2TAddresses()
+
+	if err != nil {
+		return nil, e2managererrors.NewRnibDbError()
 	}
 
 	if len(e2tAddresses) == 0 {
@@ -312,7 +322,7 @@ func (m *E2TInstancesManager) AddRanToInstance(ranName string, e2tAddress string
 	return nil
 }
 
-func (m E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error{
+func (m E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error {
 
 	if e2tInstance == nil {
 		m.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - e2tInstance empty")
@@ -356,6 +366,34 @@ func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 	if err != nil {
 		m.logger.Errorf("#E2TInstancesManager.ResetKeepAliveTimestamp - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
 		return err
+	}
+
+	return nil
+}
+
+func (m *E2TInstancesManager) ClearRansOfAllE2TInstances() error {
+
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	e2tInstances, err := m.GetE2TInstances()
+
+	if err != nil {
+		return err
+	}
+
+	if len(e2tInstances) == 0 {
+		m.logger.Errorf("#E2TInstancesManager.ClearRansOfAllE2TInstances - No E2T instances to clear associated RANs from")
+		return nil
+	}
+
+	for _, v := range e2tInstances {
+		v.AssociatedRanList = []string{}
+		err := m.rnibDataService.SaveE2TInstance(v)
+
+		if err != nil {
+			m.logger.Errorf("#E2TInstancesManager.ClearRansOfAllE2TInstances - e2t address: %s - failed saving e2t instance. error: %s", v.Address, err)
+		}
 	}
 
 	return nil

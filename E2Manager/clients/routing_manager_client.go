@@ -45,6 +45,7 @@ type IRoutingManagerClient interface {
 	AddE2TInstance(e2tAddress string) error
 	AssociateRanToE2TInstance(e2tAddress string, ranName string) error
 	DissociateRanE2TInstance(e2tAddress string, ranName string) error
+	DissociateAllRans(e2tAddresses []string) error
 }
 
 func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Configuration, httpClient HttpClient) *RoutingManagerClient {
