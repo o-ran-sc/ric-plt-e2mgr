@@ -26,20 +26,14 @@ Library     ../Scripts/cleanup_db.py
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 
-
-
-
-
 *** Keywords ***
 Post Request setup node b x-2
     Set Headers     ${header}
     POST        /v1/nodeb/x2-setup    ${json}
 
-
 Put Request Resource Status Start
     Set Headers     ${header}
     PUT        /v1/general/resourcestatus  ${resource_status_start_json}
-
 
 Put Request Resource Status Stop
     Set Headers     ${header}
@@ -49,11 +43,9 @@ Get Request node b enb test1
     Sleep    1s
     GET      /v1/nodeb/test1
 
-
-Get Request node b enb test2
+Get Request node b gnb test2
     Sleep    1s
     GET      /v1/nodeb/test2
-
 
 Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}

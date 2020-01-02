@@ -90,7 +90,7 @@ func mockHttpClientDissociateAllRans(httpClientMock *mocks.HttpClientMock, e2tAd
 
 func TestGetE2TAddressesFailure(t *testing.T) {
 	h, readerMock, _, _, _ := setupDeleteAllRequestHandlerTest(t)
-	readerMock.On("GetE2TAddresses").Return([]string{}, e2managererrors.NewRnibDbError())
+	readerMock.On("GetE2TAddresses").Return([]string{}, common.NewInternalError(errors.New("error")))
 	_, err := h.Handle(nil)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	readerMock.AssertExpectations(t)
@@ -123,7 +123,7 @@ func TestTwoRansGetE2TAddressesEmptyListOneGetNodebFailure(t *testing.T) {
 	var nb2 *entities.NodebInfo
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, common.NewInternalError(errors.New("error")))
 	_, err := h.Handle(nil)
-	assert.Nil(t, err)
+	assert.IsType(t,&e2managererrors.RnibDbError{}, err)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 	readerMock.AssertExpectations(t)
 }
@@ -144,7 +144,7 @@ func TestTwoRansGetE2TAddressesEmptyListOneUpdateNodebInfoFailure(t *testing.T) 
 	updatedNb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
 	writerMock.On("UpdateNodebInfo", updatedNb2).Return(common.NewInternalError(errors.New("error")))
 	_, err := h.Handle(nil)
-	assert.Nil(t, err)
+	assert.IsType(t,&e2managererrors.RnibDbError{}, err)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 }
@@ -223,11 +223,11 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSendFails(t *testing.T) {
 	writerMock.AssertExpectations(t)
 }
 
-func TestTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdown(t *testing.T) {
+func testTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdown(t *testing.T, partial bool) {
 	h, readerMock, writerMock, rmrMessengerMock, httpClientMock := setupDeleteAllRequestHandlerTest(t)
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
-	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
+	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, !partial)
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}, {InventoryName: "RanName_2"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
@@ -244,11 +244,26 @@ func TestTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdow
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
 	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
-	_, err := h.Handle(nil)
+	resp, err := h.Handle(nil)
 	assert.Nil(t, err)
+
+	if partial {
+		assert.IsType(t, &models.RedButtonPartialSuccessResponseModel{}, resp)
+	} else {
+		assert.Nil(t, resp)
+	}
+
 	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
+}
+
+func TestTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdownSuccess(t *testing.T) {
+	testTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdown(t, false)
+}
+
+func TestTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdownPartialSuccess(t *testing.T) {
+	testTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdown(t, true)
 }
 
 //func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsAlreadyShutdown(t *testing.T) {
@@ -285,11 +300,45 @@ func TestTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdow
 //	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 //}
 
-func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDown(t *testing.T) {
+//func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDownUpdateFailure(t *testing.T) {
+//	h, readerMock, writerMock, rmrMessengerMock, httpClientMock := setupDeleteAllRequestHandlerTest(t)
+//	e2tAddresses := []string{E2TAddress}
+//	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+//	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
+//	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
+//	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+//	//nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress}
+//	//readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
+//	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
+//	writerMock.On("UpdateNodebInfo", updatedNb1).Return(nil)
+//	readerMock.On("GetE2TAddresses").Return([]string{E2TAddress}, nil)
+//	e2tInstance := entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{"RanName_1"}}
+//	readerMock.On("GetE2TInstances", []string{E2TAddress}).Return([]*entities.E2TInstance{&e2tInstance}, nil)
+//	updatedE2tInstance := e2tInstance
+//	updatedE2tInstance.AssociatedRanList = []string{}
+//	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
+//
+//	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
+//	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+//	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
+//
+//	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+//	readerMock.On("GetNodeb", "RanName_1").Return(updatedNb1, nil)
+//	updatedNb2 := *updatedNb1
+//	updatedNb2.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
+//	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(common.NewInternalError(errors.New("error")))
+//	_, err := h.Handle(nil)
+//	assert.IsType(t,&e2managererrors.RnibDbError{}, err)
+//	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
+//	readerMock.AssertExpectations(t)
+//	writerMock.AssertExpectations(t)
+//}
+
+func testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDown(t *testing.T, partial bool) {
 	h, readerMock, writerMock, rmrMessengerMock, httpClientMock := setupDeleteAllRequestHandlerTest(t)
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
-	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
+	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, !partial)
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 	//nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress}
@@ -317,6 +366,14 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
+}
+
+func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDownSuccess (t *testing.T) {
+	testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDown(t, false)
+}
+
+func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDownPartialSuccess (t *testing.T) {
+	testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttingDown(t, true)
 }
 
 func TestSuccessTwoE2TInstancesSixRans(t *testing.T) {

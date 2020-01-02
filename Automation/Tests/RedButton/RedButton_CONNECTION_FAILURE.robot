@@ -24,6 +24,7 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Resource    red_button_keywords.robot
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
@@ -31,27 +32,12 @@ Library     REST      ${url}
 
 *** Test Cases ***
 
-Prepare Ran in CONNECTION FAILURE connectionStatus
-    Set Headers     ${header}
-    POST        /v1/nodeb/x2-setup   ${json}
-    Sleep    1s
-    POST        /v1/nodeb/x2-setup   ${json}
-    Sleep    1s
-    GET      /v1/nodeb/test1
-    Integer    response status       200
-    String     response body connectionStatus     CONNECTED_SETUP_FAILED
+Execute X2 setup twice and verify its connection status is CONNECTED_SETUP_FAILED
+    Execute setup twice and verify connected setup failed
 
-Disconnect Ran
-    PUT    /v1/nodeb/shutdown
-    Integer   response status   204
+Execute Shutdown
+    Execute Shutdown
 
-
-
-Verfiy Shutdown ConnectionStatus
-    Sleep    1s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    SHUT_DOWN
-
+Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
+   Verify shutdown for enb
 

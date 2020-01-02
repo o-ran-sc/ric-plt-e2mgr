@@ -40,7 +40,7 @@ Run Endc setup request
 
 Get request gnb
     Sleep    1s
-    Get Request node b enb test2
+    Get Request node b gnb test2
     Integer  response status  200
     String   response body ranName    test2
     String   response body ip    ${ip_e2adapter} 

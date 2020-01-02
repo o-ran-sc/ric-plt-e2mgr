@@ -345,6 +345,19 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 	assert.Equal(t, errorResponse.Message, err.Message)
 }
 
+func TestHandleRoutingManagerError(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+	err := e2managererrors.NewRoutingManagerError()
+
+	controller.handleErrorResponse(err, writer)
+	var errorResponse = parseJsonRequest(t, writer.Body)
+
+	assert.Equal(t, http.StatusServiceUnavailable, writer.Result().StatusCode)
+	assert.Equal(t, errorResponse.Code, err.Code)
+	assert.Equal(t, errorResponse.Message, err.Message)
+}
+
 func TestHandleE2TInstanceAbsenceError(t *testing.T) {
 	controller, _, _, _, _ := setupControllerTest(t)
 

@@ -38,6 +38,7 @@ Put Http Start Request To RSM
     Integer  response status  204
 
 Verify RSM RAN Info Status Is Start And True In Redis
+    Sleep   1s
     ${result}=   rsmscripts.verify_rsm_ran_info_start_true
     Should Be Equal As Strings  ${result}    True
 

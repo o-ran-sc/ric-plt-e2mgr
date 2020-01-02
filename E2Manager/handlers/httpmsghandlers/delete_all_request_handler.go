@@ -67,9 +67,9 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, err
 	}
 
-	err = h.rmClient.DissociateAllRans(e2tAddresses)
+	dissocErr := h.rmClient.DissociateAllRans(e2tAddresses)
 
-	if err != nil {
+	if dissocErr != nil {
 		h.logger.Warnf("#DeleteAllRequestHandler.Handle - routing manager failure. continue flow.")
 	}
 
@@ -95,6 +95,11 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 	}
 
 	if allRansAreShutDown {
+
+		if dissocErr != nil {
+			return models.NewRedButtonPartialSuccessResponseModel("Operation succeeded, except Routing Manager failure"), nil
+		}
+
 		return nil, nil
 	}
 
@@ -102,7 +107,16 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 	h.logger.Infof("#DeleteAllRequestHandler.Handle - timer expired")
 
 	err, _ = h.updateNodebs(h.updateNodebInfoShutDown)
-	return nil, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	if dissocErr != nil {
+		return models.NewRedButtonPartialSuccessResponseModel("Operation succeeded, except Routing Manager failure"), nil
+	}
+
+	return nil, nil
 }
 
 func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.NodebInfo) error) (error, bool) {
@@ -120,14 +134,18 @@ func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.Node
 
 		if err != nil {
 			h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodeB entity for ran name: %s from rNib. error: %s", nbIdentity.InventoryName, err)
-			continue
+			return e2managererrors.NewRnibDbError(), false
 		}
 
 		if node.ConnectionStatus != entities.ConnectionStatus_SHUT_DOWN {
 			allRansAreShutdown = false
 		}
 
-		_ = updateCb(node)
+		err = updateCb(node)
+
+		if err != nil {
+			return err, false
+		}
 	}
 
 	return nil, allRansAreShutdown
@@ -169,8 +187,8 @@ func (h *DeleteAllRequestHandler) updateNodebInfo(node *entities.NodebInfo, conn
 	err := h.rnibDataService.UpdateNodebInfo(node)
 
 	if err != nil {
-		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s - failed saving nodeB entity to rNib. error: %s", node.RanName, err)
-		return err
+		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s - failed updating nodeB entity in rNib. error: %s", node.RanName, err)
+		return e2managererrors.NewRnibDbError()
 	}
 
 	h.logger.Infof("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s, connection status: %s", node.RanName, connectionStatus)

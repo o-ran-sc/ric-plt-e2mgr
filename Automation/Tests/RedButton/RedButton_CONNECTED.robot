@@ -22,8 +22,9 @@
 
 *** Settings ***
 Suite Setup   Prepare Enviorment
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
+Resource    ../Resource/resource.robot
+Resource    ../Resource/Keywords.robot
+Resource    red_button_keywords.robot
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
@@ -31,27 +32,12 @@ Library     REST      ${url}
 
 *** Test Cases ***
 
-Prepare Ran in Connected connectionStatus
-    Post Request setup node b x-2
-    Integer     response status       204
-    Sleep  1s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    CONNECTED
+Execute X2 setup, verify nodeb connection status is CONNECTED and it's associated to an e2t instance
+   Execute setup and verify connected and associated
 
+Execute Shutdown
+   Execute Shutdown
 
-Disconnect Ran
-   PUT    /v1/nodeb/shutdown
-   Integer   response status   204
-
-
-
-Verfiy Shutdown ConnectionStatus
-    Sleep    1s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    SHUT_DOWN
-
+Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
+   Verify shutdown for enb
 

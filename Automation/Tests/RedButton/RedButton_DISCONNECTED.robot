@@ -23,6 +23,7 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Resource    red_button_keywords.robot
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
@@ -30,15 +31,12 @@ Library     REST      ${url}
 *** Variables ***
 ${stop_docker_e2}      docker stop e2adapter
 
-
-
 *** Test Cases ***
 
 Pre Condition for Connecting - no E2ADAPTER
     Run And Return Rc And Output    ${stop_docker_e2}
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
-
 
 Prepare Ran in Connecting connectionStatus
     Post Request setup node b endc-setup
@@ -49,16 +47,8 @@ Prepare Ran in Connecting connectionStatus
     String   response body ranName    test2
     String   response body connectionStatus    DISCONNECTED
 
-Disconnect Ran
-    PUT    /v1/nodeb/shutdown
-    Integer   response status   204
+Execute Shutdown
+    Execute Shutdown
 
-
-
-Verfiy Shutdown ConnectionStatus
-    Sleep    1s
-    GET      /v1/nodeb/test2
-    Integer  response status  200
-    String   response body ranName    test2
-    String   response body connectionStatus    SHUT_DOWN
-
+Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
+    Verify shutdown for gnb
