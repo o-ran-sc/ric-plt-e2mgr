@@ -30,6 +30,7 @@ import (
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"time"
 )
@@ -43,6 +44,8 @@ type DeleteAllRequestHandler struct {
 	rmClient            clients.IRoutingManagerClient
 }
 
+const PartialSuccessDueToRmErrorMessage = "Operation succeeded except for routing manager outbound call"
+
 func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient) *DeleteAllRequestHandler {
 	return &DeleteAllRequestHandler{
 		logger:              logger,
@@ -55,6 +58,7 @@ func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrS
 }
 
 func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IResponse, error) {
+	h.logger.Infof("#DeleteAllRequestHandler.Handle - handling shutdown request")
 
 	e2tAddresses, err := h.e2tInstancesManager.GetE2TAddresses()
 
@@ -73,7 +77,7 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 		h.logger.Warnf("#DeleteAllRequestHandler.Handle - routing manager failure. continue flow.")
 	}
 
-	err, allRansAreShutDown := h.updateNodebs(h.updateNodebInfoShuttingDown)
+	err, updatedAtLeastOnce := h.updateNodebs(h.updateNodebInfoShuttingDown)
 
 	if err != nil {
 		return nil, err
@@ -94,10 +98,11 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewRmrError()
 	}
 
-	if allRansAreShutDown {
+	if !updatedAtLeastOnce {
+		h.logger.Infof("#DeleteAllRequestHandler.Handle - DB wasn't updated, not activating timer")
 
 		if dissocErr != nil {
-			return models.NewRedButtonPartialSuccessResponseModel("Operation succeeded, except Routing Manager failure"), nil
+			return models.NewRedButtonPartialSuccessResponseModel(PartialSuccessDueToRmErrorMessage), nil
 		}
 
 		return nil, nil
@@ -113,13 +118,13 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 	}
 
 	if dissocErr != nil {
-		return models.NewRedButtonPartialSuccessResponseModel("Operation succeeded, except Routing Manager failure"), nil
+		return models.NewRedButtonPartialSuccessResponseModel(PartialSuccessDueToRmErrorMessage), nil
 	}
 
 	return nil, nil
 }
 
-func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.NodebInfo) error) (error, bool) {
+func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.NodebInfo) (error, bool)) (error, bool) {
 	nbIdentityList, err := h.rnibDataService.GetListNodebIds()
 
 	if err != nil {
@@ -127,54 +132,76 @@ func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.Node
 		return e2managererrors.NewRnibDbError(), false
 	}
 
-	allRansAreShutdown := true
+	updatedAtLeastOnce := false
 
 	for _, nbIdentity := range nbIdentityList {
 		node, err := h.rnibDataService.GetNodeb(nbIdentity.InventoryName)
 
 		if err != nil {
-			h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodeB entity for ran name: %s from rNib. error: %s", nbIdentity.InventoryName, err)
-			return e2managererrors.NewRnibDbError(), false
+			_, ok := err.(*common.ResourceNotFoundError)
+
+			if !ok {
+				h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodeB entity for ran name: %s from rNib. error: %s", nbIdentity.InventoryName, err)
+				return e2managererrors.NewRnibDbError(), false
+			}
+			continue
 		}
 
-		if node.ConnectionStatus != entities.ConnectionStatus_SHUT_DOWN {
-			allRansAreShutdown = false
-		}
-
-		err = updateCb(node)
+		err, updated := updateCb(node)
 
 		if err != nil {
 			return err, false
 		}
+
+		if updated {
+			updatedAtLeastOnce = true
+		}
 	}
 
-	return nil, allRansAreShutdown
-
+	return nil, updatedAtLeastOnce
 }
 
-func (h *DeleteAllRequestHandler) updateNodebInfoForceShutdown(node *entities.NodebInfo) error {
-	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, true)
-}
+func (h *DeleteAllRequestHandler) updateNodebInfoForceShutdown(node *entities.NodebInfo) (error, bool) {
+	err := h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, true)
 
-func (h *DeleteAllRequestHandler) updateNodebInfoShuttingDown(node *entities.NodebInfo) error {
-	if node.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
-		return nil
+	if err != nil {
+		return err, false
 	}
 
-	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUTTING_DOWN, true)
+	return nil, true
 }
 
-func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebInfo) error {
+func (h *DeleteAllRequestHandler) updateNodebInfoShuttingDown(node *entities.NodebInfo) (error, bool) {
 	if node.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
-		return nil
+		return nil, false
+	}
+
+	err := h.updateNodebInfo(node, entities.ConnectionStatus_SHUTTING_DOWN, true)
+
+	if err != nil {
+		return err, false
+	}
+
+	return nil, true
+}
+
+func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebInfo) (error, bool) {
+	if node.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
+		return nil, false
 	}
 
 	if node.ConnectionStatus != entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Warnf("#DeleteAllRequestHandler.updateNodebInfoShutDown - RAN name: %s - ignore, status is not Shutting Down", node.RanName)
-		return nil
+		return nil, false
 	}
 
-	return h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, false)
+	err :=  h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, false)
+
+	if err != nil {
+		return err, false
+	}
+
+	return nil, true
 }
 
 func (h *DeleteAllRequestHandler) updateNodebInfo(node *entities.NodebInfo, connectionStatus entities.ConnectionStatus, resetAssociatedE2TAddress bool) error {

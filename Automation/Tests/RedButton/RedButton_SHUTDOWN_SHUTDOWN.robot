@@ -40,8 +40,15 @@ Execute Shutdown
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
    Verify shutdown for enb
 
+Verify E2T instance has no associated RANs
+   Verify E2T instance has no associated RANs
+
+
 Execute second Shutdown
    Execute Shutdown
 
 Verify again nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
    Verify shutdown for enb
+
+Verify again E2T instance has no associated RANs
+   Verify E2T instance has no associated RANs

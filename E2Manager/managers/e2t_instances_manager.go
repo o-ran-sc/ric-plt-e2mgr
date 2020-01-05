@@ -372,7 +372,7 @@ func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 }
 
 func (m *E2TInstancesManager) ClearRansOfAllE2TInstances() error {
-
+	m.logger.Infof("#E2TInstancesManager.ClearRansOfAllE2TInstances - Going to clear associated RANs from E2T instances")
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
