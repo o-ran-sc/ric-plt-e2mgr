@@ -36,8 +36,8 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, "info", config.Logging.LogLevel)
 	assert.Equal(t, 100, config.NotificationResponseBuffer)
 	assert.Equal(t, 5, config.BigRedButtonTimeoutSec)
-	assert.Equal(t, 1500, config.KeepAliveResponseTimeoutMs)
-	assert.Equal(t, 500, config.KeepAliveDelayMs)
+	assert.Equal(t, 4500, config.KeepAliveResponseTimeoutMs)
+	assert.Equal(t, 1500, config.KeepAliveDelayMs)
 }
 
 func TestParseConfigurationFileNotFoundFailure(t *testing.T) {

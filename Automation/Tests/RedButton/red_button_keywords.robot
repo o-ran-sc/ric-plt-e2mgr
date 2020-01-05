@@ -50,8 +50,6 @@ Verify shutdown for enb
     String   response body ranName    test1
     String   response body connectionStatus    SHUT_DOWN
     Missing  response body associatedE2tInstanceAddress
-    ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test1    e2t.att.com:38000
-    Should Be True    ${result} == False
 
 
 Verify shutdown for gnb
@@ -60,8 +58,10 @@ Verify shutdown for gnb
     String   response body ranName    test2
     String   response body connectionStatus    SHUT_DOWN
     Missing  response body associatedE2tInstanceAddress
-    ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test2    e2t.att.com:38000
-    Should Be True    ${result} == False
+
+Verify E2T instance has no associated RANs
+    ${result}    e2mdbscripts.verify_e2t_instance_has_no_associated_rans     e2t.att.com:38000
+    Should Be True    ${result}
 
 Execute Shutdown
    PUT       /v1/nodeb/shutdown

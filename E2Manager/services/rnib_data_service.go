@@ -101,7 +101,6 @@ func (w *rNibDataService) SaveRanLoadInformation(inventoryName string, ranLoadIn
 }
 
 func (w *rNibDataService) GetNodeb(ranName string) (*entities.NodebInfo, error) {
-	w.logger.Infof("#RnibDataService.GetNodeb - RAN name: %s", ranName)
 
 	var nodeb *entities.NodebInfo = nil
 
@@ -110,18 +109,24 @@ func (w *rNibDataService) GetNodeb(ranName string) (*entities.NodebInfo, error) 
 		return
 	})
 
+	if err == nil {
+		w.logger.Infof("#RnibDataService.GetNodeb - RAN name: %s, connection status: %s", nodeb.RanName, nodeb.ConnectionStatus)
+	}
+
 	return nodeb, err
 }
 
 func (w *rNibDataService) GetListNodebIds() ([]*entities.NbIdentity, error) {
-	w.logger.Infof("#RnibDataService.GetListNodebIds")
-
 	var nodeIds []*entities.NbIdentity = nil
 
 	err := w.retry("GetListNodebIds", func() (err error) {
 		nodeIds, err = w.rnibReader.GetListNodebIds()
 		return
 	})
+
+	if err == nil {
+		w.logger.Infof("#RnibDataService.GetListNodebIds - RANs count: %d", len(nodeIds))
+	}
 
 	return nodeIds, err
 }
