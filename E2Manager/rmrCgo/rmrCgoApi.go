@@ -61,7 +61,6 @@ func (ctx *Context) SendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
 	ctx.checkContextInitialized()
 	ctx.Logger.Debugf("#rmrCgoApi.SendMsg - Going to send message. MBuf: %v", *msg)
 	allocatedCMBuf := ctx.getAllocatedCRmrMBuf(ctx.Logger, msg, ctx.MaxMsgSize)
-	defer C.rmr_free_msg(allocatedCMBuf)
 	state := allocatedCMBuf.state
 	if state != RMR_OK {
 		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - Failed to get allocated message. state: %v - %s", state, states[int(state)])
@@ -76,6 +75,8 @@ func (ctx *Context) SendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
 	}
 
 	currCMBuf := C.rmr_send_msg(ctx.RmrCtx, allocatedCMBuf)
+	defer C.rmr_free_msg(currCMBuf)
+
 	state = currCMBuf.state
 
 	if state != RMR_OK {
@@ -90,9 +91,10 @@ func (ctx *Context) RecvMsg() (*MBuf, error) {
 	ctx.checkContextInitialized()
 	ctx.Logger.Debugf("#rmrCgoApi.RecvMsg - Going to receive message")
 	allocatedCMBuf := C.rmr_alloc_msg(ctx.RmrCtx, C.int(ctx.MaxMsgSize))
-	defer C.rmr_free_msg(allocatedCMBuf)
 
 	currCMBuf := C.rmr_rcv_msg(ctx.RmrCtx, allocatedCMBuf)
+	defer C.rmr_free_msg(currCMBuf)
+
 	state := currCMBuf.state
 
 	if state != RMR_OK {
