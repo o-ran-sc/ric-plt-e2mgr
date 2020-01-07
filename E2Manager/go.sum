@@ -13,6 +13,8 @@ gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.28 h1:AaYvK59fxDXQUV9NC
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.28/go.mod h1:vZ/335+rRSQW82wcbc80fNNICSK3TiCqIxmkqeC2Pfo=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.0 h1:+P3XuWKSaMbzh5PNtrW9gkZlCN0hKrZq+Cn8JetwBys=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.0/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2 h1:UK7awyRKIkVdokWvvkYvazlg3EWIfMnIqCcJxTnLlDA=
+gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
