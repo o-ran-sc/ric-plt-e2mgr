@@ -58,12 +58,14 @@ RUN apt-get update && apt-get install -y \
   
 COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
 COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
-COPY --from=ubuntu /opt/E2Manager/resources /opt/E2Manager/resources
+COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
+COPY --from=ubuntu /opt/E2Manager/resources/rmr.verbose /tmp/rmr.verbose
 COPY --from=ubuntu /usr/local/lib/librmr_nng.so.1 /usr/local/lib/librmr_nng.so.1
 COPY --from=ubuntu /usr/local/lib/libnng.so.1 /usr/local/lib/libnng.so.1
 WORKDIR /opt/E2Manager
 ENV LD_LIBRARY_PATH=/usr/local/lib \
     port=3800 
 ENV RMR_SEED_RT=router.txt
+ENV RMR_VCTL_FILE=/tmp/rmr.verbose
 EXPOSE 3800
 CMD ["sh", "-c", "./main  -port=$port"]
