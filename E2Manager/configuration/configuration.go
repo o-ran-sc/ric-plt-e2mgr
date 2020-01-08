@@ -46,6 +46,7 @@ type Configuration struct {
 	RnibRetryIntervalMs          int
 	KeepAliveResponseTimeoutMs 	 int
 	KeepAliveDelayMs             int
+	E2TInstanceDeletionTimeoutMs int
 }
 
 func ParseConfiguration() *Configuration {
@@ -72,6 +73,7 @@ func ParseConfiguration() *Configuration {
 	config.RnibRetryIntervalMs = viper.GetInt("rnibRetryIntervalMs")
 	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
+	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
 	return &config
 }
 

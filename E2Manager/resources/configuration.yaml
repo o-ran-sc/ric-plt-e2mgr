@@ -14,3 +14,4 @@ maxRnibConnectionAttempts: 3
 rnibRetryIntervalMs: 10
 keepAliveResponseTimeoutMs: 4500
 keepAliveDelayMs: 1500
+e2tInstanceDeletionTimeoutMs: 15000

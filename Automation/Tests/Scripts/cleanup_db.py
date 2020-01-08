@@ -38,7 +38,7 @@ def flush():
 
     r.set("{e2Manager},E2TAddresses", "[\"e2t.att.com:38000\"]")
 
-    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int(time.time())) + ",\"state\":\"ACTIVE\"}")
+    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int((time.time()+2) * 1000000000)) + ",\"state\":\"ACTIVE\"}")
 
     return True
 

@@ -47,6 +47,7 @@ type RNibDataService interface {
 	GetE2TInstancesNoLogs(addresses []string) ([]*entities.E2TInstance, error)
 	SaveE2TInstanceNoLogs(e2tInstance *entities.E2TInstance) error
 	GetE2TAddressesNoLogs() ([]string, error)
+	RemoveE2TInstance(e2tAddress string) error
 }
 
 type rNibDataService struct {
@@ -230,6 +231,17 @@ func (w *rNibDataService) SaveE2TAddresses(addresses []string) error {
 
 	err := w.retry("SaveE2TAddresses", func() (err error) {
 		err = w.rnibWriter.SaveE2TAddresses(addresses)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) RemoveE2TInstance(e2tAddress string) error {
+	w.logger.Infof("#RnibDataService.RemoveE2TInstance - e2tAddress: %s", e2tAddress)
+
+	err := w.retry("RemoveE2TInstance", func() (err error) {
+		err = w.rnibWriter.RemoveE2TInstance(e2tAddress)
 		return
 	})
 

@@ -1,4 +1,4 @@
-##############################################################################
+robot##############################################################################
 #
 #   Copyright (c) 2019 AT&T Intellectual Property.
 #
@@ -29,7 +29,7 @@ Library    Collections
 
 Stop E2T
     stop_e2
-    Sleep  1s
+    Sleep  3s
 
 Prepare logs for tests
     Remove log files

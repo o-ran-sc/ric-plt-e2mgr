@@ -46,6 +46,7 @@ type IRoutingManagerClient interface {
 	AssociateRanToE2TInstance(e2tAddress string, ranName string) error
 	DissociateRanE2TInstance(e2tAddress string, ranName string) error
 	DissociateAllRans(e2tAddresses []string) error
+	DeleteE2TInstance(e2tAddress string, ransToBeDissociated []string, e2tToRansAssociations map[string][]string) error
 }
 
 func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Configuration, httpClient HttpClient) *RoutingManagerClient {
@@ -86,6 +87,11 @@ func (c *RoutingManagerClient) DissociateAllRans(e2tAddresses []string) error {
 	url := c.config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
 
 	return c.PostMessage(data, url)
+}
+
+func (c *RoutingManagerClient) DeleteE2TInstance(e2tAddress string, ransToBeDissociated []string, e2tToRansAssociations map[string][]string) error {
+	//TODO - here should be the call to routing-manager...
+	return nil
 }
 
 func (c *RoutingManagerClient) PostMessage(data interface{}, url string) error {

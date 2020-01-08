@@ -100,3 +100,33 @@ func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string)
 	}
 	return nil
 }
+
+func (m *E2TAssociationManager) RemoveE2tInstance(e2tAddress string, ransToBeDissociated []string, ranAssociationList map[string][]string) error {
+
+	err := m.rmClient.DeleteE2TInstance(e2tAddress, ransToBeDissociated, ranAssociationList)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - RoutingManager failure: Failed to delete E2T %s. Error: %s", e2tAddress, err)
+		_ = m.setStateToRoutingManagerFailure(e2tAddress)
+		return err
+	}
+
+	err = m.e2tInstanceManager.RemoveE2TInstance(e2tAddress)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - Failed to remove E2T %s. Error: %s", e2tAddress, err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *E2TAssociationManager) setStateToRoutingManagerFailure(e2tAddress string) error {
+	e2tInstance, err := m.e2tInstanceManager.GetE2TInstance(e2tAddress)
+	if err != nil {
+		return err
+	}
+	err = m.e2tInstanceManager.SetE2tInstanceState(e2tAddress, e2tInstance.State, entities.RoutingManagerFailure)
+	if err != nil {
+		return err
+	}
+	return nil
+}

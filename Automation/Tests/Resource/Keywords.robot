@@ -85,6 +85,7 @@ Prepare Simulator For Load Information
      Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 Prepare Enviorment
+     Log To Console  Starting preparations
      ${starting_timestamp}    Evaluate   datetime.datetime.now(datetime.timezone.utc).isoformat("T")   modules=datetime 
      ${e2t_log_filename}      Evaluate      "e2t.${SUITE NAME}.log".replace(" ","-")
      ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
@@ -114,7 +115,8 @@ Prepare Enviorment
      Set Suite Variable  ${Save_e2e_simu_log}
      Set Suite Variable  ${Save_rm_sim_log}
      Set Suite Variable  ${Save_e2adapter_log}
-	
+
+	 Log To Console  Ready to flush db
      ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${stop_simu}
@@ -125,6 +127,7 @@ Prepare Enviorment
      Run And Return Rc And Output    ${run_e2e_simu_regular}
      Run And Return Rc And Output    ${restart_e2adapter}
      Sleep  3s
+     Log To Console  Validating dockers are up
      ${result}=  Run And Return Rc And Output     ${docker_command}
      Should Be Equal As Integers    ${result[1]}    ${docker_number}
 

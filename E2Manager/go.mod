@@ -1,9 +1,9 @@
 module e2mgr
 
 require (
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.28
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.28
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.28
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.29
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.29
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.29
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.5.2
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible

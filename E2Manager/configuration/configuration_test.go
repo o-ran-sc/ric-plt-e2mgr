@@ -38,6 +38,7 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, 5, config.BigRedButtonTimeoutSec)
 	assert.Equal(t, 4500, config.KeepAliveResponseTimeoutMs)
 	assert.Equal(t, 1500, config.KeepAliveDelayMs)
+	assert.Equal(t, 15000, config.E2TInstanceDeletionTimeoutMs)
 }
 
 func TestParseConfigurationFileNotFoundFailure(t *testing.T) {

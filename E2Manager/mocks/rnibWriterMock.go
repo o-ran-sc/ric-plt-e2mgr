@@ -76,3 +76,9 @@ func (rnibWriterMock *RnibWriterMock) SaveE2TAddresses(addresses []string) error
 
 	return args.Error(0)
 }
+
+func (rnibWriterMock *RnibWriterMock) RemoveE2TInstance(address string) error {
+	args := rnibWriterMock.Called(address)
+
+	return args.Error(0)
+}

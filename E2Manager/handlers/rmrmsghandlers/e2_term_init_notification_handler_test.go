@@ -321,7 +321,7 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerFailure_Error(t *testing.T
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
 
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	e2tInstancesManagerMock.On("ActivateE2TInstance", e2tInstance).Return(fmt.Errorf(" Error "))
+	e2tInstancesManagerMock.On("SetE2tInstanceState", e2tInstanceAddress, e2tInstance.State, entities.Active).Return(fmt.Errorf(" Error "))
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}

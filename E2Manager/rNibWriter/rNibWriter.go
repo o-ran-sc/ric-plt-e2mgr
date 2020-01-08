@@ -43,6 +43,7 @@ type RNibWriter interface {
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
 	SaveE2TAddresses(addresses []string) error
+	RemoveE2TInstance(e2tAddress string) error
 }
 
 /*
@@ -231,6 +232,20 @@ func (w *rNibWriterInstance) SaveE2TAddresses(addresses []string) error {
 		return common.NewInternalError(err)
 	}
 
+	return nil
+}
+
+
+func (w *rNibWriterInstance) RemoveE2TInstance(address string) error {
+	key, rNibErr := common.ValidateAndBuildE2TInstanceKey(address)
+	if rNibErr != nil {
+		return rNibErr
+	}
+	err := w.sdl.Remove([]string{key})
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
 	return nil
 }
 

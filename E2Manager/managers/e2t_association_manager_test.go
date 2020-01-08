@@ -283,3 +283,37 @@ func TestDissociateRanRoutingManagerError(t *testing.T) {
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
 }
+
+func TestRemoveE2tInstanceSuccess(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	//mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
+
+	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
+	e2tAddresses := []string{E2TAddress, E2TAddress2}
+	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tAddressesNew := []string{E2TAddress2}
+	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
+
+	err := manager.RemoveE2tInstance(E2TAddress, []string{""}, make(map[string][]string))
+
+	assert.Nil(t, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestRemoveE2tInstanceFailureInE2TInstanceManager(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	//mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
+
+	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
+	var e2tAddresses []string
+	readerMock.On("GetE2TAddresses").Return(e2tAddresses, e2managererrors.NewRnibDbError())
+
+	err := manager.RemoveE2tInstance(E2TAddress, []string{""}, make(map[string][]string))
+
+	assert.NotNil(t, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}

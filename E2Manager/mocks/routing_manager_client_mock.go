@@ -50,3 +50,9 @@ func (m *RoutingManagerClientMock) DissociateAllRans(e2tAddresses []string) erro
 args := m.Called(e2tAddresses)
 return args.Error(0)
 }
+
+func (m *RoutingManagerClientMock) DeleteE2TInstance(e2tAddress string, ransToBeDissociated []string, e2tToRansAssociations map[string][]string) error {
+
+	args := m.Called(e2tAddress, ransToBeDissociated, e2tToRansAssociations)
+	return args.Error(0)
+}

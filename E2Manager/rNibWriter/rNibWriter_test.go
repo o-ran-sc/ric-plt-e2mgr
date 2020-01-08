@@ -577,6 +577,39 @@ func TestSaveE2TAddressesSdlFailure(t *testing.T) {
 	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
 
+func TestRemoveE2TInstanceSuccess(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tAddresses := []string{fmt.Sprintf("E2TInstance:%s", address)}
+	var e error
+	sdlInstanceMock.On("Remove", e2tAddresses).Return(e)
+
+	rNibErr := w.RemoveE2TInstance(address)
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestRemoveE2TInstanceSdlFailure(t *testing.T) {
+	address := "10.10.2.15:9800"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	e2tAddresses := []string{fmt.Sprintf("E2TInstance:%s", address)}
+	expectedErr := errors.New("expected error")
+	sdlInstanceMock.On("Remove", e2tAddresses).Return(expectedErr)
+
+	rNibErr := w.RemoveE2TInstance(address)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
+}
+
+func TestRemoveE2TInstanceEmptyAddressFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	rNibErr := w.RemoveE2TInstance("")
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
 //Integration tests
 //
 //func TestSaveEnbGnbInteg(t *testing.T){

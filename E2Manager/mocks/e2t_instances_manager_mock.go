@@ -40,8 +40,8 @@ func (m *E2TInstancesManagerMock) AddE2TInstance(e2tInstanceAddress string) erro
 	return args.Error(0)
 }
 
-func (m *E2TInstancesManagerMock) RemoveE2TInstance(e2tInstance *entities.E2TInstance) error {
-	args := m.Called(e2tInstance)
+func (m *E2TInstancesManagerMock) RemoveE2TInstance(e2tAddress string) error {
+	args := m.Called(e2tAddress)
 	return args.Error(0)
 }
 
@@ -55,6 +55,7 @@ func (m *E2TInstancesManagerMock) AddRanToInstance(ranName string, e2tAddress st
 	return args.Error(0)
 
 }
+
 func (m *E2TInstancesManagerMock) RemoveRanFromInstance(ranName string, e2tAddress string) error {
 	args := m.Called(ranName, e2tAddress)
 	return args.Error(0)
@@ -79,8 +80,8 @@ func (m *E2TInstancesManagerMock) ResetKeepAliveTimestamp(e2tAddress string) err
 
 }
 
-func (m *E2TInstancesManagerMock) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error {
-	args := m.Called(e2tInstance)
+func (m *E2TInstancesManagerMock) SetE2tInstanceState(e2tAddress string, currentState entities.E2TInstanceState, newState entities.E2TInstanceState) error {
+	args := m.Called(e2tAddress, currentState, newState)
 	return args.Error(0)
 }
 

@@ -43,13 +43,13 @@ type IE2TInstancesManager interface {
 	GetE2TInstances() ([]*entities.E2TInstance, error)
 	GetE2TInstancesNoLogs() ([]*entities.E2TInstance, error)
 	AddE2TInstance(e2tAddress string) error
-	RemoveE2TInstance(e2tInstance *entities.E2TInstance) error
+	RemoveE2TInstance(e2tAddress string) error
 	SelectE2TInstance() (string, error)
 	AddRanToInstance(ranName string, e2tAddress string) error
 	RemoveRanFromInstance(ranName string, e2tAddress string) error
-	ActivateE2TInstance(e2tInstance *entities.E2TInstance) error
 	ResetKeepAliveTimestamp(e2tAddress string) error
 	ClearRansOfAllE2TInstances() error
+	SetE2tInstanceState(e2tAddress string, currentState entities.E2TInstanceState, newState entities.E2TInstanceState) error
 }
 
 func NewE2TInstancesManager(rnibDataService services.RNibDataService, logger *logger.Logger) *E2TInstancesManager {
@@ -270,9 +270,46 @@ func (m *E2TInstancesManager) RemoveRanFromInstance(ranName string, e2tAddress s
 	return nil
 }
 
-func (m *E2TInstancesManager) RemoveE2TInstance(e2tInstance *entities.E2TInstance) error {
+func (m *E2TInstancesManager) RemoveE2TInstance(e2tAddress string) error {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	err := m.rnibDataService.RemoveE2TInstance(e2tAddress)
+	if err != nil {
+		m.logger.Errorf("#E2TInstancesManager.RemoveE2TInstance - E2T Instance address: %s - Failed removing E2TInstance. error: %s", e2tAddress, err)
+		return e2managererrors.NewRnibDbError()
+	}
+
+	e2tAddresses, err := m.rnibDataService.GetE2TAddresses()
+
+	if err != nil {
+		m.logger.Errorf("#E2TInstancesManager.RemoveE2TInstance - E2T Instance address: %s - Failed retrieving E2T addresses list. error: %s", e2tAddress, err)
+		return e2managererrors.NewRnibDbError()
+	}
+
+	e2tAddresses = m.removeAddressFromList(e2tAddresses, e2tAddress)
+
+	err = m.rnibDataService.SaveE2TAddresses(e2tAddresses)
+	if err != nil {
+		m.logger.Errorf("#E2TInstancesManager.RemoveE2TInstance - E2T Instance address: %s - Failed saving E2T addresses list. error: %s", e2tAddress, err)
+		return e2managererrors.NewRnibDbError()
+	}
+
 	return nil
 }
+
+func (m *E2TInstancesManager) removeAddressFromList(e2tAddresses []string, addressToRemove string) []string {
+	newAddressList := []string{}
+
+	for _, address := range e2tAddresses {
+		if address != addressToRemove {
+			newAddressList = append(newAddressList, address)
+		}
+	}
+
+	return newAddressList
+}
+
 func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 
 	e2tInstances, err := m.GetE2TInstances()
@@ -322,26 +359,6 @@ func (m *E2TInstancesManager) AddRanToInstance(ranName string, e2tAddress string
 	return nil
 }
 
-func (m E2TInstancesManager) ActivateE2TInstance(e2tInstance *entities.E2TInstance) error {
-
-	if e2tInstance == nil {
-		m.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - e2tInstance empty")
-		return e2managererrors.NewInternalError()
-	}
-
-	m.logger.Infof("#E2TInstancesManager.ActivateE2TInstance - E2T Address: %s - activate E2T instance", e2tInstance.Address)
-
-	e2tInstance.State = entities.Active
-	e2tInstance.KeepAliveTimestamp = time.Now().UnixNano()
-
-	err := m.rnibDataService.SaveE2TInstance(e2tInstance)
-	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.ActivateE2TInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tInstance.Address, err)
-		return err
-	}
-	return nil
-}
-
 func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 
 	m.mux.Lock()
@@ -367,6 +384,38 @@ func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 		m.logger.Errorf("#E2TInstancesManager.ResetKeepAliveTimestamp - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
 		return err
 	}
+
+	return nil
+}
+
+func (m *E2TInstancesManager) SetE2tInstanceState(e2tAddress string, currentState entities.E2TInstanceState, newState entities.E2TInstanceState) error {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	e2tInstance, err := m.rnibDataService.GetE2TInstance(e2tAddress)
+
+	if err != nil {
+		m.logger.Errorf("#E2TInstancesManager.SetE2tInstanceState - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+		return e2managererrors.NewRnibDbError()
+	}
+
+	if (currentState != e2tInstance.State) {
+		m.logger.Warnf("#E2TInstancesManager.SetE2tInstanceState - E2T Instance address: %s - Current state is not: %s", e2tAddress, currentState)
+		return e2managererrors.NewInternalError()
+	}
+
+	e2tInstance.State = newState
+	if (newState == entities.Active) {
+		e2tInstance.KeepAliveTimestamp = time.Now().UnixNano()
+	}
+
+	err = m.rnibDataService.SaveE2TInstance(e2tInstance)
+	if err != nil {
+		m.logger.Errorf("#E2TInstancesManager.SetE2tInstanceState - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tInstance.Address, err)
+		return err
+	}
+
+	m.logger.Infof("#E2TInstancesManager.SetE2tInstanceState - E2T Instance address: %s - State change: %s --> %s", e2tAddress, currentState, newState)
 
 	return nil
 }
