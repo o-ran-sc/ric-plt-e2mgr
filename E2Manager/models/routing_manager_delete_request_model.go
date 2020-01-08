@@ -17,29 +17,18 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package clients
+package models
 
-import (
-	"io"
-	"net/http"
-)
-
-type IHttpClient interface {
-	Post(url, contentType string, body io.Reader) (resp *http.Response, err error)
-	Delete(url, contentType string, body io.Reader) (resp *http.Response, err error)
+type RoutingManagerDeleteRequestModel struct {
+	E2TAddress                 string                    `json:"E2TAddress"`
+	RanNameListToBeDissociated []string                  `json:"ranNamelistTobeDissociated,omitempty"`
+	RanAssocList               RoutingManagerE2TDataList `json:"ranAssocList,omitempty"`
 }
 
-type HttpClient struct {
-	*http.Client
+func NewRoutingManagerDeleteRequestModel(e2tAddress string, ranNameListToBeDissociated []string, ranAssocList RoutingManagerE2TDataList) *RoutingManagerDeleteRequestModel {
+	return &RoutingManagerDeleteRequestModel{
+		E2TAddress:                 e2tAddress,
+		RanNameListToBeDissociated: ranNameListToBeDissociated,
+		RanAssocList:               ranAssocList,
+	}
 }
-
-func NewHttpClient() *HttpClient {
-	return &HttpClient{}
-}
-
-func (c *HttpClient) Delete(url, contentType string, body io.Reader) (resp *http.Response, err error) {
-	req, _ := http.NewRequest(http.MethodDelete, url, body)
-	req.Header.Set("Content-Type", contentType)
-	return c.Do(req)
-}
-

@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package main
 
 import (
@@ -38,7 +37,6 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
-	"net/http"
 	"os"
 	"strconv"
 )
@@ -54,13 +52,13 @@ func main() {
 	db := sdlgo.NewDatabase()
 	sdl := sdlgo.NewSdlInstance("e2Manager", db)
 	defer sdl.Close()
-	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter( sdl))
+	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter(sdl))
 	var msgImpl *rmrCgo.Context
 	rmrMessenger := msgImpl.Init("tcp:"+strconv.Itoa(config.Rmr.Port), config.Rmr.MaxMsgSize, 0, logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
-	routingManagerClient := clients.NewRoutingManagerClient(logger, config, &http.Client{})
+	routingManagerClient := clients.NewRoutingManagerClient(logger, config, clients.NewHttpClient())
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
 	e2tShutdownManager := managers.NewE2TShutdownManager(logger, config, rnibDataService, e2tInstancesManager, e2tAssociationManager, ranSetupManager)
 	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(logger, rmrSender, e2tInstancesManager, e2tShutdownManager, config)

@@ -17,12 +17,12 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package clients
 
 import (
 	"bytes"
 	"e2mgr/configuration"
+	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/models"
@@ -35,8 +35,8 @@ import (
 )
 
 const E2TAddress = "10.0.2.15:38000"
+const E2TAddress2 = "10.0.2.15:38001"
 const RanName = "test1"
-
 
 func initRoutingManagerClientTest(t *testing.T) (*RoutingManagerClient, *mocks.HttpClientMock, *configuration.Configuration) {
 	logger := initLog(t)
@@ -45,6 +45,56 @@ func initRoutingManagerClientTest(t *testing.T) (*RoutingManagerClient, *mocks.H
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := NewRoutingManagerClient(logger, config, httpClientMock)
 	return rmClient, httpClientMock, config
+}
+
+func TestDeleteE2TInstanceSuccess(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	e2tToRansAssociations := map[string][]string{
+		E2TAddress2: {"test1"},
+	}
+	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + "e2t"
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusOK, Body: respBody}, nil)
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	assert.Nil(t, err)
+}
+
+func TestDeleteE2TInstanceFailure(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	e2tToRansAssociations := map[string][]string{
+		E2TAddress2: {"test1"},
+	}
+	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + "e2t"
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
+}
+
+func TestDeleteE2TInstanceDeleteFailure(t *testing.T) {
+	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
+
+	e2tToRansAssociations := map[string][]string{
+		E2TAddress2: {"test1"},
+	}
+	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	marshaled, _ := json.Marshal(data)
+	body := bytes.NewBuffer(marshaled)
+	url := config.RoutingManager.BaseUrl + "e2t"
+	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestAddE2TInstanceSuccess(t *testing.T) {
@@ -69,7 +119,7 @@ func TestAddE2TInstanceHttpPostFailure(t *testing.T) {
 	url := config.RoutingManager.BaseUrl + "e2t"
 	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
 	err := rmClient.AddE2TInstance(E2TAddress)
-	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestAddE2TInstanceFailure(t *testing.T) {
@@ -80,7 +130,7 @@ func TestAddE2TInstanceFailure(t *testing.T) {
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + "e2t"
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
-	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
 	err := rmClient.AddE2TInstance(E2TAddress)
 	assert.NotNil(t, err)
 }
@@ -88,7 +138,7 @@ func TestAddE2TInstanceFailure(t *testing.T) {
 func TestAssociateRanToE2TInstance_Success(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
@@ -101,32 +151,32 @@ func TestAssociateRanToE2TInstance_Success(t *testing.T) {
 func TestAssociateRanToE2TInstance_RoutingManagerError(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
 	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
 	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
-	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestAssociateRanToE2TInstance_RoutingManager_400(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + AssociateRanToE2TInstanceApiSuffix
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
-	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
 	err := rmClient.AssociateRanToE2TInstance(E2TAddress, RanName)
-	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestDissociateRanE2TInstance_Success(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
@@ -139,26 +189,26 @@ func TestDissociateRanE2TInstance_Success(t *testing.T) {
 func TestDissociateRanE2TInstance_RoutingManagerError(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
 	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
 	err := rmClient.DissociateRanE2TInstance(E2TAddress, RanName)
-	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestDissociateRanE2TInstance_RoutingManager_400(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress,RanName)}
+	data := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + DissociateRanE2TInstanceApiSuffix
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
-	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body:respBody}, nil)
+	httpClientMock.On("Post", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
 	err := rmClient.DissociateRanE2TInstance(E2TAddress, RanName)
-	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 // TODO: extract to test_utils

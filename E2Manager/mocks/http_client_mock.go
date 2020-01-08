@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package mocks
 
 import (
@@ -31,11 +30,11 @@ type HttpClientMock struct {
 }
 
 func (c *HttpClientMock) Post(url, contentType string, body io.Reader) (resp *http.Response, err error) {
-		args := c.Called(url, contentType, body)
-		return args.Get(0).(*http.Response), args.Error(1)
+	args := c.Called(url, contentType, body)
+	return args.Get(0).(*http.Response), args.Error(1)
 }
 
-//func (c *HttpClientMock) Do(req *http.Request) (*http.Response, error) {
-//	args := c.Called(req)
-//	return args.Get(0).(*http.Response), args.Error(1)
-//}
+func (c *HttpClientMock) Delete(url, contentType string, body io.Reader) (resp *http.Response, err error) {
+	args := c.Called(url, contentType, body)
+	return args.Get(0).(*http.Response), args.Error(1)
+}
