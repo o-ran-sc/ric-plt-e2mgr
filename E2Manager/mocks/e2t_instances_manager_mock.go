@@ -50,8 +50,8 @@ func (m *E2TInstancesManagerMock) SelectE2TInstance() (string, error) {
 	return args.String(0), args.Error(1)
 }
 
-func (m *E2TInstancesManagerMock) AddRanToInstance(ranName string, e2tAddress string) error {
-	args := m.Called(ranName, e2tAddress)
+func (m *E2TInstancesManagerMock) AddRansToInstance(e2tAddress string, ranNames []string) error {
+	args := m.Called(e2tAddress, ranNames)
 	return args.Error(0)
 
 }

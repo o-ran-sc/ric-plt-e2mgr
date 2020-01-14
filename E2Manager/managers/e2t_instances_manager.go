@@ -45,7 +45,7 @@ type IE2TInstancesManager interface {
 	AddE2TInstance(e2tAddress string) error
 	RemoveE2TInstance(e2tAddress string) error
 	SelectE2TInstance() (string, error)
-	AddRanToInstance(ranName string, e2tAddress string) error
+	AddRansToInstance(e2tAddress string, ranNames []string) error
 	RemoveRanFromInstance(ranName string, e2tAddress string) error
 	ResetKeepAliveTimestamp(e2tAddress string) error
 	ClearRansOfAllE2TInstances() error
@@ -334,7 +334,7 @@ func (m *E2TInstancesManager) SelectE2TInstance() (string, error) {
 	return min.Address, nil
 }
 
-func (m *E2TInstancesManager) AddRanToInstance(ranName string, e2tAddress string) error {
+func (m *E2TInstancesManager) AddRansToInstance(e2tAddress string, ranNames []string) error {
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
@@ -342,20 +342,20 @@ func (m *E2TInstancesManager) AddRanToInstance(ranName string, e2tAddress string
 	e2tInstance, err := m.rnibDataService.GetE2TInstance(e2tAddress)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.AddRanToInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.AddRansToInstance - E2T Instance address: %s - Failed retrieving E2TInstance. error: %s", e2tAddress, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
-	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, ranName)
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, ranNames...)
 
 	err = m.rnibDataService.SaveE2TInstance(e2tInstance)
 
 	if err != nil {
-		m.logger.Errorf("#E2TInstancesManager.AddRanToInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TInstancesManager.AddRansToInstance - E2T Instance address: %s - Failed saving E2TInstance. error: %s", e2tAddress, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
-	m.logger.Infof("#E2TInstancesManager.AddRanToInstance - RAN %s was added successfully to E2T %s", ranName, e2tInstance.Address)
+	m.logger.Infof("#E2TInstancesManager.AddRansToInstance - RAN %s were added successfully to E2T %s", ranNames, e2tInstance.Address)
 	return nil
 }
 
@@ -372,7 +372,7 @@ func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 	}
 
 	if e2tInstance.State == entities.ToBeDeleted || e2tInstance.State == entities.RoutingManagerFailure {
-		m.logger.Warnf("#E2TInstancesManager.ResetKeepAliveTimestamp - Ignore. This Instance is about to deleted")
+		m.logger.Warnf("#E2TInstancesManager.ResetKeepAliveTimestamp - Ignore. This Instance is about to be deleted")
 		return nil
 
 	}

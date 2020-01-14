@@ -34,7 +34,9 @@ type HttpClient struct {
 }
 
 func NewHttpClient() *HttpClient {
-	return &HttpClient{}
+	return &HttpClient{
+		&http.Client{},
+	}
 }
 
 func (c *HttpClient) Delete(url, contentType string, body io.Reader) (resp *http.Response, err error) {

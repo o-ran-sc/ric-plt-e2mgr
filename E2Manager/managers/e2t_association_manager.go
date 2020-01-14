@@ -61,7 +61,7 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entit
 		return rnibErr
 	}
 
-	err = m.e2tInstanceManager.AddRanToInstance(ranName, e2tAddress)
+	err = m.e2tInstanceManager.AddRansToInstance(e2tAddress, []string{ranName})
 	if err != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to add RAN to E2T instance %s. Error: %s", ranName, e2tAddress, err)
 		return err
@@ -101,30 +101,37 @@ func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string)
 	return nil
 }
 
-func (m *E2TAssociationManager) RemoveE2tInstance(e2tAddress string, ransToBeDissociated []string, ranAssociationList map[string][]string) error {
+func (m *E2TAssociationManager) RemoveE2tInstance(e2tInstance *entities.E2TInstance, ransToBeDissociated []string, ranAssociationList map[string][]string) error {
+	m.logger.Infof("#E2TAssociationManager.RemoveE2tInstance -  Removing E2T %s and re-associating its associated RANs.", e2tInstance.Address)
 
-	err := m.rmClient.DeleteE2TInstance(e2tAddress, ransToBeDissociated, ranAssociationList)
+	err := m.rmClient.DeleteE2TInstance(e2tInstance.Address, ransToBeDissociated, ranAssociationList)
 	if err != nil {
-		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - RoutingManager failure: Failed to delete E2T %s. Error: %s", e2tAddress, err)
-		_ = m.setStateToRoutingManagerFailure(e2tAddress)
+		_ = m.setStateToRoutingManagerFailure(e2tInstance)
+		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - RoutingManager failure: Failed to delete E2T %s. Error: %s", e2tInstance.Address, err)
 		return err
 	}
 
-	err = m.e2tInstanceManager.RemoveE2TInstance(e2tAddress)
+	err = m.e2tInstanceManager.RemoveE2TInstance(e2tInstance.Address)
 	if err != nil {
-		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - Failed to remove E2T %s. Error: %s", e2tAddress, err)
+		m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - Failed to remove E2T %s. Error: %s", e2tInstance.Address, err)
 		return err
 	}
 
+	for e2tAddress, associatedRans := range ranAssociationList {
+		err = m.e2tInstanceManager.AddRansToInstance(e2tAddress, associatedRans)
+		if err != nil {
+			m.logger.Errorf("#E2TAssociationManager.RemoveE2tInstance - Failed to add RANs %s to E2T %s. Error: %s", associatedRans, e2tAddress, err)
+			return err
+		}
+	}
+
+	m.logger.Infof("#E2TAssociationManager.RemoveE2tInstance -  E2T %s successfully removed.", e2tInstance.Address)
 	return nil
 }
 
-func (m *E2TAssociationManager) setStateToRoutingManagerFailure(e2tAddress string) error {
-	e2tInstance, err := m.e2tInstanceManager.GetE2TInstance(e2tAddress)
-	if err != nil {
-		return err
-	}
-	err = m.e2tInstanceManager.SetE2tInstanceState(e2tAddress, e2tInstance.State, entities.RoutingManagerFailure)
+func (m *E2TAssociationManager) setStateToRoutingManagerFailure(e2tInstance *entities.E2TInstance) error {
+
+	err := m.e2tInstanceManager.SetE2tInstanceState(e2tInstance.Address, e2tInstance.State, entities.RoutingManagerFailure)
 	if err != nil {
 		return err
 	}

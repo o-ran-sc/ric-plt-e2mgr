@@ -42,8 +42,8 @@ type E2TShutdownManager struct {
 	ranSetupManager       IRanSetupManager
 }
 
-func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager, ranSetupManager IRanSetupManager) E2TShutdownManager {
-	return E2TShutdownManager{
+func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager, ranSetupManager IRanSetupManager) *E2TShutdownManager {
+	return &E2TShutdownManager{
 		logger:                logger,
 		config:                config,
 		rnibDataService:       rnibDataService,
@@ -72,14 +72,14 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 	ranNamesToBeAssociated := make(map[string][]string) // e2tAddress -> associatedRanList
 
 	for _, ranName := range e2tInstance.AssociatedRanList {
-		err = m.reAssociateRanInMemory(ranName, ranNamesToBeAssociated, ranNamesToBeDissociated)
+		ranNamesToBeDissociated, err = m.reAssociateRanInMemory(ranName, ranNamesToBeAssociated, ranNamesToBeDissociated)
 		if err != nil {
 			m.logger.Errorf("#E2TShutdownManager.Shutdown - Failed to re-associate nodeb %s.", ranName)
 			return err
 		}
 	}
 
-	err = m.e2tAssociationManager.RemoveE2tInstance(e2tInstance.Address, ranNamesToBeDissociated, ranNamesToBeAssociated)
+	err = m.e2tAssociationManager.RemoveE2tInstance(e2tInstance, ranNamesToBeDissociated, ranNamesToBeAssociated)
 	if err != nil {
 		m.logger.Errorf("#E2TShutdownManager.Shutdown - Failed to remove E2T %s.", e2tInstance.Address)
 		return err
@@ -97,6 +97,7 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 		return err
 	}
 
+	m.logger.Infof("#E2TShutdownManager.Shutdown - E2T %s was sutdown successfully.", e2tInstance.Address)
 	return nil
 }
 
@@ -117,6 +118,7 @@ func (m E2TShutdownManager) clearNodebsAssociation(ranNamesToBeDissociated []str
 }
 
 func (m E2TShutdownManager) associateAndSetupNodebs(ranNamesToBeUpdated []string, e2tAddress string) error {
+	isDissociatedRans := len(e2tAddress) == 0
 	for _, ranName := range ranNamesToBeUpdated {
 		nodeb, err := m.rnibDataService.GetNodeb(ranName)
 		if err != nil {
@@ -128,14 +130,17 @@ func (m E2TShutdownManager) associateAndSetupNodebs(ranNamesToBeUpdated []string
 			return err
 		}
 		nodeb.AssociatedE2TInstanceAddress = e2tAddress
+		if isDissociatedRans{
+			nodeb.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+		}
+
 		err = m.rnibDataService.UpdateNodebInfo(nodeb)
 		if err != nil {
 			m.logger.Errorf("#E2TShutdownManager.associateAndSetupNodebs - Failed to save nodeb %s from db.", ranName)
 			return err
 		}
 
-		shouldSendSetup := len(e2tAddress) > 0
-		if shouldSendSetup {
+		if !isDissociatedRans {
 			err = m.ranSetupManager.ExecuteSetup(nodeb, entities.ConnectionStatus_CONNECTING)
 			if err != nil {
 				m.logger.Errorf("#E2TShutdownManager.associateAndSetupNodebs - Failed to execute Setup for nodeb %s.", ranName)
@@ -146,7 +151,7 @@ func (m E2TShutdownManager) associateAndSetupNodebs(ranNamesToBeUpdated []string
 	return nil
 }
 
-func (m E2TShutdownManager) reAssociateRanInMemory(ranName string, ranNamesToBeAssociated map[string][]string, ranNamesToBeDissociated []string) error {
+func (m E2TShutdownManager) reAssociateRanInMemory(ranName string, ranNamesToBeAssociated map[string][]string, ranNamesToBeDissociated []string) ([]string, error) {
 	nodeb, err := m.rnibDataService.GetNodeb(ranName)
 	if err != nil {
 
@@ -154,29 +159,27 @@ func (m E2TShutdownManager) reAssociateRanInMemory(ranName string, ranNamesToBeA
 
 		if !ok {
 			m.logger.Errorf("#E2TShutdownManager.reAssociateRanInMemory - Failed to get nodeb %s from db.", ranName)
-			return err
+			return ranNamesToBeDissociated, err
 		}
 
-		m.logger.Errorf("#E2TShutdownManager.reAssociateRanInMemory - nodeb %s not found in db. dissociating it...", ranName)
-		ranNamesToBeDissociated = append(ranNamesToBeDissociated, ranName)
-		return nil
+		m.logger.Errorf("#E2TShutdownManager.reAssociateRanInMemory - nodeb %s not found in db. Skipping it...", ranName)
+		return ranNamesToBeDissociated, nil
 	}
 
 	if nodeb.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN || nodeb.ConnectionStatus == entities.ConnectionStatus_SHUT_DOWN {
-		m.logger.Errorf("#E2TShutdownManager.reAssociateRanInMemory - nodeb %s status is %s. dissociating it...", ranName, nodeb.ConnectionStatus)
-		ranNamesToBeDissociated = append(ranNamesToBeDissociated, ranName)
-		return nil
+		m.logger.Errorf("#E2TShutdownManager.reAssociateRanInMemory - nodeb %s status is %s. Skipping it...", ranName, nodeb.ConnectionStatus)
+		return ranNamesToBeDissociated, nil
 	}
 
 	selectedE2tAddress, err := m.e2TInstancesManager.SelectE2TInstance()
 	if err != nil {
 		m.logger.Infof("#E2TShutdownManager.reAssociateRanInMemory - No selected E2T instance for nodeb %s found.", ranName)
 		ranNamesToBeDissociated = append(ranNamesToBeDissociated, ranName)
-		return nil
+		return ranNamesToBeDissociated, nil
 	}
 
 	ranNamesToBeAssociated[selectedE2tAddress] = append(ranNamesToBeAssociated[selectedE2tAddress], ranName)
-	return nil
+	return ranNamesToBeDissociated, nil
 }
 
 func (m E2TShutdownManager) markE2tInstanceToBeDeleted(e2tInstance *entities.E2TInstance) error {
@@ -190,5 +193,5 @@ func (m E2TShutdownManager) isE2tInstanceAlreadyBeingDeleted(e2tInstance *entiti
 	delta := time.Now().UnixNano() - e2tInstance.DeletionTimestamp
 	timestampNanosec := int64(time.Duration(m.config.E2TInstanceDeletionTimeoutMs) * time.Millisecond)
 
-	return delta <= timestampNanosec
+	return e2tInstance.State == entities.ToBeDeleted && delta <= timestampNanosec
 }

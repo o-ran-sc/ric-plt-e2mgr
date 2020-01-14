@@ -40,6 +40,15 @@ def verify_e2t_instance_has_no_associated_rans(e2tAddress):
     assocRanList = e2tInstanceDic.get("associatedRanList")
     return not assocRanList
 
+def verify_e2t_instance_exists_in_addresses(e2tAddress):
+    r = getRedisClientDecodeResponse()
+    e2tAddressesJson = r.get("{e2Manager},E2TAddresses")
+    e2tAddresses = json.loads(e2tAddressesJson)
+    return e2tAddress in e2tAddresses
+
+def verify_e2t_instance_key_exists(e2tAddress):
+    r = getRedisClientDecodeResponse()
+    return r.exists("{e2Manager},E2TInstance:"+e2tAddress)
 
 def populate_e2t_instances_in_e2m_db_for_get_e2t_instances_tc():
     r = getRedisClientDecodeResponse()

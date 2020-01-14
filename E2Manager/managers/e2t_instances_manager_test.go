@@ -140,7 +140,7 @@ func TestAddRanToInstanceGetInstanceFailure(t *testing.T) {
 	var e2tInstance1 *entities.E2TInstance
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, common.NewInternalError(fmt.Errorf("for test")))
 
-	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
+	err := e2tInstancesManager.AddRansToInstance(E2TAddress, []string{"test1"})
 	assert.NotNil(t, err)
 	rnibWriterMock.AssertNotCalled(t, "SaveE2TInstance")
 }
@@ -151,7 +151,7 @@ func TestAddRanToInstanceSaveInstanceFailure(t *testing.T) {
 	rnibReaderMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
 	rnibWriterMock.On("SaveE2TInstance", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for test")))
 
-	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
+	err := e2tInstancesManager.AddRansToInstance(E2TAddress, []string{"test1"})
 	assert.NotNil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
@@ -167,7 +167,7 @@ func TestAddRanToInstanceSuccess(t *testing.T) {
 
 	rnibWriterMock.On("SaveE2TInstance", &updateE2TInstance).Return(nil)
 
-	err := e2tInstancesManager.AddRanToInstance("test1", E2TAddress)
+	err := e2tInstancesManager.AddRansToInstance(E2TAddress, []string{"test1"})
 	assert.Nil(t, err)
 	rnibReaderMock.AssertExpectations(t)
 	rnibWriterMock.AssertExpectations(t)
