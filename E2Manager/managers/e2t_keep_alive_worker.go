@@ -85,5 +85,5 @@ func (h E2TKeepAliveWorker) E2TKeepAliveExpired() {
 func (h E2TKeepAliveWorker) SendKeepAliveRequest() {
 
 	request := models.RmrMessage{MsgType: rmrCgo.E2_TERM_KEEP_ALIVE_REQ}
-	h.rmrSender.SendWithoutLogs(&request)
+	h.rmrSender.Send(&request)
 }
