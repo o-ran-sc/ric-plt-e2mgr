@@ -31,18 +31,18 @@ import (
 )
 
 type E2TermInitNotificationHandler struct {
-	logger                 *logger.Logger
-	ranReconnectionManager *managers.RanReconnectionManager
-	e2tInstancesManager    managers.IE2TInstancesManager
-	routingManagerClient   clients.IRoutingManagerClient
+	logger                  *logger.Logger
+	ranDisconnectionManager *managers.RanDisconnectionManager
+	e2tInstancesManager     managers.IE2TInstancesManager
+	routingManagerClient    clients.IRoutingManagerClient
 }
 
-func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(logger *logger.Logger, ranDisconnectionManager *managers.RanDisconnectionManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
-		logger:                 logger,
-		ranReconnectionManager: ranReconnectionManager,
-		e2tInstancesManager:    e2tInstancesManager,
-		routingManagerClient:   routingManagerClient,
+		logger:                  logger,
+		ranDisconnectionManager: ranDisconnectionManager,
+		e2tInstancesManager:     e2tInstancesManager,
+		routingManagerClient:    routingManagerClient,
 	}
 }
 
@@ -104,7 +104,7 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
-		if err := h.ranReconnectionManager.ReconnectRan(ranName); err != nil {
+		if err := h.ranDisconnectionManager.DisconnectRan(ranName); err != nil {
 			h.logger.Errorf("#E2TermInitNotificationHandler.HandleExistingE2TInstance - Ran name: %s - connection attempt failure, error: %s", ranName, err)
 			_, ok := err.(*common.ResourceNotFoundError)
 			if !ok {

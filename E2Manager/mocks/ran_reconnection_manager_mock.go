@@ -22,11 +22,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type RanReconnectionManagerMock struct {
+type RanDisconnectionManagerMock struct {
 	mock.Mock
 }
 
-func (m *RanReconnectionManagerMock) ReconnectRan(inventoryName string) error {
+func (m *RanDisconnectionManagerMock) DisconnectRan(inventoryName string) error {
 	args := m.Called(inventoryName)
 
 	return args.Error(0)
