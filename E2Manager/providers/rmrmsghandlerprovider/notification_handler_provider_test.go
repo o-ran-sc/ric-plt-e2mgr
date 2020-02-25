@@ -64,7 +64,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 
 	logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient, e2tAssociationManager := initTestCase(t)
 
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tAssociationManager)
+	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)

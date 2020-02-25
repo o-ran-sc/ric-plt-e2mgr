@@ -42,39 +42,36 @@ func TestLostConnectionHandlerSuccess(t *testing.T) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
 
 	notificationRequest := models.NotificationRequest{RanName: ranName}
-	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
-	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(nil)
+	ranReconnectionManagerMock := &mocks.RanDisconnectionManagerMock{}
+	ranReconnectionManagerMock.On("DisconnectRan", ranName).Return(nil)
 	handler := NewRanLostConnectionHandler(logger, ranReconnectionManagerMock)
 	handler.Handle(&notificationRequest)
-	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
+	ranReconnectionManagerMock.AssertCalled(t, "DisconnectRan", ranName)
 }
 
 func TestLostConnectionHandlerFailure(t *testing.T) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
 
 	notificationRequest := models.NotificationRequest{RanName: ranName}
-	ranReconnectionManagerMock := &mocks.RanReconnectionManagerMock{}
-	ranReconnectionManagerMock.On("ReconnectRan", ranName).Return(errors.New("error"))
+	ranReconnectionManagerMock := &mocks.RanDisconnectionManagerMock{}
+	ranReconnectionManagerMock.On("DisconnectRan", ranName).Return(errors.New("error"))
 	handler := NewRanLostConnectionHandler(logger, ranReconnectionManagerMock)
 	handler.Handle(&notificationRequest)
-	ranReconnectionManagerMock.AssertCalled(t, "ReconnectRan", ranName)
+	ranReconnectionManagerMock.AssertCalled(t, "DisconnectRan", ranName)
 }
 
 func setupLostConnectionHandlerTestWithRealReconnectionManager(t *testing.T, isSuccessfulHttpPost bool) (RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
-	rmrMessengerMock := &mocks.RmrMessengerMock{}
-	rmrSender := initRmrSender(rmrMessengerMock, logger)
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	httpClientMock := &mocks.HttpClientMock{}
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClientMock)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tAssociationManager)
+	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	handler := NewRanLostConnectionHandler(logger, ranReconnectionManager)
 
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: e2tAddress}
@@ -87,10 +84,10 @@ func setupLostConnectionHandlerTestWithRealReconnectionManager(t *testing.T, isS
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
-	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList:[]string{ranName}}
+	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
 	e2tInstanceToSave := *e2tInstance
-	e2tInstanceToSave .AssociatedRanList = []string{}
+	e2tInstanceToSave.AssociatedRanList = []string{}
 	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
 	mockHttpClient(httpClientMock, isSuccessfulHttpPost)
 

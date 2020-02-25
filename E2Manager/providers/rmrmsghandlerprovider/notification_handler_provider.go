@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rmrmsghandlerprovider
 
 import (
@@ -69,7 +68,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager, e2tAssociationManager)
+	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
 	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
