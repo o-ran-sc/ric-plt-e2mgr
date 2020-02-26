@@ -68,7 +68,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
-	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager)
+	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
 	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
@@ -80,13 +80,13 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2SetupFailureResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupFailureResponseManager, nil, rmrCgo.RIC_X2_SETUP_FAILURE)
 	endcSetupResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_RESP)
 	endcSetupFailureResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupFailureResponseManager, nil, rmrCgo.RIC_ENDC_X2_SETUP_FAILURE)
-	ranLostConnectionHandler := rmrmsghandlers.NewRanLostConnectionHandler(logger, ranReconnectionManager)
+	ranLostConnectionHandler := rmrmsghandlers.NewRanLostConnectionHandler(logger, ranDisconnectionManager)
 	enbLoadInformationNotificationHandler := rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, enbLoadInformationExtractor)
 	x2EnbConfigurationUpdateHandler := rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)
 	endcConfigurationUpdateHandler := rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)
 	x2ResetResponseHandler := rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, x2ResetResponseExtractor)
 	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
-	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)
+	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManager, routingManagerClient)
 	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)

@@ -28,9 +28,6 @@ Library    Collections
 Library     REST      ${url}
 
 
-
-
-
 *** Test Cases ***
 
 Pre Condition for Connecting - no simu
@@ -50,12 +47,9 @@ Prepare Ran in Connecting connectionStatus
     #String   response body connectionStatus    CONNECTING
 
 
-
-Verfiy Disconnected ConnectionStatus
+Verify Disconnected ConnectionStatus
     Sleep    10s
     GET      /v1/nodeb/test1
     Integer  response status  200
     String   response body ranName    test1
     String   response body connectionStatus    DISCONNECTED
-    Integer   response body connectionAttempts    3
-
