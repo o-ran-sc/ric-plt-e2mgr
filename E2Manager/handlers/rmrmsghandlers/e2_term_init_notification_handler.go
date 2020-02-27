@@ -88,13 +88,6 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 		return
 	}
 
-	if e2tInstance.State == entities.RoutingManagerFailure {
-		err := h.e2tInstancesManager.SetE2tInstanceState(e2tAddress, e2tInstance.State, entities.Active)
-		if err != nil {
-			return
-		}
-	}
-
 	h.HandleExistingE2TInstance(e2tInstance)
 
 	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")

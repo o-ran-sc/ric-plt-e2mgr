@@ -371,7 +371,7 @@ func (m *E2TInstancesManager) ResetKeepAliveTimestamp(e2tAddress string) error {
 		return err
 	}
 
-	if e2tInstance.State == entities.ToBeDeleted || e2tInstance.State == entities.RoutingManagerFailure {
+	if e2tInstance.State == entities.ToBeDeleted {
 		m.logger.Warnf("#E2TInstancesManager.ResetKeepAliveTimestamp - Ignore. This Instance is about to be deleted")
 		return nil
 
