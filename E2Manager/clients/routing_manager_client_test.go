@@ -50,50 +50,38 @@ func initRoutingManagerClientTest(t *testing.T) (*RoutingManagerClient, *mocks.H
 func TestDeleteE2TInstanceSuccess(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	e2tToRansAssociations := map[string][]string{
-		E2TAddress2: {"test1"},
-	}
-	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, nil)
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + "e2t"
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
 	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusOK, Body: respBody}, nil)
-	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"})
 	assert.Nil(t, err)
 }
 
 func TestDeleteE2TInstanceFailure(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	e2tToRansAssociations := map[string][]string{
-		E2TAddress2: {"test1"},
-	}
-	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},nil)
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + "e2t"
 	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
 	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
-	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"})
 	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 
 func TestDeleteE2TInstanceDeleteFailure(t *testing.T) {
 	rmClient, httpClientMock, config := initRoutingManagerClientTest(t)
 
-	e2tToRansAssociations := map[string][]string{
-		E2TAddress2: {"test1"},
-	}
-	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"},nil)
 	marshaled, _ := json.Marshal(data)
 	body := bytes.NewBuffer(marshaled)
 	url := config.RoutingManager.BaseUrl + "e2t"
 	httpClientMock.On("Delete", url, "application/json", body).Return(&http.Response{}, errors.New("error"))
-	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"}, e2tToRansAssociations)
+	err := rmClient.DeleteE2TInstance(E2TAddress, []string{"test1"})
 	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
 }
 

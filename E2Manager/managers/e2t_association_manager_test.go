@@ -31,7 +31,6 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -285,43 +284,6 @@ func TestDissociateRanRoutingManagerError(t *testing.T) {
 	httpClientMock.AssertExpectations(t)
 }
 
-func TestRemoveE2tInstanceSuccess(t *testing.T) {
-	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress2, RanName), models.NewRoutingManagerE2TData(E2TAddress3, "test1")}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, nil, e2tDataList)
-	mockHttpClientDelete(httpClientMock, data, true)
-
-	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
-	e2tAddresses := []string{E2TAddress, E2TAddress2, E2TAddress3}
-	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
-	e2tAddressesNew := []string{E2TAddress2, E2TAddress3}
-	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
-
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress}
-	e2tInstance2 := &entities.E2TInstance{Address: E2TAddress2}
-	readerMock.On("GetE2TInstance", E2TAddress2).Return(e2tInstance2, nil)
-	e2tInstance3 := &entities.E2TInstance{Address: E2TAddress3}
-	readerMock.On("GetE2TInstance", E2TAddress3).Return(e2tInstance3, nil)
-
-	e2tInstance2updated := *e2tInstance2
-	e2tInstance2updated.AssociatedRanList = []string{RanName}
-	writerMock.On("SaveE2TInstance", &e2tInstance2updated).Return(nil)
-	e2tInstance3updated := *e2tInstance3
-	e2tInstance3updated.AssociatedRanList = []string{"test1"}
-	writerMock.On("SaveE2TInstance", &e2tInstance3updated).Return(nil)
-
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress2] = []string{RanName}
-	ranNamesToBeAssociated[E2TAddress3] = []string{"test1"}
-	err := manager.RemoveE2tInstance(e2tInstance1, nil, ranNamesToBeAssociated)
-
-	assert.Nil(t, err)
-	readerMock.AssertExpectations(t)
-	writerMock.AssertExpectations(t)
-	httpClientMock.AssertExpectations(t)
-}
-
 func TestRemoveE2tInstanceSuccessWithOrphans(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 
@@ -335,8 +297,8 @@ func TestRemoveE2tInstanceSuccessWithOrphans(t *testing.T) {
 	e2tAddressesNew := []string{}
 	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
 
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress}
-	err := manager.RemoveE2tInstance(e2tInstance1, ranNamesToBeDissociated, nil)
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:ranNamesToBeDissociated}
+	err := manager.RemoveE2tInstance(e2tInstance1)
 
 	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
@@ -347,63 +309,20 @@ func TestRemoveE2tInstanceSuccessWithOrphans(t *testing.T) {
 func TestRemoveE2tInstanceFailureRoutingManager(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, nil)
 	mockHttpClientDelete(httpClientMock, data, false)
 
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
-	e2tInstance1.State = entities.Active
-	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
-	e2tInstance2 := *e2tInstance1
-	e2tInstance2.State = entities.RoutingManagerFailure
-	writerMock.On("SaveE2TInstance", &e2tInstance2).Return(nil)
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress] = []string{"test"}
-	err := manager.RemoveE2tInstance(e2tInstance1, []string{"test1"}, ranNamesToBeAssociated)
+	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
+	e2tAddresses := []string{E2TAddress}
+	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
+	e2tAddressesNew := []string{}
+	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
 
-	assert.NotNil(t, err)
-	readerMock.AssertExpectations(t)
-	writerMock.AssertExpectations(t)
-	httpClientMock.AssertExpectations(t)
-}
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:[]string{"test1"}}
+	//readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, e2managererrors.NewRnibDbError())
+	err := manager.RemoveE2tInstance(e2tInstance1)
 
-func TestRemoveE2tInstanceFailureRoutingManagerAndGetInstance(t *testing.T) {
-	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, e2tDataList)
-	mockHttpClientDelete(httpClientMock, data, false)
-
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress}
-	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, e2managererrors.NewRnibDbError())
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress] = []string{"test"}
-	err := manager.RemoveE2tInstance(e2tInstance1, []string{"test1"}, ranNamesToBeAssociated)
-
-	assert.NotNil(t, err)
-	readerMock.AssertExpectations(t)
-	writerMock.AssertExpectations(t)
-	httpClientMock.AssertExpectations(t)
-}
-
-func TestRemoveE2tInstanceFailureRoutingManagerAndSetInstanceState(t *testing.T) {
-	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
-
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, e2tDataList)
-	mockHttpClientDelete(httpClientMock, data, false)
-
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
-	e2tInstance1.State = entities.Active
-	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, nil)
-	e2tInstance2 := *e2tInstance1
-	e2tInstance2.State = entities.RoutingManagerFailure
-	writerMock.On("SaveE2TInstance", &e2tInstance2).Return(e2managererrors.NewRnibDbError())
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress] = []string{"test"}
-	err := manager.RemoveE2tInstance(e2tInstance1, []string{"test1"}, ranNamesToBeAssociated)
-
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
@@ -411,8 +330,7 @@ func TestRemoveE2tInstanceFailureRoutingManagerAndSetInstanceState(t *testing.T)
 
 func TestRemoveE2tInstanceFailureInE2TInstanceManager(t *testing.T) {
 
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress, RanName)}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1"}, nil)
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 	mockHttpClientDelete(httpClientMock, data, true)
 
@@ -420,10 +338,8 @@ func TestRemoveE2tInstanceFailureInE2TInstanceManager(t *testing.T) {
 	var e2tAddresses []string
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, e2managererrors.NewRnibDbError())
 
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress] = []string{"test"}
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress}
-	err := manager.RemoveE2tInstance(e2tInstance1, []string{"test1"}, ranNamesToBeAssociated)
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:[]string{"test1"}}
+	err := manager.RemoveE2tInstance(e2tInstance1)
 
 	assert.NotNil(t, err)
 	readerMock.AssertExpectations(t)
@@ -434,8 +350,7 @@ func TestRemoveE2tInstanceFailureInE2TInstanceManager(t *testing.T) {
 func TestRemoveE2tInstanceFailureInE2tInstanceAddRansToInstance(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 
-	e2tDataList := models.RoutingManagerE2TDataList{models.NewRoutingManagerE2TData(E2TAddress2, RanName), models.NewRoutingManagerE2TData(E2TAddress3, "test1")}
-	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, nil, e2tDataList)
+	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, nil, nil)
 	mockHttpClientDelete(httpClientMock, data, true)
 
 	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
@@ -444,17 +359,10 @@ func TestRemoveE2tInstanceFailureInE2tInstanceAddRansToInstance(t *testing.T) {
 	e2tAddressesNew := []string{E2TAddress2, E2TAddress3}
 	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
 
-	var e2tInstance2 *entities.E2TInstance
-	readerMock.On("GetE2TInstance", mock.Anything).Return(e2tInstance2, e2managererrors.NewRnibDbError())
-
-	ranNamesToBeAssociated := make(map[string][]string)
-	ranNamesToBeAssociated[E2TAddress2] = []string{RanName}
-	ranNamesToBeAssociated[E2TAddress3] = []string{"test1"}
-
 	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress}
-	err := manager.RemoveE2tInstance(e2tInstance1, nil, ranNamesToBeAssociated)
+	err := manager.RemoveE2tInstance(e2tInstance1)
 
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
