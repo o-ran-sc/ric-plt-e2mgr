@@ -71,7 +71,7 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 	err = m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 
 	if err != nil {
-		return err;
+		return err
 	}
 
 	e2tAddress := nodebInfo.AssociatedE2TInstanceAddress
