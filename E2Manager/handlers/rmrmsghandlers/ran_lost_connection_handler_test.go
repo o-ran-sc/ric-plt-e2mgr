@@ -60,7 +60,7 @@ func TestLostConnectionHandlerFailure(t *testing.T) {
 	ranDisconnectionManagerMock.AssertCalled(t, "DisconnectRan", ranName)
 }
 
-func setupLostConnectionHandlerTestWithRealReconnectionManager(t *testing.T, isSuccessfulHttpPost bool) (RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
+func setupLostConnectionHandlerTestWithRealDisconnectionManager(t *testing.T, isSuccessfulHttpPost bool) (RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
@@ -74,7 +74,7 @@ func setupLostConnectionHandlerTestWithRealReconnectionManager(t *testing.T, isS
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	handler := NewRanLostConnectionHandler(logger, ranDisconnectionManager)
 
-	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 20, AssociatedE2TInstanceAddress: e2tAddress}
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: e2tAddress}
 	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
@@ -108,8 +108,8 @@ func mockHttpClient(httpClientMock *mocks.HttpClientMock, isSuccessful bool) {
 	httpClientMock.On("Post", clients.DissociateRanE2TInstanceApiSuffix, "application/json", body).Return(&http.Response{StatusCode: respStatusCode, Body: respBody}, nil)
 }
 
-func TestLostConnectionHandlerFailureWithRealReconnectionManager(t *testing.T) {
-	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealReconnectionManager(t, false)
+func TestLostConnectionHandlerFailureWithRealDisconnectionManager(t *testing.T) {
+	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealDisconnectionManager(t, false)
 
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	handler.Handle(&notificationRequest)
@@ -120,8 +120,8 @@ func TestLostConnectionHandlerFailureWithRealReconnectionManager(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 }
 
-func TestLostConnectionHandlerSuccessWithRealReconnectionManager(t *testing.T) {
-	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealReconnectionManager(t, true)
+func TestLostConnectionHandlerSuccessWithRealDisconnectionManager(t *testing.T) {
+	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealDisconnectionManager(t, true)
 
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	handler.Handle(&notificationRequest)

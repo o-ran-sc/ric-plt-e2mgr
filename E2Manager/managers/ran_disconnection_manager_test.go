@@ -57,7 +57,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	return logger, rmrMessengerMock, readerMock, writerMock, ranDisconnectionManager, httpClient
 }
 
-func TestRanReconnectionGetNodebFailure(t *testing.T) {
+func TestRanDisconnectionGetNodebFailure(t *testing.T) {
 	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
 
 	var nodebInfo *entities.NodebInfo
@@ -68,7 +68,7 @@ func TestRanReconnectionGetNodebFailure(t *testing.T) {
 	writerMock.AssertNotCalled(t, "UpdateNodebInfo")
 }
 
-func TestShutdownRanReconnection(t *testing.T) {
+func TestShutdownRan(t *testing.T) {
 	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
 
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
@@ -80,7 +80,7 @@ func TestShutdownRanReconnection(t *testing.T) {
 	writerMock.AssertNotCalled(t, "UpdateNodebInfo")
 }
 
-func TestShuttingdownRanReconnection(t *testing.T) {
+func TestShuttingdownRan(t *testing.T) {
 	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
 
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
@@ -95,7 +95,37 @@ func TestShuttingdownRanReconnection(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
-func TestConnectingRanDissociateSucceeds(t *testing.T) {
+func TestShuttingDownRanUpdateNodebInfoFailure(t *testing.T) {
+	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
+
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo := *origNodebInfo
+	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	err := ranDisconnectionManager.DisconnectRan(ranName)
+	assert.NotNil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+}
+
+func TestConnectingRanUpdateNodebInfoFailure(t *testing.T) {
+	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
+
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo := *origNodebInfo
+	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	err := ranDisconnectionManager.DisconnectRan(ranName)
+	assert.NotNil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+}
+
+func TestConnectingRanDisconnectSucceeds(t *testing.T) {
 	_, _, readerMock, writerMock, ranDisconnectionManager, httpClient := initRanLostConnectionTest(t)
 
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: E2TAddress}
@@ -120,7 +150,32 @@ func TestConnectingRanDissociateSucceeds(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 }
 
-func TestConnectingRanDissociateFails(t *testing.T) {
+func TestConnectingRanDissociateFailsRmError(t *testing.T) {
+	_, _, readerMock, writerMock, ranDisconnectionManager, httpClient := initRanLostConnectionTest(t)
+
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: E2TAddress}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{ranName}}
+	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
+	e2tInstanceToSave := * e2tInstance
+	e2tInstanceToSave.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
+	mockHttpClient(httpClient, clients.DissociateRanE2TInstanceApiSuffix, false)
+	err := ranDisconnectionManager.DisconnectRan(ranName)
+	assert.Nil(t, err)
+	readerMock.AssertCalled(t, "GetNodeb", ranName)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
+}
+
+func TestConnectingRanDissociateFailsDbError(t *testing.T) {
 	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
 
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: e2tAddress}
@@ -140,36 +195,6 @@ func TestConnectingRanDissociateFails(t *testing.T) {
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 	writerMock.AssertNotCalled(t, "SaveE2TInstance", )
-}
-
-func TestShuttingDownRanUpdateNodebInfoFailure(t *testing.T) {
-	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
-
-	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
-	var rnibErr error
-	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
-	updatedNodebInfo := *origNodebInfo
-	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
-	err := ranDisconnectionManager.DisconnectRan(ranName)
-	assert.NotNil(t, err)
-	readerMock.AssertCalled(t, "GetNodeb", ranName)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
-}
-
-func TestRanDisconnectedUpdateNodebInfoFailure(t *testing.T) {
-	_, _, readerMock, writerMock, ranDisconnectionManager, _ := initRanLostConnectionTest(t)
-
-	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING}
-	var rnibErr error
-	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
-	updatedNodebInfo := *origNodebInfo
-	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
-	err := ranDisconnectionManager.DisconnectRan(ranName)
-	assert.NotNil(t, err)
-	readerMock.AssertCalled(t, "GetNodeb", ranName)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
 }
 
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {

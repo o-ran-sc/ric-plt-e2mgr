@@ -64,6 +64,8 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 		return nil
 	}
 
+	nodebInfo.ConnectionAttempts = 0;
+
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
 		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}

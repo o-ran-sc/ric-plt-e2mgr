@@ -31,16 +31,22 @@ Library     REST      ${url}
 
 *** Test Cases ***
 
-Pre Condition for Connecting - no simu
-    Run And Return Rc And Output    ${stop_simu}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+prepare logs for tests
+    Remove log files
+    Save logs
 
 
-Setup Ran
-    Sleep  1s
+Setup Ran and verify it's CONNECTED and associated
     Post Request setup node b x-2
-    Integer     response status       204
+    Integer  response status       204
+    Get Request node b enb test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTED
+    String   response body associatedE2tInstanceAddress     e2t.att.com:38000
+
+Restart simulator
+   Restart simulator
 
 Verify connection status is DISCONNECTED and RAN is not associated with E2T instance
     Sleep    5s
