@@ -81,7 +81,6 @@ Stop E2T
 prepare logs for tests
     Remove log files
     Save logs
-    Sleep  3s
 
 Verify Is Dead Message Printed
     ${result}    find_error_script.find_error     ${EXECDIR}    ${e2mgr_log_filename}  ${e2_is_dead_message_printed}

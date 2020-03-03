@@ -98,9 +98,7 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
 		if err := h.ranDisconnectionManager.DisconnectRan(ranName); err != nil {
-			h.logger.Errorf("#E2TermInitNotificationHandler.HandleExistingE2TInstance - Ran name: %s - connection attempt failure, error: %s", ranName, err)
-			_, ok := err.(*common.ResourceNotFoundError)
-			if !ok {
+			if _, ok := err.(*common.ResourceNotFoundError); !ok{
 				break
 			}
 		}
