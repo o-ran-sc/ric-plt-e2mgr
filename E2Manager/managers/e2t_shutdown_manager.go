@@ -79,7 +79,7 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 	}
 
 
-	m.logger.Infof("#E2TShutdownManager.Shutdown - E2T %s was sutdown successfully.", e2tInstance.Address)
+	m.logger.Infof("#E2TShutdownManager.Shutdown - E2T %s was shutdown successfully.", e2tInstance.Address)
 	return nil
 }
 
