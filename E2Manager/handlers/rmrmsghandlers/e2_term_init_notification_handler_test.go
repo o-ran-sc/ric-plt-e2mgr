@@ -42,7 +42,6 @@ import (
 	"testing"
 )
 
-const e2tInstanceAddress = "10.0.2.15"
 const e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
 
 func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.E2TInstancesManagerMock, *mocks.RoutingManagerClientMock) {
@@ -96,7 +95,7 @@ func TestE2TermInitUnmarshalPayloadFailure(t *testing.T) {
 }
 
 func TestE2TermInitEmptyE2TAddress(t *testing.T) {
-	_, handler, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	_, handler, _, _, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte("{\"address\":\"\"}")}
 	handler.Handle(notificationRequest)
 	e2tInstancesManagerMock.AssertNotCalled(t, "GetE2TInstance")
@@ -104,7 +103,7 @@ func TestE2TermInitEmptyE2TAddress(t *testing.T) {
 }
 
 func TestE2TermInitGetE2TInstanceFailure(t *testing.T) {
-	_, handler, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	_, handler, _, _, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	var e2tInstance *entities.E2TInstance
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewInternalError(fmt.Errorf("internal error")))
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
@@ -163,7 +162,7 @@ func TestE2TermInitNewE2TInstance__RoutingManagerError(t *testing.T) {
 }
 
 func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
-	_, handler, _, _, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	_, handler, _, _, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
@@ -239,7 +238,7 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
-	_, _, handler, readerMock, writerMock,_ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var rnibErr error
 
 	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -259,7 +258,7 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
-	_, _, handler, readerMock, writerMock, httpClientMock:= initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var rnibErr error
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -298,7 +297,6 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 
 	var updatedDisconnectedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", updatedDisconnectedFirstRan).Return(rnibErr)
-
 
 	//Second RAN
 	var secondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -433,7 +431,7 @@ func TestE2TermInitHandlerSuccessTwoRansFirstRnibInternalErrorFailure(t *testing
 }
 
 func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
-	_, handler, _, writerMock, e2tInstancesManagerMock, _  := initRanLostConnectionTest(t)
+	_, handler, _, writerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
