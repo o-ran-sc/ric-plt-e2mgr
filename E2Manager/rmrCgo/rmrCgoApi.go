@@ -20,7 +20,7 @@
 
 package rmrCgo
 
-// #cgo LDFLAGS: -L/usr/local/lib -lrmr_nng -lnng
+// #cgo LDFLAGS: -L/usr/local/lib -lrmr_si
 // #include <rmr/rmr.h>
 // #include <stdlib.h>
 import "C"

@@ -20,7 +20,7 @@
 
 package rmrCgo
 
-// #cgo LDFLAGS: -L/usr/local/lib -lrmr_nng -lnng
+// #cgo LDFLAGS: -L/usr/local/lib -lrmr_si
 // #include <rmr/rmr.h>
 // #include <rmr/RIC_message_types.h>
 // #include <stdlib.h>

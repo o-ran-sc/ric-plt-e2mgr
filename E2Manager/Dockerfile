@@ -27,10 +27,10 @@ COPY . .
 ENV PATH=$PATH:/usr/local/go/bin:/usr/lib/go-1.12/bin
 #RUN git clone https://gerrit.o-ran-sc.org/r/ric-plt/lib/rmr && cd rmr/; mkdir build; cd build; /opt/bin/cmake -DDEV_PKG=1 ..; make install
 # Install RMr library and dev files
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_3.3.0_amd64.deb/download.deb
-RUN dpkg -i rmr_3.3.0_amd64.deb
-RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_3.3.0_amd64.deb/download.deb
-RUN dpkg -i rmr-dev_3.3.0_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr_3.5.1_amd64.deb/download.deb
+RUN dpkg -i rmr_3.5.1_amd64.deb
+RUN wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/rmr-dev_3.5.1_amd64.deb/download.deb
+RUN dpkg -i rmr-dev_3.5.1_amd64.deb
 
 RUN cd 3rdparty/asn1codec && make
 RUN go build app/main.go
@@ -60,8 +60,8 @@ COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
 COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
 COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
 COPY --from=ubuntu /opt/E2Manager/resources/rmr.verbose /tmp/rmr.verbose
-COPY --from=ubuntu /usr/local/lib/librmr_nng.so.1 /usr/local/lib/librmr_nng.so.1
-COPY --from=ubuntu /usr/local/lib/libnng.so.1 /usr/local/lib/libnng.so.1
+COPY --from=ubuntu /usr/local/lib/librmr_si.so.3 /usr/local/lib/librmr_si.so.3
+
 WORKDIR /opt/E2Manager
 ENV LD_LIBRARY_PATH=/usr/local/lib \
     port=3800 
