@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef848435_c3d1b755",
+        "filename": "E2Manager/build-e2mgr-ubuntu.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000014
+      },
+      "writtenOn": "2020-03-13T13:58:35Z",
+      "side": 1,
+      "message": "Please use the approach that the e2mgr team demonstrated:\n\n0) install tool go-acc\n\n    go get -v github.com/ory/go-acc\n\n1) build the source:\n\n    go build -v your-main-module.go\n\n2) run the tests with the test tool:\n\n    go-acc $(go list ./... | grep -vE \u0027(/mocks|/tests|/e2managererrors|/enums)\u0027 )",
+      "revId": "b23d04b0a9b31a525ecb3a55dacb6c22008339e1",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
