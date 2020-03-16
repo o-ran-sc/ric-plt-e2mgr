@@ -26,6 +26,7 @@ WORKDIR /opt/E2Manager
 COPY . . 
 
 # Install dependencies, compile and test the module
+RUN apt-get install -y sudo
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
