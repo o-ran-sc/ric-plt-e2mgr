@@ -59,14 +59,14 @@ func initE2TKeepAliveTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibRea
 func TestSendKeepAliveRequest(t *testing.T) {
 	rmrMessengerMock, _, _, _, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
-	rmrMessengerMock.On("SendMsg", mock.Anything, false).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, nil)
 
 	e2tKeepAliveWorker.SendKeepAliveRequest()
 
 	var payload, xAction []byte
 	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction)
 
-	rmrMessengerMock.AssertCalled(t, "SendMsg", req, false)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", req, true)
 }
 
 func TestShutdownExpiredE2T_InternalError(t *testing.T) {
@@ -188,7 +188,7 @@ func TestExecute_Two_E2TExpired(t *testing.T) {
 	readerMock.On("GetE2TAddresses").Return(addresses, nil)
 	readerMock.On("GetE2TInstances",addresses).Return([]*entities.E2TInstance{e2tInstance1}, nil)
 	e2tShutdownManagerMock.On("Shutdown", e2tInstance1).Return(nil)
-	rmrMessengerMock.On("SendMsg", mock.Anything, false).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, nil)
 
 	go e2tKeepAliveWorker.Execute()
 
@@ -197,6 +197,6 @@ func TestExecute_Two_E2TExpired(t *testing.T) {
 	var payload, xAction []byte
 	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction)
 
-	rmrMessengerMock.AssertCalled(t, "SendMsg", req, false)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", req, true)
 	e2tShutdownManagerMock.AssertCalled(t, "Shutdown", e2tInstance1)
 }
