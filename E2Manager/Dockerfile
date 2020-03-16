@@ -23,9 +23,10 @@
 FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:3-u16.04-nng as ubuntu
 
 WORKDIR /opt/E2Manager
-COPY . . 
+COPY . .
 
 # Install dependencies, compile and test the module
+RUN apt-get install -y sudo
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
@@ -36,7 +37,7 @@ RUN apt-get update && apt-get install -y \
   iputils-ping \
   curl \
   tcpdump
-  
+
 COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
 COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
 COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
@@ -45,7 +46,7 @@ COPY --from=ubuntu /usr/local/lib/librmr_nng.so.1 /usr/local/lib/librmr_nng.so.1
 COPY --from=ubuntu /usr/local/lib/libnng.so.1 /usr/local/lib/libnng.so.1
 WORKDIR /opt/E2Manager
 ENV LD_LIBRARY_PATH=/usr/local/lib \
-    port=3800 
+    port=3800
 ENV RMR_SEED_RT=router.txt
 ENV RMR_VCTL_FILE=/tmp/rmr.verbose
 EXPOSE 3800
