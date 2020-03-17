@@ -23,39 +23,39 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Library     ../Scripts/e2mdbscripts.py
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
 
 
-
-
-
 *** Test Cases ***
 
-Pre Condition for Connecting - no simu
-    Run And Return Rc And Output    ${stop_simu}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+prepare logs for tests
+    Remove log files
+    Save logs
 
 
-Prepare Ran in Connecting connectionStatus
-    Sleep  1s
+Setup Ran and verify it's CONNECTED and associated
     Post Request setup node b x-2
-    Integer     response status       204
-    Sleep  1s
+    Integer  response status       204
+    Get Request node b enb test1
+    Integer  response status  200
+    String   response body ranName    test1
+    String   response body connectionStatus    CONNECTED
+    String   response body associatedE2tInstanceAddress     e2t.att.com:38000
+
+Restart simulator
+   Restart simulator
+
+Verify connection status is DISCONNECTED and RAN is not associated with E2T instance
+    Sleep    5s
     GET      /v1/nodeb/test1
     Integer  response status  200
     String   response body ranName    test1
-    #String   response body connectionStatus    CONNECTING
-
-
-
-Verfiy Disconnected ConnectionStatus
-    Sleep    10s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
+    Missing  response body associatedE2tInstanceAddress
     String   response body connectionStatus    DISCONNECTED
-    Integer   response body connectionAttempts    3
 
+Verify E2T instance is NOT associated with RAN
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test1    e2t.att.com:38000
+   Should Be True    ${result} == False

@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rmrmsghandlerprovider
 
 import (
@@ -69,7 +68,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, config, rnibDataService, ranSetupManager, e2tAssociationManager)
+	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
 	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)
@@ -89,6 +88,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
 	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)
 	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
+	e2SetupRequestNotificationHandler := rmrmsghandlers.NewE2SetupRequestNotificationHandler(logger, e2tInstancesManager, rmrSender, rnibDataService, e2tAssociationManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
 	provider.Register(rmrCgo.RIC_X2_SETUP_FAILURE, x2SetupFailureResponseHandler)
@@ -102,4 +102,5 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	provider.Register(rmrCgo.RIC_X2_RESET, x2ResetRequestNotificationHandler)
 	provider.Register(rmrCgo.RIC_E2_TERM_INIT, e2TermInitNotificationHandler)
 	provider.Register(rmrCgo.E2_TERM_KEEP_ALIVE_RESP, e2TKeepAliveResponseHandler)
+	provider.Register(rmrCgo.RIC_E2_SETUP_REQ, e2SetupRequestNotificationHandler)
 }

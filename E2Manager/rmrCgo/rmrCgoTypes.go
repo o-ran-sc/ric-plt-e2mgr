@@ -20,7 +20,7 @@
 
 package rmrCgo
 
-// #cgo LDFLAGS: -L/usr/local/lib -lrmr_nng -lnng
+// #cgo LDFLAGS: -L/usr/local/lib -lrmr_si
 // #include <rmr/rmr.h>
 // #include <rmr/RIC_message_types.h>
 // #include <stdlib.h>
@@ -76,6 +76,9 @@ const (
 	RAN_RECONFIGURED					 = C.RAN_RECONFIGURED
 	E2_TERM_KEEP_ALIVE_REQ				 = C.E2_TERM_KEEP_ALIVE_REQ
 	E2_TERM_KEEP_ALIVE_RESP				 = C.E2_TERM_KEEP_ALIVE_RESP
+	RIC_E2_SETUP_REQ					 = C.RIC_E2_SETUP_REQ
+	RIC_E2_SETUP_RESP                    = C.RIC_E2_SETUP_RESP
+	RIC_E2_SETUP_FAILURE                 = C.RIC_E2_SETUP_FAILURE
 )
 
 const (

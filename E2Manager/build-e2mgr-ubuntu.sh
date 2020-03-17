@@ -49,11 +49,11 @@ git clone https://github.com/nanomsg/nng.git \
     && rm -r nng
 
 # Install RMR from deb packages at packagecloud.io
-rmr=rmr_1.13.0_amd64.deb
+rmr=rmr_3.5.1_amd64.deb
 wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmr/download.deb
 dpkg -i $rmr
 rm $rmr
-rmrdev=rmr-dev_1.13.0_amd64.deb
+rmrdev=rmr-dev_3.5.1_amd64.deb
 wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmrdev/download.deb
 dpkg -i $rmrdev
 rm $rmrdev

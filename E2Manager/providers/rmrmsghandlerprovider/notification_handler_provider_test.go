@@ -64,7 +64,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 
 	logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient, e2tAssociationManager := initTestCase(t)
 
-	ranReconnectionManager := managers.NewRanReconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tAssociationManager)
+	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -89,11 +89,11 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, x2SetupFailureResponseManager, ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_FAILURE)},
 		{rmrCgo.RIC_ENDC_X2_SETUP_RESP, rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_RESP)},
 		{rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupFailureResponseManager, ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_FAILURE),},
-		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE, rmrmsghandlers.NewRanLostConnectionHandler(logger, ranReconnectionManager)},
+		{rmrCgo.RIC_SCTP_CONNECTION_FAILURE, rmrmsghandlers.NewRanLostConnectionHandler(logger, ranDisconnectionManager)},
 		{rmrCgo.RIC_ENB_LOAD_INFORMATION, rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, converters.NewEnbLoadInformationExtractor(logger))},
 		{rmrCgo.RIC_ENB_CONF_UPDATE, rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)},
 		{rmrCgo.RIC_ENDC_CONF_UPDATE, rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)},
-		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)},
+		{rmrCgo.RIC_E2_TERM_INIT, rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManager, routingManagerClient)},
 		{rmrCgo.E2_TERM_KEEP_ALIVE_RESP, rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)},
 		{rmrCgo.RIC_X2_RESET_RESP, rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger))},
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},

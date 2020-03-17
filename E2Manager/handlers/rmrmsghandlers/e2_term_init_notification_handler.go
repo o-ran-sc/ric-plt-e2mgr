@@ -31,18 +31,18 @@ import (
 )
 
 type E2TermInitNotificationHandler struct {
-	logger                 *logger.Logger
-	ranReconnectionManager *managers.RanReconnectionManager
-	e2tInstancesManager    managers.IE2TInstancesManager
-	routingManagerClient   clients.IRoutingManagerClient
+	logger                  *logger.Logger
+	ranDisconnectionManager *managers.RanDisconnectionManager
+	e2tInstancesManager     managers.IE2TInstancesManager
+	routingManagerClient    clients.IRoutingManagerClient
 }
 
-func NewE2TermInitNotificationHandler(logger *logger.Logger, ranReconnectionManager *managers.RanReconnectionManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
+func NewE2TermInitNotificationHandler(logger *logger.Logger, ranDisconnectionManager *managers.RanDisconnectionManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient) E2TermInitNotificationHandler {
 	return E2TermInitNotificationHandler{
-		logger:                 logger,
-		ranReconnectionManager: ranReconnectionManager,
-		e2tInstancesManager:    e2tInstancesManager,
-		routingManagerClient:   routingManagerClient,
+		logger:                  logger,
+		ranDisconnectionManager: ranDisconnectionManager,
+		e2tInstancesManager:     e2tInstancesManager,
+		routingManagerClient:    routingManagerClient,
 	}
 }
 
@@ -88,13 +88,6 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 		return
 	}
 
-	if e2tInstance.State == entities.RoutingManagerFailure {
-		err := h.e2tInstancesManager.SetE2tInstanceState(e2tAddress, e2tInstance.State, entities.Active)
-		if err != nil {
-			return
-		}
-	}
-
 	h.HandleExistingE2TInstance(e2tInstance)
 
 	h.logger.Infof("#E2TermInitNotificationHandler.Handle - Completed handling of E2_TERM_INIT")
@@ -104,10 +97,8 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
-		if err := h.ranReconnectionManager.ReconnectRan(ranName); err != nil {
-			h.logger.Errorf("#E2TermInitNotificationHandler.HandleExistingE2TInstance - Ran name: %s - connection attempt failure, error: %s", ranName, err)
-			_, ok := err.(*common.ResourceNotFoundError)
-			if !ok {
+		if err := h.ranDisconnectionManager.DisconnectRan(ranName); err != nil {
+			if _, ok := err.(*common.ResourceNotFoundError); !ok{
 				break
 			}
 		}

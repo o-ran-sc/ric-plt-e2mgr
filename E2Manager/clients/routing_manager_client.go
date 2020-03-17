@@ -47,7 +47,7 @@ type IRoutingManagerClient interface {
 	AssociateRanToE2TInstance(e2tAddress string, ranName string) error
 	DissociateRanE2TInstance(e2tAddress string, ranName string) error
 	DissociateAllRans(e2tAddresses []string) error
-	DeleteE2TInstance(e2tAddress string, ransToBeDissociated []string, e2tToRansAssociations map[string][]string) error
+	DeleteE2TInstance(e2tAddress string, ransToBeDissociated []string) error
 }
 
 func NewRoutingManagerClient(logger *logger.Logger, config *configuration.Configuration, httpClient IHttpClient) *RoutingManagerClient {
@@ -90,9 +90,8 @@ func (c *RoutingManagerClient) DissociateAllRans(e2tAddresses []string) error {
 	return c.PostMessage(url, data)
 }
 
-func (c *RoutingManagerClient) DeleteE2TInstance(e2tAddress string, ransTobeDissociated []string, e2tToRansAssociations map[string][]string) error {
-	e2tDataList := convertE2TToRansAssociationsMapToE2TDataList(e2tToRansAssociations)
-	data := models.NewRoutingManagerDeleteRequestModel(e2tAddress, ransTobeDissociated, e2tDataList)
+func (c *RoutingManagerClient) DeleteE2TInstance(e2tAddress string, ransTobeDissociated []string) error {
+	data := models.NewRoutingManagerDeleteRequestModel(e2tAddress, ransTobeDissociated, nil)
 	url := c.config.RoutingManager.BaseUrl + DeleteE2TInstanceApiSuffix
 	return c.DeleteMessage(url, data)
 }
