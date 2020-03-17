@@ -20,42 +20,24 @@
 # Installs libraries and builds E2 manager
 # Prerequisites:
 #   Debian distro; e.g., Ubuntu
-#   cmake (version?)
-#   gcc/g++ compiler (version?)
-#   golang (go), tested with version 1.12.0
+#   NNG shared library
+#   golang (go); tested with version 1.12
 #   current working directory is E2Manager
 #   running with sudo privs, which is default in Docker
-
-# TODO:
-# 1) drop go from $PATH when build minion is extended
-# 2) drop rewrite of path prefix when SonarScanner is extended
 
 # Stop at first error and be verbose
 set -eux
 
 echo "--> e2mgr-build-ubuntu.sh"
 
-# Build and install NNG, which requires ninja
-apt-get install ninja-build
-git clone https://github.com/nanomsg/nng.git \
-    && cd nng \
-    && git checkout e618abf8f3db2a94269a79c8901a51148d48fcc2 \
-    && mkdir build \
-    && cd build \
-    && cmake -DBUILD_SHARED_LIBS=1 -G Ninja .. \
-    && ninja \
-    && ninja install \
-    && cd ../.. \
-    && rm -r nng
-
 # Install RMR from deb packages at packagecloud.io
 rmr=rmr_3.5.1_amd64.deb
 wget --content-disposition  https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmr/download.deb
-dpkg -i $rmr
+sudo dpkg -i $rmr
 rm $rmr
 rmrdev=rmr-dev_3.5.1_amd64.deb
 wget --content-disposition https://packagecloud.io/o-ran-sc/staging/packages/debian/stretch/$rmrdev/download.deb
-dpkg -i $rmrdev
+sudo dpkg -i $rmrdev
 rm $rmrdev
 
 # required to find nng and rmr libs
@@ -75,11 +57,16 @@ cd 3rdparty/asn1codec \
 go build -v app/main.go
 
 # Execute UT and measure coverage
-# cgocheck=2 enables expensive checks that should not miss any errors, but will cause your program to run slower.
-# clobberfree=1 causes the garbage collector to clobber the memory content of an object with bad content when it frees the object.
-# gcstoptheworld=1 disables concurrent garbage collection, making every garbage collection a stop-the-world event.
-# Setting gcstoptheworld=2 also disables concurrent sweeping after the garbage collection finishes.
-# Setting allocfreetrace=1 causes every allocation to be profiled and a stack trace printed on each object's allocation and free.
+# cgocheck=2 enables expensive checks that should not miss any errors,
+# but will cause your program to run slower.
+# clobberfree=1 causes the garbage collector to clobber the memory content
+# of an object with bad content when it frees the object.
+# gcstoptheworld=1 disables concurrent garbage collection, making every
+# garbage collection a stop-the-world event.
+# Setting gcstoptheworld=2 also disables concurrent sweeping after the
+# garbage collection finishes.
+# Setting allocfreetrace=1 causes every allocation to be profiled and a
+# stack trace printed on each object's allocation and free.
 export GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
 export RIC_ID="bbbccc-abcd0e/20"
 # Static route table is provided in git repo
@@ -88,6 +75,7 @@ export RMR_SEED_RT=$(pwd)/router_test.txt
 # SonarCloud accepts the text format
 go-acc $(go list ./... | grep -vE '(/mocks|/tests|/e2managererrors|/enums)' )
 
+# TODO: drop rewrite of path prefix when SonarScanner is extended
 # rewrite the module name to a directory name in the coverage report
 # https://jira.sonarsource.com/browse/SONARSLANG-450
 sed -i -e 's/^e2mgr/E2Manager/' coverage.txt
