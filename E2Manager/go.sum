@@ -1,10 +1,10 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.29 h1:T0ydbEy2pmP2n8A/eyx5iF5PNm0XYa3A5G5HmXsN0Wo=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.29/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.29 h1:H/6CeGFUwS4S1DJ2OVwjt/qKmm/VTdgcgHcxBJfrQt4=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.29/go.mod h1:Fh23KkroYw5CRBh39WzZzxpKSkpQWL3scdzGnMngLo8=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.29 h1:eke+zU8y2gQmEBxAQryBXwBWwvXSHeu+pC11t8luQBQ=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.29/go.mod h1:EPOJ7YGXDS5F+IK1pa9cv2JYlj73PYOXVvgolhhCSfM=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.32 h1:rth8ETFAQxKd5LzB/j8Xic5gDU/NQ4K9LBioBXBMMb4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.32/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.32 h1:9xffoKE1Y4FR6KzncK/FhjbljoshPT90kDSeU78H6G8=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.32/go.mod h1:G+4sUBMbLfQ+RrGS65U15tKmbnP+/1b5oLTPmMfyfT4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.32 h1:TSpWWIccJhSyvqBibXQFgyP13KqhsFA14auTSqvEpz0=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.32/go.mod h1:oPHTwdTeaOEuvqVRAog9WoCTW7O6ynE6rOyFB/sp9C0=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2 h1:UK7awyRKIkVdokWvvkYvazlg3EWIfMnIqCcJxTnLlDA=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
@@ -50,8 +50,8 @@ github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfb
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
-github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
-github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/golang/protobuf v1.3.4 h1:87PNWwrRvUSnqS4dlcBU/ftvOIBep4sYuBLlh6rX2wk=
+github.com/golang/protobuf v1.3.4/go.mod h1:vzj43D7+SQXF/4pzW/hwtAqwc6iTitCiVSaWz5lYuqw=
 github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/gorilla/mux v1.7.0 h1:tOSd0UKHQd6urX6ApfOn4XdBMY6Sh1MfxV3kmaazO+U=

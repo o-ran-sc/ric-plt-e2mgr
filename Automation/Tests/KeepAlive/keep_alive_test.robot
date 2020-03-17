@@ -54,9 +54,9 @@ X2 - Get Nodeb
     String   response body enb servedCells 0 choiceEutraMode fdd ulTransmissionBandwidth   BW50
     String   response body enb servedCells 0 choiceEutraMode fdd dlTransmissionBandwidth   BW50
 
-#prepare logs for tests
-#    Remove log files
-#    Save logs
+prepare logs for tests
+    Remove log files
+    Save logs
 
 X2 - RAN Connected message going to be sent
     ${result}    find_rmr_message.verify_logs     ${EXECDIR}   ${e2mgr_log_filename}  ${RAN_CONNECTED_message_type}    ${Meid_test1}
