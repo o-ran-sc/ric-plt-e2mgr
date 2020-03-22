@@ -51,6 +51,7 @@ export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
 go get -v github.com/ory/go-acc
 
 cd 3rdparty/asn1codec \
+    && make clobber \
     && make \
     && cd ../..
 

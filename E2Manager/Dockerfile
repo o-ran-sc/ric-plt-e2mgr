@@ -20,7 +20,7 @@
 #   platform project (RICP).
 #
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:3-u16.04-nng as ubuntu
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:5-u18.04-nng as ubuntu
 
 WORKDIR /opt/E2Manager
 COPY . .
@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y sudo
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
 RUN apt-get update && apt-get install -y \
   net-tools \
