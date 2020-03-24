@@ -26,6 +26,7 @@ import (
 	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/tests"
 	"errors"
@@ -46,6 +47,65 @@ const (
 	e2tInstanceAddress = "10.0.2.15"
 	nodebRanName = "gnb:310-410-b5c67788"
 )
+
+func TestParseSetupRequest_Success(t *testing.T){
+	path, err :=filepath.Abs("../../tests/resources/setupRequest_gnb.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	xmlGnb, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := stubMockSuccessFlowNewNodeb(t)
+	prefBytes := []byte(prefix)
+	request, _, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
+	assert.Equal(t, request.GetPlmnId(), "131014")
+	assert.Equal(t, request.GetNbId(), "10110101110001100111011110001000")
+}
+
+func TestParseSetupRequest_ColonFailure(t *testing.T){
+	path, err :=filepath.Abs("../../tests/resources/setupRequest_gnb.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	xmlGnb, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := stubMockSuccessFlowNewNodeb(t)
+	prefBytes := []byte("10.0.2.15;9999|")
+	request, _, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
+	assert.Nil(t, request)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "#E2SetupRequestNotificationHandler.parseSetupRequest - Error parsing E2 Setup Request, failed extract E2T IP Address: no ':' separator found")
+}
+
+func TestParseSetupRequest_PipFailure(t *testing.T){
+	path, err :=filepath.Abs("../../tests/resources/setupRequest_gnb.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	xmlGnb, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	handler := stubMockSuccessFlowNewNodeb(t)
+	prefBytes := []byte("10.0.2.15:9999")
+	request, _, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
+	assert.Nil(t, request)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "#E2SetupRequestNotificationHandler.parseSetupRequest - Error parsing E2 Setup Request failed extract Payload: no | separator found")
+}
+
+func TestParseSetupRequest_UnmarshalFailure(t *testing.T){
+	handler := stubMockSuccessFlowNewNodeb(t)
+	prefBytes := []byte(prefix)
+	request, _, err := handler.parseSetupRequest(append(prefBytes, 1,2,3))
+	assert.Nil(t, request)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: 31302e302e322e31353a393939397c010203")
+}
 
 func TestE2SetupRequestNotificationHandler_HandleNewGnbSuccess(t *testing.T) {
 	path, err :=filepath.Abs("../../tests/resources/setupRequest_gnb.xml")
@@ -394,6 +454,7 @@ func assertSuccessFlowNewNodebLogs(t *testing.T){
 	assertNewNodebSavedLog(buf, t)
 	assertAssociatedLog(buf, t)
 	assertRequestBuiltLog(buf, t)
+	assertRequestSentLog(buf, t)
 	assertNoMoreRecordsLog(buf, t)
 }
 
@@ -403,6 +464,7 @@ func assertSuccessFlowExistingNodebLogs(t *testing.T){
 	assertExistingNodebRetrievedLog(buf, t)
 	assertAssociatedLog(buf, t)
 	assertRequestBuiltLog(buf, t)
+	assertRequestSentLog(buf, t)
 	assertNoMoreRecordsLog(buf, t)
 }
 
@@ -446,6 +508,10 @@ func assertAssociatedLog(buf *bytes.Buffer, t *testing.T){
 	assert.Contains(t, record, "#E2TAssociationManager.AssociateRan - successfully associated RAN")
 }
 
+func assertRequestSentLog(buf *bytes.Buffer, t *testing.T) {
+	record, _ := buf.ReadString('\n')
+	assert.Contains(t, record, "uccessfully sent RMR message")
+}
 func assertRequestBuiltLog(buf *bytes.Buffer, t *testing.T) {
 	record, _ := buf.ReadString('\n')
 	assert.Contains(t, record, "E2 Setup Request has been built")
@@ -457,7 +523,7 @@ func assertNoMoreRecordsLog(buf *bytes.Buffer, t *testing.T) {
 }
 
 func stubMockSuccessFlowNewNodeb(t *testing.T) E2SetupRequestNotificationHandler{
-	_, handler, readerMock, writerMock, _, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	var gnb *entities.NodebInfo
@@ -466,18 +532,30 @@ func stubMockSuccessFlowNewNodeb(t *testing.T) E2SetupRequestNotificationHandler
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
+	var err error
+	rmrMessage := &rmrCgo.MBuf{}
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, err)
 	return handler
 }
 
 func stubMockSuccessFlowExistingNodeb(t *testing.T) E2SetupRequestNotificationHandler{
-	_, handler, readerMock, writerMock, _, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
+	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
-	var gnb = &entities.NodebInfo{RanName: nodebRanName}
+	var gnb = &entities.NodebInfo{
+		RanName: nodebRanName,
+		AssociatedE2TInstanceAddress: e2tAddress,
+		ConnectionStatus: entities.ConnectionStatus_CONNECTED,
+		NodeType: entities.Node_GNB,
+		Configuration: &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
+	}
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
+	var err error
+	rmrMessage := &rmrCgo.MBuf{}
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, err)
 	return handler
 }
 
@@ -501,7 +579,7 @@ func initMocks(t *testing.T) (*logger.Logger, E2SetupRequestNotificationHandler,
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock)
-	handler := NewE2SetupRequestNotificationHandler(logger, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager)
+	handler := NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager)
 	return logger, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock
 }
 

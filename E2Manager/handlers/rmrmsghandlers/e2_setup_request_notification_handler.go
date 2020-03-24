@@ -21,6 +21,7 @@ package rmrmsghandlers
 
 import (
 	"bytes"
+	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
@@ -37,15 +38,17 @@ import (
 
 type E2SetupRequestNotificationHandler struct {
 	logger                 *logger.Logger
+	config                 *configuration.Configuration
 	e2tInstancesManager    managers.IE2TInstancesManager
 	rmrSender              *rmrsender.RmrSender
 	rNibDataService       services.RNibDataService
 	e2tAssociationManager *managers.E2TAssociationManager
 }
 
-func NewE2SetupRequestNotificationHandler(logger *logger.Logger, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager) E2SetupRequestNotificationHandler {
+func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager) E2SetupRequestNotificationHandler {
 	return E2SetupRequestNotificationHandler{
 		logger:                 logger,
+		config:                 config,
 		e2tInstancesManager:    e2tInstancesManager,
 		rmrSender: rmrSender,
 		rNibDataService: rNibDataService,
@@ -76,7 +79,11 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 	if err != nil{
 		if _, ok := err.(*common.ResourceNotFoundError); ok{
 			nbIdentity := h.buildNbIdentity(ranName, setupRequest)
-			nodebInfo = h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
+			nodebInfo, err = h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
+			if err != nil{
+				h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to build nodebInfo entity. Error: %s", ranName, err)
+				return
+			}
 			err = h.rNibDataService.SaveNodeb(nbIdentity, nodebInfo)
 			if err != nil{
 				h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to save nodebInfo entity. Error: %s", ranName, err)
@@ -93,24 +100,29 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 			h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling setup request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
 			return
 		}
-		h.updateNodeBFunctions(nodebInfo, setupRequest)
+		nodebInfo.GetGnb().RanFunctions, err = setupRequest.GetExtractRanFunctionsList()
+		if err != nil{
+			h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to update nodebInfo entity. Error: %s", ranName, err)
+			return
+		}
 	}
 	err = h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
 	if err != nil{
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to associate E2T to nodeB entity. Error: %s", ranName, err)
 		return
 	}
-	successResponse := &models.E2SetupSuccessResponseMessage{}
-	successResponse.SetPlmnId(setupRequest.GetPlmnId())
-	successResponse.SetNbId("&" + fmt.Sprintf("%020b", 0xf0))
+	successResponse := models.NewE2SetupSuccessResponseMessage()
+	successResponse.SetPlmnId(h.config.RicId.PlmnId)
+	successResponse.SetRicId(h.config.RicId.RicNearRtId)
+	successResponse.SetExtractRanFunctionsIDList(setupRequest)
 	responsePayload, err := xml.Marshal(successResponse)
+
 	if err != nil{
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling E2 Setup Response. Response: %x", ranName, responsePayload)
 	}
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, request.TransactionId)
 	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - E2 Setup Request has been built. Message: %x", ranName, msg)
-	//TODO err = h.rmrSender.Send(msg)
-
+	err = h.rmrSender.Send(msg)
 }
 
 func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*models.E2SetupRequestMessage, string, error){
@@ -133,17 +145,14 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*mo
 	setupRequest := &models.E2SetupRequestMessage{}
 	err := xml.Unmarshal(payload[pipInd + 1:], &setupRequest)
 	if err != nil {
-		return nil, "", errors.New("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %s")
+		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
 
 	return setupRequest, e2tIpAddress, nil
 }
 
-func (h E2SetupRequestNotificationHandler) updateNodeBFunctions(nodeB *entities.NodebInfo, request *models.E2SetupRequestMessage){
-	//TODO the function should be implemented in the scope of the US 192 "Save the entire Setup request in RNIB"
-}
-
-func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) *entities.NodebInfo{
+func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error){
+	var err error
 	nodebInfo := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tAddress,
 		ConnectionStatus: entities.ConnectionStatus_CONNECTED,
@@ -151,8 +160,8 @@ func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAdd
 		NodeType: entities.Node_GNB,
 		Configuration: &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
 	}
-	h.updateNodeBFunctions(nodebInfo, request)
-	return nodebInfo
+	nodebInfo.GetGnb().RanFunctions, err = request.GetExtractRanFunctionsList()
+	return nodebInfo, err
 }
 
 func (h E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setupRequest *models.E2SetupRequestMessage)*entities.NbIdentity{

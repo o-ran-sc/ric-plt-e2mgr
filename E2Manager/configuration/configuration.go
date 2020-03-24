@@ -39,6 +39,10 @@ type Configuration struct {
 	RoutingManager struct {
 		BaseUrl	   string
 	}
+	RicId struct {
+		PlmnId string
+		RicNearRtId string
+	}
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
 	MaxConnectionAttempts        int

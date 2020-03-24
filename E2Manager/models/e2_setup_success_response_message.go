@@ -40,22 +40,7 @@ type E2SetupSuccessResponseMessage struct {
 					Text        string `xml:",chardata"`
 					ProtocolIEs struct {
 						Text               string `xml:",chardata"`
-						E2setupResponseIEs struct {
-							Text        string `xml:",chardata"`
-							ID          string `xml:"id"`
-							Criticality struct {
-								Text   string `xml:",chardata"`
-								Reject string `xml:"reject"`
-							} `xml:"criticality"`
-							Value struct {
-								Text        string `xml:",chardata"`
-								GlobalRICID struct {
-									Text         string `xml:",chardata"`
-									PLMNIdentity string `xml:"pLMN-Identity"`
-									RicID        string `xml:"ric-ID"`
-								} `xml:"GlobalRIC-ID"`
-							} `xml:"value"`
-						} `xml:"E2setupResponseIEs"`
+						E2setupResponseIEs []E2setupResponseIEs`xml:"E2setupResponseIEs"`
 					} `xml:"protocolIEs"`
 				} `xml:"E2setupResponse"`
 			} `xml:"value"`
@@ -63,11 +48,70 @@ type E2SetupSuccessResponseMessage struct {
 	} `xml:"E2AP-PDU"`
 }
 
-
-func (m *E2SetupSuccessResponseMessage) SetPlmnId(plmnId string){
-	m.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs.Value.GlobalRICID.PLMNIdentity = plmnId
+type E2setupResponseIEs struct {
+	Text        string `xml:",chardata"`
+	ID          string `xml:"id"`
+	Criticality struct {
+		Text   string `xml:",chardata"`
+		Reject string `xml:"reject"`
+	} `xml:"criticality"`
+	Value struct {
+		Text        string `xml:",chardata"`
+		GlobalRICID struct {
+			Text         string `xml:",chardata"`
+			PLMNIdentity string `xml:"pLMN-Identity"`
+			RicID        string `xml:"ric-ID"`
+		} `xml:"GlobalRIC-ID"`
+		RANfunctionsIDList struct {
+			Text                      string `xml:",chardata"`
+			ProtocolIESingleContainer []ProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
+		} `xml:"RANfunctionsID-List"`
+	} `xml:"value"`
 }
 
-func (m *E2SetupSuccessResponseMessage) SetNbId(ricID string){
-	m.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs.Value.GlobalRICID.RicID = ricID
+type ProtocolIESingleContainer struct {
+	Text        string `xml:",chardata"`
+	ID          string `xml:"id"`
+	Criticality struct {
+		Text   string `xml:",chardata"`
+		Ignore string `xml:"ignore"`
+	} `xml:"criticality"`
+	Value struct {
+		Text              string `xml:",chardata"`
+		RANfunctionIDItem struct {
+			Text                string `xml:",chardata"`
+			RanFunctionID       string `xml:"ranFunctionID"`
+			RanFunctionRevision string `xml:"ranFunctionRevision"`
+		} `xml:"RANfunctionID-Item"`
+	} `xml:"value"`
+}
+
+func NewE2SetupSuccessResponseMessage() *E2SetupSuccessResponseMessage{
+	msg := &E2SetupSuccessResponseMessage{}
+	msg.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, 2)
+	return msg
+}
+
+func (m *E2SetupSuccessResponseMessage) SetExtractRanFunctionsIDList(request *E2SetupRequestMessage) {
+	list := &request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList
+	ids := make([]ProtocolIESingleContainer,len(list.ProtocolIESingleContainer))
+	for i := 0; i< len(ids); i++{
+		ids[i] = m.convertToRANfunctionID(list, i)
+	}
+	m.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].Value.RANfunctionsIDList.ProtocolIESingleContainer = ids
+}
+
+func (m *E2SetupSuccessResponseMessage) convertToRANfunctionID(list *RANfunctionsList, i int) ProtocolIESingleContainer{
+	id := ProtocolIESingleContainer{}
+	id.Value.RANfunctionIDItem.RanFunctionID = list.ProtocolIESingleContainer[i].Value.RANfunctionItem.RanFunctionID
+	id.Value.RANfunctionIDItem.RanFunctionRevision = list.ProtocolIESingleContainer[i].Value.RANfunctionItem.RanFunctionRevision
+	return id
+}
+
+func (m *E2SetupSuccessResponseMessage) SetPlmnId(plmnId string){
+	m.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].Value.GlobalRICID.PLMNIdentity = plmnId
+}
+
+func (m *E2SetupSuccessResponseMessage) SetRicId(ricId string){
+	m.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].Value.GlobalRICID.RicID = ricId
 }
