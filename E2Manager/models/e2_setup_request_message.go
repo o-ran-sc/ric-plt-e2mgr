@@ -21,7 +21,10 @@ package models
 
 import (
 	"encoding/xml"
+	"errors"
+	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"strconv"
 )
 
 type E2SetupRequestMessage struct {
@@ -98,26 +101,7 @@ type E2SetupRequestMessage struct {
 										} `xml:"global-eNB-ID"`
 									} `xml:"eNB"`
 								} `xml:"GlobalE2node-ID"`
-								RANfunctionsList struct {
-									Text                      string `xml:",chardata"`
-									ProtocolIESingleContainer []struct {
-										Text        string `xml:",chardata"`
-										ID          string `xml:"id"`
-										Criticality struct {
-											Text   string `xml:",chardata"`
-											Reject string `xml:"reject"`
-										} `xml:"criticality"`
-										Value struct {
-											Text            string `xml:",chardata"`
-											RANfunctionItem struct {
-												Text                  string `xml:",chardata"`
-												RanFunctionID         string `xml:"ranFunctionID"`
-												RanFunctionDefinition string `xml:"ranFunctionDefinition"`
-												RanFunctionRevision   string `xml:"ranFunctionRevision"`
-											} `xml:"RANfunction-Item"`
-										} `xml:"value"`
-									} `xml:"ProtocolIE-SingleContainer"`
-								} `xml:"RANfunctions-List"`
+								RANfunctionsList RANfunctionsList `xml:"RANfunctions-List"`
 							} `xml:"value"`
 						} `xml:"E2setupRequestIEs"`
 					} `xml:"protocolIEs"`
@@ -125,6 +109,47 @@ type E2SetupRequestMessage struct {
 			} `xml:"value"`
 		} `xml:"initiatingMessage"`
 	} `xml:"E2AP-PDU"`
+}
+
+type RANfunctionsList struct {
+    Text                      string `xml:",chardata"`
+    ProtocolIESingleContainer []struct {
+		Text        string `xml:",chardata"`
+		ID          string `xml:"id"`
+		Criticality struct {
+			Text   string `xml:",chardata"`
+			Reject string `xml:"reject"`
+		} `xml:"criticality"`
+		Value struct {
+			Text            string `xml:",chardata"`
+			RANfunctionItem struct {
+				Text                  string `xml:",chardata"`
+				RanFunctionID         string `xml:"ranFunctionID"`
+				RanFunctionDefinition string `xml:"ranFunctionDefinition"`
+				RanFunctionRevision   string `xml:"ranFunctionRevision"`
+			} `xml:"RANfunction-Item"`
+		} `xml:"value"`
+    } `xml:"ProtocolIE-SingleContainer"`
+}
+
+func (m *E2SetupRequestMessage) GetExtractRanFunctionsList()([]*entities.RanFunction, error){
+	list :=m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
+	funcs := make([]*entities.RanFunction, len(list))
+	for i:=0; i < len(funcs); i++{
+		funcs[i] = &entities.RanFunction{}
+		id, err := strconv.ParseUint(list[i].Value.RANfunctionItem.RanFunctionID, 10, 32)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.GetExtractRanFunctionsList - Failed parse uint RanFunctionID from %s", list[i].Value.RANfunctionItem.RanFunctionID))
+		}
+		funcs[i].RanFunctionId = uint32(id)
+		rev, err := strconv.ParseUint(list[i].Value.RANfunctionItem.RanFunctionRevision, 10, 32)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.GetExtractRanFunctionsList - Failed parse uint RanFunctionRevision from %s", list[i].Value.RANfunctionItem.RanFunctionRevision))
+		}
+		funcs[i].RanFunctionDefinition = list[i].Value.RANfunctionItem.RanFunctionDefinition
+		funcs[i].RanFunctionRevision = uint32(rev)
+	}
+	return funcs, nil
 }
 
 func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type{

@@ -13,11 +13,9 @@
                             <GlobalE2node-ID>
                                 <en-gNB>
                                     <global-gNB-ID>
-                                        <plmn-id>13 10 14</plmn-id>
+                                        <plmn-id>131014</plmn-id>
                                         <gnb-id>
-                                            <gnb-ID>
-                                                10110101110001100111011110001000
-                                            </gnb-ID>
+                                            <gnb-ID>10110101110001100111011110001000</gnb-ID>
                                         </gnb-id>
                                     </global-gNB-ID>
                                 </en-gNB>
@@ -35,7 +33,7 @@
                                     <value>
                                         <RANfunction-Item>
                                             <ranFunctionID>1</ranFunctionID>
-                                            <ranFunctionDefinition>33 44 55</ranFunctionDefinition>
+                                            <ranFunctionDefinition>334455</ranFunctionDefinition>
                                             <ranFunctionRevision>0</ranFunctionRevision>
                                         </RANfunction-Item>
                                     </value>
@@ -46,7 +44,7 @@
                                     <value>
                                         <RANfunction-Item>
                                             <ranFunctionID>7</ranFunctionID>
-                                            <ranFunctionDefinition>33 44 55</ranFunctionDefinition>
+                                            <ranFunctionDefinition>334455</ranFunctionDefinition>
                                             <ranFunctionRevision>0</ranFunctionRevision>
                                         </RANfunction-Item>
                                     </value>
