@@ -29,7 +29,6 @@ import "C"
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"os"
 	"unsafe"
 )
 
@@ -133,9 +132,7 @@ func parseRicID(ricId string) error {
 
 func init() {
 	var err error
-	ricId := os.Getenv(EnvRicId)
-	//ricId="bbbccc-ffff0e/20"
-	//ricId="bbbccc-abcd0e/20"
+	ricId := "bbbccc-abcd0e/20"
 	if err = parseRicID(ricId); err != nil {
 		panic(err)
 	}

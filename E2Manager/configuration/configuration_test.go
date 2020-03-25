@@ -39,6 +39,9 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, 4500, config.KeepAliveResponseTimeoutMs)
 	assert.Equal(t, 1500, config.KeepAliveDelayMs)
 	assert.Equal(t, 15000, config.E2TInstanceDeletionTimeoutMs)
+	assert.NotNil(t, config.GlobalRicId)
+	assert.NotEmpty(t, config.GlobalRicId.PlmnId)
+	assert.NotEmpty(t, config.GlobalRicId.RicNearRtId)
 }
 
 func TestParseConfigurationFileNotFoundFailure(t *testing.T) {
@@ -74,6 +77,7 @@ func TestRmrConfigNotFoundFailure(t *testing.T) {
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http":    map[string]interface{}{"port": 3800},
 		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -103,6 +107,7 @@ func TestLoggingConfigNotFoundFailure(t *testing.T) {
 		"rmr":  map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"http": map[string]interface{}{"port": 3800},
 		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -133,6 +138,7 @@ func TestHttpConfigNotFoundFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -163,6 +169,7 @@ func TestRoutingManagerConfigNotFoundFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -173,5 +180,36 @@ func TestRoutingManagerConfigNotFoundFailure(t *testing.T) {
 		t.Errorf("#TestRoutingManagerConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
 	}
 	assert.PanicsWithValue(t, "#configuration.populateRoutingManagerConfig - failed to populate Routing Manager configuration: The entry 'routingManager' not found\n",
+		func() { ParseConfiguration() })
+}
+
+func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.populateGlobalRicIdConfig - failed to populate Global RicId configuration: The entry 'globalRicId' not found\n",
 		func() { ParseConfiguration() })
 }

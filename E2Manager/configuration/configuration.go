@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package configuration
 
 import (
@@ -37,20 +36,20 @@ type Configuration struct {
 		MaxMsgSize int
 	}
 	RoutingManager struct {
-		BaseUrl	   string
-	}
-	RicId struct {
-		PlmnId string
-		RicNearRtId string
+		BaseUrl string
 	}
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
 	MaxConnectionAttempts        int
 	MaxRnibConnectionAttempts    int
 	RnibRetryIntervalMs          int
-	KeepAliveResponseTimeoutMs 	 int
+	KeepAliveResponseTimeoutMs   int
 	KeepAliveDelayMs             int
 	E2TInstanceDeletionTimeoutMs int
+	GlobalRicId                  struct {
+		PlmnId      string
+		RicNearRtId string
+	}
 }
 
 func ParseConfiguration() *Configuration {
@@ -78,6 +77,7 @@ func ParseConfiguration() *Configuration {
 	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
+	config.populateGlobalRicIdConfig(viper.Sub("globalRicId"))
 	return &config
 }
 
@@ -108,4 +108,12 @@ func (c *Configuration) populateRoutingManagerConfig(rmConfig *viper.Viper) {
 		panic(fmt.Sprintf("#configuration.populateRoutingManagerConfig - failed to populate Routing Manager configuration: The entry 'routingManager' not found\n"))
 	}
 	c.RoutingManager.BaseUrl = rmConfig.GetString("baseUrl")
+}
+
+func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) {
+	if globalRicIdConfig == nil {
+		panic(fmt.Sprintf("#configuration.populateGlobalRicIdConfig - failed to populate Global RicId configuration: The entry 'globalRicId' not found\n"))
+	}
+	c.GlobalRicId.PlmnId = globalRicIdConfig.GetString("plmnId")
+	c.GlobalRicId.RicNearRtId = globalRicIdConfig.GetString("ricNearRtId")
 }

@@ -112,8 +112,8 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 		return
 	}
 	successResponse := models.NewE2SetupSuccessResponseMessage()
-	successResponse.SetPlmnId(h.config.RicId.PlmnId)
-	successResponse.SetRicId(h.config.RicId.RicNearRtId)
+	successResponse.SetPlmnId(h.config.GlobalRicId.PlmnId)
+	successResponse.SetRicId(h.config.GlobalRicId.RicNearRtId)
 	successResponse.SetExtractRanFunctionsIDList(setupRequest)
 	responsePayload, err := xml.Marshal(successResponse)
 

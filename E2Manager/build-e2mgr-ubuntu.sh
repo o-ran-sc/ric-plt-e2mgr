@@ -69,7 +69,6 @@ go build -v app/main.go
 # Setting allocfreetrace=1 causes every allocation to be profiled and a
 # stack trace printed on each object's allocation and free.
 export GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
-export RIC_ID="bbbccc-abcd0e/20"
 # Static route table is provided in git repo
 export RMR_SEED_RT=$(pwd)/router_test.txt
 # writes to coverage.txt by default
