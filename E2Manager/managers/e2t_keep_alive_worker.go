@@ -53,7 +53,7 @@ func (h E2TKeepAliveWorker) Execute() {
 
 	ticker := time.NewTicker(time.Duration(h.config.KeepAliveDelayMs) * time.Millisecond)
 
-	for _= range ticker.C {
+	for _ = range ticker.C {
 
 		h.SendKeepAliveRequest()
 		h.E2TKeepAliveExpired()
@@ -84,6 +84,6 @@ func (h E2TKeepAliveWorker) E2TKeepAliveExpired() {
 
 func (h E2TKeepAliveWorker) SendKeepAliveRequest() {
 
-	request := models.RmrMessage{MsgType: rmrCgo.E2_TERM_KEEP_ALIVE_REQ}
-	h.rmrSender.Send(&request)
+	rmrMessage := models.RmrMessage{MsgType: rmrCgo.E2_TERM_KEEP_ALIVE_REQ}
+	h.rmrSender.SendWithoutLogs(&rmrMessage)
 }
