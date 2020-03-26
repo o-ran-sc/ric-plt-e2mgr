@@ -44,7 +44,7 @@ import (
 const (
 	prefix = "10.0.2.15:9999|"
 	logFilePath = "./loggerTest.txt"
-	e2tInstanceAddress = "10.0.2.15"
+	e2tInstanceFullAddress = "10.0.2.15:9999"
 	nodebRanName = "gnb:310-410-b5c67788"
 )
 
@@ -62,23 +62,6 @@ func TestParseSetupRequest_Success(t *testing.T){
 	request, _, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
 	assert.Equal(t, request.GetPlmnId(), "131014")
 	assert.Equal(t, request.GetNbId(), "10110101110001100111011110001000")
-}
-
-func TestParseSetupRequest_ColonFailure(t *testing.T){
-	path, err :=filepath.Abs("../../tests/resources/setupRequest_gnb.xml")
-	if err != nil {
-		t.Fatal(err)
-	}
-	xmlGnb, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	handler := stubMockSuccessFlowNewNodeb(t)
-	prefBytes := []byte("10.0.2.15;9999|")
-	request, _, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
-	assert.Nil(t, request)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, "#E2SetupRequestNotificationHandler.parseSetupRequest - Error parsing E2 Setup Request, failed extract E2T IP Address: no ':' separator found")
 }
 
 func TestParseSetupRequest_PipFailure(t *testing.T){
@@ -273,7 +256,7 @@ func TestE2SetupRequestNotificationHandler_HandleGetE2TInstanceError(t *testing.
 
 	_, handler, _, _, _, e2tInstancesManagerMock, _ := initMocks(t)
 	var e2tInstance * entities.E2TInstance
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewResourceNotFoundError("Not found"))
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, common.NewResourceNotFoundError("Not found"))
 	prefBytes := []byte(prefix)
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append(prefBytes, xmlGnb...)}
 	handler.Handle(notificationRequest)
@@ -300,7 +283,7 @@ func TestE2SetupRequestNotificationHandler_HandleGetNodebError(t *testing.T) {
 	os.Stdout = logFile
 	_, handler, readerMock, _, _, e2tInstancesManagerMock, _ := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
 	var gnb *entities.NodebInfo
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewInternalError(errors.New("Some error")))
 	prefBytes := []byte(prefix)
@@ -330,11 +313,11 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 
 	_, handler, readerMock, writerMock, _, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
 	var gnb *entities.NodebInfo
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
-	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceAddress, mock.Anything).Return(errors.New("association error"))
+	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))
 
 	prefBytes := []byte(prefix)
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append(prefBytes, xmlGnb...)}
@@ -525,11 +508,11 @@ func assertNoMoreRecordsLog(buf *bytes.Buffer, t *testing.T) {
 func stubMockSuccessFlowNewNodeb(t *testing.T) E2SetupRequestNotificationHandler{
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
 	var gnb *entities.NodebInfo
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
-	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceAddress, mock.Anything).Return(nil)
+	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
 	var err error
@@ -541,7 +524,7 @@ func stubMockSuccessFlowNewNodeb(t *testing.T) E2SetupRequestNotificationHandler
 func stubMockSuccessFlowExistingNodeb(t *testing.T) E2SetupRequestNotificationHandler{
 	_, handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
 	var gnb = &entities.NodebInfo{
 		RanName: nodebRanName,
 		AssociatedE2TInstanceAddress: e2tAddress,
@@ -550,7 +533,7 @@ func stubMockSuccessFlowExistingNodeb(t *testing.T) E2SetupRequestNotificationHa
 		Configuration: &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
 	}
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, nil)
-	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceAddress, mock.Anything).Return(nil)
+	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
 	var err error
@@ -562,7 +545,7 @@ func stubMockSuccessFlowExistingNodeb(t *testing.T) E2SetupRequestNotificationHa
 func stubMockInvalidStatusFlowExistingNodeb(t *testing.T) E2SetupRequestNotificationHandler{
 	_, handler, readerMock, _, _, e2tInstancesManagerMock, _ := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
 	var gnb = &entities.NodebInfo{RanName: nodebRanName, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN}
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, nil)
 	return handler

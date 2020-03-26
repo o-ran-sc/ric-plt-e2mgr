@@ -42,7 +42,10 @@ import (
 	"testing"
 )
 
-const e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
+const (
+	e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
+	e2tInstanceAddress = "10.0.2.15"
+)
 
 func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.E2TInstancesManagerMock, *mocks.RoutingManagerClientMock) {
 

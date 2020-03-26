@@ -67,6 +67,7 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 	}
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - E2T Address: %s - handling E2_SETUP_REQUEST", e2tIpAddress)
+	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - E2_SETUP_REQUEST has been parsed successfully %+v", setupRequest)
 
 	_, err = h.e2tInstancesManager.GetE2TInstance(e2tIpAddress)
 
@@ -116,6 +117,7 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 	successResponse.SetRicId(h.config.GlobalRicId.RicNearRtId)
 	successResponse.SetExtractRanFunctionsIDList(setupRequest)
 	responsePayload, err := xml.Marshal(&successResponse.E2APPDU)
+	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - E2_SETUP_RESPONSE has been built successfully %+v", successResponse)
 
 	if err != nil{
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling E2 Setup Response. Response: %x", ranName, responsePayload)
@@ -127,21 +129,15 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 
 func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*models.E2SetupRequestMessage, string, error){
 
-	colonInd := bytes.IndexByte(payload, ':')
-	if colonInd < 0 {
-		return nil, "", errors.New("#E2SetupRequestNotificationHandler.parseSetupRequest - Error parsing E2 Setup Request, failed extract E2T IP Address: no ':' separator found")
-	}
-
-	e2tIpAddress := string(payload[:colonInd])
-	if len(e2tIpAddress) == 0 {
-		return nil, "", errors.New("#E2SetupRequestNotificationHandler.parseSetupRequest - Empty E2T Address received")
-	}
-
 	pipInd := bytes.IndexByte(payload, '|')
 	if pipInd < 0 {
 		return nil, "", errors.New( "#E2SetupRequestNotificationHandler.parseSetupRequest - Error parsing E2 Setup Request failed extract Payload: no | separator found")
 	}
 
+	e2tIpAddress := string(payload[:pipInd])
+	if len(e2tIpAddress) == 0 {
+		return nil, "", errors.New("#E2SetupRequestNotificationHandler.parseSetupRequest - Empty E2T Address received")
+	}
 	setupRequest := &models.E2SetupRequestMessage{}
 	err := xml.Unmarshal(payload[pipInd + 1:], &setupRequest.E2APPDU)
 	if err != nil {
