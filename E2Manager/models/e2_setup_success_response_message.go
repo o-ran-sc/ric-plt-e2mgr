@@ -25,27 +25,29 @@ import (
 type E2SetupSuccessResponseMessage struct {
 	XMLName xml.Name `xml:"E2SetupSuccessResponseMessage"`
 	Text    string   `xml:",chardata"`
-	E2APPDU struct {
-		Text              string `xml:",chardata"`
-		SuccessfulOutcome struct {
-			Text          string `xml:",chardata"`
-			ProcedureCode string `xml:"procedureCode"`
-			Criticality   struct {
-				Text   string `xml:",chardata"`
-				Reject string `xml:"reject"`
-			} `xml:"criticality"`
-			Value struct {
-				Text            string `xml:",chardata"`
-				E2setupResponse struct {
-					Text        string `xml:",chardata"`
-					ProtocolIEs struct {
-						Text               string `xml:",chardata"`
-						E2setupResponseIEs []E2setupResponseIEs`xml:"E2setupResponseIEs"`
-					} `xml:"protocolIEs"`
-				} `xml:"E2setupResponse"`
-			} `xml:"value"`
-		} `xml:"successfulOutcome"`
-	} `xml:"E2AP-PDU"`
+	E2APPDU E2APPDU`xml:"E2AP-PDU"`
+}
+
+type E2APPDU struct {
+	Text              string `xml:",chardata"`
+	SuccessfulOutcome struct {
+		Text          string `xml:",chardata"`
+		ProcedureCode string `xml:"procedureCode"`
+		Criticality   struct {
+			Text   string `xml:",chardata"`
+			Reject string `xml:"reject"`
+		} `xml:"criticality"`
+		Value struct {
+			Text            string `xml:",chardata"`
+			E2setupResponse struct {
+				Text        string `xml:",chardata"`
+				ProtocolIEs struct {
+					Text               string `xml:",chardata"`
+					E2setupResponseIEs []E2setupResponseIEs`xml:"E2setupResponseIEs"`
+				} `xml:"protocolIEs"`
+			} `xml:"E2setupResponse"`
+		} `xml:"value"`
+	} `xml:"successfulOutcome"`
 }
 
 type E2setupResponseIEs struct {
@@ -86,8 +88,8 @@ type ProtocolIESingleContainer struct {
 	} `xml:"value"`
 }
 
-func NewE2SetupSuccessResponseMessage() *E2SetupSuccessResponseMessage{
-	msg := &E2SetupSuccessResponseMessage{}
+func NewE2SetupSuccessResponseMessage() E2SetupSuccessResponseMessage{
+	msg := E2SetupSuccessResponseMessage{}
 	msg.E2APPDU.SuccessfulOutcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, 2)
 	return msg
 }

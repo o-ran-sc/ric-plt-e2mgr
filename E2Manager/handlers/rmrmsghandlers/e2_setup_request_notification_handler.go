@@ -115,14 +115,14 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 	successResponse.SetPlmnId(h.config.GlobalRicId.PlmnId)
 	successResponse.SetRicId(h.config.GlobalRicId.RicNearRtId)
 	successResponse.SetExtractRanFunctionsIDList(setupRequest)
-	responsePayload, err := xml.Marshal(successResponse)
+	responsePayload, err := xml.Marshal(&successResponse.E2APPDU)
 
 	if err != nil{
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling E2 Setup Response. Response: %x", ranName, responsePayload)
 	}
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, request.TransactionId)
 	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - E2 Setup Request has been built. Message: %x", ranName, msg)
-	err = h.rmrSender.Send(msg)
+	_ = h.rmrSender.Send(msg)
 }
 
 func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*models.E2SetupRequestMessage, string, error){
@@ -143,7 +143,7 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*mo
 	}
 
 	setupRequest := &models.E2SetupRequestMessage{}
-	err := xml.Unmarshal(payload[pipInd + 1:], &setupRequest)
+	err := xml.Unmarshal(payload[pipInd + 1:], &setupRequest.E2APPDU)
 	if err != nil {
 		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
