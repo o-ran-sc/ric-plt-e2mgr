@@ -25,10 +25,11 @@ import (
 type E2SetupSuccessResponseMessage struct {
 	XMLName xml.Name `xml:"E2SetupSuccessResponseMessage"`
 	Text    string   `xml:",chardata"`
-	E2APPDU E2APPDU`xml:"E2AP-PDU"`
+	E2APPDU E2APPDU  `xml:"E2AP-PDU"`
 }
 
 type E2APPDU struct {
+	XMLName xml.Name `xml:"E2AP-PDU"`
 	Text              string `xml:",chardata"`
 	SuccessfulOutcome struct {
 		Text          string `xml:",chardata"`

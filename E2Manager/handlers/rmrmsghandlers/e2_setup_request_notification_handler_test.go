@@ -453,21 +453,21 @@ func assertSuccessFlowExistingNodebLogs(t *testing.T){
 
 func assertReceivedAndParsedLog(buf *bytes.Buffer, t *testing.T) {
 	record, _ := buf.ReadString('\n')
-	assert.Contains(t, record, "received E2 Setup Request")
+	assert.Contains(t, record, "received E2_SETUP_REQUEST")
 	record, _ = buf.ReadString('\n')
 	assert.Contains(t, record, "handling E2_SETUP_REQUEST")
 }
 
 func assertReceivedAndFailedParseLog(buf *bytes.Buffer, t *testing.T) {
 	record, _ := buf.ReadString('\n')
-	assert.Contains(t, record, "received E2 Setup Request")
+	assert.Contains(t, record, "received E2_SETUP_REQUEST")
 	record, _ = buf.ReadString('\n')
 	assert.Contains(t, record, "Error parsing E2 Setup Request")
 }
 
 func assertReceivedAndFailedUnmarshalLog(buf *bytes.Buffer, t *testing.T) {
 	record, _ := buf.ReadString('\n')
-	assert.Contains(t, record, "received E2 Setup Request")
+	assert.Contains(t, record, "received E2_SETUP_REQUEST")
 	record, _ = buf.ReadString('\n')
 	assert.Contains(t, record, "Error unmarshalling E2 Setup Request")
 }
@@ -497,7 +497,7 @@ func assertRequestSentLog(buf *bytes.Buffer, t *testing.T) {
 }
 func assertRequestBuiltLog(buf *bytes.Buffer, t *testing.T) {
 	record, _ := buf.ReadString('\n')
-	assert.Contains(t, record, "E2 Setup Request has been built")
+	assert.Contains(t, record, "RIC_E2_SETUP_RESP message has been built successfully")
 }
 
 func assertNoMoreRecordsLog(buf *bytes.Buffer, t *testing.T) {

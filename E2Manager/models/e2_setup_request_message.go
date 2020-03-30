@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"strconv"
+	"strings"
 )
 
 type E2SetupRequestMessage struct {
@@ -146,7 +147,7 @@ func (m *E2SetupRequestMessage) GetExtractRanFunctionsList()([]*entities.RanFunc
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.GetExtractRanFunctionsList - Failed parse uint RanFunctionRevision from %s", list[i].Value.RANfunctionItem.RanFunctionRevision))
 		}
-		funcs[i].RanFunctionDefinition = list[i].Value.RANfunctionItem.RanFunctionDefinition
+		funcs[i].RanFunctionDefinition = m.trimSpaces(list[i].Value.RANfunctionItem.RanFunctionDefinition)
 		funcs[i].RanFunctionRevision = uint32(rev)
 	}
 	return funcs, nil
@@ -170,32 +171,36 @@ func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type{
 
 func (m *E2SetupRequestMessage) GetPlmnId() string{
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.GNB.GlobalGNBID.PlmnID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.EnGNB.GlobalGNBID.PlmnID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.ENB.GlobalENBID.PlmnID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.NgENB.GlobalNgENBID.PlmnID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	return ""
 }
 
 func (m *E2SetupRequestMessage) GetNbId() string{
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.GNB.GlobalGNBID.GnbID.GnbID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.EnGNB.GlobalGNBID.GnbID.GnbID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.ENB.GlobalENBID.GnbID.GnbID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.NgENB.GlobalNgENBID.GnbID.GnbID; id!= ""{
-		return id
+		return m.trimSpaces(id)
 	}
 	return ""
+}
+
+func (m *E2SetupRequestMessage) trimSpaces(str string) string {
+	return strings.NewReplacer(" ", "", "\n", "").Replace(str)
 }

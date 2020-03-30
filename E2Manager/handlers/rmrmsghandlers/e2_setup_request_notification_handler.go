@@ -58,7 +58,7 @@ func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configu
 
 func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRequest){
 	ranName := request.RanName
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - received E2 Setup Request. Payload: %x", ranName, request.Payload)
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - received E2_SETUP_REQUEST. Payload: %x", ranName, request.Payload)
 
 	setupRequest, e2tIpAddress, err := h.parseSetupRequest(request.Payload)
 	if err != nil {
@@ -124,7 +124,7 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling E2 Setup Response. Response: %x", ranName, responsePayload)
 	}
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, request.TransactionId)
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - E2 Setup Request has been built. Message: %x", ranName, msg)
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
 	_ = h.rmrSender.Send(msg)
 }
 
