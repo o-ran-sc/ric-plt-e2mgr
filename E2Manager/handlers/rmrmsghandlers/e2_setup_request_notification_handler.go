@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"strconv"
 )
 
 type E2SetupRequestNotificationHandler struct {
@@ -58,7 +59,7 @@ func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configu
 
 func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRequest){
 	ranName := request.RanName
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - received E2 Setup Request. Payload: %x", ranName, request.Payload)
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - received E2_SETUP_REQUEST. Payload: %x", ranName, request.Payload)
 
 	setupRequest, e2tIpAddress, err := h.parseSetupRequest(request.Payload)
 	if err != nil {
@@ -113,10 +114,13 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to associate E2T to nodeB entity. Error: %s", ranName, err)
 		return
 	}
-	successResponse := models.NewE2SetupSuccessResponseMessage()
-	successResponse.SetPlmnId(h.config.GlobalRicId.PlmnId)
-	successResponse.SetRicId(h.config.GlobalRicId.RicNearRtId)
-	successResponse.SetExtractRanFunctionsIDList(setupRequest)
+
+	ricNearRtId, err := convertTo20BitString(h.config.GlobalRicId.RicNearRtId)
+	if err != nil{
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to convert RicNearRtId value %s to 20 bit string . Error: %s", ranName, h.config.GlobalRicId.RicNearRtId, err)
+		return
+	}
+	successResponse := models.NewE2SetupSuccessResponseMessage(h.config.GlobalRicId.PlmnId, ricNearRtId,setupRequest)
 	responsePayload, err := xml.Marshal(&successResponse.E2APPDU)
 	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - E2_SETUP_RESPONSE has been built successfully %+v", successResponse)
 
@@ -124,8 +128,16 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling E2 Setup Response. Response: %x", ranName, responsePayload)
 	}
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, request.TransactionId)
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - E2 Setup Request has been built. Message: %x", ranName, msg)
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
 	_ = h.rmrSender.Send(msg)
+}
+
+func convertTo20BitString(ricNearRtId string) (string, error){
+	r, err := strconv.ParseUint(ricNearRtId, 16, 32)
+	if err != nil{
+		return "", err
+	}
+	return fmt.Sprintf("%020b", r)[:20], nil
 }
 
 func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*models.E2SetupRequestMessage, string, error){
