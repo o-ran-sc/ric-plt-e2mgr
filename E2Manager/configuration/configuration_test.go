@@ -44,6 +44,11 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.NotEmpty(t, config.GlobalRicId.RicNearRtId)
 }
 
+func TestStringer(t *testing.T) {
+	config := ParseConfiguration().String()
+	assert.NotEmpty(t, config)
+}
+
 func TestParseConfigurationFileNotFoundFailure(t *testing.T) {
 	configPath := "../resources/configuration.yaml"
 	configPathTmp := "../resources/configuration.yaml_tmp"

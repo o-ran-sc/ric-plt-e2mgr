@@ -49,6 +49,7 @@ func main() {
 		fmt.Printf("#app.main - failed to initialize logger, error: %s", err)
 		os.Exit(1)
 	}
+	logger.Infof("#app.main - Configuration %s", config)
 	db := sdlgo.NewDatabase()
 	sdl := sdlgo.NewSdlInstance("e2Manager", db)
 	defer sdl.Close()

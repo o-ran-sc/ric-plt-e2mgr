@@ -117,3 +117,26 @@ func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper
 	c.GlobalRicId.PlmnId = globalRicIdConfig.GetString("plmnId")
 	c.GlobalRicId.RicNearRtId = globalRicIdConfig.GetString("ricNearRtId")
 }
+
+func (c *Configuration) String() string {
+	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
+		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxConnectionAttempts: %d, maxRnibConnectionAttempts: %d, "+
+		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
+		"globalRicId: { plmnId: %s, ricNearRtId: %s}}",
+		c.Logging.LogLevel,
+		c.Http.Port,
+		c.Rmr.Port,
+		c.Rmr.MaxMsgSize,
+		c.RoutingManager.BaseUrl,
+		c.NotificationResponseBuffer,
+		c.BigRedButtonTimeoutSec,
+		c.MaxConnectionAttempts,
+		c.MaxRnibConnectionAttempts,
+		c.RnibRetryIntervalMs,
+		c.KeepAliveResponseTimeoutMs,
+		c.KeepAliveDelayMs,
+		c.E2TInstanceDeletionTimeoutMs,
+		c.GlobalRicId.PlmnId,
+		c.GlobalRicId.RicNearRtId,
+	)
+}
