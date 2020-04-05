@@ -113,6 +113,10 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 	err = h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
 	if err != nil{
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to associate E2T to nodeB entity. Error: %s", ranName, err)
+		err = h.rNibDataService.UpdateNodebInfo(nodebInfo)
+		if err != nil {
+			h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Failed to update nodebInfo entity. Error: %s", ranName, err)
+		}
 		return
 	}
 
