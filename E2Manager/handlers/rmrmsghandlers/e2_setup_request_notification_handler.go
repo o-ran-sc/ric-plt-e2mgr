@@ -178,6 +178,10 @@ func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAdd
 		RanName: ranName,
 		NodeType: entities.Node_GNB,
 		Configuration: &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
+		GlobalNbId:  &entities.GlobalNbId{
+			PlmnId: request.GetPlmnId(),
+			NbId:   request.GetNbId(),
+		},
 	}
 	nodebInfo.GetGnb().RanFunctions, err = request.GetExtractRanFunctionsList()
 	return nodebInfo, err
