@@ -95,9 +95,9 @@ func TestShutdownExpiredE2T_NotExpired_InternalError(t *testing.T) {
 	rmrMessengerMock, readerMock, _, _, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
 	addresses := []string{E2TAddress,E2TAddress2}
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
-	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2, PodName)
 	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
 
 	readerMock.On("GetE2TAddresses").Return(addresses, nil)
@@ -122,9 +122,9 @@ func TestShutdownExpiredE2T_NotExpired(t *testing.T) {
 	rmrMessengerMock, readerMock, _, _, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
 	addresses := []string{E2TAddress,E2TAddress2}
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
-	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2, PodName)
 	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
 
 	readerMock.On("GetE2TAddresses").Return(addresses, nil)
@@ -139,12 +139,12 @@ func TestShutdownExpiredE2T_One_E2TExpired(t *testing.T) {
 	_, readerMock, _, e2tShutdownManagerMock, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
 	addresses := []string{E2TAddress,E2TAddress2}
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
 
 	time.Sleep(time.Duration(400) * time.Millisecond)
 
-	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2, PodName)
 	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
 
 	readerMock.On("GetE2TAddresses").Return(addresses, nil)
@@ -160,10 +160,10 @@ func TestShutdownExpiredE2T_Two_E2TExpired(t *testing.T) {
 	_, readerMock, _, e2tShutdownManagerMock, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
 	addresses := []string{E2TAddress,E2TAddress2}
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
 
-	e2tInstance2 := entities.NewE2TInstance(E2TAddress2)
+	e2tInstance2 := entities.NewE2TInstance(E2TAddress2, PodName)
 	e2tInstance2.AssociatedRanList = []string{"test4","test5","test6", "test7"}
 
 	time.Sleep(time.Duration(400) * time.Millisecond)
@@ -182,7 +182,7 @@ func TestExecute_Two_E2TExpired(t *testing.T) {
 	rmrMessengerMock, readerMock, _, e2tShutdownManagerMock, e2tKeepAliveWorker := initE2TKeepAliveTest(t)
 
 	addresses := []string{E2TAddress,E2TAddress2}
-	e2tInstance1 := entities.NewE2TInstance(E2TAddress)
+	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.AssociatedRanList = []string{"test1","test2","test3"}
 
 	readerMock.On("GetE2TAddresses").Return(addresses, nil)

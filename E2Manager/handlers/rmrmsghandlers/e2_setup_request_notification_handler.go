@@ -171,7 +171,7 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte)(*mo
 		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
 
-	return setupRequest, e2tIpAddress, nil 
+	return setupRequest, e2tIpAddress, nil
 }
 
 func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error){

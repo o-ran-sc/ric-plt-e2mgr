@@ -42,7 +42,7 @@ type IE2TInstancesManager interface {
 	GetE2TInstance(e2tAddress string) (*entities.E2TInstance, error)
 	GetE2TInstances() ([]*entities.E2TInstance, error)
 	GetE2TInstancesNoLogs() ([]*entities.E2TInstance, error)
-	AddE2TInstance(e2tAddress string) error
+	AddE2TInstance(e2tAddress string, podName string) error
 	RemoveE2TInstance(e2tAddress string) error
 	SelectE2TInstance() (string, error)
 	AddRansToInstance(e2tAddress string, ranNames []string) error
@@ -198,12 +198,12 @@ func findActiveE2TInstanceWithMinimumAssociatedRans(e2tInstances []*entities.E2T
 	return minInstance
 }
 
-func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
+func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string, podName string) error {
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	e2tInstance := entities.NewE2TInstance(e2tAddress)
+	e2tInstance := entities.NewE2TInstance(e2tAddress, podName)
 	err := m.rnibDataService.SaveE2TInstance(e2tInstance)
 
 	if err != nil {
@@ -232,7 +232,7 @@ func (m *E2TInstancesManager) AddE2TInstance(e2tAddress string) error {
 		return err
 	}
 
-	m.logger.Infof("#E2TInstancesManager.AddE2TInstance - E2T Instance address: %s - successfully added E2T instance", e2tInstance.Address)
+	m.logger.Infof("#E2TInstancesManager.AddE2TInstance - E2T Instance address: %s, pod name: %s - successfully added E2T instance", e2tInstance.Address, e2tInstance.PodName)
 	return nil
 }
 

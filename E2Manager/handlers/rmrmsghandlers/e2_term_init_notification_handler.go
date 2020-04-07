@@ -62,7 +62,7 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 		return
 	}
 
-	h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T address: %s - handling E2_TERM_INIT", e2tAddress)
+	h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T payload: %s - handling E2_TERM_INIT", unmarshalledPayload)
 
 	e2tInstance, err := h.e2tInstancesManager.GetE2TInstance(e2tAddress)
 
@@ -74,7 +74,7 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 			return
 		}
 
-		h.HandleNewE2TInstance(e2tAddress)
+		h.HandleNewE2TInstance(e2tAddress, unmarshalledPayload.PodName)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 	}
 }
 
-func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string) {
+func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string, podName string) {
 
 	err := h.routingManagerClient.AddE2TInstance(e2tAddress)
 
@@ -114,5 +114,5 @@ func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string) {
 		return
 	}
 
-	_ = h.e2tInstancesManager.AddE2TInstance(e2tAddress)
+	_ = h.e2tInstancesManager.AddE2TInstance(e2tAddress, podName)
 }

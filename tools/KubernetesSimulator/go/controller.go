@@ -13,15 +13,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package models
 
-type E2TermInitPayload struct {
-	Address string `json:"address"`
-	Fqdn    string `json:"fqdn"`
-	PodName string `json:"pod_name"`
+package kubernetes
+
+import (
+	"net/http"
+)
+
+func DeletePod(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	writer.WriteHeader(http.StatusOK)
 }

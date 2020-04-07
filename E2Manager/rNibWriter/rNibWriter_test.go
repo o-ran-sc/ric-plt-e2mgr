@@ -495,7 +495,7 @@ func TestSaveE2TInstanceSuccess(t *testing.T) {
 func TestSaveE2TInstanceNullE2tInstanceFailure(t *testing.T) {
 	w, _ := initSdlInstanceMock(namespace)
 	var address string
-	e2tInstance := entities.NewE2TInstance(address)
+	e2tInstance := entities.NewE2TInstance(address, "test")
 	err := w.SaveE2TInstance(e2tInstance)
 	assert.NotNil(t, err)
 	assert.IsType(t, &common.ValidationError{}, err)
@@ -529,7 +529,7 @@ func TestSaveE2TInstanceSdlFailure(t *testing.T) {
 }
 
 func generateE2tInstance(address string) *entities.E2TInstance {
-	e2tInstance := entities.NewE2TInstance(address)
+	e2tInstance := entities.NewE2TInstance(address, "pod test")
 
 	e2tInstance.AssociatedRanList = []string{"test1", "test2"}
 
