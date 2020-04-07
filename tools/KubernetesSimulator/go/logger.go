@@ -13,15 +13,44 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package models
 
-type E2TermInitPayload struct {
-	Address string `json:"address"`
-	Fqdn    string `json:"fqdn"`
-	PodName string `json:"pod_name"`
+package kubernetes
+
+import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
+)
+
+func Logger(inner http.Handler, name string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		inner.ServeHTTP(w, r)
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Error reading body: %v", err)
+			http.Error(w, "can't read body", http.StatusBadRequest)
+			return
+		}
+
+		buffer := new(bytes.Buffer)
+		_ =json.Compact(buffer, body)
+
+		log.Printf(
+			"%s %s  body: %s elapsed: %s",
+			r.Method,
+			r.RequestURI,
+			buffer,
+			time.Since(start),
+		)
+	})
 }

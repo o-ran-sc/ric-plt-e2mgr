@@ -211,7 +211,7 @@ func (w *rNibDataService) GetE2TAddressesNoLogs() ([]string, error) {
 }
 
 func (w *rNibDataService) SaveE2TInstance(e2tInstance *entities.E2TInstance) error {
-	w.logger.Infof("#RnibDataService.SaveE2TInstance - E2T instance address: %s, state: %s, associated RANs count: %d, keep Alive ts: %d", e2tInstance.Address, e2tInstance.State, len(e2tInstance.AssociatedRanList), e2tInstance.KeepAliveTimestamp)
+	w.logger.Infof("#RnibDataService.SaveE2TInstance - E2T instance address: %s, podName: %s, state: %s, associated RANs count: %d, keep Alive ts: %d", e2tInstance.Address, e2tInstance.PodName, e2tInstance.State, len(e2tInstance.AssociatedRanList), e2tInstance.KeepAliveTimestamp)
 
 	return w.SaveE2TInstanceNoLogs(e2tInstance)
 }

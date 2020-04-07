@@ -57,11 +57,12 @@ func main() {
 	var msgImpl *rmrCgo.Context
 	rmrMessenger := msgImpl.Init("tcp:"+strconv.Itoa(config.Rmr.Port), config.Rmr.MaxMsgSize, 0, logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
+	kubernetes := managers.NewKubernetesManager(logger, config)
 	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, clients.NewHttpClient())
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
-	e2tShutdownManager := managers.NewE2TShutdownManager(logger, config, rnibDataService, e2tInstancesManager, e2tAssociationManager)
+	e2tShutdownManager := managers.NewE2TShutdownManager(logger, config, rnibDataService, e2tInstancesManager, e2tAssociationManager, kubernetes)
 	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(logger, rmrSender, e2tInstancesManager, e2tShutdownManager, config)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
 	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient, e2tAssociationManager)

@@ -13,15 +13,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package models
 
-type E2TermInitPayload struct {
-	Address string `json:"address"`
-	Fqdn    string `json:"fqdn"`
-	PodName string `json:"pod_name"`
+package main
+
+import (
+	"fmt"
+	"kubsimulator/configuration"
+	"kubsimulator/go"
+	"log"
+	"net/http"
+)
+
+func main() {
+	config := configuration.ParseConfiguration()
+	port := config.Http.Port
+
+	log.Printf("Server started on port %d", port)
+
+	router := kubernetes.NewRouter()
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), router))
 }

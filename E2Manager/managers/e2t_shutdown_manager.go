@@ -39,15 +39,17 @@ type E2TShutdownManager struct {
 	rnibDataService       services.RNibDataService
 	e2TInstancesManager   IE2TInstancesManager
 	e2tAssociationManager *E2TAssociationManager
+	kubernetesManager     *KubernetesManager
 }
 
-func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager) *E2TShutdownManager {
+func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager, kubernetes *KubernetesManager) *E2TShutdownManager {
 	return &E2TShutdownManager{
 		logger:                logger,
 		config:                config,
 		rnibDataService:       rnibDataService,
 		e2TInstancesManager:   e2TInstancesManager,
 		e2tAssociationManager: e2tAssociationManager,
+		kubernetesManager:     kubernetes,
 	}
 }
 
@@ -59,6 +61,8 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 		m.logger.Infof("#E2TShutdownManager.Shutdown - E2T %s is already being deleted", e2tInstance.Address)
 		return nil
 	}
+
+	go m.kubernetesManager.DeletePod(e2tInstance.PodName)
 
 	err := m.markE2tInstanceToBeDeleted(e2tInstance)
 	if err != nil {
@@ -77,7 +81,6 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 		m.logger.Errorf("#E2TShutdownManager.Shutdown - Failed to remove E2T %s.", e2tInstance.Address)
 		return err
 	}
-
 
 	m.logger.Infof("#E2TShutdownManager.Shutdown - E2T %s was shutdown successfully.", e2tInstance.Address)
 	return nil

@@ -35,8 +35,8 @@ func (m *E2TInstancesManagerMock) GetE2TInstance(e2tAddress string) (*entities.E
 	return args.Get(0).(*entities.E2TInstance), args.Error(1)
 }
 
-func (m *E2TInstancesManagerMock) AddE2TInstance(e2tInstanceAddress string) error {
-	args := m.Called(e2tInstanceAddress)
+func (m *E2TInstancesManagerMock) AddE2TInstance(e2tInstanceAddress string, podName string) error {
+	args := m.Called(e2tInstanceAddress, podName)
 	return args.Error(0)
 }
 

@@ -42,6 +42,8 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.NotNil(t, config.GlobalRicId)
 	assert.NotEmpty(t, config.GlobalRicId.PlmnId)
 	assert.NotEmpty(t, config.GlobalRicId.RicNearRtId)
+	assert.NotEmpty(t, config.Kubernetes.Namespace)
+	assert.NotEmpty(t, config.Kubernetes.ConfigPath)
 }
 
 func TestStringer(t *testing.T) {
@@ -206,6 +208,7 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
 		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"kubernetes":    map[string]interface{}{"namespace": "test", "ConfigPath": "test"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -216,5 +219,37 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
 	}
 	assert.PanicsWithValue(t, "#configuration.populateGlobalRicIdConfig - failed to populate Global RicId configuration: The entry 'globalRicId' not found\n",
+		func() { ParseConfiguration() })
+}
+
+func TestKubernetesConfigNotFoundFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestKubernetesConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestKubernetesConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestKubernetesConfigNotFoundFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestKubernetesConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.populateKubernetesConfig - failed to populate Kubernetes configuration: The entry 'kubernetes' not found\n",
 		func() { ParseConfiguration() })
 }
