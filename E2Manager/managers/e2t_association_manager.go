@@ -46,12 +46,6 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entit
 	ranName := nodebInfo.RanName
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - Associating RAN %s to E2T Instance address: %s", ranName, e2tAddress)
 
-	err := m.rmClient.AssociateRanToE2TInstance(e2tAddress, ranName)
-	if err != nil {
-		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RoutingManager failure: Failed to associate RAN %s to E2T %s. Error: %s", ranName, e2tAddress, err)
-		return err
-	}
-
 	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
 	nodebInfo.ConnectionAttempts = 0
 
@@ -61,10 +55,14 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entit
 		return rnibErr
 	}
 
-	err = m.e2tInstanceManager.AddRansToInstance(e2tAddress, []string{ranName})
+	err := m.e2tInstanceManager.AddRansToInstance(e2tAddress, []string{ranName})
 	if err != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to add RAN to E2T instance %s. Error: %s", ranName, e2tAddress, err)
 		return err
+	}
+	err = m.rmClient.AssociateRanToE2TInstance(e2tAddress, ranName)
+	if err != nil {
+		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RoutingManager failure: Failed to associate RAN %s to E2T %s. Error: %s", ranName, e2tAddress, err)
 	}
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tAddress)
 	return nil
