@@ -28,7 +28,7 @@ Library     REST      ${url}
 Suite Teardown   Start Dbass
 
 *** Test Cases ***
-ENDC-setup - 500 http - 500 RNIB error
+Get All nodes - 500 http - 500 RNIB error
     Stop Dbass
     GET      /v1/nodeb/ids
     Integer  response status            500

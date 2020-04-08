@@ -30,15 +30,14 @@ Library    Collections
 Library     REST      ${url}
 
 *** Test Cases ***
-
-Execute X2 setup, verify nodeb connection status is CONNECTED and it's associated to an e2t instance
-   Execute setup and verify connected and associated
+Verify nodeb connection status is CONNECTED and it's associated to an e2t instance
+   Verify connected and associated
 
 Execute Shutdown
    Execute Shutdown
 
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-   Verify shutdown for enb
+   Verify shutdown for gnb
 
 Verify E2T instance has no associated RANs
    Verify E2T instance has no associated RANs
@@ -48,7 +47,7 @@ Execute second Shutdown
    Execute Shutdown
 
 Verify again nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-   Verify shutdown for enb
+   Verify shutdown for gnb
 
 Verify again E2T instance has no associated RANs
    Verify E2T instance has no associated RANs

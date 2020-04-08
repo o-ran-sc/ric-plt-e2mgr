@@ -34,25 +34,12 @@ def flush():
 
     r.flushall()
 
-    r.set("{rsm},CFG:GENERAL:v1.0.0" , "{\"enableResourceStatus\":true,\"partialSuccessAllowed\":true,\"prbPeriodic\":true,\"tnlLoadIndPeriodic\":true,\"wwLoadIndPeriodic\":true,\"absStatusPeriodic\":true,\"rsrpMeasurementPeriodic\":true,\"csiPeriodic\":true,\"periodicityMs\":1,\"periodicityRsrpMeasurementMs\":3,\"periodicityCsiMs\":3}")
+    r.set("{e2Manager},E2TAddresses", "[\"127.0.0.1:38000\"]")
 
-    r.set("{e2Manager},E2TAddresses", "[\"e2t.att.com:38000\"]")
-
-    r.set("{e2Manager},E2TInstance:e2t.att.com:38000", "{\"address\":\"e2t.att.com:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int((time.time()+2) * 1000000000)) + ",\"state\":\"ACTIVE\"}")
+    r.set("{e2Manager},E2TInstance:127.0.0.1:38000","{\"address\":\"127.0.0.1:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int((time.time()+2) * 1000000000)) + ",\"state\":\"ACTIVE\",\"deletionTimeStamp\":0}")
 
     return True
 
-def flush_and_restore_without_e2t_keys():
 
-    c = config.redis_ip_address
 
-    p = config.redis_ip_port
-
-    r = redis.Redis(host=c, port=p, db=0)
-
-    r.flushall()
-
-    r.set("{rsm},CFG:GENERAL:v1.0.0" , "{\"enableResourceStatus\":true,\"partialSuccessAllowed\":true,\"prbPeriodic\":true,\"tnlLoadIndPeriodic\":true,\"wwLoadIndPeriodic\":true,\"absStatusPeriodic\":true,\"rsrpMeasurementPeriodic\":true,\"csiPeriodic\":true,\"periodicityMs\":1,\"periodicityRsrpMeasurementMs\":3,\"periodicityCsiMs\":3}")
-
-    return True
 

@@ -27,40 +27,22 @@ Library    json
 Library    REST      ${url}
 
 *** Keywords ***
-Execute setup and verify connected and associated
-    Post Request setup node b x-2
-    Integer  response status       204
-    Get Request node b enb test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    CONNECTED
-    String   response body associatedE2tInstanceAddress     e2t.att.com:38000
-
-Execute setup twice and verify connected setup failed
-    Post Request setup node b x-2
-    Sleep    1s
-    Post Request setup node b x-2
-    Get Request node b enb test1
-    String     response body connectionStatus     CONNECTED_SETUP_FAILED
-
-
-Verify shutdown for enb
-    Get Request node b enb test1
-    Integer  response status  200
-    String   response body ranName    test1
-    String   response body connectionStatus    SHUT_DOWN
-    Missing  response body associatedE2tInstanceAddress
-
+Verify connected and associated
+   Get Request node b gnb
+   Integer  response status  200
+   String   response body ranName   ${ranName}
+   String   response body connectionStatus    CONNECTED
+   String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
 
 Verify shutdown for gnb
-    Get Request node b gnb test2
+    Get Request node b gnb
     Integer  response status  200
-    String   response body ranName    test2
+    String   response body ranName    ${ranName}
     String   response body connectionStatus    SHUT_DOWN
     Missing  response body associatedE2tInstanceAddress
 
 Verify E2T instance has no associated RANs
-    ${result}    e2mdbscripts.verify_e2t_instance_has_no_associated_rans     e2t.att.com:38000
+    ${result}    e2mdbscripts.verify_e2t_instance_has_no_associated_rans     ${e2tinstanceaddress}
     Should Be True    ${result}
 
 Execute Shutdown

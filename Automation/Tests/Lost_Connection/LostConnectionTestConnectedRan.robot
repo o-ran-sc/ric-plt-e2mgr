@@ -37,25 +37,23 @@ prepare logs for tests
 
 
 Setup Ran and verify it's CONNECTED and associated
-    Post Request setup node b x-2
-    Integer  response status       204
-    Get Request node b enb test1
+    Get Request node b gnb
     Integer  response status  200
-    String   response body ranName    test1
+    String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
-    String   response body associatedE2tInstanceAddress     e2t.att.com:38000
+    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
 
-Restart simulator
-   Restart simulator
+Stop simulator
+   Stop Simulator
 
 Verify connection status is DISCONNECTED and RAN is not associated with E2T instance
-    Sleep    5s
-    GET      /v1/nodeb/test1
+    Sleep    2s
+    GET      ${getNodeb}
     Integer  response status  200
-    String   response body ranName    test1
+    String   response body ranName    ${ranname}
     Missing  response body associatedE2tInstanceAddress
     String   response body connectionStatus    DISCONNECTED
 
 Verify E2T instance is NOT associated with RAN
-   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test1    e2t.att.com:38000
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     ${ranname}  ${e2tinstanceaddress}
    Should Be True    ${result} == False
