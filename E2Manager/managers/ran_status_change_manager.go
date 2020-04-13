@@ -26,6 +26,7 @@ import (
 	"e2mgr/services/rmrsender"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"unsafe"
 )
 
 type RanStatusChangeManager struct {
@@ -55,6 +56,7 @@ func (m *RanStatusChangeManager) Execute(msgType int, msgDirection enums.Message
 	}
 
 	var xAction []byte
-	rmrMessage := models.NewRmrMessage(msgType, nodebInfo.RanName, resourceStatusJson, xAction)
+	var msgSrc unsafe.Pointer
+	rmrMessage := models.NewRmrMessage(msgType, nodebInfo.RanName, resourceStatusJson, xAction, msgSrc)
 	return m.rmrSender.Send(rmrMessage)
 }

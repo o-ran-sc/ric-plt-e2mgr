@@ -20,18 +20,26 @@
 
 package models
 
+import "unsafe"
+
 type RmrMessage struct {
 	MsgType int
 	RanName string
 	Payload []byte
 	XAction []byte
+	msgSrc unsafe.Pointer
 }
 
-func NewRmrMessage(msgType int, ranName string, payload []byte, xAction []byte) *RmrMessage {
+func NewRmrMessage(msgType int, ranName string, payload []byte, xAction []byte, msgSrc unsafe.Pointer) *RmrMessage {
 	return &RmrMessage{
-		MsgType: msgType,
-		RanName: ranName,
-		Payload: payload,
-		XAction: xAction,
+		msgType,
+		ranName,
+		payload,
+		xAction,
+		msgSrc,
 	}
+}
+
+func (m RmrMessage) GetMsgSrc() unsafe.Pointer{
+	return m.msgSrc
 }

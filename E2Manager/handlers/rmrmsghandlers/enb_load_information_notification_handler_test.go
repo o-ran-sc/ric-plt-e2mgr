@@ -43,7 +43,7 @@ func createNotificationRequest(ranName string, transactionId []byte, packedPdu s
 		return nil, err
 	}
 
-	return models.NewNotificationRequest(ranName, packedByteSlice, time.Now(), transactionId), nil
+	return models.NewNotificationRequest(ranName, packedByteSlice, time.Now(), transactionId, nil), nil
 }
 
 func createNotificationRequestAndHandle(ranName string, transactionId []byte, loadInformationHandler EnbLoadInformationNotificationHandler, pdu string) error {

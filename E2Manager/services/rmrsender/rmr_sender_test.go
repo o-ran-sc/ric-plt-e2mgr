@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"unsafe"
 )
 
 func initRmrSenderTest(t *testing.T) (*logger.Logger, *mocks.RmrMessengerMock) {
@@ -54,9 +55,10 @@ func TestRmrSenderSendSuccess(t *testing.T) {
 	ranName := "test"
 	payload := []byte("some payload")
 	var xAction []byte
-	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(&rmrCgo.MBuf{}, nil)
-	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)
@@ -71,9 +73,10 @@ func TestRmrSenderSendFailure(t *testing.T) {
 	ranName := "test"
 	payload := []byte("some payload")
 	var xAction []byte
-	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, fmt.Errorf("rmr send failure"))
-	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)

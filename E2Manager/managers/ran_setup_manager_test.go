@@ -34,6 +34,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
+	"unsafe"
 )
 
 func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibWriterMock, *RanSetupManager) {
@@ -66,8 +67,9 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedX2setupRequest
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
@@ -89,8 +91,9 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedEndcX2setupRequest
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err != nil {
@@ -114,8 +117,9 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(rnibErr)
 
 	payload := []byte{0}
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
@@ -139,8 +143,9 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(rnibErr)
 
 	payload := []byte{0}
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
@@ -166,8 +171,9 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(common.NewInternalError(fmt.Errorf("DB error")))
 
 	payload := []byte{0}
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, fmt.Errorf("send failure"))
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {
@@ -191,8 +197,9 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	payload := e2pdus.PackedX2setupRequest
-	xaction := []byte(ranName)
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xaction)
+	xAction := []byte(ranName)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
 	if err := mgr.ExecuteSetup(initialNodeb, entities.ConnectionStatus_CONNECTING); err == nil {

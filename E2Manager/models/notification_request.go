@@ -20,7 +20,10 @@
 
 package models
 
-import "time"
+import (
+	"time"
+	"unsafe"
+)
 
 type NotificationRequest struct {
 	RanName       string
@@ -28,14 +31,20 @@ type NotificationRequest struct {
 	Payload       []byte
 	StartTime     time.Time
 	TransactionId []byte
+	msgSrc unsafe.Pointer
 }
 
-func NewNotificationRequest(ranName string, payload []byte, startTime time.Time, transactionId []byte) *NotificationRequest {
+func NewNotificationRequest(ranName string, payload []byte, startTime time.Time, transactionId []byte, msgSrc unsafe.Pointer) *NotificationRequest {
 	return &NotificationRequest{
 		ranName,
 		len(payload),
 		payload,
 		startTime,
 		transactionId,
+		msgSrc,
 	}
+}
+
+func (r NotificationRequest) GetMsgSrc() unsafe.Pointer{
+	return r.msgSrc
 }

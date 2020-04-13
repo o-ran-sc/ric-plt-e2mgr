@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 const PackedEndcConfigurationUpdateAck = "2025000a00000100f70003000000"
@@ -47,8 +48,9 @@ func TestHandleEndcConfigUpdateSuccess(t *testing.T) {
 
 	var payload []byte
 	_, _ = fmt.Sscanf(PackedEndcConfigurationUpdateAck, "%x", &payload)
+	var msgSrc unsafe.Pointer
 
-	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_CONF_UPDATE_ACK, len(payload), ranName, &payload, &xAction)
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_CONF_UPDATE_ACK, len(payload), ranName, &payload, &xAction, msgSrc)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: mBuf.Len, Payload: *mBuf.Payload, StartTime: time.Now(),
 		TransactionId: *mBuf.XAction}
 	var err error
@@ -65,8 +67,9 @@ func TestHandleEndcConfigUpdateFailure(t *testing.T) {
 
 	var payload []byte
 	_, _ = fmt.Sscanf(PackedEndcConfigurationUpdateFailure, "%x", &payload)
+	var msgSrc unsafe.Pointer
 
-	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE, len(payload), ranName, &payload, &xAction)
+	mBuf := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE, len(payload), ranName, &payload, &xAction, msgSrc)
 	notificationRequest := models.NotificationRequest{RanName: mBuf.Meid, Len: 0, Payload: []byte{0}, StartTime: time.Now(),
 		TransactionId: *mBuf.XAction}
 	rmrMessengerMock.On("SendMsg", mBuf, true).Return(&rmrCgo.MBuf{}, fmt.Errorf("send failure"))

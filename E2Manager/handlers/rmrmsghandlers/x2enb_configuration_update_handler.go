@@ -54,7 +54,7 @@ func (h X2EnbConfigurationUpdateHandler) Handle(request *models.NotificationRequ
 	if err != nil {
 		h.logger.Errorf("#x2enb_configuration_update_handler.Handle - unpack failed. Error: %v", err)
 
-		msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateFailure, request.TransactionId)
+		msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_FAILURE, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateFailure, request.TransactionId, request.GetMsgSrc())
 		_ = h.rmrSender.Send(msg)
 
 		h.logger.Infof("#X2EnbConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling enb configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
@@ -64,7 +64,7 @@ func (h X2EnbConfigurationUpdateHandler) Handle(request *models.NotificationRequ
 	h.logger.Infof("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message received")
 	h.logger.Debugf("#x2enb_configuration_update_handler.Handle - Enb configuration update initiating message payload: %s", refinedMessage.PduPrint)
 
-	msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateAck,request.TransactionId)
+	msg := models.NewRmrMessage(rmrCgo.RIC_ENB_CONFIGURATION_UPDATE_ACK, request.RanName, e2pdus.PackedX2EnbConfigurationUpdateAck,request.TransactionId, request.GetMsgSrc())
 	_ = h.rmrSender.Send(msg)
 
 	h.logger.Infof("#X2EnbConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling enb configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
