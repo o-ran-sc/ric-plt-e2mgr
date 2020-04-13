@@ -54,7 +54,7 @@ func (h EndcConfigurationUpdateHandler) Handle(request *models.NotificationReque
 	if err != nil {
 		h.logger.Errorf("#endc_configuration_update_handler.Handle - unpack failed. Error: %v", err)
 
-		msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE, request.RanName, e2pdus.PackedEndcConfigurationUpdateFailure, request.TransactionId)
+		msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_FAILURE, request.RanName, e2pdus.PackedEndcConfigurationUpdateFailure, request.TransactionId, request.GetMsgSrc())
 		_ = h.rmrSender.Send(msg)
 
 		h.logger.Infof("#EndcConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling endc configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
@@ -63,7 +63,7 @@ func (h EndcConfigurationUpdateHandler) Handle(request *models.NotificationReque
 
 	h.logger.Infof("#endc_configuration_update_handler.Handle - Endc configuration update initiating message received")
 	h.logger.Debugf("#endc_configuration_update_handler.Handle - Endc configuration update initiating message payload: %s", refinedMessage.PduPrint)
-	msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_ACK, request.RanName, e2pdus.PackedEndcConfigurationUpdateAck, request.TransactionId)
+	msg := models.NewRmrMessage(rmrCgo.RIC_ENDC_CONF_UPDATE_ACK, request.RanName, e2pdus.PackedEndcConfigurationUpdateAck, request.TransactionId, request.GetMsgSrc())
 	_ = h.rmrSender.Send(msg)
 
 	h.logger.Infof("#EndcConfigurationUpdateHandler.Handle - Summary: elapsed time for receiving and handling endc configuration update initiating message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))

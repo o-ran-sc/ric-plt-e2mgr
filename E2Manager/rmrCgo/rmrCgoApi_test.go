@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
+	"unsafe"
 )
 
 var (
@@ -47,7 +48,8 @@ func TestLogger(t *testing.T) {
 }
 
 func TestNewMBufSuccess(t *testing.T) {
-	msg := rmrCgo.NewMBuf(tests.MessageType, len(tests.DummyPayload), "RanName", &tests.DummyPayload, &tests.DummyXAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(tests.MessageType, len(tests.DummyPayload), "RanName", &tests.DummyPayload, &tests.DummyXAction, msgSrc)
 	assert.NotNil(t, msg)
 	assert.NotEmpty(t, msg.Payload)
 	assert.NotEmpty(t, msg.XAction)
