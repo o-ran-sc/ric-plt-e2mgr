@@ -30,6 +30,7 @@ import (
 	"e2mgr/services/rmrsender"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"unsafe"
 )
 
 const (
@@ -82,8 +83,8 @@ func (handler *X2ResetRequestHandler) Handle(request models.Request) (models.IRe
 	}
 
 	var xAction []byte
-
-	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET, resetRequest.RanName, payload, xAction)
+	var msgSrc unsafe.Pointer
+	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET, resetRequest.RanName, payload, xAction, msgSrc)
 
 	err = handler.rmrSender.Send(msg)
 

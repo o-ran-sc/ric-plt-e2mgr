@@ -49,7 +49,7 @@ func (m NotificationManager) HandleMessage(mbuf *rmrCgo.MBuf) error {
 		return err
 	}
 
-	notificationRequest := models.NewNotificationRequest(mbuf.Meid, *mbuf.Payload, time.Now(), *mbuf.XAction)
+	notificationRequest := models.NewNotificationRequest(mbuf.Meid, *mbuf.Payload, time.Now(), *mbuf.XAction, mbuf.GetMsgSrc())
 	go notificationHandler.Handle(notificationRequest)
 	return nil
 }

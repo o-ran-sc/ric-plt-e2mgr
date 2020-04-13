@@ -214,7 +214,7 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSendFails(t *testing.T) {
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
 
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, e2managererrors.NewRmrError())
 	_, err := h.Handle(nil)
 	assert.IsType(t, &e2managererrors.RmrError{}, err)
@@ -242,7 +242,7 @@ func testTwoRansTryShuttingDownSucceedsClearSucceedsRmrSucceedsAllRansAreShutdow
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
 
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
 	resp, err := h.Handle(nil)
 	assert.Nil(t, err)
@@ -353,7 +353,7 @@ func testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
 
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
 
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
@@ -421,7 +421,7 @@ func TestSuccessTwoE2TInstancesSixRans(t *testing.T) {
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance2).Return(nil)
 
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
-	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction)
+	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
 
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)

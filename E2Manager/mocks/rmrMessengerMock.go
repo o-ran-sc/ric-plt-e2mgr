@@ -40,6 +40,11 @@ func (m *RmrMessengerMock) SendMsg(msg *rmrCgo.MBuf, printLogs bool) (*rmrCgo.MB
 	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)
 }
 
+func (m *RmrMessengerMock) WhSendMsg(msg *rmrCgo.MBuf, printLogs bool) (*rmrCgo.MBuf, error){
+	args := m.Called(msg, printLogs)
+	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)
+}
+
 func (m *RmrMessengerMock) RecvMsg() (*rmrCgo.MBuf, error){
 	args := m.Called()
 	return args.Get(0).(*rmrCgo.MBuf), args.Error(1)

@@ -31,13 +31,14 @@ import (
 	"unsafe"
 )
 
-func NewMBuf(mType int, len int, meid string, payload *[]byte, xAction *[]byte) *MBuf {
+func NewMBuf(mType int, len int, meid string, payload *[]byte, xAction *[]byte, msgSrc unsafe.Pointer) *MBuf {
 	return &MBuf{
-		MType:   mType,
-		Len:     len,
-		Meid:    meid,
-		Payload: payload,
-		XAction: xAction,
+		mType,
+		len,
+		meid,
+		payload,
+		xAction,
+		msgSrc,
 	}
 }
 
@@ -84,6 +85,7 @@ const (
 const (
 	RMR_MAX_XACTION_LEN = int(C.RMR_MAX_XID)
 	RMR_MAX_MEID_LEN    = int(C.RMR_MAX_MEID)
+	RMR_MAX_SRC_LEN			= int(C.RMR_MAX_SRC)
 
 	//states
 	RMR_OK             = C.RMR_OK
@@ -129,10 +131,15 @@ type MBuf struct {
 	Meid    string //Managed entity id (RAN name)
 	Payload *[]byte
 	XAction *[]byte
+	msgSrc  unsafe.Pointer
 }
 
 func (m MBuf) String() string {
 	return fmt.Sprintf("{ MType: %d, Len: %d, Meid: %q, Xaction: %q, Payload: [%x] }", m.MType, m.Len, m.Meid, m.XAction, m.Payload)
+}
+
+func (m MBuf) GetMsgSrc() unsafe.Pointer {
+	return m.msgSrc
 }
 
 type Context struct {
@@ -145,6 +152,7 @@ type Context struct {
 type RmrMessenger interface {
 	Init(port string, maxMsgSize int, flags int, logger *logger.Logger) RmrMessenger
 	SendMsg(msg *MBuf, printLogs bool) (*MBuf, error)
+	WhSendMsg(msg *MBuf, printLogs bool) (*MBuf, error)
 	RecvMsg() (*MBuf, error)
 	IsReady() bool
 	Close()

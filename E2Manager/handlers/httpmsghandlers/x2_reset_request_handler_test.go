@@ -32,6 +32,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"unsafe"
 )
 
 func setupX2ResetRequestHandlerTest(t *testing.T) (*X2ResetRequestHandler, *mocks.RmrMessengerMock, *mocks.RnibReaderMock) {
@@ -53,7 +54,8 @@ func TestHandleSuccessfulDefaultCause(t *testing.T) {
 	// o&m intervention
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	var xAction[]byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
 
 	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
@@ -71,7 +73,8 @@ func TestHandleSuccessfulRequestedCause(t *testing.T) {
 	ranName := "test1"
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
 	var xAction[]byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
@@ -138,7 +141,8 @@ func TestHandleFailureRmrError(t *testing.T) {
 	// o&m intervention
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	var xAction[]byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", msg, true).Return(&rmrCgo.MBuf{}, fmt.Errorf("rmr error"))
 
 	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
