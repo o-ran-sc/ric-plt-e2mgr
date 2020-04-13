@@ -109,36 +109,62 @@ func (h E2SetupRequestNotificationHandler) Handle(request *models.NotificationRe
 			return
 		}
 	}
-	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	err = h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
 	if err != nil{
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to associate E2T to nodeB entity. Error: %s", ranName, err)
+		h.handleUnsuccessfulResponse(nodebInfo, request)
 		return
 	}
+	h.handleSuccessfulResponse(ranName, request, setupRequest)
+
+}
+
+func (h E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(nodebInfo *entities.NodebInfo, req *models.NotificationRequest){
+	failureResponse := models.NewE2SetupFailureResponseMessage()
+	h.logger.Debugf("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - E2_SETUP_RESPONSE has been built successfully %+v", failureResponse)
+
+	responsePayload, err := xml.Marshal(&failureResponse.E2APPDU)
+	if err != nil{
+		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", nodebInfo.RanName, responsePayload)
+	}
+
+	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
+
+	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_FAILURE, nodebInfo.RanName, responsePayload, req.TransactionId, req.GetMsgSrc())
+	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", nodebInfo.RanName, msg)
+	_ = h.rmrSender.WhSend(msg)
+
+}
+
+func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName string, req *models.NotificationRequest, setupRequest *models.E2SetupRequestMessage){
 
 	ricNearRtId, err := convertTo20BitString(h.config.GlobalRicId.RicNearRtId)
 	if err != nil{
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to convert RicNearRtId value %s to 20 bit string . Error: %s", ranName, h.config.GlobalRicId.RicNearRtId, err)
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - failed to convert RicNearRtId value %s to 20 bit string . Error: %s", ranName, h.config.GlobalRicId.RicNearRtId, err)
 		return
 	}
 	successResponse := models.NewE2SetupSuccessResponseMessage(h.config.GlobalRicId.PlmnId, ricNearRtId,setupRequest)
-	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - E2_SETUP_RESPONSE has been built successfully %+v", successResponse)
+	h.logger.Debugf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - E2_SETUP_RESPONSE has been built successfully %+v", successResponse)
 
 	responsePayload, err := xml.Marshal(&successResponse.E2APPDU)
 	if err != nil{
-		h.logger.Warnf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
+		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
 	}
 
-	responsePayload = replaceCriticalityTagsWithSelfClosing(responsePayload)
+	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
 
-	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, request.TransactionId)
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
+	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
+	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
 	_ = h.rmrSender.Send(msg)
 }
 
-func replaceCriticalityTagsWithSelfClosing(responsePayload []byte) []byte {
-	responseString := strings.Replace(string(responsePayload), "<reject></reject>", "<reject/>", -1)
-	responseString = strings.Replace(responseString, "<ignore></ignore>", "<ignore/>", -1)
+
+func replaceEmptyTagsWithSelfClosing(responsePayload []byte) []byte {
+	responseString := strings.NewReplacer(
+		"<reject></reject>", "<reject/>",
+		"<ignore></ignore>", "<ignore/>",
+		"<transport-resource-unavailable></transport-resource-unavailable>", "<transport-resource-unavailable/>",
+		).Replace(string(responsePayload))
 	return []byte(responseString)
 }
 

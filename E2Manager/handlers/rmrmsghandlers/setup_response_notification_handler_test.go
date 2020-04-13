@@ -40,6 +40,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
+	"unsafe"
 )
 
 const (
@@ -160,7 +161,8 @@ func getRanConnectedMbuf(nodeType entities.Node_Type) *rmrCgo.MBuf {
 	var xAction []byte
 	resourceStatusPayload := models.NewResourceStatusPayload(nodeType, enums.RIC_TO_RAN)
 	resourceStatusJson, _ := json.Marshal(resourceStatusPayload)
-	return rmrCgo.NewMBuf(rmrCgo.RAN_CONNECTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xAction)
+	var msgSrc unsafe.Pointer
+	return rmrCgo.NewMBuf(rmrCgo.RAN_CONNECTED, len(resourceStatusJson), RanName, &resourceStatusJson, &xAction, msgSrc)
 }
 
 func executeHandleSetupFailureResponse(t *testing.T, tc setupFailureResponseTestCase) (*setupResponseTestContext, *entities.NodebInfo) {

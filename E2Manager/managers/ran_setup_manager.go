@@ -29,6 +29,7 @@ import (
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"unsafe"
 )
 
 type RanSetupManager struct {
@@ -110,7 +111,8 @@ func (m *RanSetupManager) ExecuteSetup(nodebInfo *entities.NodebInfo, status ent
 
 	// Send the endc/x2 setup request
 	var xAction []byte
-	msg := models.NewRmrMessage(rmrMsgType, nodebInfo.RanName, request.GetMessageAsBytes(m.logger), xAction)
+	var msgSrc unsafe.Pointer
+	msg := models.NewRmrMessage(rmrMsgType, nodebInfo.RanName, request.GetMessageAsBytes(m.logger), xAction, msgSrc)
 
 	err = m.rmrSender.Send(msg)
 
