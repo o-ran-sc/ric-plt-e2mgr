@@ -9,7 +9,6 @@ require (
 	github.com/go-ozzo/ozzo-validation v3.5.0+incompatible
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/mux v1.7.0
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/magiconair/properties v1.8.1
 	github.com/pelletier/go-toml v1.5.0 // indirect

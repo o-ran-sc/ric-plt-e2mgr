@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package httpserver
 
 import (
@@ -43,16 +42,16 @@ func Run(log *logger.Logger, port int, rootController controllers.IRootControlle
 
 func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) {
 	r := router.PathPrefix("/v1").Subrouter()
-	r.HandleFunc("/health", rootController.HandleHealthCheckRequest).Methods("GET")
+	r.HandleFunc("/health", rootController.HandleHealthCheckRequest).Methods(http.MethodGet)
 
 	rr := r.PathPrefix("/nodeb").Subrouter()
-	rr.HandleFunc("/ids", nodebController.GetNodebIdList).Methods("GET")
-	rr.HandleFunc("/{ranName}", nodebController.GetNodeb).Methods("GET")
-	rr.HandleFunc("/shutdown", nodebController.Shutdown).Methods("PUT")
-	rr.HandleFunc("/{ranName}/reset", nodebController.X2Reset).Methods("PUT")
-	rr.HandleFunc("/x2-setup", nodebController.X2Setup).Methods("POST")
-	rr.HandleFunc("/endc-setup", nodebController.EndcSetup).Methods("POST")
-
+	rr.HandleFunc("/ids", nodebController.GetNodebIdList).Methods(http.MethodGet)
+	rr.HandleFunc("/{ranName}", nodebController.GetNodeb).Methods(http.MethodGet)
+	rr.HandleFunc("/{ranName}/update", nodebController.UpdateGnb).Methods(http.MethodPut)
+	rr.HandleFunc("/shutdown", nodebController.Shutdown).Methods(http.MethodPut)
+	rr.HandleFunc("/{ranName}/reset", nodebController.X2Reset).Methods(http.MethodPut)
+	rr.HandleFunc("/x2-setup", nodebController.X2Setup).Methods(http.MethodPost)
+	rr.HandleFunc("/endc-setup", nodebController.EndcSetup).Methods(http.MethodPost)
 	rrr := r.PathPrefix("/e2t").Subrouter()
-	rrr.HandleFunc("/list", e2tController.GetE2TInstances).Methods("GET")
+	rrr.HandleFunc("/list", e2tController.GetE2TInstances).Methods(http.MethodGet)
 }

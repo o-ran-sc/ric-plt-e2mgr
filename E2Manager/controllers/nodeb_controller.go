@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package controllers
 
 import (
@@ -26,6 +25,9 @@ import (
 	"e2mgr/models"
 	"e2mgr/providers/httpmsghandlerprovider"
 	"encoding/json"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -45,6 +47,7 @@ type INodebController interface {
 	X2Setup(writer http.ResponseWriter, r *http.Request)
 	EndcSetup(writer http.ResponseWriter, r *http.Request)
 	GetNodeb(writer http.ResponseWriter, r *http.Request)
+	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
 }
 
@@ -72,6 +75,24 @@ func (c *NodebController) GetNodeb(writer http.ResponseWriter, r *http.Request) 
 	ranName := vars["ranName"]
 	request := models.GetNodebRequest{RanName: ranName}
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebRequest, request, false)
+}
+
+func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.UpdateGnb - request: %v", c.prettifyRequest(r))
+	vars := mux.Vars(r)
+	ranName := vars[ParamRanName]
+
+	request := models.UpdateGnbRequest{}
+
+	gnb := entities.Gnb{}
+
+	if !c.extractRequestBodyToProto(r, &gnb, writer) {
+		return
+	}
+
+	request.Gnb = &gnb;
+	request.RanName = ranName
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true)
 }
 
 func (c *NodebController) Shutdown(writer http.ResponseWriter, r *http.Request) {
@@ -116,6 +137,20 @@ func (c *NodebController) EndcSetup(writer http.ResponseWriter, r *http.Request)
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.EndcSetupRequest, request, true)
 }
 
+func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message , writer http.ResponseWriter) bool {
+	defer r.Body.Close()
+
+	err := jsonpb.Unmarshal(r.Body, pb)
+
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.extractJsonBody - unable to extract json body - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return false
+	}
+
+	return true
+}
+
 func (c *NodebController) extractJsonBody(r *http.Request, request models.Request, writer http.ResponseWriter) bool {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
@@ -136,9 +171,9 @@ func (c *NodebController) extractJsonBody(r *http.Request, request models.Reques
 	return true
 }
 
-func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http.Header, requestName httpmsghandlerprovider.IncomingRequest, request models.Request, validateHeader bool) {
+func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http.Header, requestName httpmsghandlerprovider.IncomingRequest, request models.Request, validateRequestHeaders bool) {
 
-	if validateHeader {
+	if validateRequestHeaders {
 
 		err := c.validateRequestHeader(header)
 		if err != nil {

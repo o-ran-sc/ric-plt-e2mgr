@@ -17,42 +17,32 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package tests
+package models
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"strconv"
+	"e2mgr/e2managererrors"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/golang/protobuf/jsonpb"
 )
 
-const (
-	MaxMsgSize  int    = 4096
-	Port        int    = 3801
-	Flags       int    = 0
-	MessageType int    = 1001
-	RanPort     uint16 = 879
-	RanName     string = "test"
-	RanIp       string = "10.0.0.3"
-)
-
-var (
-	DummyPayload = []byte{1, 2, 3, 4}
-	DummyXAction = []byte{5, 6, 7, 8}
-)
-
-func GetPort() string {
-	return "tcp:" + strconv.Itoa(Port)
+type UpdateGnbResponse struct {
+	nodebInfo *entities.NodebInfo
 }
 
-func GetHttpRequest() *http.Request {
-	data := map[string]interface{}{
-		"ranIp":   RanIp,
-		"ranPort": RanPort,
-		"ranName": RanName,
+func NewUpdateGnbResponse(nodebInfo *entities.NodebInfo) *UpdateGnbResponse {
+	return &UpdateGnbResponse{
+		nodebInfo: nodebInfo,
 	}
-	b := new(bytes.Buffer)
-	_ = json.NewEncoder(b).Encode(data)
-	req, _ := http.NewRequest("POST", "https://localhost:3800/request", b)
-	return req
+}
+
+func (response *UpdateGnbResponse) Marshal() ([]byte, error) {
+	m := jsonpb.Marshaler{}
+	result, err := m.MarshalToString(response.nodebInfo)
+
+	if err != nil {
+		return nil, e2managererrors.NewInternalError()
+	}
+
+	return []byte(result), nil
+
 }

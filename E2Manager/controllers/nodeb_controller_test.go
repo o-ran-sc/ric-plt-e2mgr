@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package controllers
 
 import (
@@ -51,6 +50,19 @@ import (
 	"testing"
 )
 
+const (
+	RanName                      = "test"
+	AssociatedE2TInstanceAddress = "10.0.2.15:38000"
+	ValidationFailureJson        = "{\"errorCode\":402,\"errorMessage\":\"Validation error\"}"
+	ResourceNotFoundJson         = "{\"errorCode\":404,\"errorMessage\":\"Resource not found\"}"
+	RnibErrorJson                = "{\"errorCode\":500,\"errorMessage\":\"RNIB error\"}"
+)
+
+var (
+	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "nrPci", "servedPlmns"}
+	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode", "nrPci"}
+)
+
 type controllerGetNodebTestContext struct {
 	ranName              string
 	nodebInfo            *entities.NodebInfo
@@ -66,7 +78,56 @@ type controllerGetNodebIdListTestContext struct {
 	expectedJsonResponse string
 }
 
-func  setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
+type getNodebInfoResult struct {
+	nodebInfo *entities.NodebInfo
+	rnibError error
+}
+
+type controllerUpdateGnbTestContext struct {
+	getNodebInfoResult   *getNodebInfoResult
+	requestBody          map[string]interface{}
+	expectedStatusCode   int
+	expectedJsonResponse string
+}
+
+func buildNrNeighbourInformation(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"nrCgi": "whatever",
+		"choiceNrMode": map[string]interface{}{
+			"tdd": map[string]interface{}{},
+		},
+		"nrMode": 1,
+		"nrPci":  1,
+	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func buildServedNrCellInformation(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"cellId": "whatever",
+		"choiceNrMode": map[string]interface{}{
+			"fdd": map[string]interface{}{},
+		},
+		"nrMode": 1,
+		"nrPci":  1,
+		"servedPlmns": []interface{}{
+			"whatever",
+		},
+	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
 	log := initLog(t)
 	config := configuration.ParseConfiguration()
 
@@ -110,13 +171,13 @@ func TestX2SetupSuccess(t *testing.T) {
 	controller, readerMock, writerMock, rmrMessengerMock, _ := setupControllerTest(t)
 
 	ranName := "test"
-	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress:"10.0.2.15:8989"}
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	readerMock.On("GetNodeb", ranName).Return(nb, nil)
 	var nbUpdated = *nb
 	nbUpdated.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
 
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress:"10.0.2.15:8989"}
+	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
 
 	payload := e2pdus.PackedX2setupRequest
@@ -141,17 +202,17 @@ func TestEndcSetupSuccess(t *testing.T) {
 	controller, readerMock, writerMock, rmrMessengerMock, _ := setupControllerTest(t)
 
 	ranName := "test"
-	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress:"10.0.2.15:8989"}
+	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	readerMock.On("GetNodeb", ranName).Return(nb, nil)
 	var nbUpdated = *nb
 	nbUpdated.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
 
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress:"10.0.2.15:8989"}
+	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
 
 	payload := e2pdus.PackedEndcX2setupRequest
-	var xAction[]byte
+	var xAction []byte
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
@@ -168,7 +229,7 @@ func TestEndcSetupSuccess(t *testing.T) {
 }
 
 func TestShutdownHandlerRnibError(t *testing.T) {
-	controller, _, _, _, e2tInstancesManagerMock:= setupControllerTest(t)
+	controller, _, _, _, e2tInstancesManagerMock := setupControllerTest(t)
 	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, e2managererrors.NewRnibDbError())
 
 	writer := httptest.NewRecorder()
@@ -185,7 +246,7 @@ func controllerGetNodebTestExecuter(t *testing.T, context *controllerGetNodebTes
 	controller, readerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	readerMock.On("GetNodeb", context.ranName).Return(context.nodebInfo, context.rnibError)
-	req, _ := http.NewRequest("GET", "/nodeb", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/nodeb", nil)
 	req = mux.SetURLVars(req, map[string]string{"ranName": context.ranName})
 	controller.GetNodeb(writer, req)
 	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
@@ -197,11 +258,218 @@ func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNo
 	controller, readerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	readerMock.On("GetListNodebIds").Return(context.nodebIdList, context.rnibError)
-	req, _ := http.NewRequest("GET", "/nodeb/ids", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/nodeb/ids", nil)
 	controller.GetNodebIdList(writer, req)
 	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
 	bodyBytes, _ := ioutil.ReadAll(writer.Body)
 	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+}
+
+func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbTestContext) {
+	controller, readerMock, _, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+
+	if context.getNodebInfoResult != nil {
+		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
+	}
+
+	updateGnbUrl := fmt.Sprintf("/nodeb/%s/update", RanName)
+	requestBody := getJsonRequestAsBuffer(context.requestBody)
+	req, _ := http.NewRequest(http.MethodGet, updateGnbUrl, requestBody)
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"ranName": RanName})
+	controller.UpdateGnb(writer, req)
+	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+}
+
+func TestControllerUpdateGnbEmptyServedNrCells(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+			},
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbMissingServedNrCellInformation(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": nil,
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbMissingServedNrCellRequiredProp(t *testing.T) {
+
+	for _, v := range ServedNrCellInformationRequiredFields {
+		context := controllerUpdateGnbTestContext{
+			getNodebInfoResult: nil,
+			requestBody: map[string]interface{}{
+				"servedNrCells": []interface{}{
+					map[string]interface{}{
+						"servedNrCellInformation": buildServedNrCellInformation(v),
+					},
+				},
+			},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerUpdateGnbTestExecuter(t, &context)
+	}
+}
+
+func TestControllerUpdateGnbMissingServedNrCellFddOrTdd(t *testing.T) {
+
+	servedNrCellInformation := buildServedNrCellInformation("")
+	servedNrCellInformation["choiceNrMode"] = map[string]interface{}{}
+
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": servedNrCellInformation,
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbMissingNeighbourInfoFddOrTdd(t *testing.T) {
+
+	nrNeighbourInfo := buildNrNeighbourInformation("")
+	nrNeighbourInfo["choiceNrMode"] = map[string]interface{}{}
+
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos":        []interface{}{
+						nrNeighbourInfo,
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbMissingNrNeighbourInformationRequiredProp(t *testing.T) {
+
+	for _, v := range NrNeighbourInformationRequiredFields {
+		context := controllerUpdateGnbTestContext{
+			getNodebInfoResult: nil,
+			requestBody: map[string]interface{}{
+				"servedNrCells": []interface{}{
+					map[string]interface{}{
+						"servedNrCellInformation": buildServedNrCellInformation(""),
+						"nrNeighbourInfos":        []interface{}{
+							buildNrNeighbourInformation(v),
+						},
+					},
+				},
+			},
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerUpdateGnbTestExecuter(t, &context)
+	}
+}
+
+func TestControllerUpdateGnbValidServedNrCellInformationAndNrNeighbourInfoGetNodebSuccess(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress},
+			rnibError: nil,
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos":        []interface{}{
+						buildNrNeighbourInformation(""),
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusOK,
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbValidServedNrCellInformationGetNodebNotFound(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusNotFound,
+		expectedJsonResponse: ResourceNotFoundJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbValidServedNrCellInformationGetNodebInternalError(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func getJsonRequestAsBuffer(requestJson map[string]interface{}) *bytes.Buffer {
+	b := new(bytes.Buffer)
+	_ = json.NewEncoder(b).Encode(requestJson)
+	return b;
 }
 
 func TestControllerGetNodebSuccess(t *testing.T) {
@@ -227,7 +495,7 @@ func TestControllerGetNodebNotFound(t *testing.T) {
 		nodebInfo:            nodebInfo,
 		rnibError:            common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
 		expectedStatusCode:   http.StatusNotFound,
-		expectedJsonResponse: "{\"errorCode\":404,\"errorMessage\":\"Resource not found\"}",
+		expectedJsonResponse: ResourceNotFoundJson,
 	}
 
 	controllerGetNodebTestExecuter(t, &context)
@@ -241,7 +509,7 @@ func TestControllerGetNodebInternal(t *testing.T) {
 		nodebInfo:            nodebInfo,
 		rnibError:            common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
 		expectedStatusCode:   http.StatusInternalServerError,
-		expectedJsonResponse: "{\"errorCode\":500,\"errorMessage\":\"RNIB error\"}",
+		expectedJsonResponse: RnibErrorJson,
 	}
 
 	controllerGetNodebTestExecuter(t, &context)
@@ -284,7 +552,7 @@ func TestControllerGetNodebIdListInternal(t *testing.T) {
 		nodebIdList:          nodebIdList,
 		rnibError:            common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
 		expectedStatusCode:   http.StatusInternalServerError,
-		expectedJsonResponse: "{\"errorCode\":500,\"errorMessage\":\"RNIB error\"}",
+		expectedJsonResponse: RnibErrorJson,
 	}
 
 	controllerGetNodebIdListTestExecuter(t, &context)
@@ -453,7 +721,7 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 }
 
 func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
-	controller, _, _, _ , _:= setupControllerTest(t)
+	controller, _, _, _, _ := setupControllerTest(t)
 
 	ranName := "test1"
 
@@ -470,7 +738,7 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 }
 
 func TestHandleErrorResponse(t *testing.T) {
-	controller, _, _, _ , _:= setupControllerTest(t)
+	controller, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	controller.handleErrorResponse(e2managererrors.NewRnibDbError(), writer)
