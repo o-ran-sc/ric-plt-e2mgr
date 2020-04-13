@@ -309,7 +309,7 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))
 	var errEmpty error
 	rmrMessage := &rmrCgo.MBuf{}
-	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	rmrMessengerMock.On("WhSendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
 
 	prefBytes := []byte(prefix)
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append(prefBytes, xmlGnb...)}
@@ -319,8 +319,8 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 	writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, mock.Anything)
 	routingManagerClientMock.AssertCalled(t, "AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything)
 	writerMock.AssertCalled(t, "UpdateNodebInfo", mock.Anything)
-	e2tInstancesManagerMock.AssertCalled(t, "AddRansToInstance", mock.Anything, mock.Anything)
-	rmrMessengerMock.AssertCalled(t, "SendMsg", mock.Anything, mock.Anything)
+	e2tInstancesManagerMock.AssertNotCalled(t, "AddRansToInstance", mock.Anything, mock.Anything)
+	rmrMessengerMock.AssertCalled(t, "WhSendMsg", mock.Anything, mock.Anything)
 }
 
 

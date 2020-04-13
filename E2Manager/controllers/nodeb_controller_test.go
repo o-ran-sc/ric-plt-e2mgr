@@ -48,6 +48,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"unsafe"
 )
 
 const (
@@ -182,7 +183,8 @@ func TestX2SetupSuccess(t *testing.T) {
 
 	payload := e2pdus.PackedX2setupRequest
 	var xAction []byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
@@ -213,7 +215,8 @@ func TestEndcSetupSuccess(t *testing.T) {
 
 	payload := e2pdus.PackedEndcX2setupRequest
 	var xAction []byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
 
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
 
@@ -657,7 +660,7 @@ func parseJsonRequest(t *testing.T, r io.Reader) models.ErrorResponse {
 	if err != nil {
 		t.Errorf("Error cannot deserialize json request")
 	}
-	json.Unmarshal(body, &errorResponse)
+	_ =json.Unmarshal(body, &errorResponse)
 
 	return errorResponse
 }
@@ -676,7 +679,8 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 	ranName := "test1"
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
 	var xAction []byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
 
 	writer := httptest.NewRecorder()
@@ -702,7 +706,8 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	// o&m intervention
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
 	var xAction []byte
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
 	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
 
 	writer := httptest.NewRecorder()

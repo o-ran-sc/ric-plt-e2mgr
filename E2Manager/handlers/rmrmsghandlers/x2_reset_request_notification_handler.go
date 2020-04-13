@@ -79,7 +79,7 @@ func (h X2ResetRequestNotificationHandler) Handle(request *models.NotificationRe
 		return
 	}
 
-	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, e2pdus.PackedX2ResetResponse, request.TransactionId)
+	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, e2pdus.PackedX2ResetResponse, request.TransactionId, request.GetMsgSrc())
 
 	_ = h.rmrSender.Send(msg)
 	h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))

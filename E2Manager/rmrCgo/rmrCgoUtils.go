@@ -45,7 +45,10 @@ func convertToMBuf(logger *logger.Logger, m *C.rmr_mbuf_t) *MBuf {
 		Len:   int(m.len),
 		Payload: &payloadArr,
 		XAction: &xActionArr,
+		msgSrc: C.CBytes(make([]byte, RMR_MAX_SRC_LEN)),
 	}
+
+	C.rmr_get_src(m, (*C.uchar)(mbuf.msgSrc)) // Capture message source
 
 	meidBuf := make([]byte, RMR_MAX_MEID_LEN)
 	if meidCstr := C.rmr_get_meid(m, (*C.uchar)(unsafe.Pointer(&meidBuf[0]))); meidCstr != nil {

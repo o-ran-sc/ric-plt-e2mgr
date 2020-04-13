@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func initE2TKeepAliveTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.E2TShutdownManagerMock, *E2TKeepAliveWorker) {
@@ -64,7 +65,8 @@ func TestSendKeepAliveRequest(t *testing.T) {
 	e2tKeepAliveWorker.SendKeepAliveRequest()
 
 	var payload, xAction []byte
-	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction, msgSrc)
 
 	rmrMessengerMock.AssertCalled(t, "SendMsg", req, false)
 }
@@ -195,7 +197,8 @@ func TestExecute_Two_E2TExpired(t *testing.T) {
 	time.Sleep(time.Duration(500) * time.Millisecond)
 
 	var payload, xAction []byte
-	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction)
+	var msgSrc unsafe.Pointer
+	req := rmrCgo.NewMBuf(rmrCgo.E2_TERM_KEEP_ALIVE_REQ, 0, "", &payload, &xAction, msgSrc)
 
 	rmrMessengerMock.AssertCalled(t, "SendMsg", req, false)
 	e2tShutdownManagerMock.AssertCalled(t, "Shutdown", e2tInstance1)

@@ -87,6 +87,41 @@ func (ctx *Context) SendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
 	return convertToMBuf(ctx.Logger, currCMBuf), nil
 }
 
+func (ctx *Context) WhSendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
+	ctx.checkContextInitialized()
+	ctx.Logger.Debugf("#rmrCgoApi.WhSendMsg - Going to wormhole send message. MBuf: %v", *msg)
+
+	whid := C.rmr_wh_open(ctx.RmrCtx, (*C.char)(msg.GetMsgSrc()))		// open direct connection, returns wormhole ID
+	ctx.Logger.Infof("#rmrCgoApi.WhSendMsg - The wormhole id %v has been received", whid)
+	defer C.rmr_wh_close(ctx.RmrCtx, whid)
+
+	allocatedCMBuf := ctx.getAllocatedCRmrMBuf(ctx.Logger, msg, ctx.MaxMsgSize)
+	state := allocatedCMBuf.state
+	if state != RMR_OK {
+		errorMessage := fmt.Sprintf("#rmrCgoApi.WhSendMsg - Failed to get allocated message. state: %v - %s", state, states[int(state)])
+		return nil, errors.New(errorMessage)
+	}
+
+	if printLogs {
+		transactionId := string(*msg.XAction)
+		tmpTid := strings.TrimSpace(transactionId)
+		ctx.Logger.Infof("[E2 Manager -> RMR] #rmrCgoApi.WhSendMsg - Going to send message %v for transaction id: %s", *msg, tmpTid)
+	}
+
+	currCMBuf := C.rmr_wh_send_msg(ctx.RmrCtx, whid, allocatedCMBuf)
+	defer C.rmr_free_msg(currCMBuf)
+
+	state = currCMBuf.state
+
+	if state != RMR_OK {
+		errorMessage := fmt.Sprintf("#rmrCgoApi.WhSendMsg - Failed to send message. state: %v - %s", state, states[int(state)])
+		return nil, errors.New(errorMessage)
+	}
+
+	return convertToMBuf(ctx.Logger, currCMBuf), nil
+}
+
+
 func (ctx *Context) RecvMsg() (*MBuf, error) {
 	ctx.checkContextInitialized()
 	ctx.Logger.Debugf("#rmrCgoApi.RecvMsg - Going to receive message")
