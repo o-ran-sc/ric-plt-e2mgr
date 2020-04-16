@@ -29,36 +29,17 @@ Library     REST      ${url}
 
 
 *** Test Cases ***
-Run x2 setup
-    Post Request setup node b x-2
-    Integer     response status       204
-    Sleep  2s
-    GET      /v1/nodeb/test1
-    Integer  response status  200
-    String   response body ranName    test1
-    Integer  response body port     5577
-    String   response body connectionStatus    CONNECTED
 
-Run endc setup
-    Post Request setup node b endc-setup
-    Integer     response status       204
-    Sleep  2s
-    GET      /v1/nodeb/test2
-    Integer  response status  200
-    String   response body ranName    test2
-    String   response body connectionStatus    CONNECTED
 
 
 Get all node ids
     GET     v1/nodeb/ids
     Sleep  2s
     Integer  response status   200
-    String   response body 0 inventoryName  test1
-    String   response body 0 globalNbId plmnId   02f829
-    String   response body 0 globalNbId nbId     007ab0
-    String   response body 1 inventoryName  test2
-    String   response body 1 globalNbId plmnId   42f490
-    String   response body 1 globalNbId nbId     000004
+    String   response body 0 inventoryName  ${ranName}
+    String   response body 0 globalNbId plmnId   02F829
+    String   response body 0 globalNbId nbId     001100000011000000110000
+
 
 
 

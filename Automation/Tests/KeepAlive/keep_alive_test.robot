@@ -31,74 +31,51 @@ Library     REST      ${url}
 
 *** Test Cases ***
 
-X2 - Setup Test
-    Post Request setup node b x-2
-    Integer     response status       204
-
-X2 - Get Nodeb
-    Get Request Node B Enb test1
+Get request gnb
+    Sleep    2s
+    Get Request node b gnb
     Integer  response status  200
-    String   response body ranName    test1
-    String   response body ip    ${ip_gnb_simu}
-    Integer  response body port     5577
+    String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
-    String   response body nodeType     ENB
-    String   response body associatedE2tInstanceAddress     e2t.att.com:38000
-    String   response body enb enbType     MACRO_ENB
-    Integer  response body enb servedCells 0 pci  99
-    String   response body enb servedCells 0 cellId   02f829:0007ab00
-    String   response body enb servedCells 0 tac    0102
-    String   response body enb servedCells 0 broadcastPlmns 0   "02f829"
-    Integer  response body enb servedCells 0 choiceEutraMode fdd ulearFcn    1
-    Integer  response body enb servedCells 0 choiceEutraMode fdd dlearFcn    1
-    String   response body enb servedCells 0 choiceEutraMode fdd ulTransmissionBandwidth   BW50
-    String   response body enb servedCells 0 choiceEutraMode fdd dlTransmissionBandwidth   BW50
+    String   response body nodeType     GNB
+    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+    Integer  response body gnb ranFunctions 0 ranFunctionId  1
+    Integer  response body gnb ranFunctions 0 ranFunctionRevision  1
+    Integer  response body gnb ranFunctions 1 ranFunctionId  2
+    Integer  response body gnb ranFunctions 1 ranFunctionRevision  1
+    Integer  response body gnb ranFunctions 2 ranFunctionId  3
+    Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
+
 
 prepare logs for tests
     Remove log files
     Save logs
 
-X2 - RAN Connected message going to be sent
-    ${result}    find_rmr_message.verify_logs     ${EXECDIR}   ${e2mgr_log_filename}  ${RAN_CONNECTED_message_type}    ${Meid_test1}
-    Should Be Equal As Strings    ${result}      True
-
-RSM RESOURCE STATUS REQUEST message sent
-    ${result}    find_rmr_message.verify_logs     ${EXECDIR}    ${rsm_log_filename}  ${RIC_RES_STATUS_REQ_message_type_successfully_sent}    ${RAN_NAME_test1}
-    Should Be Equal As Strings    ${result}      True
-
-Verify RSM RAN info exists in redis
-   ${result}=   rsmscripts.verify_rsm_ran_info_start_false
-   Should Be Equal As Strings  ${result}    True
-
 Verify RAN is associated with E2T instance
-   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     test1    e2t.att.com:38000
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance      ${ranname}    ${e2tinstanceaddress}
    Should Be True    ${result}
 
 Stop E2T
-    stop_e2
+    Stop E2
     Sleep  3s
 
-prepare logs for tests
+Prepare logs
     Remove log files
     Save logs
 
-Verify Is Dead Message Printed
-    ${result}    find_error_script.find_error     ${EXECDIR}    ${e2mgr_log_filename}  ${e2_is_dead_message_printed}
-    Should Be Equal As Strings    ${result}      True
-
 Verify RAN is not associated with E2T instance
-    Get Request node b enb test1
+    Get Request node b gnb
     Integer  response status  200
-    String   response body ranName    test1
+    String   response body ranName    ${ranname}
     Missing  response body associatedE2tInstanceAddress
     String   response body connectionStatus    DISCONNECTED
 
 Verify E2T instance removed from db
-    ${result}    e2mdbscripts.verify_e2t_instance_key_exists     e2t.att.com:38000
+    ${result}    e2mdbscripts.verify_e2t_instance_key_exists     ${e2tinstanceaddress}
     Should Be True    ${result} == False
 
-    ${result}    e2mdbscripts.verify_e2t_instance_exists_in_addresses     e2t.att.com:38000
+    ${result}    e2mdbscripts.verify_e2t_instance_exists_in_addresses     ${e2tinstanceaddress}
     Should Be True    ${result} == False
 
 Start E2T
-    start_e2
+    Start E2

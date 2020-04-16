@@ -19,7 +19,6 @@
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
 #
-
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
@@ -30,18 +29,18 @@ Library    Collections
 Library     REST      ${url}
 
 
-*** Test Cases ***
 
-Execute X2 setup twice and verify its connection status is CONNECTED_SETUP_FAILED
-    Execute setup twice and verify connected setup failed
+*** Test Cases ***
+Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
+   Verify connected and associated
+
+
 
 Execute Shutdown
     Execute Shutdown
 
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-   Verify shutdown for enb
+    Verify shutdown for gnb
 
 Verify E2T instance has no associated RANs
    Verify E2T instance has no associated RANs
-
-

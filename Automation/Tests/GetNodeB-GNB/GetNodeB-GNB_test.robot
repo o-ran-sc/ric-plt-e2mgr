@@ -19,39 +19,40 @@
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
 #
+
+
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    red_button_keywords.robot
+Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
-Library    Collections
-Library     REST      ${url}
+Library     ../Scripts/find_rmr_message.py
+Library     ../Scripts/rsmscripts.py
+Library     REST        ${url}
 
-*** Variables ***
-${stop_docker_e2}      docker stop e2adapter
+
+
 
 *** Test Cases ***
 
-Pre Condition for Connecting - no E2ADAPTER
-    Run And Return Rc And Output    ${stop_docker_e2}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
-Prepare Ran in Connecting connectionStatus
-    Post Request setup node b endc-setup
-    Integer     response status       204
-    Sleep  10s
-    GET      /v1/nodeb/test2
+Get request gnb
+    Sleep    2s
+    Get Request node b gnb
     Integer  response status  200
-    String   response body ranName    test2
-    String   response body connectionStatus    DISCONNECTED
+    String   response body ranName    ${ranname}
+    String   response body connectionStatus    CONNECTED
+    String   response body nodeType     GNB
+    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+    Integer  response body gnb ranFunctions 0 ranFunctionId  1
+    Integer  response body gnb ranFunctions 0 ranFunctionRevision  1
+    Integer  response body gnb ranFunctions 1 ranFunctionId  2
+    Integer  response body gnb ranFunctions 1 ranFunctionRevision  1
+    Integer  response body gnb ranFunctions 2 ranFunctionId  3
+    Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
 
-Execute Shutdown
-    Execute Shutdown
 
-Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-    Verify shutdown for gnb
 
-Verify E2T instance has no associated RANs
-   Verify E2T instance has no associated RANs
+
+

@@ -12,10 +12,8 @@ Library     ../Scripts/e2t_db_script.py
 
 Test New E2T Send Init
     Stop E2
-
-    ${result}=    cleanup_db.flush_and_restore_without_e2t_keys
+    ${result}=    cleanup_db.flush
     Should Be Equal As Strings  ${result}    True
-
     Start E2
 
 prepare logs for tests

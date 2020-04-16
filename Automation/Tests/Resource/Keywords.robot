@@ -27,62 +27,27 @@ Resource   ../Resource/resource.robot
 Library     OperatingSystem
 
 *** Keywords ***
-Post Request setup node b x-2
-    Set Headers     ${header}
-    POST        /v1/nodeb/x2-setup    ${json}
-
-Put Request Resource Status Start
-    Set Headers     ${header}
-    PUT        /v1/general/resourcestatus  ${resource_status_start_json}
-
-Put Request Resource Status Stop
-    Set Headers     ${header}
-    PUT        /v1/general/resourcestatus  ${resource_status_stop_json}
-
-Get Request node b enb test1
+Get Request node b gnb
     Sleep    1s
-    GET      /v1/nodeb/test1
+    GET      ${getNodeb}
 
-Get Request node b gnb test2
-    Sleep    1s
-    GET      /v1/nodeb/test2
+
 
 Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}
     Remove File  ${EXECDIR}/${e2mgr_log_filename}
     Remove File  ${EXECDIR}/${e2t_log_filename}
-    Remove File  ${EXECDIR}/${rsm_log_filename}
-    Remove File  ${EXECDIR}/${e2e_simu_log_filename}
     Remove File  ${EXECDIR}/${rm_sim_log_filename}
-    Remove File  ${EXECDIR}/${e2adapter_log_filename}
 
 Save logs
     Sleep   1s
     Run     ${Save_sim_log}
     Run     ${Save_e2mgr_log}
     Run     ${Save_e2t_log}
-    Run     ${Save_rsm_log}
-    Run     ${Save_e2e_simu_log}
     Run     ${Save_rm_sim_log}
-    Run     ${Save_e2adapter_log}
-
-
-Post Request setup node b endc-setup
-    Set Headers     ${header}
-    POST        /v1/nodeb/endc-setup    ${endcjson}
 
 Stop Simulator
     Run And Return Rc And Output    ${stop_simu}
-
-
-Prepare Simulator For Load Information
-     Run And Return Rc And Output    ${stop_simu}
-     Run And Return Rc And Output    ${docker_Remove}
-     ${flush}  cleanup_db.flush
-     Should Be Equal As Strings  ${flush}  True
-     Run And Return Rc And Output    ${run_simu_load}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
 Prepare Enviorment
      Log To Console  Starting preparations
@@ -90,42 +55,26 @@ Prepare Enviorment
      ${e2t_log_filename}      Evaluate      "e2t.${SUITE NAME}.log".replace(" ","-")
      ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
      ${gnb_log_filename}      Evaluate      "gnb.${SUITE NAME}.log".replace(" ","-")
-     ${rsm_log_filename}      Evaluate      "rsm.${SUITE NAME}.log".replace(" ","-")
-     ${e2e_simu_log_filename}      Evaluate      "e2e_simu.${SUITE NAME}.log".replace(" ","-")
      ${rm_sim_log_filename}   Evaluate      "rm_sim.${SUITE NAME}.log".replace(" ","-")
-     ${e2adapter_log_filename}    Evaluate  "e2adapter.${SUITE NAME}.log".replace(" ","-")
-     ${Save_sim_log}          Evaluate   'docker logs --since ${starting_timestamp} gnbe2_simu > ${gnb_log_filename}'
+     ${Save_sim_log}          Evaluate   'docker logs --since ${starting_timestamp} gnbe2_oran_simu > ${gnb_log_filename}'
      ${Save_e2mgr_log}        Evaluate   'docker logs --since ${starting_timestamp} e2mgr > ${e2mgr_log_filename}'
      ${Save_e2t_log}          Evaluate   'docker logs --since ${starting_timestamp} e2 > ${e2t_log_filename}'
-     ${Save_rsm_log}          Evaluate   'docker logs --since ${starting_timestamp} rsm > ${rsm_log_filename}'
-     ${Save_e2e_simu_log}     Evaluate   'docker logs --since ${starting_timestamp} e2e_simu > ${e2e_simu_log_filename}'
      ${Save_rm_sim_log}       Evaluate   'docker logs --since ${starting_timestamp} rm_sim > ${rm_sim_log_filename}'
-     ${Save_e2adapter_log}    Evaluate   'docker logs --since ${starting_timestamp} e2adapter > ${e2adapter_log_filename}'
-     Set Suite Variable  ${e2t_log_filename}  
+     Set Suite Variable  ${e2t_log_filename}
      Set Suite Variable  ${e2mgr_log_filename}  
      Set Suite Variable  ${gnb_log_filename}   
-     Set Suite Variable  ${rsm_log_filename}  
-     Set Suite Variable  ${e2e_simu_log_filename}
      Set Suite Variable  ${rm_sim_log_filename}
-     Set Suite Variable  ${e2adapter_log_filename} 
      Set Suite Variable  ${Save_sim_log}
      Set Suite Variable  ${Save_e2mgr_log}
      Set Suite Variable  ${Save_e2t_log}
-     Set Suite Variable  ${Save_rsm_log}
-     Set Suite Variable  ${Save_e2e_simu_log}
      Set Suite Variable  ${Save_rm_sim_log}
-     Set Suite Variable  ${Save_e2adapter_log}
 
 	 Log To Console  Ready to flush db
      ${flush}  cleanup_db.flush
      Should Be Equal As Strings  ${flush}  True
      Run And Return Rc And Output    ${stop_simu}
-     Run And Return Rc And Output    ${stop_e2e_simu}
      Run And Return Rc And Output    ${docker_Remove}
-     Run And Return Rc And Output    ${docker_remove_e2e_simu}
      Run And Return Rc And Output    ${run_simu_regular}
-     Run And Return Rc And Output    ${run_e2e_simu_regular}
-     Run And Return Rc And Output    ${restart_e2adapter}
      Sleep  3s
      Log To Console  Validating dockers are up
      ${result}=  Run And Return Rc And Output     ${docker_command}
@@ -155,8 +104,7 @@ Stop Dbass
      Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
 Restart simulator
-
-    Run And Return Rc And Output    ${restart_docker_sim}
+    Run And Return Rc And Output    ${restart_simu}
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    ${docker_number}
 

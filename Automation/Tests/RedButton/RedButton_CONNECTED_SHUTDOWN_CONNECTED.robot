@@ -31,20 +31,18 @@ Library     REST      ${url}
 
 *** Test Cases ***
 
-Execute X2 setup, verify nodeb connection status is CONNECTED and it's associated to an e2t instance
-   Execute setup and verify connected and associated
+Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
+  Verify connected and associated
 
 Execute Shutdown
    Execute Shutdown
 
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-   Verify shutdown for enb
-
-Verify E2T instance has no associated RANs
+   Verify shutdown for gnb
    Verify E2T instance has no associated RANs
 
 Restart simulator
    Restart simulator
 
-Execute second X2 setup, verify nodeb connection status is CONNECTED and it's associated to an e2t instance
-   Execute setup and verify connected and associated
+Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
+   Verify connected and associated

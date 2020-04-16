@@ -21,4 +21,4 @@
 #
 
 *** Settings ***
-Documentation    endc-Setup
+Documentation    GetNodeb-GNB
