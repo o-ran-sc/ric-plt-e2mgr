@@ -38,10 +38,10 @@ type Configuration struct {
 	RoutingManager struct {
 		BaseUrl string
 	}
-	Kubernetes struct {
+/*	Kubernetes struct {
 		ConfigPath string
 		Namespace  string
-	}
+	}*/
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
 	MaxConnectionAttempts        int
@@ -73,7 +73,7 @@ func ParseConfiguration() *Configuration {
 	config.populateHttpConfig(viper.Sub("http"))
 	config.populateLoggingConfig(viper.Sub("logging"))
 	config.populateRoutingManagerConfig(viper.Sub("routingManager"))
-	config.populateKubernetesConfig(viper.Sub("kubernetes"))
+	//config.populateKubernetesConfig(viper.Sub("kubernetes"))
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
 	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
@@ -115,13 +115,13 @@ func (c *Configuration) populateRoutingManagerConfig(rmConfig *viper.Viper) {
 	c.RoutingManager.BaseUrl = rmConfig.GetString("baseUrl")
 }
 
-func (c *Configuration) populateKubernetesConfig(rmConfig *viper.Viper) {
+/*func (c *Configuration) populateKubernetesConfig(rmConfig *viper.Viper) {
 	if rmConfig == nil {
 		panic(fmt.Sprintf("#configuration.populateKubernetesConfig - failed to populate Kubernetes configuration: The entry 'kubernetes' not found\n"))
 	}
 	c.Kubernetes.ConfigPath = rmConfig.GetString("configPath")
 	c.Kubernetes.Namespace = rmConfig.GetString("namespace")
-}
+}*/
 
 func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) {
 	if globalRicIdConfig == nil {
@@ -135,7 +135,7 @@ func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxConnectionAttempts: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
-		"globalRicId: { plmnId: %s, ricNearRtId: %s}, kubernetes: {configPath: %s, namespace: %s}}",
+		"globalRicId: { plmnId: %s, ricNearRtId: %s}}",//, kubernetes: {configPath: %s, namespace: %s}}",
 		c.Logging.LogLevel,
 		c.Http.Port,
 		c.Rmr.Port,
@@ -151,7 +151,7 @@ func (c *Configuration) String() string {
 		c.E2TInstanceDeletionTimeoutMs,
 		c.GlobalRicId.PlmnId,
 		c.GlobalRicId.RicNearRtId,
-		c.Kubernetes.ConfigPath,
-		c.Kubernetes.Namespace,
+	//	c.Kubernetes.ConfigPath,
+		//c.Kubernetes.Namespace,
 	)
 }

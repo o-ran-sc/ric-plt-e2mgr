@@ -22,12 +22,8 @@ package managers
 
 import (
 	"e2mgr/configuration"
-	"e2mgr/e2managererrors"
 	"e2mgr/logger"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"path/filepath"
 )
 
 type KubernetesManager struct {
@@ -39,7 +35,7 @@ type KubernetesManager struct {
 func NewKubernetesManager(logger *logger.Logger, config *configuration.Configuration) *KubernetesManager {
 	return &KubernetesManager{
 		Logger:    logger,
-		ClientSet: createClientSet(logger, config),
+	//	ClientSet: createClientSet(logger, config),
 		Config:    config,
 	}
 }
@@ -63,7 +59,7 @@ func NewKubernetesManager(logger *logger.Logger, config *configuration.Configura
 	km.DeletePod(podInterface, podName)
 }*/
 
-func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
+/*func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
 	////path := os.Getenv("HOME") + "/.kube/config"
 
 	absConfigPath,err := filepath.Abs(config.Kubernetes.ConfigPath)
@@ -84,7 +80,7 @@ func createClientSet(logger *logger.Logger, config *configuration.Configuration)
 		return nil
 	}
 	return clientSet
-}
+}*/
 
 /*func (km KubernetesManager) DeletePod(podInterface v1.PodInterface, podName string) {
 	km.logger.Infof("#KubernetesManager.DeletePod - POD name %s ", podName)
@@ -99,7 +95,7 @@ func createClientSet(logger *logger.Logger, config *configuration.Configuration)
 }
 */
 func (km KubernetesManager) DeletePod(podName string) error {
-	km.Logger.Infof("#KubernetesManager.DeletePod - POD name: %s ", podName)
+/*	km.Logger.Infof("#KubernetesManager.DeletePod - POD name: %s ", podName)
 
 	if km.ClientSet == nil {
 		km.Logger.Errorf("#KubernetesManager.DeletePod - no kubernetesManager connection")
@@ -118,7 +114,7 @@ func (km KubernetesManager) DeletePod(podName string) error {
 		return err
 	}
 
-	km.Logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)
+	km.Logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)*/
 	return nil
 }
 

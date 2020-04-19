@@ -20,6 +20,7 @@
 
 package managers
 
+/*
 import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
@@ -148,3 +149,4 @@ func pod(namespace, image string) *v1.Pod {
 		},
 	}
 }
+*/
