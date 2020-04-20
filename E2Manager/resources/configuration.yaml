@@ -9,7 +9,6 @@ routingManager:
   baseUrl: http://10.0.2.15:12020/ric/v1/handles/
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
-maxConnectionAttempts: 3
 maxRnibConnectionAttempts: 3
 rnibRetryIntervalMs: 10
 keepAliveResponseTimeoutMs: 4500

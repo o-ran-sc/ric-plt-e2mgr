@@ -24,7 +24,6 @@ import (
 	"e2mgr/clients"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
-	"e2mgr/e2pdus"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/mocks"
@@ -42,14 +41,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"unsafe"
 )
 
 const (
@@ -65,6 +62,10 @@ var (
 	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "nrPci", "servedPlmns"}
 	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode", "nrPci"}
 )
+
+type TestRequest struct {
+	RanName string
+}
 
 type controllerGetNodebTestContext struct {
 	ranName              string
@@ -154,88 +155,6 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
-}
-
-func TestX2SetupInvalidBody(t *testing.T) {
-
-	controller, _, _, _, _ := setupControllerTest(t)
-
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	httpRequest, _ := http.NewRequest("POST", "http://localhost:3800/v1/nodeb/x2-setup", strings.NewReader("{}{}"))
-	httpRequest.Header = header
-
-	writer := httptest.NewRecorder()
-	controller.X2Setup(writer, httpRequest)
-
-	var errorResponse = parseJsonRequest(t, writer.Body)
-
-	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
-	assert.Equal(t, e2managererrors.NewInvalidJsonError().Code, errorResponse.Code)
-}
-
-func TestX2SetupSuccess(t *testing.T) {
-
-	controller, readerMock, writerMock, rmrMessengerMock, _ := setupControllerTest(t)
-
-	ranName := "test"
-	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
-	readerMock.On("GetNodeb", ranName).Return(nb, nil)
-	var nbUpdated = *nb
-	nbUpdated.ConnectionAttempts = 0
-	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
-
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
-	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
-
-	payload := e2pdus.PackedX2setupRequest
-	var xAction []byte
-	var msgSrc unsafe.Pointer
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
-
-	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
-
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	httpRequest := tests.GetHttpRequest()
-	httpRequest.Header = header
-
-	writer := httptest.NewRecorder()
-	controller.X2Setup(writer, httpRequest)
-
-	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
-}
-
-func TestEndcSetupSuccess(t *testing.T) {
-
-	controller, readerMock, writerMock, rmrMessengerMock, _ := setupControllerTest(t)
-
-	ranName := "test"
-	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
-	readerMock.On("GetNodeb", ranName).Return(nb, nil)
-	var nbUpdated = *nb
-	nbUpdated.ConnectionAttempts = 0
-	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
-
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
-	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
-
-	payload := e2pdus.PackedEndcX2setupRequest
-	var xAction []byte
-	var msgSrc unsafe.Pointer
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_ENDC_X2_SETUP_REQ, len(payload), ranName, &payload, &xAction, msgSrc)
-
-	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(msg, nil)
-
-	header := http.Header{}
-	header.Set("Content-Type", "application/json")
-	httpRequest := tests.GetHttpRequest()
-	httpRequest.Header = header
-
-	writer := httptest.NewRecorder()
-	controller.EndcSetup(writer, httpRequest)
-
-	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
 
 func TestShutdownHandlerRnibError(t *testing.T) {
@@ -756,6 +675,39 @@ func TestValidateHeaders(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+func TestExtractJsonBodyInvalidJsonError(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+
+	header := http.Header{}
+	header.Set("Content-Type", "application/json")
+	httpRequest, _ := http.NewRequest("POST", "http://localhost:3800/v1/nodeb/some", strings.NewReader("{}{}"))
+	httpRequest.Header = header
+
+	writer := httptest.NewRecorder()
+
+	controller.extractJsonBody(httpRequest, TestRequest{}, writer)
+
+	var errorResponse = parseJsonRequest(t, writer.Body)
+
+	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
+	assert.Equal(t, e2managererrors.NewInvalidJsonError().Code, errorResponse.Code)
+}
+
+func TestExtractJsonBodySuccess(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+
+	data4Req := map[string]interface{}{"RanName": "test"}
+	b := new(bytes.Buffer)
+	_ = json.NewEncoder(b).Encode(data4Req)
+	httpRequest, _ := http.NewRequest("POST", "http://localhost:3800/v1/nodeb/some", b)
+
+	writer := httptest.NewRecorder()
+
+	response := controller.extractJsonBody(httpRequest, TestRequest{}, writer)
+
+	assert.True(t, response)
+}
+
 func parseJsonRequest(t *testing.T, r io.Reader) models.ErrorResponse {
 
 	var errorResponse models.ErrorResponse
@@ -774,75 +726,6 @@ func initLog(t *testing.T) *logger.Logger {
 		t.Errorf("#delete_all_request_handler_test.TestHandleSuccessFlow - failed to initialize logger, error: %s", err)
 	}
 	return log
-}
-
-func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
-	controller, readerMock, _, rmrMessengerMock, _ := setupControllerTest(t)
-
-	ranName := "test1"
-	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
-	var xAction []byte
-	var msgSrc unsafe.Pointer
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
-	rmrMessengerMock.On("SendMsg", msg, mock.Anything).Return(msg, nil)
-
-	writer := httptest.NewRecorder()
-
-	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
-
-	data4Req := map[string]interface{}{"cause": "protocol:transfer-syntax-error"}
-	b := new(bytes.Buffer)
-	_ = json.NewEncoder(b).Encode(data4Req)
-	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
-	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
-
-	controller.X2Reset(writer, req)
-	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
-
-}
-
-func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
-	controller, readerMock, _, rmrMessengerMock, _ := setupControllerTest(t)
-
-	ranName := "test1"
-	// o&m intervention
-	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
-	var xAction []byte
-	var msgSrc unsafe.Pointer
-	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
-	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
-
-	writer := httptest.NewRecorder()
-
-	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
-
-	// no body
-	b := new(bytes.Buffer)
-	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
-	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
-
-	controller.X2Reset(writer, req)
-	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
-
-}
-
-func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
-
-	ranName := "test1"
-
-	writer := httptest.NewRecorder()
-
-	// Invalid json: attribute name without quotes (should be "cause":).
-	b := strings.NewReader("{cause:\"protocol:transfer-syntax-error\"")
-	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
-	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
-
-	controller.X2Reset(writer, req)
-	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
-
 }
 
 func TestHandleErrorResponse(t *testing.T) {
