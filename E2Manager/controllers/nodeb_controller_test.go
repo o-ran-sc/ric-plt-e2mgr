@@ -38,6 +38,7 @@ import (
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -57,6 +58,7 @@ const (
 	ValidationFailureJson        = "{\"errorCode\":402,\"errorMessage\":\"Validation error\"}"
 	ResourceNotFoundJson         = "{\"errorCode\":404,\"errorMessage\":\"Resource not found\"}"
 	RnibErrorJson                = "{\"errorCode\":500,\"errorMessage\":\"RNIB error\"}"
+	InternalErrorJson            = "{\"errorCode\":501,\"errorMessage\":\"Internal Server Error. Please try again later\"}"
 )
 
 var (
@@ -84,8 +86,13 @@ type getNodebInfoResult struct {
 	rnibError error
 }
 
+type updateGnbCellsParams struct {
+	err error
+}
+
 type controllerUpdateGnbTestContext struct {
 	getNodebInfoResult   *getNodebInfoResult
+	updateGnbCellsParams *updateGnbCellsParams
 	requestBody          map[string]interface{}
 	expectedStatusCode   int
 	expectedJsonResponse string
@@ -268,23 +275,53 @@ func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNo
 	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
 }
 
-func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbTestContext) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
-	writer := httptest.NewRecorder()
-
+func activateControllerUpdateGnbMocks(context *controllerUpdateGnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
 	if context.getNodebInfoResult != nil {
 		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	}
 
+	if context.updateGnbCellsParams != nil {
+		updatedNodebInfo := *context.getNodebInfoResult.nodebInfo
+		gnb := entities.Gnb{}
+		_ = jsonpb.Unmarshal(getJsonRequestAsBuffer(context.requestBody), &gnb)
+		updatedNodebInfo.GetGnb().ServedNrCells = gnb.ServedNrCells
+		writerMock.On("UpdateGnbCells", &updatedNodebInfo, gnb.ServedNrCells).Return(context.updateGnbCellsParams.err)
+	}
+}
+
+func assertControllerUpdateGnb(t *testing.T, context *controllerUpdateGnbTestContext, writer *httptest.ResponseRecorder, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
+	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+
+	if context.getNodebInfoResult != nil {
+		readerMock.AssertNotCalled(t, "GetNodeb")
+	}
+
+	if context.updateGnbCellsParams != nil {
+		writerMock.AssertNotCalled(t, "UpdateGnb")
+	}
+}
+
+func buildUpdateGnbRequest(context *controllerUpdateGnbTestContext) *http.Request {
 	updateGnbUrl := fmt.Sprintf("/nodeb/%s/update", RanName)
 	requestBody := getJsonRequestAsBuffer(context.requestBody)
 	req, _ := http.NewRequest(http.MethodGet, updateGnbUrl, requestBody)
 	req.Header.Set("Content-Type", "application/json")
 	req = mux.SetURLVars(req, map[string]string{"ranName": RanName})
+	return req
+}
+
+func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbTestContext) {
+	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+
+	activateControllerUpdateGnbMocks(context, readerMock, writerMock)
+	req := buildUpdateGnbRequest(context)
 	controller.UpdateGnb(writer, req)
-	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
-	bodyBytes, _ := ioutil.ReadAll(writer.Body)
-	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	assertControllerUpdateGnb(t, context, writer, readerMock, writerMock)
 }
 
 func TestControllerUpdateGnbEmptyServedNrCells(t *testing.T) {
@@ -370,7 +407,7 @@ func TestControllerUpdateGnbMissingNeighbourInfoFddOrTdd(t *testing.T) {
 			"servedNrCells": []interface{}{
 				map[string]interface{}{
 					"servedNrCellInformation": buildServedNrCellInformation(""),
-					"nrNeighbourInfos":        []interface{}{
+					"nrNeighbourInfos": []interface{}{
 						nrNeighbourInfo,
 					},
 				},
@@ -392,7 +429,7 @@ func TestControllerUpdateGnbMissingNrNeighbourInformationRequiredProp(t *testing
 				"servedNrCells": []interface{}{
 					map[string]interface{}{
 						"servedNrCellInformation": buildServedNrCellInformation(""),
-						"nrNeighbourInfos":        []interface{}{
+						"nrNeighbourInfos": []interface{}{
 							buildNrNeighbourInformation(v),
 						},
 					},
@@ -404,29 +441,6 @@ func TestControllerUpdateGnbMissingNrNeighbourInformationRequiredProp(t *testing
 
 		controllerUpdateGnbTestExecuter(t, &context)
 	}
-}
-
-func TestControllerUpdateGnbValidServedNrCellInformationAndNrNeighbourInfoGetNodebSuccess(t *testing.T) {
-	context := controllerUpdateGnbTestContext{
-		getNodebInfoResult: &getNodebInfoResult{
-			nodebInfo: &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress},
-			rnibError: nil,
-		},
-		requestBody: map[string]interface{}{
-			"servedNrCells": []interface{}{
-				map[string]interface{}{
-					"servedNrCellInformation": buildServedNrCellInformation(""),
-					"nrNeighbourInfos":        []interface{}{
-						buildNrNeighbourInformation(""),
-					},
-				},
-			},
-		},
-		expectedStatusCode:   http.StatusOK,
-		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
-	}
-
-	controllerUpdateGnbTestExecuter(t, &context)
 }
 
 func TestControllerUpdateGnbValidServedNrCellInformationGetNodebNotFound(t *testing.T) {
@@ -464,6 +478,95 @@ func TestControllerUpdateGnbValidServedNrCellInformationGetNodebInternalError(t 
 		},
 		expectedStatusCode:   http.StatusInternalServerError,
 		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbGetNodebSuccessInvalidGnbConfiguration(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+			},
+			rnibError: nil,
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos": []interface{}{
+						buildNrNeighbourInformation(""),
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: InternalErrorJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbGetNodebSuccessUpdateGnbCellsFailure(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		updateGnbCellsParams: &updateGnbCellsParams{
+			err: common.NewInternalError(errors.New("#writer.UpdateGnbCells - Internal Error")),
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
+			},
+			rnibError: nil,
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos": []interface{}{
+						buildNrNeighbourInformation(""),
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbSuccess(t *testing.T) {
+	context := controllerUpdateGnbTestContext{
+		updateGnbCellsParams: &updateGnbCellsParams{
+			err: nil,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
+			},
+			rnibError: nil,
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos": []interface{}{
+						buildNrNeighbourInformation(""),
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusOK,
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"gnb\":{\"servedNrCells\":[{\"servedNrCellInformation\":{\"nrPci\":1,\"cellId\":\"whatever\",\"servedPlmns\":[\"whatever\"],\"nrMode\":\"FDD\",\"choiceNrMode\":{\"fdd\":{}}},\"nrNeighbourInfos\":[{\"nrPci\":1,\"nrCgi\":\"whatever\",\"nrMode\":\"FDD\",\"choiceNrMode\":{\"tdd\":{}}}]}]},\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
 	}
 
 	controllerUpdateGnbTestExecuter(t, &context)

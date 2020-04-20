@@ -68,21 +68,22 @@ func (h *UpdateGnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewResourceNotFoundError()
 	}
 
-	//gnb := nodebInfo.GetGnb()
-	//
-	//if gnb == nil {
-	//	// TODO: log and return appropriate error
-	//	return nil, e2managererrors.NewRnibDbError()
-	//}
-	//
-	//gnb.ServedNrCells = updateGnbRequest.ServedNrCells
-	//
-	//err = h.rNibDataService.UpdateGnbCells(nodebInfo, updateGnbRequest.ServedNrCells)
-	//
-	//if err != nil {
-	//	// TODO: handle error
-	//	return nil, err
-	//}
+	ranName:= nodebInfo.RanName
+	gnb := nodebInfo.GetGnb()
+
+	if gnb == nil {
+		h.logger.Errorf("#UpdateGnbRequestHandler.Handle - RAN name: %s - nodeb missing gnb configuration", ranName)
+		return nil, e2managererrors.NewInternalError()
+	}
+
+	gnb.ServedNrCells = updateGnbRequest.ServedNrCells
+
+	err = h.rNibDataService.UpdateGnbCells(nodebInfo, updateGnbRequest.ServedNrCells)
+
+	if err != nil {
+		h.logger.Errorf("#UpdateGnbRequestHandler.Handle - RAN name: %s - Failed updating GNB cells. Error: %s", ranName, err)
+		return nil, e2managererrors.NewRnibDbError()
+	}
 
 	return models.NewUpdateGnbResponse(nodebInfo), nil
 }

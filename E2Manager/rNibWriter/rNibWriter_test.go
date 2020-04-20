@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rNibWriter
 
 import (
@@ -33,26 +32,141 @@ import (
 	"time"
 )
 
+var namespace = "namespace"
+
 func initSdlInstanceMock(namespace string) (w RNibWriter, sdlInstanceMock *mocks.MockSdlInstance) {
 	sdlInstanceMock = new(mocks.MockSdlInstance)
 	w = GetRNibWriter(sdlInstanceMock)
 	return
 }
 
-var namespace = "namespace"
+func generateNodebInfo(inventoryName string, nodeType entities.Node_Type, plmnId string, nbId string) *entities.NodebInfo {
+	nodebInfo := &entities.NodebInfo{
+		RanName:          inventoryName,
+		GlobalNbId:       &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId},
+		NodeType:         nodeType,
+		ConnectionStatus: entities.ConnectionStatus_CONNECTED,
+	}
+
+	if nodeType == entities.Node_ENB {
+		nodebInfo.Configuration = &entities.NodebInfo_Enb{
+			Enb: &entities.Enb{},
+		}
+	} else if nodeType == entities.Node_GNB {
+		nodebInfo.Configuration = &entities.NodebInfo_Gnb{
+			Gnb: &entities.Gnb{},
+		}
+	}
+
+	return nodebInfo
+}
+
+func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
+
+	servedNrCells := []*entities.ServedNRCell{}
+
+	for _, v := range cellIds {
+		servedNrCells = append(servedNrCells, &entities.ServedNRCell{ServedNrCellInformation: &entities.ServedNRCellInformation{
+			CellId: v,
+			ChoiceNrMode: &entities.ServedNRCellInformation_ChoiceNRMode{
+				Fdd: &entities.ServedNRCellInformation_ChoiceNRMode_FddInfo{
+
+				},
+			},
+			NrMode:      entities.Nr_FDD,
+			NrPci:       5,
+			ServedPlmns: []string{"whatever"},
+		}})
+	}
+
+	return servedNrCells
+}
+
+func TestUpdateGnbCellsInvalidNodebInfoFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCells := generateServedNrCells("test1", "test2")
+	nodebInfo := &entities.NodebInfo{}
+	sdlInstanceMock.AssertNotCalled(t, "Set")
+	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+}
+
+func TestUpdateGnbCellsInvalidCellFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCells := []*entities.ServedNRCell{{ServedNrCellInformation: &entities.ServedNRCellInformation{}}}
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
+	nodebInfo.GetGnb().ServedNrCells = servedNrCells
+	sdlInstanceMock.AssertNotCalled(t, "Set")
+	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+}
+
+func getUpdateGnbCellsSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) []interface{} {
+
+	nodebInfoData, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Fatalf("#rNibWriter_test.getUpdateGnbCellsSetExpected - Failed to marshal NodeB entity. Error: %s", err)
+	}
+
+	nodebNameKey, _ := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
+	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId)
+	setExpected := []interface{}{nodebNameKey, nodebInfoData, nodebIdKey, nodebInfoData}
+
+	for _, v := range servedNrCells {
+
+		cellEntity := entities.Cell{Type: entities.Cell_NR_CELL, Cell: &entities.Cell_ServedNrCell{ServedNrCell: v}}
+		cellData, err := proto.Marshal(&cellEntity)
+
+		if err != nil {
+			t.Fatalf("#rNibWriter_test.getUpdateGnbCellsSetExpected - Failed to marshal cell entity. Error: %s", err)
+		}
+
+		nrCellIdKey, _ := common.ValidateAndBuildNrCellIdKey(v.GetServedNrCellInformation().GetCellId())
+		cellNamePciKey, _ := common.ValidateAndBuildCellNamePciKey(nodebInfo.RanName, v.GetServedNrCellInformation().GetNrPci())
+		setExpected = append(setExpected, nrCellIdKey, cellData, cellNamePciKey, cellData)
+	}
+
+	return setExpected
+}
+
+func TestUpdateGnbCellsSdlFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCells := generateServedNrCells("test1", "test2")
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
+	nodebInfo.GetGnb().ServedNrCells = servedNrCells
+	setExpected := getUpdateGnbCellsSetExpected(t, nodebInfo, servedNrCells)
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(errors.New("expected error"))
+	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
+}
+
+func TestUpdateGnbCellsSuccess(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCells := generateServedNrCells("test1", "test2")
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
+	nodebInfo.GetGnb().ServedNrCells = servedNrCells
+	setExpected := getUpdateGnbCellsSetExpected(t, nodebInfo, servedNrCells)
+	var e error
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
+	assert.Nil(t, rNibErr)
+}
 
 func TestUpdateNodebInfoSuccess(t *testing.T) {
 	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
-	nodebInfo := &entities.NodebInfo{}
-	nodebInfo.RanName = inventoryName
-	nodebInfo.GlobalNbId = &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}
-	nodebInfo.NodeType = entities.Node_ENB
-	nodebInfo.ConnectionStatus = 1
-	enb := entities.Enb{}
-	nodebInfo.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
 	data, err := proto.Marshal(nodebInfo)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
@@ -391,7 +505,7 @@ func generateCellLoadInformation() *entities.CellLoadInformation {
 	}
 
 	compInformationItem := &entities.CompInformationItem{
-		CompHypothesisSets: []*entities.CompHypothesisSet{&entities.CompHypothesisSet{CellId: "789", CompHypothesis: "xxx"}},
+		CompHypothesisSets: []*entities.CompHypothesisSet{{CellId: "789", CompHypothesis: "xxx"}},
 		BenefitMetric:      50,
 	}
 

@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rNibWriter
 
 import (
@@ -44,6 +43,7 @@ type RNibWriter interface {
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
 	SaveE2TAddresses(addresses []string) error
 	RemoveE2TInstance(e2tAddress string) error
+	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 }
 
 /*
@@ -83,13 +83,13 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 	}
 
 	if entity.GetEnb() != nil {
-		pairs, rNibErr = appendEnbCells(nbIdentity, entity.GetEnb().GetServedCells(), pairs)
+		pairs, rNibErr = appendEnbCells(nbIdentity.InventoryName, entity.GetEnb().GetServedCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
 	if entity.GetGnb() != nil {
-		pairs, rNibErr = appendGnbCells(nbIdentity, entity.GetGnb().GetServedNrCells(), pairs)
+		pairs, rNibErr = appendGnbCells(nbIdentity.InventoryName, entity.GetGnb().GetServedNrCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
@@ -125,15 +125,34 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 	return nil
 }
 
-/*
-UpdateNodebInfo...
-*/
-func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
+func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error {
 
+	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
+
+	if err != nil {
+		return err
+	}
+
+	pairs, err = appendGnbCells(nodebInfo.RanName, servedNrCells, pairs)
+
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.Set(pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func buildUpdateNodebInfoPairs(nodebInfo *entities.NodebInfo) ([]interface{}, error) {
 	nodebNameKey, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.GetRanName())
 
 	if rNibErr != nil {
-		return rNibErr
+		return []interface{}{}, rNibErr
 	}
 
 	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
@@ -141,14 +160,27 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) erro
 	data, err := proto.Marshal(nodebInfo)
 
 	if err != nil {
-		return common.NewInternalError(err)
+		return []interface{}{}, common.NewInternalError(err)
 	}
 
-	var pairs []interface{}
-	pairs = append(pairs, nodebNameKey, data)
+	pairs := []interface{}{nodebNameKey, data}
 
 	if buildNodebIdKeyError == nil {
 		pairs = append(pairs, nodebIdKey, data)
+	}
+
+	return pairs, nil
+}
+
+/*
+UpdateNodebInfo...
+*/
+func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
+
+	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
+
+	if err != nil {
+		return err
 	}
 
 	err = w.sdl.Set(pairs)
@@ -235,7 +267,6 @@ func (w *rNibWriterInstance) SaveE2TAddresses(addresses []string) error {
 	return nil
 }
 
-
 func (w *rNibWriterInstance) RemoveE2TInstance(address string) error {
 	key, rNibErr := common.ValidateAndBuildE2TInstanceKey(address)
 	if rNibErr != nil {
@@ -256,7 +287,7 @@ func Close() {
 	//Nothing to do
 }
 
-func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
+func appendEnbCells(inventoryName string, cells []*entities.ServedCellInfo, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -268,7 +299,7 @@ func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCel
 			return pairs, rNibErr
 		}
 		pairs = append(pairs, key, cellData)
-		key, rNibErr = common.ValidateAndBuildCellNamePciKey(nbIdentity.InventoryName, cell.GetPci())
+		key, rNibErr = common.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetPci())
 		if rNibErr != nil {
 			return pairs, rNibErr
 		}
@@ -277,7 +308,7 @@ func appendEnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedCel
 	return pairs, nil
 }
 
-func appendGnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
+func appendGnbCells(inventoryName string, cells []*entities.ServedNRCell, pairs []interface{}) ([]interface{}, error) {
 	for _, cell := range cells {
 		cellEntity := entities.Cell{Type: entities.Cell_NR_CELL, Cell: &entities.Cell_ServedNrCell{ServedNrCell: cell}}
 		cellData, err := proto.Marshal(&cellEntity)
@@ -289,7 +320,7 @@ func appendGnbCells(nbIdentity *entities.NbIdentity, cells []*entities.ServedNRC
 			return pairs, rNibErr
 		}
 		pairs = append(pairs, key, cellData)
-		key, rNibErr = common.ValidateAndBuildCellNamePciKey(nbIdentity.InventoryName, cell.GetServedNrCellInformation().GetNrPci())
+		key, rNibErr = common.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetServedNrCellInformation().GetNrPci())
 		if rNibErr != nil {
 			return pairs, rNibErr
 		}

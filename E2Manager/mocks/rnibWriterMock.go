@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package mocks
 
 import (
@@ -80,5 +79,10 @@ func (rnibWriterMock *RnibWriterMock) SaveE2TAddresses(addresses []string) error
 func (rnibWriterMock *RnibWriterMock) RemoveE2TInstance(address string) error {
 	args := rnibWriterMock.Called(address)
 
+	return args.Error(0)
+}
+
+func (rnibWriterMock *RnibWriterMock) UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error {
+	args := rnibWriterMock.Called(nodebInfo, servedNrCells)
 	return args.Error(0)
 }

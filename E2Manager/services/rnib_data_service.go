@@ -48,6 +48,7 @@ type RNibDataService interface {
 	SaveE2TInstanceNoLogs(e2tInstance *entities.E2TInstance) error
 	GetE2TAddressesNoLogs() ([]string, error)
 	RemoveE2TInstance(e2tAddress string) error
+	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 }
 
 type rNibDataService struct {
@@ -66,6 +67,17 @@ func NewRnibDataService(logger *logger.Logger, config *configuration.Configurati
 		maxAttempts:   config.MaxRnibConnectionAttempts,
 		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
 	}
+}
+
+func (w *rNibDataService) UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error {
+	w.logger.Infof("#RnibDataService.UpdateGnbCells - nodebInfo: %s, servedNrCells: %s", nodebInfo, servedNrCells)
+
+	err := w.retry("UpdateGnbCells", func() (err error) {
+		err = w.rnibWriter.UpdateGnbCells(nodebInfo, servedNrCells)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
