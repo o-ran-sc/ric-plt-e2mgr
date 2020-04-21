@@ -54,12 +54,11 @@ func NewRanSetupManager(logger *logger.Logger, rmrSender *rmrsender.RmrSender, r
 func (m *RanSetupManager) updateConnectionStatus(nodebInfo *entities.NodebInfo, status entities.ConnectionStatus) error {
 	// Update retries and connection status
 	nodebInfo.ConnectionStatus = status
-	nodebInfo.ConnectionAttempts++
 	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatus - Ran name: %s - Failed updating RAN's connection status to %v : %s", nodebInfo.RanName, status, err)
 	} else {
-		m.logger.Infof("#RanSetupManager.updateConnectionStatus - Ran name: %s - Successfully updated rNib. RAN's current connection status: %v, RAN's current connection attempts: %d", nodebInfo.RanName, status, nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatus - Ran name: %s - Successfully updated rNib. RAN's current connection status: %v", nodebInfo.RanName, status)
 	}
 	return err
 }
@@ -68,12 +67,11 @@ func (m *RanSetupManager) updateConnectionStatus(nodebInfo *entities.NodebInfo, 
 func (m *RanSetupManager) updateConnectionStatusDisconnected(nodebInfo *entities.NodebInfo) error {
 	// Update retries and connection status
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	nodebInfo.ConnectionAttempts--
 	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if err != nil {
 		m.logger.Errorf("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Failed updating RAN's connection status to DISCONNECTED : %s", nodebInfo.RanName, err)
 	} else {
-		m.logger.Infof("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Successfully updated rNib. RAN's current connection status: DISCONNECTED, RAN's current connection attempts: %d", nodebInfo.RanName, nodebInfo.ConnectionAttempts)
+		m.logger.Infof("#RanSetupManager.updateConnectionStatusDisconnected - Ran name: %s - Successfully updated rNib. RAN's current connection status: DISCONNECTED", nodebInfo.RanName)
 	}
 	return err
 }

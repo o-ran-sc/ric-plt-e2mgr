@@ -182,10 +182,9 @@ func TestX2SetupSuccess(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	readerMock.On("GetNodeb", ranName).Return(nb, nil)
 	var nbUpdated = *nb
-	nbUpdated.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
 
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
+	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
 
 	payload := e2pdus.PackedX2setupRequest
@@ -214,10 +213,9 @@ func TestEndcSetupSuccess(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	readerMock.On("GetNodeb", ranName).Return(nb, nil)
 	var nbUpdated = *nb
-	nbUpdated.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &nbUpdated).Return(nil)
 
-	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
+	var nbUpdated2 = &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, AssociatedE2TInstanceAddress: "10.0.2.15:8989"}
 	writerMock.On("UpdateNodebInfo", nbUpdated2).Return(nil)
 
 	payload := e2pdus.PackedEndcX2setupRequest

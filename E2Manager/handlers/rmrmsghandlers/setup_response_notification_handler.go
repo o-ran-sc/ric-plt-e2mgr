@@ -73,7 +73,6 @@ func (h SetupResponseNotificationHandler) Handle(request *models.NotificationReq
 		return
 	}
 
-	nodebInfo.ConnectionAttempts = 0
 	nbIdentity := &entities.NbIdentity{InventoryName: inventoryName}
 	err := h.setupResponseManager.PopulateNodebByPdu(h.logger, nbIdentity, nodebInfo, request.Payload)
 
