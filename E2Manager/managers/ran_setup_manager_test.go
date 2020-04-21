@@ -62,7 +62,7 @@ func TestExecuteSetupConnectingX2Setup(t *testing.T) {
 	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
@@ -86,7 +86,7 @@ func TestExecuteSetupConnectingEndcX2Setup(t *testing.T) {
 	ranName := "test1"
 
 		var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_ENDC_X2_SETUP_REQUEST}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
@@ -110,8 +110,8 @@ func TestExecuteSetupDisconnected(t *testing.T) {
 	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
-	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(rnibErr)
@@ -136,8 +136,8 @@ func TestExecuteSetupConnectingRnibError(t *testing.T) {
 	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
-	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var rnibErr = common.NewInternalError(fmt.Errorf("DB error"))
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(rnibErr)
@@ -164,8 +164,8 @@ func TestExecuteSetupDisconnectedRnibError(t *testing.T) {
 	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
-	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	var argNodebDisconnected = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 	writerMock.On("UpdateNodebInfo", argNodebDisconnected).Return(common.NewInternalError(fmt.Errorf("DB error")))
@@ -192,7 +192,7 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 	ranName := "test1"
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_UNKNOWN_E2_APPLICATION_PROTOCOL}
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_UNKNOWN_E2_APPLICATION_PROTOCOL, ConnectionAttempts: 1}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_UNKNOWN_E2_APPLICATION_PROTOCOL}
 	var rnibErr error
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 

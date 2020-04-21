@@ -44,7 +44,6 @@ type Configuration struct {
 	}*/
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
-	MaxConnectionAttempts        int
 	MaxRnibConnectionAttempts    int
 	RnibRetryIntervalMs          int
 	KeepAliveResponseTimeoutMs   int
@@ -76,7 +75,6 @@ func ParseConfiguration() *Configuration {
 	//config.populateKubernetesConfig(viper.Sub("kubernetes"))
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
-	config.MaxConnectionAttempts = viper.GetInt("maxConnectionAttempts")
 	config.MaxRnibConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
 	config.RnibRetryIntervalMs = viper.GetInt("rnibRetryIntervalMs")
 	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
@@ -133,7 +131,7 @@ func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper
 
 func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
-		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxConnectionAttempts: %d, maxRnibConnectionAttempts: %d, "+
+		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
 		"globalRicId: { plmnId: %s, ricNearRtId: %s}}",//, kubernetes: {configPath: %s, namespace: %s}}",
 		c.Logging.LogLevel,
@@ -143,7 +141,6 @@ func (c *Configuration) String() string {
 		c.RoutingManager.BaseUrl,
 		c.NotificationResponseBuffer,
 		c.BigRedButtonTimeoutSec,
-		c.MaxConnectionAttempts,
 		c.MaxRnibConnectionAttempts,
 		c.RnibRetryIntervalMs,
 		c.KeepAliveResponseTimeoutMs,

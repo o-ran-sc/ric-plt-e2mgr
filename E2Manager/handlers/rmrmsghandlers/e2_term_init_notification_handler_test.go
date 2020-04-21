@@ -248,7 +248,7 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
-	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 0}
+	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
@@ -268,7 +268,7 @@ func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
-	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST, ConnectionAttempts: 1}
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)

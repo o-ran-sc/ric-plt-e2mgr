@@ -143,7 +143,6 @@ func executeHandleSetupSuccessResponse(t *testing.T, tc setupSuccessResponseTest
 
 	nodebInfo := &entities.NodebInfo{
 		ConnectionStatus:   entities.ConnectionStatus_CONNECTING,
-		ConnectionAttempts: 1,
 		RanName:            RanName,
 		Ip:                 "10.0.2.2",
 		Port:               1231,
@@ -181,7 +180,6 @@ func executeHandleSetupFailureResponse(t *testing.T, tc setupFailureResponseTest
 
 	nodebInfo := &entities.NodebInfo{
 		ConnectionStatus:   entities.ConnectionStatus_CONNECTING,
-		ConnectionAttempts: 1,
 		RanName:            RanName,
 		Ip:                 "10.0.2.2",
 		Port:               1231,
@@ -211,7 +209,6 @@ func TestX2SetupResponse(t *testing.T) {
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
-	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Node_ENB, nodebInfo.NodeType)
 
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
@@ -234,7 +231,6 @@ func TestX2SetupFailureResponse(t *testing.T) {
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
-	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Failure_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
 	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
@@ -257,7 +253,6 @@ func TestEndcSetupResponse(t *testing.T) {
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
-	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Node_GNB, nodebInfo.NodeType)
 	assert.IsType(t, &entities.NodebInfo_Gnb{}, nodebInfo.Configuration)
 
@@ -280,7 +275,6 @@ func TestEndcSetupFailureResponse(t *testing.T) {
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
-	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Failure_ENDC_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
 	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
@@ -293,7 +287,7 @@ func TestSetupResponseInvalidPayload(t *testing.T) {
 	testContext := NewSetupResponseTestContext(nil)
 	handler := NewSetupResponseNotificationHandler(testContext.logger, testContext.rnibDataService, managers.NewX2SetupResponseManager(converters.NewX2SetupResponseConverter(logger)), testContext.ranStatusChangeManager, rmrCgo.RIC_X2_SETUP_RESP)
 	var rnibErr error
-	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, ConnectionAttempts: 1}, rnibErr)
+	testContext.readerMock.On("GetNodeb", ranName).Return(&entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING}, rnibErr)
 	handler.Handle(&notificationRequest)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", ranName)
 	testContext.writerMock.AssertNotCalled(t, "SaveNodeb")
@@ -336,7 +330,6 @@ func TestSetupResponseStatusChangeSendFailure(t *testing.T) {
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
 	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
-	assert.EqualValues(t, 0, nodebInfo.ConnectionAttempts)
 	assert.EqualValues(t, entities.Node_ENB, nodebInfo.NodeType)
 
 	assert.IsType(t, &entities.NodebInfo_Enb{}, nodebInfo.Configuration)
