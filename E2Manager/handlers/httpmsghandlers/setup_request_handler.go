@@ -102,7 +102,6 @@ func createInitialNodeInfo(requestDetails *models.SetupRequest, protocol entitie
 		ConnectionStatus:      entities.ConnectionStatus_CONNECTING,
 		E2ApplicationProtocol: protocol,
 		RanName:               requestDetails.RanName,
-		ConnectionAttempts:    0,
 	}
 
 	nbIdentity := &entities.NbIdentity{
@@ -118,12 +117,11 @@ func (h *SetupRequestHandler) connectExistingRanWithoutAssociatedE2TAddress(node
 	if err != nil {
 		h.logger.Errorf("#SetupRequestHandler.connectExistingRanWithoutAssociatedE2TAddress - RAN name: %s - failed selecting E2T instance", nodebInfo.RanName)
 
-		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_DISCONNECTED && nodebInfo.ConnectionAttempts == 0 {
+		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_DISCONNECTED{
 			return err
 		}
 
 		nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-		nodebInfo.ConnectionAttempts = 0
 		updateError := h.rNibDataService.UpdateNodebInfo(nodebInfo)
 
 		if updateError != nil {
@@ -151,7 +149,6 @@ func (h *SetupRequestHandler) connectExistingRanWithAssociatedE2TAddress(nodebIn
 	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_CONNECTED {
 		status = nodebInfo.ConnectionStatus
 	}
-	nodebInfo.ConnectionAttempts = 0
 	err := h.rNibDataService.UpdateNodebInfo(nodebInfo)
 
 	if err != nil {

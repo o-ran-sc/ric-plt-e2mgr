@@ -69,7 +69,6 @@ func (m *E2TAssociationManager) associateRanAndUpdateNodeb(e2tAddress string, no
 	} else {
 		nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 		nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
-		nodebInfo.ConnectionAttempts = 0
 	}
 	rNibErr := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 	if rNibErr != nil {

@@ -16,7 +16,7 @@
 #
 ##############################################################################
 
-FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu16-c-go:2-u16.04-nng as ubuntu
+FROM nexus3.o-ran-sc.org:10004/bldr-ubuntu18-c-go:7-u18.04-nng as ubuntu
 
 WORKDIR /opt/rmsimulator
 COPY . . 
@@ -25,7 +25,7 @@ ENV PATH=$PATH:/usr/local/go/bin:/usr/lib/go-1.12/bin
 RUN go build main.go
 
 
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 COPY --from=ubuntu /opt/rmsimulator/main /opt/rmsimulator/main
 COPY --from=ubuntu /opt/rmsimulator/resources /opt/rmsimulator/resources
 

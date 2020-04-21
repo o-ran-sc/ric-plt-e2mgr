@@ -164,7 +164,6 @@ func TestSetupNewRanSelectE2TInstancesNoInstances(t *testing.T) {
 	nodebInfo, _ := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
 	updatedNb := *nodebInfo
-	updatedNb.ConnectionAttempts = 0
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
@@ -188,10 +187,8 @@ func TestSetupNewRanAssociateRanFailure(t *testing.T) {
 	writerMock.On("SaveNodeb", nbIdentity, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", nb).Return(nil)
 	nb.AssociatedE2TInstanceAddress = E2TAddress
-	nb.ConnectionAttempts = 0
 	mockHttpClientAssociateRan(httpClientMock)
 	updatedNb := *nb
-	updatedNb.ConnectionAttempts = 0
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 
 	_, err := handler.Handle(*setupRequest)
@@ -226,7 +223,6 @@ func TestSetupNewRanSetupDbError(t *testing.T) {
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	updatedNb := *nodebInfo
-	updatedNb.ConnectionAttempts = 0
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
@@ -247,7 +243,6 @@ func TestSetupNewRanSetupRmrError(t *testing.T) {
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	updatedNb := *nodebInfo
-	updatedNb.ConnectionAttempts = 0
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
@@ -265,7 +260,6 @@ func TestSetupNewRanSetupSuccess(t *testing.T) {
 	nodebInfo, nbIdentity := createInitialNodeInfo(&setupRequest, entities.E2ApplicationProtocol_X2_SETUP_REQUEST)
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	updatedNb := *nodebInfo
-	updatedNb.ConnectionAttempts = 0
 	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
@@ -371,7 +365,6 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t
 //	e2tInstancesManagerMock.On("AddRansToInstance", E2TAddress, []string{RanName}).Return(nil)
 //	updatedNb := *nb
 //	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
-//	updatedNb.ConnectionAttempts = 0
 //	writerMock.On("UpdateNodebInfo", &updatedNb).Return(common.NewInternalError(fmt.Errorf("")))
 //	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 //	assert.IsType(t, /* &e2managererrors.RnibDbError{} */&common.InternalError{}, err)
@@ -386,7 +379,6 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t
 //	e2tInstancesManagerMock.On("AddRansToInstance", E2TAddress, []string{RanName}).Return(nil)
 //	updatedNb := *nb
 //	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
-//	updatedNb.ConnectionAttempts = 0
 //	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
 //	ranSetupManagerMock.On("ExecuteSetup", &updatedNb, entities.ConnectionStatus_CONNECTING).Return(e2managererrors.NewRnibDbError())
 //	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
@@ -401,7 +393,6 @@ func TestSetupExistingRanWithoutAssocE2TInstanceSelectErrorAlreadyDisconnected(t
 //	e2tInstancesManagerMock.On("AddRansToInstance", E2TAddress, []string{RanName}).Return(nil)
 //	updatedNb := *nb
 //	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
-//	updatedNb.ConnectionAttempts = 0
 //	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
 //	ranSetupManagerMock.On("ExecuteSetup", &updatedNb, entities.ConnectionStatus_CONNECTING).Return(nil)
 //	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
@@ -413,7 +404,6 @@ func TestSetupExistingRanWithAssocE2TInstanceUpdateNodebFailure(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
-	updatedNb.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(common.NewInternalError(fmt.Errorf("")))
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
@@ -427,14 +417,9 @@ func TestSetupExistingRanWithAssocE2TInstanceExecuteSetupRmrError(t *testing.T) 
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
-	updatedNb.ConnectionAttempts = 0
-	updatedNb2 := updatedNb
-	updatedNb2.ConnectionAttempts++
-	updatedNb3 := updatedNb2
+	updatedNb3 := updatedNb
 	updatedNb3.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	updatedNb3.ConnectionAttempts--
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
-	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(nil)
 	payload := e2pdus.PackedX2setupRequest
 	xaction := []byte(RanName)
 	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_SETUP_REQ, len(payload), RanName, &payload, &xaction, nil)
@@ -450,7 +435,6 @@ func TestSetupExistingRanWithAssocE2TInstanceConnectedSuccess(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", RanName).Return(nb, nil)
 	updatedNb := *nb
-	updatedNb.ConnectionAttempts = 0
 	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
 	ranSetupManagerMock.On("ExecuteSetup", &updatedNb, entities.ConnectionStatus_CONNECTED).Return(nil)
 	_, err := handler.Handle(models.SetupRequest{"127.0.0.1", 8080, RanName,})
