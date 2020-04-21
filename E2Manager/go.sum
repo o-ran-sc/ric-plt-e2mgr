@@ -3,10 +3,16 @@ cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.34 h1:d53dCN59dZftx847pzyo/zIKk0XJjOqMAx4VwxJHO10=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.34/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35 h1:TGXHb4DNY8on+ej4S9VUnk2HibIC/5chDy64OE+bQBQ=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.35/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.34 h1:7jxKtb+VPgwHKxQuWne1mG09rsi330erwb1u4OsWEaA=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.34/go.mod h1:G+4sUBMbLfQ+RrGS65U15tKmbnP+/1b5oLTPmMfyfT4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.35 h1:tkM3yE8UzmuH4nf9TqAmiNBSuIZ2CtcMRH2eBIYIzpQ=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.35/go.mod h1:G+4sUBMbLfQ+RrGS65U15tKmbnP+/1b5oLTPmMfyfT4=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.34 h1:niBDUlmhq+8dhXt7z8KW+ZBq/0XlnM4FzvrLYlub1co=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.34/go.mod h1:tcc2L3Fb7hTvxK+QVTCbWjBX//078qOgPMwA9ZyCxY4=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.35 h1:LcxnUUDwsCzYEISKmkjkyYfg/lnLt8ofkPiGK69vNIA=
+gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.35/go.mod h1:2bSaXTpECbZieB8bMnubTqMwF3n+mMBxlTaAXvcduNg=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2 h1:UK7awyRKIkVdokWvvkYvazlg3EWIfMnIqCcJxTnLlDA=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2/go.mod h1:y2WhrCvdLkAKdH+ySdHSOSehACJkTMyZghCGVcqoZzc=
 github.com/Azure/go-autorest/autorest v0.9.0/go.mod h1:xyHB1BMZT0cuDHU7I0+g046+BFDTQ8rEZB0s4Yfa6bI=

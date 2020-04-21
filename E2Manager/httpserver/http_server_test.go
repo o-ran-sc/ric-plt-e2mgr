@@ -37,9 +37,6 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 
 	nodebControllerMock := &mocks.NodebControllerMock{}
 	nodebControllerMock.On("Shutdown").Return(nil)
-	nodebControllerMock.On("X2Reset").Return(nil)
-	nodebControllerMock.On("X2Setup").Return(nil)
-	nodebControllerMock.On("EndcSetup").Return(nil)
 	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
 
@@ -50,32 +47,6 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	router := mux.NewRouter()
 	initializeRoutes(router, rootControllerMock, nodebControllerMock, e2tControllerMock)
 	return router, rootControllerMock, nodebControllerMock, e2tControllerMock
-}
-
-func TestRoutePostEndcSetup(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
-
-	req, err := http.NewRequest("POST", "/v1/nodeb/endc-setup", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
-
-	nodebControllerMock.AssertNumberOfCalls(t, "EndcSetup", 1)
-}
-
-func TestRoutePostX2Setup(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
-
-	req, err := http.NewRequest("POST", "/v1/nodeb/x2-setup", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
-
-	nodebControllerMock.AssertNumberOfCalls(t, "X2Setup", 1)
 }
 
 func TestRouteGetNodebIds(t *testing.T) {
@@ -130,21 +101,6 @@ func TestRoutePutNodebShutdown(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	nodebControllerMock.AssertNumberOfCalls(t, "Shutdown", 1)
-}
-
-func TestRoutePutNodebResetRanName(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
-
-	req, err := http.NewRequest("PUT", "/v1/nodeb/ran1/reset", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	rr := httptest.NewRecorder()
-	router.ServeHTTP(rr, req)
-
-	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
-	assert.Equal(t, "ran1", rr.Body.String(), "handler returned wrong body")
-	nodebControllerMock.AssertNumberOfCalls(t, "X2Reset", 1)
 }
 
 func TestRouteNotFound(t *testing.T) {
