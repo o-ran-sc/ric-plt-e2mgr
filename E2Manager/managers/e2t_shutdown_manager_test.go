@@ -35,8 +35,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"io/ioutil"
-	//"k8s.io/apimachinery/pkg/runtime"
-	//"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/fake"
 	"net/http"
 	"testing"
 	"time"
@@ -56,14 +56,11 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
-	//kubernetesManager := initKubernetesManagerTest(t)
+	kubernetesManager := initKubernetesManagerTest(t)
 
-	/*shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, kubernetesManager)
+	shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, kubernetesManager)
 
-	return shutdownManager, readerMock, writerMock, httpClientMock, kubernetesManager*/
-	shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, nil)
-
-	return shutdownManager, readerMock, writerMock, httpClientMock, nil
+	return shutdownManager, readerMock, writerMock, httpClientMock, kubernetesManager
 }
 
 func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
@@ -184,7 +181,7 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
-	
+
 }
 
 func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
@@ -201,7 +198,7 @@ func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
-	
+
 }
 
 func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
@@ -218,7 +215,7 @@ func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
-	
+
 }
 
 func TestShutdownFailureRoutingManagerError(t *testing.T) {
@@ -273,7 +270,7 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
-	
+
 }
 
 func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
@@ -412,7 +409,7 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
 }
-/*
+
 func TestShutdownSuccess2Instance2Rans(t *testing.T) {
 	shutdownManager, readerMock, writerMock, httpClientMock,kubernetesManager  := initE2TShutdownManagerTest(t)
 
@@ -507,4 +504,4 @@ func TestShutdownSuccess2Instance2RansNoPod(t *testing.T) {
 		writerMock.AssertExpectations(t)
 		httpClientMock.AssertExpectations(t)
 	})
-}*/
+}

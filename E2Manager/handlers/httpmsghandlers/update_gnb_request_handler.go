@@ -88,7 +88,7 @@ func (h *UpdateGnbRequestHandler) Handle(request models.Request) (models.IRespon
 	return models.NewUpdateGnbResponse(nodebInfo), nil
 }
 
-func (h *UpdateGnbRequestHandler) validateRequestBody(updateGnbRequest models.UpdateGnbRequest) (error) {
+func (h *UpdateGnbRequestHandler) validateRequestBody(updateGnbRequest models.UpdateGnbRequest) error {
 
 	if len(updateGnbRequest.ServedNrCells) == 0 {
 		h.logger.Errorf(VALIDATION_FAILURE_MESSAGE+" and cannot be empty", "servedCells")
