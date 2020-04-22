@@ -22,8 +22,12 @@ package managers
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"path/filepath"
 )
 
 type KubernetesManager struct {
@@ -35,32 +39,12 @@ type KubernetesManager struct {
 func NewKubernetesManager(logger *logger.Logger, config *configuration.Configuration) *KubernetesManager {
 	return &KubernetesManager{
 		Logger:    logger,
-	//	ClientSet: createClientSet(logger, config),
+		ClientSet: createClientSet(logger, config),
 		Config:    config,
 	}
 }
 
-/*func (km KubernetesManager) GetAndDeletePod(namespace string, podName string) {
-	km.logger.Infof("#KubernetesManager.GetAndDeletePod - namespace: %s, POD name: %s ", namespace, podName)
-
-	config, err := clientcmd.BuildConfigFromFlags("", "kubeConfigPath")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	clientSet, _ := kubernetesManager.NewForConfig(config)
-
-	podInterface := km.GetPodInterface(clientSet.CoreV1(), namespace, podName)
-
-	if podInterface == nil{
-		return
-	}
-
-	km.DeletePod(podInterface, podName)
-}*/
-
-/*func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
-	////path := os.Getenv("HOME") + "/.kube/config"
+func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
 
 	absConfigPath,err := filepath.Abs(config.Kubernetes.ConfigPath)
 	if err != nil {
@@ -80,22 +64,10 @@ func NewKubernetesManager(logger *logger.Logger, config *configuration.Configura
 		return nil
 	}
 	return clientSet
-}*/
-
-/*func (km KubernetesManager) DeletePod(podInterface v1.PodInterface, podName string) {
-	km.logger.Infof("#KubernetesManager.DeletePod - POD name %s ", podName)
-
-	err := podInterface.Delete(podName, &metaV1.DeleteOptions{})
-
-	if err != nil{
-		km.logger.Warnf("#KubernetesManager.DeletePod - POD %s can't be deleted", podName)
-		return
-	}
-	km.logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)
 }
-*/
+
 func (km KubernetesManager) DeletePod(podName string) error {
-/*	km.Logger.Infof("#KubernetesManager.DeletePod - POD name: %s ", podName)
+	km.Logger.Infof("#KubernetesManager.DeletePod - POD name: %s ", podName)
 
 	if km.ClientSet == nil {
 		km.Logger.Errorf("#KubernetesManager.DeletePod - no kubernetesManager connection")
@@ -107,30 +79,13 @@ func (km KubernetesManager) DeletePod(podName string) error {
 		return e2managererrors.NewInternalError()
 	}
 
-	err := km.ClientSet.CoreV1().Pods(km.Config.Kubernetes.Namespace).Delete(podName, &metaV1.DeleteOptions{})
+	err := km.ClientSet.CoreV1().Pods(km.Config.Kubernetes.KubeNamespace).Delete(podName, &metaV1.DeleteOptions{})
 
 	if err != nil {
 		km.Logger.Errorf("#KubernetesManager.DeletePod - POD %s can't be deleted, error: %s", podName, err)
 		return err
 	}
 
-	km.Logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)*/
+	km.Logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)
 	return nil
 }
-
-/*func (km KubernetesManager) GetPodInterface(client v1.CoreV1Interface, namespace string, podName string) v1.PodInterface{
-	km.logger.Infof("#KubernetesManager.GetPodInterface - namespace: %s, POD name: %s ", namespace, podName)
-
-
-	podInterface := client.Pods(namespace)
-	pod, err := podInterface.Get(podName, metaV1.GetOptions{})
-
-	if err != nil{
-		km.logger.Warnf("#KubernetesManager.GetPodInterface - POD name: %s not found", podName)
-		return nil
-	}
-
-	km.logger.Infof("#KubernetesManager.GetPodInterface - POD status: %s ", pod.Status.String())
-
-	return podInterface
-}*/

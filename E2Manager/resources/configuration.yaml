@@ -17,3 +17,6 @@ e2tInstanceDeletionTimeoutMs: 15000
 globalRicId:
   plmnId: 131014
   ricNearRtId: 556670
+kubernetes:
+  configPath: ./kube_config.yml
+  kubeNamespace: ricplt

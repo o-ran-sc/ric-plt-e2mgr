@@ -20,7 +20,7 @@
 
 package managers
 
-/*
+
 import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
@@ -45,7 +45,7 @@ func initKubernetesManagerTest(t *testing.T) *KubernetesManager {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
 	config := &configuration.Configuration{}
-	config.Kubernetes.Namespace = "oran"
+	config.Kubernetes.KubeNamespace = "oran"
 	config.Kubernetes.ConfigPath = "somePath"
 
 	kubernetesManager := NewKubernetesManager(logger, config)
@@ -149,4 +149,3 @@ func pod(namespace, image string) *v1.Pod {
 		},
 	}
 }
-*/

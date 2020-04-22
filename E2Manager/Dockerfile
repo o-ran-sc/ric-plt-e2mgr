@@ -39,6 +39,7 @@ RUN apt-get update && apt-get install -y \
   tcpdump
 
 COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
+COPY --from=ubuntu /opt/E2Manager/kube_config.yml /opt/E2Manager/kube_config.yml
 COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
 COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
 COPY --from=ubuntu /opt/E2Manager/resources/rmr.verbose /tmp/rmr.verbose
