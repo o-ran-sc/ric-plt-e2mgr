@@ -90,12 +90,39 @@ type updateGnbCellsParams struct {
 	err error
 }
 
+type removeServedNrCellsParams struct {
+	servedNrCells []*entities.ServedNRCell
+	err error
+}
+
 type controllerUpdateGnbTestContext struct {
 	getNodebInfoResult   *getNodebInfoResult
+	removeServedNrCellsParams *removeServedNrCellsParams
 	updateGnbCellsParams *updateGnbCellsParams
 	requestBody          map[string]interface{}
 	expectedStatusCode   int
 	expectedJsonResponse string
+}
+
+func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
+
+	servedNrCells := []*entities.ServedNRCell{}
+
+	for _, v := range cellIds {
+		servedNrCells = append(servedNrCells, &entities.ServedNRCell{ServedNrCellInformation: &entities.ServedNRCellInformation{
+			CellId: v,
+			ChoiceNrMode: &entities.ServedNRCellInformation_ChoiceNRMode{
+				Fdd: &entities.ServedNRCellInformation_ChoiceNRMode_FddInfo{
+
+				},
+			},
+			NrMode:      entities.Nr_FDD,
+			NrPci:       5,
+			ServedPlmns: []string{"whatever"},
+		}})
+	}
+
+	return servedNrCells
 }
 
 func buildNrNeighbourInformation(propToOmit string) map[string]interface{} {
@@ -278,11 +305,16 @@ func activateControllerUpdateGnbMocks(context *controllerUpdateGnbTestContext, r
 		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	}
 
+	if context.removeServedNrCellsParams != nil {
+		writerMock.On("RemoveServedNrCells", RanName, context.removeServedNrCellsParams.servedNrCells).Return(context.removeServedNrCellsParams.err)
+	}
+
 	if context.updateGnbCellsParams != nil {
 		updatedNodebInfo := *context.getNodebInfoResult.nodebInfo
 		gnb := entities.Gnb{}
 		_ = jsonpb.Unmarshal(getJsonRequestAsBuffer(context.requestBody), &gnb)
-		updatedNodebInfo.GetGnb().ServedNrCells = gnb.ServedNrCells
+		updatedGnb := *updatedNodebInfo.GetGnb()
+		updatedGnb.ServedNrCells = gnb.ServedNrCells
 		writerMock.On("UpdateGnbCells", &updatedNodebInfo, gnb.ServedNrCells).Return(context.updateGnbCellsParams.err)
 	}
 }
@@ -300,6 +332,10 @@ func assertControllerUpdateGnb(t *testing.T, context *controllerUpdateGnbTestCon
 
 	if context.updateGnbCellsParams != nil {
 		writerMock.AssertNotCalled(t, "UpdateGnb")
+	}
+
+	if context.removeServedNrCellsParams != nil {
+		writerMock.AssertNotCalled(t, "RemoveServedNrCells")
 	}
 }
 
@@ -508,8 +544,46 @@ func TestControllerUpdateGnbGetNodebSuccessInvalidGnbConfiguration(t *testing.T)
 	controllerUpdateGnbTestExecuter(t, &context)
 }
 
-func TestControllerUpdateGnbGetNodebSuccessUpdateGnbCellsFailure(t *testing.T) {
+func TestControllerUpdateGnbGetNodebSuccessRemoveServedNrCellsFailure(t *testing.T) {
+	oldServedNrCells := generateServedNrCells("whatever1","whatever2")
 	context := controllerUpdateGnbTestContext{
+		removeServedNrCellsParams: &removeServedNrCellsParams{
+			err: common.NewInternalError(errors.New("#writer.UpdateGnbCells - Internal Error")),
+			servedNrCells: oldServedNrCells,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{ServedNrCells: oldServedNrCells}},
+			},
+			rnibError: nil,
+		},
+		requestBody: map[string]interface{}{
+			"servedNrCells": []interface{}{
+				map[string]interface{}{
+					"servedNrCellInformation": buildServedNrCellInformation(""),
+					"nrNeighbourInfos": []interface{}{
+						buildNrNeighbourInformation(""),
+					},
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateGnbGetNodebSuccessUpdateGnbCellsFailure(t *testing.T) {
+	oldServedNrCells := generateServedNrCells("whatever1","whatever2")
+	context := controllerUpdateGnbTestContext{
+		removeServedNrCellsParams: &removeServedNrCellsParams{
+			err: nil,
+			servedNrCells: oldServedNrCells,
+		},
 		updateGnbCellsParams: &updateGnbCellsParams{
 			err: common.NewInternalError(errors.New("#writer.UpdateGnbCells - Internal Error")),
 		},
@@ -518,7 +592,7 @@ func TestControllerUpdateGnbGetNodebSuccessUpdateGnbCellsFailure(t *testing.T) {
 				RanName:                      RanName,
 				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
 				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
-				Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
+				Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{ServedNrCells: oldServedNrCells}},
 			},
 			rnibError: nil,
 		},

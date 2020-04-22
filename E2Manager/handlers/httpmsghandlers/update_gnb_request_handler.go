@@ -68,27 +68,48 @@ func (h *UpdateGnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewResourceNotFoundError()
 	}
 
-	ranName:= nodebInfo.RanName
-	gnb := nodebInfo.GetGnb()
-
-	if gnb == nil {
-		h.logger.Errorf("#UpdateGnbRequestHandler.Handle - RAN name: %s - nodeb missing gnb configuration", ranName)
-		return nil, e2managererrors.NewInternalError()
-	}
-
-	gnb.ServedNrCells = updateGnbRequest.ServedNrCells
-
-	err = h.rNibDataService.UpdateGnbCells(nodebInfo, updateGnbRequest.ServedNrCells)
+	err = h.updateGnbCells(nodebInfo, updateGnbRequest)
 
 	if err != nil {
-		h.logger.Errorf("#UpdateGnbRequestHandler.Handle - RAN name: %s - Failed updating GNB cells. Error: %s", ranName, err)
-		return nil, e2managererrors.NewRnibDbError()
+		return nil, err
 	}
 
 	return models.NewUpdateGnbResponse(nodebInfo), nil
 }
 
-func (h *UpdateGnbRequestHandler) validateRequestBody(updateGnbRequest models.UpdateGnbRequest) (error) {
+func (h *UpdateGnbRequestHandler) updateGnbCells(nodebInfo *entities.NodebInfo, updateGnbRequest models.UpdateGnbRequest) error {
+
+	ranName := nodebInfo.RanName
+	gnb := nodebInfo.GetGnb()
+
+	if gnb == nil {
+		h.logger.Errorf("#UpdateGnbRequestHandler.updateGnbCells - RAN name: %s - nodeb missing gnb configuration", ranName)
+		return e2managererrors.NewInternalError()
+	}
+
+	if len(gnb.ServedNrCells) != 0 {
+		err := h.rNibDataService.RemoveServedNrCells(ranName, gnb.ServedNrCells)
+
+		if err != nil {
+			h.logger.Errorf("#UpdateGnbRequestHandler.updateGnbCells - RAN name: %s - Failed removing served nr cells", ranName)
+			return e2managererrors.NewRnibDbError()
+		}
+	}
+
+	gnb.ServedNrCells = updateGnbRequest.ServedNrCells
+
+	err := h.rNibDataService.UpdateGnbCells(nodebInfo, updateGnbRequest.ServedNrCells)
+
+	if err != nil {
+		h.logger.Errorf("#UpdateGnbRequestHandler.updateGnbCells - RAN name: %s - Failed updating GNB cells. Error: %s", ranName, err)
+		return e2managererrors.NewRnibDbError()
+	}
+
+	h.logger.Infof("#UpdateGnbRequestHandler.updateGnbCells - RAN name: %s - Successfully updated GNB cells", ranName)
+	return nil
+}
+
+func (h *UpdateGnbRequestHandler) validateRequestBody(updateGnbRequest models.UpdateGnbRequest) error {
 
 	if len(updateGnbRequest.ServedNrCells) == 0 {
 		h.logger.Errorf(VALIDATION_FAILURE_MESSAGE+" and cannot be empty", "servedCells")
@@ -129,23 +150,23 @@ func (h *UpdateGnbRequestHandler) validateRequestBody(updateGnbRequest models.Up
 
 func isServedNrCellInformationValid(servedNrCellInformation *entities.ServedNRCellInformation) error {
 	if servedNrCellInformation.CellId == "" {
-		return errors.New("cellId");
+		return errors.New("cellId")
 	}
 
 	if servedNrCellInformation.ChoiceNrMode == nil {
-		return errors.New("choiceNrMode");
+		return errors.New("choiceNrMode")
 	}
 
 	if servedNrCellInformation.NrMode == entities.Nr_UNKNOWN {
-		return errors.New("nrMode");
+		return errors.New("nrMode")
 	}
 
 	if servedNrCellInformation.NrPci == 0 {
-		return errors.New("nrPci");
+		return errors.New("nrPci")
 	}
 
 	if len(servedNrCellInformation.ServedPlmns) == 0 {
-		return errors.New("servedPlmns");
+		return errors.New("servedPlmns")
 	}
 
 	return isServedNrCellInfoChoiceNrModeValid(servedNrCellInformation.ChoiceNrMode)

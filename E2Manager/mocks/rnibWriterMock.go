@@ -86,3 +86,9 @@ func (rnibWriterMock *RnibWriterMock) UpdateGnbCells(nodebInfo *entities.NodebIn
 	args := rnibWriterMock.Called(nodebInfo, servedNrCells)
 	return args.Error(0)
 }
+
+func (rnibWriterMock *RnibWriterMock) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
+	args := rnibWriterMock.Called(inventoryName, servedNrCells)
+	return args.Error(0)
+}
+

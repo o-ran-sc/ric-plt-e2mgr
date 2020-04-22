@@ -33,6 +33,9 @@ import (
 )
 
 var namespace = "namespace"
+const (
+	RanName = "test"
+)
 
 func initSdlInstanceMock(namespace string) (w RNibWriter, sdlInstanceMock *mocks.MockSdlInstance) {
 	sdlInstanceMock = new(mocks.MockSdlInstance)
@@ -65,7 +68,7 @@ func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 
 	servedNrCells := []*entities.ServedNRCell{}
 
-	for _, v := range cellIds {
+	for i, v := range cellIds {
 		servedNrCells = append(servedNrCells, &entities.ServedNRCell{ServedNrCellInformation: &entities.ServedNRCellInformation{
 			CellId: v,
 			ChoiceNrMode: &entities.ServedNRCellInformation_ChoiceNRMode{
@@ -74,12 +77,28 @@ func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 				},
 			},
 			NrMode:      entities.Nr_FDD,
-			NrPci:       5,
+			NrPci:       uint32(i + 1),
 			ServedPlmns: []string{"whatever"},
 		}})
 	}
 
 	return servedNrCells
+}
+
+func TestRemoveServedNrCellsSuccess(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCellsToRemove := generateServedNrCells("whatever1", "whatever2")
+	sdlInstanceMock.On("Remove", buildCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(nil)
+	err := w.RemoveServedNrCells(RanName, servedNrCellsToRemove)
+	assert.Nil(t, err)
+}
+
+func TestRemoveServedNrCellsFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedNrCellsToRemove := generateServedNrCells("whatever1", "whatever2")
+	sdlInstanceMock.On("Remove", buildCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(errors.New("expected error"))
+	err := w.RemoveServedNrCells(RanName, servedNrCellsToRemove)
+	assert.IsType(t, &common.InternalError{}, err)
 }
 
 func TestUpdateGnbCellsInvalidNodebInfoFailure(t *testing.T) {

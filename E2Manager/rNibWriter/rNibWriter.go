@@ -44,6 +44,7 @@ type RNibWriter interface {
 	SaveE2TAddresses(addresses []string) error
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
+	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 }
 
 /*
@@ -52,6 +53,18 @@ GetRNibWriter returns reference to RNibWriter
 
 func GetRNibWriter(sdl common.ISdlInstance) RNibWriter {
 	return &rNibWriterInstance{sdl: sdl}
+}
+
+
+func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
+	cellKeysToRemove := buildCellKeysToRemove(inventoryName, servedNrCells)
+	err := w.sdl.Remove(cellKeysToRemove)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
 }
 
 /*
@@ -146,6 +159,28 @@ func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, serve
 	}
 
 	return nil
+}
+
+func buildCellKeysToRemove(inventoryName string, servedNrCellsToRemove []*entities.ServedNRCell) []string {
+
+	cellKeysToRemove := []string{}
+
+	for _, cell := range servedNrCellsToRemove {
+
+		key, _ := common.ValidateAndBuildNrCellIdKey(cell.GetServedNrCellInformation().GetCellId())
+
+		if len(key) != 0 {
+			cellKeysToRemove = append(cellKeysToRemove, key)
+		}
+
+		key, _ = common.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetServedNrCellInformation().GetNrPci())
+
+		if len(key) != 0 {
+			cellKeysToRemove = append(cellKeysToRemove, key)
+		}
+	}
+
+	return cellKeysToRemove
 }
 
 func buildUpdateNodebInfoPairs(nodebInfo *entities.NodebInfo) ([]interface{}, error) {

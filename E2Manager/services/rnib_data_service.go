@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package services
 
 import (
@@ -49,6 +48,7 @@ type RNibDataService interface {
 	GetE2TAddressesNoLogs() ([]string, error)
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
+	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 }
 
 type rNibDataService struct {
@@ -67,6 +67,15 @@ func NewRnibDataService(logger *logger.Logger, config *configuration.Configurati
 		maxAttempts:   config.MaxRnibConnectionAttempts,
 		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
 	}
+}
+
+func (w *rNibDataService) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
+	err := w.retry("RemoveServedNrCells", func() (err error) {
+		err = w.rnibWriter.RemoveServedNrCells(inventoryName, servedNrCells)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error {
