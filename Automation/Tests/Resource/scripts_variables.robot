@@ -27,6 +27,7 @@ Documentation    Message types resource file
 *** Variables ***
 
 ${E2_INIT_message_type}    MType: 1100
+${Setup_failure_message_type}    MType: 12003
 ${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNodeb
 ${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
 ${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
