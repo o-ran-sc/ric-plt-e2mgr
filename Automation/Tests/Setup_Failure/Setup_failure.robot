@@ -28,7 +28,6 @@ Resource   ../Resource/Keywords.robot
 Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/rsmscripts.py
 Library     REST        ${url}
 Suite Teardown  Start RoutingManager Simulator
 
@@ -39,6 +38,10 @@ Suite Teardown  Start RoutingManager Simulator
 Stop Routing manager simulator and restarting simulator
     Stop RoutingManager Simulator
     Restart simulator with less docker
+
+prepare logs for tests
+    Remove log files
+    Save logs
 
 Get request gnb
     Sleep    2s
@@ -53,6 +56,10 @@ Get request gnb
     Integer  response body gnb ranFunctions 1 ranFunctionRevision  1
     Integer  response body gnb ranFunctions 2 ranFunctionId  3
     Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
+
+E2M Logs - Verify RMR Message
+    ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${Setup_failure_message_type}    ${None}
+    Should Be Equal As Strings    ${result}      True
 
 
 

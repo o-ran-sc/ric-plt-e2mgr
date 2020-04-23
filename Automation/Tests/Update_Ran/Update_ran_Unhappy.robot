@@ -25,10 +25,7 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
-Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/rsmscripts.py
 Library     REST        ${url}
 
 
