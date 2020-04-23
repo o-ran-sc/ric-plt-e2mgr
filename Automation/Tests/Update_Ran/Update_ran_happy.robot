@@ -19,26 +19,40 @@
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
 #
-import config
-import redis
-import time
 
 
-def flush():
+*** Settings ***
+Suite Setup   Prepare Enviorment
+Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
+Resource    ../Resource/scripts_variables.robot
+Library     OperatingSystem
+Library     ../Scripts/find_rmr_message.py
+Library     ../Scripts/rsmscripts.py
+Library     REST        ${url}
 
-    c = config.redis_ip_address
 
-    p = config.redis_ip_port
 
-    r = redis.Redis(host=c, port=p, db=0)
 
-    r.flushall()
+*** Test Cases ***
 
-    r.set("{e2Manager},E2TAddresses", "[\"10.0.2.15:38000\"]")
+Update Ran
+    Sleep  2s
+    Update Ran request
+    Integer  response status  200
+    String   response body ranName    ${ranname}
+    String   response body connectionStatus    CONNECTED
+    String   response body nodeType     GNB
+    String   response body gnb servedNrCells 0 servedNrCellInformation cellId   abcd
+    String   response body gnb servedNrCells 0 nrNeighbourInfos 0 nrCgi  one
+    String   response body gnb servedNrCells 0 servedNrCellInformation servedPlmns 0  whatever
 
-    r.set("{e2Manager},E2TInstance:10.0.2.15:38000","{\"address\":\"10.0.2.15:38000\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(int((time.time()+2) * 1000000000)) + ",\"state\":\"ACTIVE\",\"deletionTimeStamp\":0}")
 
-    return True
+
+
+
+
+
 
 
 

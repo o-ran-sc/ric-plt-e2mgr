@@ -33,7 +33,7 @@ def verify_e2t_addresses_key():
 
     r = getRedisClientDecodeResponse()
     
-    value = "[\"127.0.0.1:38000\"]"
+    value = "[\"10.0.2.15:38000\"]"
 
     return r.get("{e2Manager},E2TAddresses") == value
 
@@ -42,11 +42,11 @@ def verify_e2t_instance_key():
 
     r = getRedisClientDecodeResponse()
 
-    e2_address = "\"address\":\"127.0.0.1:38000\""
+    e2_address = "\"address\":\"10.0.2.15:38000\""
     e2_associated_ran_list = "\"associatedRanList\":[]"
     e2_state = "\"state\":\"ACTIVE\""
 
-    e2_db_instance = r.get("{e2Manager},E2TInstance:127.0.0.1:38000")
+    e2_db_instance = r.get("{e2Manager},E2TInstance:10.0.2.15:38000")
 
     if e2_db_instance.find(e2_address) < 0:
         return False

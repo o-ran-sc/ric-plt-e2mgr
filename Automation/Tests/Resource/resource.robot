@@ -30,7 +30,10 @@ ${docker_number-1}    4
 ${url}   http://localhost:3800
 ${ranName}  gnb:208-092-303030
 ${getNodeb}  /v1/nodeb/${ranName}
-${E2tInstanceAddress}   127.0.0.1:38000
+${update_gnb_url}   /v1/nodeb/${ranName}/update
+${update_gnb_body}  {"servedNrCells":[{"servedNrCellInformation":{"cellId":"abcd","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"one","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
+${update_gnb_body_notvalid}  {"servedNrCells":[{"servedNrCellInformation":{"choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"whatever","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
+${E2tInstanceAddress}   10.0.2.15:38000
 ${header}  {"Content-Type": "application/json"}
 ${docker_command}  docker ps | grep Up | wc --lines
 ${stop_simu}  docker stop gnbe2_oran_simu
