@@ -31,7 +31,14 @@ Get Request node b gnb
     Sleep    1s
     GET      ${getNodeb}
 
+Update Ran request
+    Sleep  1s
+    PUT    ${update_gnb_url}   ${update_gnb_body}
 
+
+Update Ran request not valid
+    Sleep  1s
+    PUT    ${update_gnb_url}   ${update_gnb_body_notvalid}
 
 Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}
@@ -114,5 +121,8 @@ Start RoutingManager Simulator
 Stop RoutingManager Simulator
     Run And Return Rc And Output    ${stop_routingmanager_sim}
 
-
+Restart simulator with less docker
+    Run And Return Rc And Output    ${restart_simu}
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
