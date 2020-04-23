@@ -19,7 +19,7 @@
 //  platform project (RICP).
 
 package managers
-
+/*
 
 import (
 	"e2mgr/configuration"
@@ -149,3 +149,4 @@ func pod(namespace, image string) *v1.Pod {
 		},
 	}
 }
+*/
