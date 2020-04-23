@@ -22,12 +22,8 @@ package managers
 
 import (
 	"e2mgr/configuration"
-	"e2mgr/e2managererrors"
 	"e2mgr/logger"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"path/filepath"
 )
 
 type KubernetesManager struct {
@@ -39,12 +35,12 @@ type KubernetesManager struct {
 func NewKubernetesManager(logger *logger.Logger, config *configuration.Configuration) *KubernetesManager {
 	return &KubernetesManager{
 		Logger:    logger,
-		ClientSet: createClientSet(logger, config),
+		//ClientSet: createClientSet(logger, config),
 		Config:    config,
 	}
 }
 
-func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
+/*func createClientSet(logger *logger.Logger, config *configuration.Configuration) kubernetes.Interface {
 
 	absConfigPath,err := filepath.Abs(config.Kubernetes.ConfigPath)
 	if err != nil {
@@ -64,9 +60,9 @@ func createClientSet(logger *logger.Logger, config *configuration.Configuration)
 		return nil
 	}
 	return clientSet
-}
+}*/
 
-func (km KubernetesManager) DeletePod(podName string) error {
+/*func (km KubernetesManager) DeletePod(podName string) error {
 	km.Logger.Infof("#KubernetesManager.DeletePod - POD name: %s ", podName)
 
 	if km.ClientSet == nil {
@@ -88,4 +84,4 @@ func (km KubernetesManager) DeletePod(podName string) error {
 
 	km.Logger.Infof("#KubernetesManager.DeletePod - POD %s was deleted", podName)
 	return nil
-}
+}*/

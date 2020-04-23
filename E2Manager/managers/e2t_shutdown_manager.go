@@ -62,7 +62,7 @@ func (m E2TShutdownManager) Shutdown(e2tInstance *entities.E2TInstance) error {
 		return nil
 	}
 
-	go m.kubernetesManager.DeletePod(e2tInstance.PodName)
+	//go m.kubernetesManager.DeletePod(e2tInstance.PodName)
 
 	err := m.markE2tInstanceToBeDeleted(e2tInstance)
 	if err != nil {
