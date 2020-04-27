@@ -92,16 +92,16 @@ type updateGnbCellsParams struct {
 
 type removeServedNrCellsParams struct {
 	servedNrCells []*entities.ServedNRCell
-	err error
+	err           error
 }
 
 type controllerUpdateGnbTestContext struct {
-	getNodebInfoResult   *getNodebInfoResult
+	getNodebInfoResult        *getNodebInfoResult
 	removeServedNrCellsParams *removeServedNrCellsParams
-	updateGnbCellsParams *updateGnbCellsParams
-	requestBody          map[string]interface{}
-	expectedStatusCode   int
-	expectedJsonResponse string
+	updateGnbCellsParams      *updateGnbCellsParams
+	requestBody               map[string]interface{}
+	expectedStatusCode        int
+	expectedJsonResponse      string
 }
 
 func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
@@ -545,10 +545,10 @@ func TestControllerUpdateGnbGetNodebSuccessInvalidGnbConfiguration(t *testing.T)
 }
 
 func TestControllerUpdateGnbGetNodebSuccessRemoveServedNrCellsFailure(t *testing.T) {
-	oldServedNrCells := generateServedNrCells("whatever1","whatever2")
+	oldServedNrCells := generateServedNrCells("whatever1", "whatever2")
 	context := controllerUpdateGnbTestContext{
 		removeServedNrCellsParams: &removeServedNrCellsParams{
-			err: common.NewInternalError(errors.New("#writer.UpdateGnbCells - Internal Error")),
+			err:           common.NewInternalError(errors.New("#writer.UpdateGnbCells - Internal Error")),
 			servedNrCells: oldServedNrCells,
 		},
 		getNodebInfoResult: &getNodebInfoResult{
@@ -578,10 +578,10 @@ func TestControllerUpdateGnbGetNodebSuccessRemoveServedNrCellsFailure(t *testing
 }
 
 func TestControllerUpdateGnbGetNodebSuccessUpdateGnbCellsFailure(t *testing.T) {
-	oldServedNrCells := generateServedNrCells("whatever1","whatever2")
+	oldServedNrCells := generateServedNrCells("whatever1", "whatever2")
 	context := controllerUpdateGnbTestContext{
 		removeServedNrCellsParams: &removeServedNrCellsParams{
-			err: nil,
+			err:           nil,
 			servedNrCells: oldServedNrCells,
 		},
 		updateGnbCellsParams: &updateGnbCellsParams{
@@ -647,7 +647,7 @@ func TestControllerUpdateGnbSuccess(t *testing.T) {
 func getJsonRequestAsBuffer(requestJson map[string]interface{}) *bytes.Buffer {
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(requestJson)
-	return b;
+	return b
 }
 
 func TestControllerGetNodebSuccess(t *testing.T) {
@@ -835,7 +835,7 @@ func parseJsonRequest(t *testing.T, r io.Reader) models.ErrorResponse {
 	if err != nil {
 		t.Errorf("Error cannot deserialize json request")
 	}
-	_ =json.Unmarshal(body, &errorResponse)
+	_ = json.Unmarshal(body, &errorResponse)
 
 	return errorResponse
 }

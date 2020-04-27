@@ -28,6 +28,82 @@ import (
 	"strings"
 )
 
+type Gnb struct {
+	Text        string `xml:",chardata"`
+	GlobalGNBID struct {
+		Text   string `xml:",chardata"`
+		PlmnID string `xml:"plmn-id"`
+		GnbID  struct {
+			Text  string `xml:",chardata"`
+			GnbID string `xml:"gnb-ID"`
+		} `xml:"gnb-id"`
+	} `xml:"global-gNB-ID"`
+}
+
+type EnGnb struct {
+	Text        string `xml:",chardata"`
+	GlobalGNBID struct {
+		Text   string `xml:",chardata"`
+		PlmnID string `xml:"pLMN-Identity"`
+		GnbID  struct {
+			Text  string `xml:",chardata"`
+			GnbID string `xml:"gNB-ID"`
+		} `xml:"gNB-ID"`
+	} `xml:"global-gNB-ID"`
+}
+
+type NgEnb struct {
+	Text          string `xml:",chardata"`
+	GlobalNgENBID struct {
+		Text   string `xml:",chardata"`
+		PlmnID string `xml:"plmn-id"`
+		GnbID  struct {
+			Text  string `xml:",chardata"`
+			GnbID string `xml:"gnb-ID"`
+		} `xml:"gnb-id"`
+	} `xml:"global-ng-eNB-ID"`
+}
+
+type Enb struct {
+	Text        string `xml:",chardata"`
+	GlobalENBID struct {
+		Text   string `xml:",chardata"`
+		PlmnID string `xml:"plmn-id"`
+		GnbID  struct {
+			Text  string `xml:",chardata"`
+			GnbID string `xml:"gnb-ID"`
+		} `xml:"gnb-id"`
+	} `xml:"global-eNB-ID"`
+}
+
+type GlobalE2NodeId struct {
+	Text  string `xml:",chardata"`
+	GNB   Gnb    `xml:"gNB"`
+	EnGNB EnGnb  `xml:"en-gNB"`
+	NgENB NgEnb  `xml:"ng-eNB"`
+	ENB   Enb    `xml:"eNB"`
+}
+
+type E2SetupRequest struct {
+	Text        string `xml:",chardata"`
+	ProtocolIEs struct {
+		Text              string `xml:",chardata"`
+		E2setupRequestIEs []struct {
+			Text        string `xml:",chardata"`
+			ID          string `xml:"id"`
+			Criticality struct {
+				Text   string `xml:",chardata"`
+				Reject string `xml:"reject"`
+			} `xml:"criticality"`
+			Value struct {
+				Text             string           `xml:",chardata"`
+				GlobalE2nodeID   GlobalE2NodeId   `xml:"GlobalE2node-ID"`
+				RANfunctionsList RANfunctionsList `xml:"RANfunctions-List"`
+			} `xml:"value"`
+		} `xml:"E2setupRequestIEs"`
+	} `xml:"protocolIEs"`
+}
+
 type E2SetupRequestMessage struct {
 	XMLName xml.Name `xml:"E2SetupRequestMessage"`
 	Text    string   `xml:",chardata"`
@@ -41,80 +117,23 @@ type E2SetupRequestMessage struct {
 				Reject string `xml:"reject"`
 			} `xml:"criticality"`
 			Value struct {
-				Text           string `xml:",chardata"`
-				E2setupRequest struct {
-					Text        string `xml:",chardata"`
-					ProtocolIEs struct {
-						Text              string `xml:",chardata"`
-						E2setupRequestIEs []struct {
-							Text        string `xml:",chardata"`
-							ID          string `xml:"id"`
-							Criticality struct {
-								Text   string `xml:",chardata"`
-								Reject string `xml:"reject"`
-							} `xml:"criticality"`
-							Value struct {
-								Text           string `xml:",chardata"`
-								GlobalE2nodeID struct {
-									Text string `xml:",chardata"`
-									GNB  struct {
-										Text        string `xml:",chardata"`
-										GlobalGNBID struct {
-											Text   string `xml:",chardata"`
-											PlmnID string `xml:"plmn-id"`
-											GnbID  struct {
-												Text  string `xml:",chardata"`
-												GnbID string `xml:"gnb-ID"`
-											} `xml:"gnb-id"`
-										} `xml:"global-gNB-ID"`
-									} `xml:"gNB"`
-									EnGNB struct {
-										Text        string `xml:",chardata"`
-										GlobalGNBID struct {
-											Text   string `xml:",chardata"`
-											PlmnID string `xml:"plmn-id"`
-											GnbID  struct {
-												Text  string `xml:",chardata"`
-												GnbID string `xml:"gnb-ID"`
-											} `xml:"gnb-id"`
-										} `xml:"global-gNB-ID"`
-									} `xml:"en-gNB"`
-									NgENB struct {
-										Text          string `xml:",chardata"`
-										GlobalNgENBID struct {
-											Text   string `xml:",chardata"`
-											PlmnID string `xml:"plmn-id"`
-											GnbID  struct {
-												Text  string `xml:",chardata"`
-												GnbID string `xml:"gnb-ID"`
-											} `xml:"gnb-id"`
-										} `xml:"global-ng-eNB-ID"`
-									} `xml:"ng-eNB"`
-									ENB struct {
-										Text        string `xml:",chardata"`
-										GlobalENBID struct {
-											Text   string `xml:",chardata"`
-											PlmnID string `xml:"plmn-id"`
-											GnbID  struct {
-												Text  string `xml:",chardata"`
-												GnbID string `xml:"gnb-ID"`
-											} `xml:"gnb-id"`
-										} `xml:"global-eNB-ID"`
-									} `xml:"eNB"`
-								} `xml:"GlobalE2node-ID"`
-								RANfunctionsList RANfunctionsList `xml:"RANfunctions-List"`
-							} `xml:"value"`
-						} `xml:"E2setupRequestIEs"`
-					} `xml:"protocolIEs"`
-				} `xml:"E2setupRequest"`
+				Text           string         `xml:",chardata"`
+				E2setupRequest E2SetupRequest `xml:"E2setupRequest"`
 			} `xml:"value"`
 		} `xml:"initiatingMessage"`
 	} `xml:"E2AP-PDU"`
 }
 
+type RanFunctionItem struct {
+	Text                  string `xml:",chardata"`
+	RanFunctionID         string `xml:"ranFunctionID"`
+	RanFunctionDefinition string `xml:"ranFunctionDefinition"`
+	RanFunctionRevision   string `xml:"ranFunctionRevision"`
+}
+
 type RANfunctionsList struct {
-    Text                      string `xml:",chardata"`
-    ProtocolIESingleContainer []struct {
+	Text                      string `xml:",chardata"`
+	ProtocolIESingleContainer []struct {
 		Text        string `xml:",chardata"`
 		ID          string `xml:"id"`
 		Criticality struct {
@@ -122,30 +141,25 @@ type RANfunctionsList struct {
 			Reject string `xml:"reject"`
 		} `xml:"criticality"`
 		Value struct {
-			Text            string `xml:",chardata"`
-			RANfunctionItem struct {
-				Text                  string `xml:",chardata"`
-				RanFunctionID         string `xml:"ranFunctionID"`
-				RanFunctionDefinition string `xml:"ranFunctionDefinition"`
-				RanFunctionRevision   string `xml:"ranFunctionRevision"`
-			} `xml:"RANfunction-Item"`
+			Text            string          `xml:",chardata"`
+			RANfunctionItem RanFunctionItem `xml:"RANfunction-Item"`
 		} `xml:"value"`
-    } `xml:"ProtocolIE-SingleContainer"`
+	} `xml:"ProtocolIE-SingleContainer"`
 }
 
-func (m *E2SetupRequestMessage) GetExtractRanFunctionsList()([]*entities.RanFunction, error){
-	list :=m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
+func (m *E2SetupRequestMessage) ExtractRanFunctionsList() ([]*entities.RanFunction, error) {
+	list := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
 	funcs := make([]*entities.RanFunction, len(list))
-	for i:=0; i < len(funcs); i++{
+	for i := 0; i < len(funcs); i++ {
 		funcs[i] = &entities.RanFunction{}
 		id, err := strconv.ParseUint(list[i].Value.RANfunctionItem.RanFunctionID, 10, 32)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.GetExtractRanFunctionsList - Failed parse uint RanFunctionID from %s", list[i].Value.RANfunctionItem.RanFunctionID))
+			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.ExtractRanFunctionsList - Failed parse uint RanFunctionID from %s", list[i].Value.RANfunctionItem.RanFunctionID))
 		}
 		funcs[i].RanFunctionId = uint32(id)
 		rev, err := strconv.ParseUint(list[i].Value.RANfunctionItem.RanFunctionRevision, 10, 32)
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.GetExtractRanFunctionsList - Failed parse uint RanFunctionRevision from %s", list[i].Value.RANfunctionItem.RanFunctionRevision))
+			return nil, errors.New(fmt.Sprintf("#e2_setup_request_message.ExtractRanFunctionsList - Failed parse uint RanFunctionRevision from %s", list[i].Value.RANfunctionItem.RanFunctionRevision))
 		}
 		funcs[i].RanFunctionDefinition = m.trimSpaces(list[i].Value.RANfunctionItem.RanFunctionDefinition)
 		funcs[i].RanFunctionRevision = uint32(rev)
@@ -153,49 +167,56 @@ func (m *E2SetupRequestMessage) GetExtractRanFunctionsList()([]*entities.RanFunc
 	return funcs, nil
 }
 
-func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type{
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.GNB.GlobalGNBID.PlmnID; id!= ""{
+func (m *E2SetupRequestMessage) getGlobalE2NodeId() GlobalE2NodeId {
+	return m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID
+}
+
+func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type {
+	globalE2NodeId := m.getGlobalE2NodeId()
+	if id := globalE2NodeId.GNB.GlobalGNBID.PlmnID; id != "" {
 		return entities.Node_GNB
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.EnGNB.GlobalGNBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.EnGNB.GlobalGNBID.PlmnID; id != "" {
 		return entities.Node_GNB
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.ENB.GlobalENBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.ENB.GlobalENBID.PlmnID; id != "" {
 		return entities.Node_ENB
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.NgENB.GlobalNgENBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.NgENB.GlobalNgENBID.PlmnID; id != "" {
 		return entities.Node_GNB
 	}
 	return entities.Node_UNKNOWN
 }
 
-func (m *E2SetupRequestMessage) GetPlmnId() string{
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.GNB.GlobalGNBID.PlmnID; id!= ""{
+func (m *E2SetupRequestMessage) GetPlmnId() string {
+	globalE2NodeId := m.getGlobalE2NodeId()
+	if id := globalE2NodeId.GNB.GlobalGNBID.PlmnID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.EnGNB.GlobalGNBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.EnGNB.GlobalGNBID.PlmnID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.ENB.GlobalENBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.ENB.GlobalENBID.PlmnID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.NgENB.GlobalNgENBID.PlmnID; id!= ""{
+	if id := globalE2NodeId.NgENB.GlobalNgENBID.PlmnID; id != "" {
 		return m.trimSpaces(id)
 	}
 	return ""
 }
 
-func (m *E2SetupRequestMessage) GetNbId() string{
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.GNB.GlobalGNBID.GnbID.GnbID; id!= ""{
+func (m *E2SetupRequestMessage) GetNbId() string {
+	globalE2NodeId := m.getGlobalE2NodeId()
+	if id := globalE2NodeId.GNB.GlobalGNBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.EnGNB.GlobalGNBID.GnbID.GnbID; id!= ""{
+	if id := globalE2NodeId.EnGNB.GlobalGNBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.ENB.GlobalENBID.GnbID.GnbID; id!= ""{
+	if id := globalE2NodeId.ENB.GlobalENBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID.NgENB.GlobalNgENBID.GnbID.GnbID; id!= ""{
+	if id := globalE2NodeId.NgENB.GlobalNgENBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
 	return ""

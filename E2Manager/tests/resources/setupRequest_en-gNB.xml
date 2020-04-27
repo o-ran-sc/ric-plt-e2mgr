@@ -1,21 +1,25 @@
 <E2AP-PDU>
     <initiatingMessage>
         <procedureCode>1</procedureCode>
-        <criticality><reject/></criticality>
+        <criticality>
+            <reject/>
+        </criticality>
         <value>
             <E2setupRequest>
                 <protocolIEs>
                     <E2setupRequestIEs>
                         <id>3</id>
-                        <criticality><reject/></criticality>
+                        <criticality>
+                            <reject/>
+                        </criticality>
                         <value>
                             <GlobalE2node-ID>
                                 <en-gNB>
                                     <global-gNB-ID>
-                                        <plmn-id>13 10 14</plmn-id>
-                                        <gnb-id>
-                                            <gnb-ID>10011001101010101011</gnb-ID>
-                                        </gnb-id>
+                                        <pLMN-Identity>13 10 14</pLMN-Identity>
+                                        <gNB-ID>
+                                            <gNB-ID>11000101110001101100011111111000</gNB-ID>
+                                        </gNB-ID>
                                     </global-gNB-ID>
                                 </en-gNB>
                             </GlobalE2node-ID>
@@ -23,12 +27,16 @@
                     </E2setupRequestIEs>
                     <E2setupRequestIEs>
                         <id>10</id>
-                        <criticality><reject/></criticality>
+                        <criticality>
+                            <reject/>
+                        </criticality>
                         <value>
                             <RANfunctions-List>
                                 <ProtocolIE-SingleContainer>
                                     <id>8</id>
-                                    <criticality><reject/></criticality>
+                                    <criticality>
+                                        <reject/>
+                                    </criticality>
                                     <value>
                                         <RANfunction-Item>
                                             <ranFunctionID>1</ranFunctionID>
@@ -39,7 +47,9 @@
                                 </ProtocolIE-SingleContainer>
                                 <ProtocolIE-SingleContainer>
                                     <id>8</id>
-                                    <criticality><reject/></criticality>
+                                    <criticality>
+                                        <reject/>
+                                    </criticality>
                                     <value>
                                         <RANfunction-Item>
                                             <ranFunctionID>7</ranFunctionID>
