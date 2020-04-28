@@ -64,7 +64,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2SetupFailureResponseConverter := converters.NewX2SetupFailureResponseConverter(logger)
 	endcSetupResponseConverter := converters.NewEndcSetupResponseConverter(logger)
 	endcSetupFailureResponseConverter := converters.NewEndcSetupFailureResponseConverter(logger)
-	enbLoadInformationExtractor := converters.NewEnbLoadInformationExtractor(logger)
+	//enbLoadInformationExtractor := converters.NewEnbLoadInformationExtractor(logger)
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
@@ -81,7 +81,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	endcSetupResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupResponseManager, ranStatusChangeManager, rmrCgo.RIC_ENDC_X2_SETUP_RESP)
 	endcSetupFailureResponseHandler := rmrmsghandlers.NewSetupResponseNotificationHandler(logger, rnibDataService, endcSetupFailureResponseManager, nil, rmrCgo.RIC_ENDC_X2_SETUP_FAILURE)
 	ranLostConnectionHandler := rmrmsghandlers.NewRanLostConnectionHandler(logger, ranReconnectionManager)
-	enbLoadInformationNotificationHandler := rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, enbLoadInformationExtractor)
+	//enbLoadInformationNotificationHandler := rmrmsghandlers.NewEnbLoadInformationNotificationHandler(logger, rnibDataService, enbLoadInformationExtractor)
 	x2EnbConfigurationUpdateHandler := rmrmsghandlers.NewX2EnbConfigurationUpdateHandler(logger, rmrSender)
 	endcConfigurationUpdateHandler := rmrmsghandlers.NewEndcConfigurationUpdateHandler(logger, rmrSender)
 	x2ResetResponseHandler := rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, x2ResetResponseExtractor)
@@ -95,7 +95,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	provider.Register(rmrCgo.RIC_ENDC_X2_SETUP_RESP, endcSetupResponseHandler)
 	provider.Register(rmrCgo.RIC_ENDC_X2_SETUP_FAILURE, endcSetupFailureResponseHandler)
 	provider.Register(rmrCgo.RIC_SCTP_CONNECTION_FAILURE, ranLostConnectionHandler)
-	provider.Register(rmrCgo.RIC_ENB_LOAD_INFORMATION, enbLoadInformationNotificationHandler)
+	//provider.Register(rmrCgo.RIC_ENB_LOAD_INFORMATION, enbLoadInformationNotificationHandler)
 	provider.Register(rmrCgo.RIC_ENB_CONF_UPDATE, x2EnbConfigurationUpdateHandler)
 	provider.Register(rmrCgo.RIC_ENDC_CONF_UPDATE, endcConfigurationUpdateHandler)
 	provider.Register(rmrCgo.RIC_X2_RESET_RESP, x2ResetResponseHandler)

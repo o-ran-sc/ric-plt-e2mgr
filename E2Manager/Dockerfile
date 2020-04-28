@@ -42,7 +42,7 @@ COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
 COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
 COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
 COPY --from=ubuntu /opt/E2Manager/resources/rmr.verbose /tmp/rmr.verbose
-COPY --from=ubuntu /usr/local/lib/librmr_si.so.3 /usr/local/lib/librmr_si.so.3
+COPY --from=ubuntu /usr/local/lib/librmr_si.so.4 /usr/local/lib/librmr_si.so.4
 
 WORKDIR /opt/E2Manager
 ENV LD_LIBRARY_PATH=/usr/local/lib \

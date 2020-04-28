@@ -20,7 +20,7 @@
 
 package rmrmsghandlers
 
-import (
+/*import (
 	"e2mgr/converters"
 	"e2mgr/e2pdus"
 	"e2mgr/logger"
@@ -33,7 +33,7 @@ import (
 type EnbLoadInformationNotificationHandler struct {
 	logger          *logger.Logger
 	rnibDataService services.RNibDataService
-	extractor       converters.IEnbLoadInformationExtractor
+	//extractor       converters.IEnbLoadInformationExtractor
 }
 
 func NewEnbLoadInformationNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, extractor converters.IEnbLoadInformationExtractor) EnbLoadInformationNotificationHandler {
@@ -78,4 +78,4 @@ func (h EnbLoadInformationNotificationHandler) Handle(request *models.Notificati
 	}
 
 	h.logger.Infof("#EnbLoadInformationNotificationHandler.Handle - RAN name: %s - Successfully saved RAN load information to RNIB. elapsed: %f ms", request.RanName, elapsed(request.StartTime))
-}
+}*/

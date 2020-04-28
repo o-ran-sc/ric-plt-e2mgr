@@ -20,51 +20,51 @@
 
 package converters
 
-import (
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-)
-
-/*
-Test permutations of eNB Load Information to protobuf
-*/
-
-type LoadInformationTestCaseName string
-
-const LoadTimestamp = 1257894000000000000
-
-const (
-	SingleCellWithCellIdOnly     LoadInformationTestCaseName = "SINGLE CELL WITH CELL ID ONLY"   //base
-	SingleCellPartiallyPopulated LoadInformationTestCaseName = "SINGLE CELL PARTIALLY POPULATED" //8
-	TwoCellsFullInfo             LoadInformationTestCaseName = "TWO CELLS FULLY POPULATED"       //13
-)
-
-type LoadInformationTestCase struct {
-	loadInformationTestCaseName LoadInformationTestCaseName
-	packedUperPdu               string
-	packedAperPdu               string
-	expectedLoadInformation     *entities.RanLoadInformation
-}
-
-var testCases = []LoadInformationTestCase{
-	{
-		loadInformationTestCaseName: SingleCellWithCellIdOnly,
-		packedAperPdu:               "000240140000010006400d00000740080002f8290007ab50",
-		packedUperPdu:               "004898000400190d0000074200017c148003d5a80000",
-		expectedLoadInformation:     GenerateSingleCellWithCellIdOnlyRanLoadInformation(),
-	},
-	{
-		loadInformationTestCaseName: SingleCellPartiallyPopulated,
-		packedAperPdu:               "", //TODO: populate and USE
-		packedUperPdu:               "004b380004001961000007571e017c148003d5a8205000017c180003d5a875555003331420008007a85801f07c1f07c41f07c1e07801f2020000c680b0003220664102800d8908020000be0c4001ead4016e007ab50100002f8320067ab5005b8c1ead5070190c000000",
-		expectedLoadInformation:     GenerateSingleCellPartiallyPopulatedLoadInformation(),
-	},
-	{
-		loadInformationTestCaseName: TwoCellsFullInfo,
-		packedAperPdu:               "", //TODO: populate and USE
-		packedUperPdu:               "004c07080004001980da0100075bde017c148003d5a8205000017c180003d5a875555403331420000012883a0003547400cd20002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be0c4001ead4016e007ab50100002f8320067ab5005b8c1ead5070190c00001d637805f220000f56a081400005f020000f56a1d555400ccc508002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be044001ead4016e007ab50100002f8120067ab5005b8c1ead5070190c00000",
-		expectedLoadInformation:     GenerateTwoCellsFullyPopulatedRanLoadInformation(),
-	},
-}
+//import (
+//	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+//)
+//
+///*
+//Test permutations of eNB Load Information to protobuf
+//*/
+//
+//type LoadInformationTestCaseName string
+//
+//const LoadTimestamp = 1257894000000000000
+//
+//const (
+//	SingleCellWithCellIdOnly     LoadInformationTestCaseName = "SINGLE CELL WITH CELL ID ONLY"   //base
+//	SingleCellPartiallyPopulated LoadInformationTestCaseName = "SINGLE CELL PARTIALLY POPULATED" //8
+//	TwoCellsFullInfo             LoadInformationTestCaseName = "TWO CELLS FULLY POPULATED"       //13
+//)
+//
+//type LoadInformationTestCase struct {
+//	loadInformationTestCaseName LoadInformationTestCaseName
+//	packedUperPdu               string
+//	packedAperPdu               string
+//	expectedLoadInformation     *entities.RanLoadInformation
+//}
+//
+//var testCases = []LoadInformationTestCase{
+//	{
+//		loadInformationTestCaseName: SingleCellWithCellIdOnly,
+//		packedAperPdu:               "000240140000010006400d00000740080002f8290007ab50",
+//		packedUperPdu:               "004898000400190d0000074200017c148003d5a80000",
+//		expectedLoadInformation:     GenerateSingleCellWithCellIdOnlyRanLoadInformation(),
+//	},
+//	{
+//		loadInformationTestCaseName: SingleCellPartiallyPopulated,
+//		packedAperPdu:               "", //TODO: populate and USE
+//		packedUperPdu:               "004b380004001961000007571e017c148003d5a8205000017c180003d5a875555003331420008007a85801f07c1f07c41f07c1e07801f2020000c680b0003220664102800d8908020000be0c4001ead4016e007ab50100002f8320067ab5005b8c1ead5070190c000000",
+//		expectedLoadInformation:     GenerateSingleCellPartiallyPopulatedLoadInformation(),
+//	},
+//	{
+//		loadInformationTestCaseName: TwoCellsFullInfo,
+//		packedAperPdu:               "", //TODO: populate and USE
+//		packedUperPdu:               "004c07080004001980da0100075bde017c148003d5a8205000017c180003d5a875555403331420000012883a0003547400cd20002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be0c4001ead4016e007ab50100002f8320067ab5005b8c1ead5070190c00001d637805f220000f56a081400005f020000f56a1d555400ccc508002801ea16007c1f07c1f107c1f0781e007c80800031a02c000c88199040a00352083669190000d8908020000be044001ead4016e007ab50100002f8120067ab5005b8c1ead5070190c00000",
+//		expectedLoadInformation:     GenerateTwoCellsFullyPopulatedRanLoadInformation(),
+//	},
+//}
 
 //func TestExtractAndBuildRanLoadInformation(t *testing.T) {
 //	logger, _ := logger.InitLogger(logger.InfoLevel)
@@ -96,7 +96,7 @@ var testCases = []LoadInformationTestCase{
 //	}
 //}
 
-func GenerateSingleCellWithCellIdOnlyRanLoadInformation() *entities.RanLoadInformation {
+/*func GenerateSingleCellWithCellIdOnlyRanLoadInformation() *entities.RanLoadInformation {
 	return &entities.RanLoadInformation{
 		LoadTimestamp: LoadTimestamp,
 		CellLoadInfos: []*entities.CellLoadInformation{
@@ -271,4 +271,4 @@ func GenerateTwoCellsFullyPopulatedRanLoadInformation() *entities.RanLoadInforma
 			},
 		},
 	}
-}
+}*/
