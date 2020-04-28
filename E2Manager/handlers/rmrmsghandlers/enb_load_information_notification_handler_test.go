@@ -20,7 +20,7 @@
 
 package rmrmsghandlers
 
-import (
+/*import (
 	"e2mgr/models"
 	"fmt"
 	"time"
@@ -55,7 +55,7 @@ func createNotificationRequestAndHandle(ranName string, transactionId []byte, lo
 
 	loadInformationHandler.Handle(notificationRequest)
 	return nil
-}
+}*/
 
 //func TestLoadInformationHandlerSuccess(t *testing.T) {
 //	log, err := logger.InitLogger(logger.InfoLevel)

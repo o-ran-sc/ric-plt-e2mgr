@@ -19,7 +19,7 @@
 
 
 package converters
-
+/*
 // #cgo CFLAGS: -I../3rdparty/asn1codec/inc/  -I../3rdparty/asn1codec/e2ap_engine/
 // #cgo LDFLAGS: -L ../3rdparty/asn1codec/lib/ -L../3rdparty/asn1codec/e2ap_engine/ -le2ap_codec -lasncodec
 // #include <asn1codec_utils.h>
@@ -687,3 +687,4 @@ func (*EnbLoadInformationExtractor) ExtractAndBuildRanLoadInformation(pdu *C.E2A
 
 	return nil
 }
+*/
