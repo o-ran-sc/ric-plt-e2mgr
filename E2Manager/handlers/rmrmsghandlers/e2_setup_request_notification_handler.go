@@ -132,21 +132,26 @@ func (h E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAdd
 	return nodebInfo, nil
 }
 
+func (h E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
+	ranFunctions, err := setupRequest.ExtractRanFunctionsList()
+
+	if err != nil {
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.setGnbFunctions - RAN name: %s - failed to update nodebInfo entity. Error: %s", nodebInfo.GetRanName(), err)
+		return err
+	}
+
+	nodebInfo.GetGnb().RanFunctions = ranFunctions
+	return nil
+}
+
 func (h E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
 	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", ranName, nodebInfo.ConnectionStatus)
 		return errors.New("nodeB entity in incorrect state")
 	}
 
-	ranFunctions, err := setupRequest.ExtractRanFunctionsList()
-
-	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to update nodebInfo entity. Error: %s", ranName, err)
-		return err
-	}
-
-	nodebInfo.GetGnb().RanFunctions = ranFunctions
-	return nil
+	err := h.setGnbFunctions(nodebInfo, setupRequest)
+	return err
 }
 
 func (h E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(nodebInfo *entities.NodebInfo, req *models.NotificationRequest) {
@@ -222,6 +227,9 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte) (*m
 	if len(e2tIpAddress) == 0 {
 		return nil, "", errors.New("#E2SetupRequestNotificationHandler.parseSetupRequest - Empty E2T Address received")
 	}
+
+	h.logger.Infof("#E2SetupRequestNotificationHandler.parseSetupRequest - payload: %s", payload[pipInd+1:])
+
 	setupRequest := &models.E2SetupRequestMessage{}
 	err := xml.Unmarshal(payload[pipInd+1:], &setupRequest.E2APPDU)
 	if err != nil {
@@ -232,6 +240,7 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte) (*m
 }
 
 func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
+
 	var err error
 	nodebInfo := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tAddress,
@@ -239,21 +248,23 @@ func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAdd
 		RanName:                      ranName,
 		NodeType:                     entities.Node_GNB,
 		Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
-		GlobalNbId: &entities.GlobalNbId{
-			PlmnId: request.GetPlmnId(),
-			NbId:   request.GetNbId(),
-		},
+		GlobalNbId: h.buildGlobalNbId(request),
 	}
-	nodebInfo.GetGnb().RanFunctions, err = request.ExtractRanFunctionsList()
+
+	err = h.setGnbFunctions(nodebInfo, request)
 	return nodebInfo, err
+}
+
+func (h E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.E2SetupRequestMessage) *entities.GlobalNbId {
+	return &entities.GlobalNbId{
+		PlmnId: setupRequest.GetPlmnId(),
+		NbId:   setupRequest.GetNbId(),
+	}
 }
 
 func (h E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setupRequest *models.E2SetupRequestMessage) *entities.NbIdentity {
 	return &entities.NbIdentity{
 		InventoryName: ranName,
-		GlobalNbId: &entities.GlobalNbId{
-			PlmnId: setupRequest.GetPlmnId(),
-			NbId:   setupRequest.GetNbId(),
-		},
+		GlobalNbId: h.buildGlobalNbId(setupRequest),
 	}
 }

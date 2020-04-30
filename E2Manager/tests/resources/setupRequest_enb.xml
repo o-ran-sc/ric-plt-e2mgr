@@ -14,14 +14,14 @@
                         </criticality>
                         <value>
                             <GlobalE2node-ID>
-                                <ng-eNB>
-                                    <global-ng-eNB-ID>
-                                        <plmn-id>13 10 14</plmn-id>
-                                        <enb-id>
-                                            <enb-ID-shortmacro>101010101010101010</enb-ID-shortmacro>
-                                        </enb-id>
-                                    </global-ng-eNB-ID>
-                                </ng-eNB>
+                                <eNB>
+                                    <global-eNB-ID>
+                                        <pLMN-Identity>63 59 AB</pLMN-Identity>
+                                        <eNB-ID>
+                                            <macro-eNB-ID>101010101010101010</macro-eNB-ID>
+                                        </eNB-ID>
+                                    </global-eNB-ID>
+                                </eNB>
                             </GlobalE2node-ID>
                         </value>
                     </E2setupRequestIEs>

@@ -52,27 +52,36 @@ type EnGnb struct {
 	} `xml:"global-gNB-ID"`
 }
 
+type NgEnbId struct {
+	Text            string `xml:",chardata"`
+	EnbIdMacro      string `xml:"enb-ID-macro"`
+	EnbIdShortMacro string `xml:"enb-ID-shortmacro"`
+	EnbIdLongMacro  string `xml:"enb-ID-longmacro"`
+}
+
 type NgEnb struct {
 	Text          string `xml:",chardata"`
 	GlobalNgENBID struct {
-		Text   string `xml:",chardata"`
-		PlmnID string `xml:"plmn-id"`
-		GnbID  struct {
-			Text  string `xml:",chardata"`
-			GnbID string `xml:"gnb-ID"`
-		} `xml:"gnb-id"`
+		Text   string  `xml:",chardata"`
+		PlmnID string  `xml:"plmn-id"`
+		EnbID  NgEnbId `xml:"enb-id"`
 	} `xml:"global-ng-eNB-ID"`
+}
+
+type EnbId struct {
+	Text            string `xml:",chardata"`
+	MacroEnbId      string `xml:"macro-eNB-ID"`
+	HomeEnbId       string `xml:"home-eNB-ID"`
+	ShortMacroEnbId string `xml:"short-Macro-eNB-ID"`
+	LongMacroEnbId  string `xml:"long-Macro-eNB-ID"`
 }
 
 type Enb struct {
 	Text        string `xml:",chardata"`
 	GlobalENBID struct {
 		Text   string `xml:",chardata"`
-		PlmnID string `xml:"plmn-id"`
-		GnbID  struct {
-			Text  string `xml:",chardata"`
-			GnbID string `xml:"gnb-ID"`
-		} `xml:"gnb-id"`
+		PlmnID string `xml:"pLMN-Identity"`
+		EnbID  EnbId  `xml:"eNB-ID"`
 	} `xml:"global-eNB-ID"`
 }
 
@@ -171,22 +180,22 @@ func (m *E2SetupRequestMessage) getGlobalE2NodeId() GlobalE2NodeId {
 	return m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID
 }
 
-func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type {
-	globalE2NodeId := m.getGlobalE2NodeId()
-	if id := globalE2NodeId.GNB.GlobalGNBID.PlmnID; id != "" {
-		return entities.Node_GNB
-	}
-	if id := globalE2NodeId.EnGNB.GlobalGNBID.PlmnID; id != "" {
-		return entities.Node_GNB
-	}
-	if id := globalE2NodeId.ENB.GlobalENBID.PlmnID; id != "" {
-		return entities.Node_ENB
-	}
-	if id := globalE2NodeId.NgENB.GlobalNgENBID.PlmnID; id != "" {
-		return entities.Node_GNB
-	}
-	return entities.Node_UNKNOWN
-}
+//func (m *E2SetupRequestMessage) GetNodeType() entities.Node_Type {
+//	globalE2NodeId := m.getGlobalE2NodeId()
+//	if id := globalE2NodeId.GNB.GlobalGNBID.PlmnID; id != "" {
+//		return entities.Node_GNB
+//	}
+//	if id := globalE2NodeId.EnGNB.GlobalGNBID.PlmnID; id != "" {
+//		return entities.Node_GNB
+//	}
+//	if id := globalE2NodeId.ENB.GlobalENBID.PlmnID; id != "" {
+//		return entities.Node_ENB
+//	}
+//	if id := globalE2NodeId.NgENB.GlobalNgENBID.PlmnID; id != "" {
+//		return entities.Node_ENB
+//	}
+//	return entities.Node_UNKNOWN
+//}
 
 func (m *E2SetupRequestMessage) GetPlmnId() string {
 	globalE2NodeId := m.getGlobalE2NodeId()
@@ -205,20 +214,62 @@ func (m *E2SetupRequestMessage) GetPlmnId() string {
 	return ""
 }
 
+func (m *E2SetupRequestMessage) getInnerEnbId(enbId EnbId) string {
+
+	if id := enbId.HomeEnbId; id != "" {
+		return id
+	}
+
+	if id := enbId.LongMacroEnbId; id != "" {
+		return id
+	}
+
+	if id := enbId.MacroEnbId; id != "" {
+		return id
+	}
+
+	if id := enbId.ShortMacroEnbId; id != "" {
+		return id
+	}
+
+	return ""
+}
+
+func (m *E2SetupRequestMessage) getInnerNgEnbId(enbId NgEnbId) string {
+	if id := enbId.EnbIdLongMacro; id != "" {
+		return id
+	}
+
+	if id := enbId.EnbIdMacro; id != "" {
+		return id
+	}
+
+	if id := enbId.EnbIdShortMacro; id != "" {
+		return id
+	}
+
+	return ""
+}
+
 func (m *E2SetupRequestMessage) GetNbId() string {
 	globalE2NodeId := m.getGlobalE2NodeId()
+
 	if id := globalE2NodeId.GNB.GlobalGNBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
+
 	if id := globalE2NodeId.EnGNB.GlobalGNBID.GnbID.GnbID; id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := globalE2NodeId.ENB.GlobalENBID.GnbID.GnbID; id != "" {
+
+	if id := m.getInnerEnbId(globalE2NodeId.ENB.GlobalENBID.EnbID); id != "" {
 		return m.trimSpaces(id)
 	}
-	if id := globalE2NodeId.NgENB.GlobalNgENBID.GnbID.GnbID; id != "" {
+
+	if id := m.getInnerNgEnbId(globalE2NodeId.NgENB.GlobalNgENBID.EnbID); id != "" {
 		return m.trimSpaces(id)
 	}
+
 	return ""
 }
 

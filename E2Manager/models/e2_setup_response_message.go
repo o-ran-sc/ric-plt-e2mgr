@@ -18,56 +18,56 @@
 //  platform project (RICP).
 
 package models
+
 import (
 	"encoding/xml"
 )
 
-
 type TimeToWait = int
 
-var TimeToWaitEnum = struct{
+var TimeToWaitEnum = struct {
 	V60s TimeToWait
 	V20s TimeToWait
 	V10s TimeToWait
-	V5s TimeToWait
-	V2s TimeToWait
-	V1s TimeToWait
+	V5s  TimeToWait
+	V2s  TimeToWait
+	V1s  TimeToWait
 }{60, 20, 10, 5, 2, 1}
 
 var timeToWaitMap = map[TimeToWait]interface{}{
-	TimeToWaitEnum.V60s  : struct {
+	TimeToWaitEnum.V60s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V60s string `xml:"v60s"`
+		Text    string   `xml:",chardata"`
+		V60s    string   `xml:"v60s"`
 	}{},
-	TimeToWaitEnum.V20s  : struct {
+	TimeToWaitEnum.V20s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V20s string `xml:"v20s"`
+		Text    string   `xml:",chardata"`
+		V20s    string   `xml:"v20s"`
 	}{},
-	TimeToWaitEnum.V10s  : struct {
+	TimeToWaitEnum.V10s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V10s string `xml:"v10s"`
+		Text    string   `xml:",chardata"`
+		V10s    string   `xml:"v10s"`
 	}{},
-	TimeToWaitEnum.V5s   : struct {
+	TimeToWaitEnum.V5s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V5s string `xml:"v5s"`
+		Text    string   `xml:",chardata"`
+		V5s     string   `xml:"v5s"`
 	}{},
-	TimeToWaitEnum.V2s   : struct {
+	TimeToWaitEnum.V2s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V2s string `xml:"v2s"`
+		Text    string   `xml:",chardata"`
+		V2s     string   `xml:"v2s"`
 	}{},
-	TimeToWaitEnum.V1s   : struct {
+	TimeToWaitEnum.V1s: struct {
 		XMLName xml.Name `xml:"TimeToWait"`
-		Text string `xml:",chardata"`
-		V1s string `xml:"v1s"`
+		Text    string   `xml:",chardata"`
+		V1s     string   `xml:"v1s"`
 	}{},
 }
 
-func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2SetupRequestMessage) E2SetupResponseMessage{
+func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2SetupRequestMessage) E2SetupResponseMessage {
 	outcome := SuccessfulOutcome{}
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, 2)
 	outcome.ProcedureCode = "1"
@@ -76,16 +76,16 @@ func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2Se
 		Text         string `xml:",chardata"`
 		PLMNIdentity string `xml:"pLMN-Identity"`
 		RicID        string `xml:"ric-ID"`
-	}{PLMNIdentity:plmnId, RicID:ricId}}
+	}{PLMNIdentity: plmnId, RicID: ricId}}
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].ID = "9"
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].Value = RANfunctionsIDList{RANfunctionsIDList: struct {
-		Text                      string `xml:",chardata"`
+		Text                      string                      `xml:",chardata"`
 		ProtocolIESingleContainer []ProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
-	}{ProtocolIESingleContainer:extractRanFunctionsIDList(request)}}
-	return E2SetupResponseMessage{E2APPDU:E2APPDU{Outcome:outcome}}
+	}{ProtocolIESingleContainer: extractRanFunctionsIDList(request)}}
+	return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
 }
 
-func NewE2SetupFailureResponseMessage(timeToWait TimeToWait) E2SetupResponseMessage{
+func NewE2SetupFailureResponseMessage(timeToWait TimeToWait) E2SetupResponseMessage {
 	outcome := UnsuccessfulOutcome{}
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs = make([]E2setupFailureIEs, 2)
 	outcome.ProcedureCode = "1"
@@ -93,7 +93,7 @@ func NewE2SetupFailureResponseMessage(timeToWait TimeToWait) E2SetupResponseMess
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[0].Value.Value = Cause{}
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[1].ID = "31"
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[1].Value.Value = timeToWaitMap[timeToWait]
-	return E2SetupResponseMessage{E2APPDU:E2APPDU{Outcome:outcome}}
+	return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
 }
 
 type E2SetupResponseMessage struct {
@@ -104,14 +104,14 @@ type E2SetupResponseMessage struct {
 
 type E2APPDU struct {
 	XMLName xml.Name `xml:"E2AP-PDU"`
-	Text    string `xml:",chardata"`
+	Text    string   `xml:",chardata"`
 	Outcome interface{}
 }
 
 type SuccessfulOutcome struct {
-	XMLName xml.Name	`xml:"successfulOutcome"`
-	Text          string `xml:",chardata"`
-	ProcedureCode string `xml:"procedureCode"`
+	XMLName       xml.Name `xml:"successfulOutcome"`
+	Text          string   `xml:",chardata"`
+	ProcedureCode string   `xml:"procedureCode"`
 	Criticality   struct {
 		Text   string `xml:",chardata"`
 		Reject string `xml:"reject"`
@@ -121,8 +121,8 @@ type SuccessfulOutcome struct {
 		E2setupResponse struct {
 			Text        string `xml:",chardata"`
 			ProtocolIEs struct {
-				Text               string `xml:",chardata"`
-				E2setupResponseIEs []E2setupResponseIEs`xml:"E2setupResponseIEs"`
+				Text               string               `xml:",chardata"`
+				E2setupResponseIEs []E2setupResponseIEs `xml:"E2setupResponseIEs"`
 			} `xml:"protocolIEs"`
 		} `xml:"E2setupResponse"`
 	} `xml:"value"`
@@ -135,7 +135,7 @@ type E2setupResponseIEs struct {
 		Text   string `xml:",chardata"`
 		Reject string `xml:"reject"`
 	} `xml:"criticality"`
-	Value interface{}`xml:"value"`
+	Value interface{} `xml:"value"`
 }
 
 type GlobalRICID struct {
@@ -148,9 +148,9 @@ type GlobalRICID struct {
 }
 
 type RANfunctionsIDList struct {
-	Text        string `xml:",chardata"`
+	Text               string `xml:",chardata"`
 	RANfunctionsIDList struct {
-		Text                      string `xml:",chardata"`
+		Text                      string                      `xml:",chardata"`
 		ProtocolIESingleContainer []ProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
 	} `xml:"RANfunctionsID-List"`
 }
@@ -172,22 +172,21 @@ type ProtocolIESingleContainer struct {
 	} `xml:"value"`
 }
 
-
 type UnsuccessfulOutcome struct {
-	XMLName xml.Name	`xml:"unsuccessfulOutcome"`
-	Text          string `xml:",chardata"`
-	ProcedureCode string `xml:"procedureCode"`
+	XMLName       xml.Name `xml:"unsuccessfulOutcome"`
+	Text          string   `xml:",chardata"`
+	ProcedureCode string   `xml:"procedureCode"`
 	Criticality   struct {
 		Text   string `xml:",chardata"`
 		Reject string `xml:"reject"`
 	} `xml:"criticality"`
 	Value struct {
-		Text            string `xml:",chardata"`
+		Text           string `xml:",chardata"`
 		E2setupFailure struct {
 			Text        string `xml:",chardata"`
 			ProtocolIEs struct {
-				Text               string `xml:",chardata"`
-				E2setupFailureIEs []E2setupFailureIEs`xml:"E2setupFailureIEs"`
+				Text              string              `xml:",chardata"`
+				E2setupFailureIEs []E2setupFailureIEs `xml:"E2setupFailureIEs"`
 			} `xml:"protocolIEs"`
 		} `xml:"E2setupFailure"`
 	} `xml:"value"`
@@ -207,24 +206,24 @@ type E2setupFailureIEs struct {
 }
 
 type Cause struct {
-	XMLName xml.Name	`xml:"Cause"`
-	Text      string `xml:",chardata"`
+	XMLName   xml.Name `xml:"Cause"`
+	Text      string   `xml:",chardata"`
 	Transport struct {
 		Text                         string `xml:",chardata"`
 		TransportResourceUnavailable string `xml:"transport-resource-unavailable"`
 	} `xml:"transport"`
 }
 
-func extractRanFunctionsIDList(request *E2SetupRequestMessage) []ProtocolIESingleContainer{
+func extractRanFunctionsIDList(request *E2SetupRequestMessage) []ProtocolIESingleContainer {
 	list := &request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList
-	ids := make([]ProtocolIESingleContainer,len(list.ProtocolIESingleContainer))
-	for i := 0; i< len(ids); i++{
+	ids := make([]ProtocolIESingleContainer, len(list.ProtocolIESingleContainer))
+	for i := 0; i < len(ids); i++ {
 		ids[i] = convertToRANfunctionID(list, i)
 	}
 	return ids
 }
 
-func convertToRANfunctionID(list *RANfunctionsList, i int) ProtocolIESingleContainer{
+func convertToRANfunctionID(list *RANfunctionsList, i int) ProtocolIESingleContainer {
 	id := ProtocolIESingleContainer{}
 	id.ID = "6"
 	id.Value.RANfunctionIDItem.RanFunctionID = list.ProtocolIESingleContainer[i].Value.RANfunctionItem.RanFunctionID
