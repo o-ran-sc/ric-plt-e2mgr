@@ -1,6 +1,6 @@
 ---
 distribution_type: container
-container_release_tag: 4.4.2
+container_release_tag: 4.4.3
 container_pull_registry: nexus3.o-ran-sc.org:10004
 container_push_registry: nexus3.o-ran-sc.org:10002
 project: ric-plt/e2mgr
