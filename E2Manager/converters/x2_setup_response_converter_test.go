@@ -25,6 +25,7 @@ import (
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -44,7 +45,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 	}{
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -82,7 +83,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "2006002a000002001500080002f82900007a8000140017000000630002f8290007ab50102002f829000001000133"},
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD pci:100  cell_id:\"02f929:0007ac50\"  tac:\"0203\"  broadcast_plmns:\"02f829\"  broadcast_plmns:\"02f929\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:3  ul_transmission_bandwidth:BW75  dl_transmission_bandwidth:BW75}}  eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -136,7 +137,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060043000002001500080002f82900007a8000140030010000630002f8290007ab50102002f8290000010001330000640002f9290007ac50203202f82902f929000002000344"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -178,7 +179,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "20060033000002001500080002f82900007a8000140020000000630002f8290007ab50102002f8291000010001330000005f0003800102"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD ] [02f729:0203 02f929:0304]",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD] [02f729:0203 02f929:0304]",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -226,7 +227,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "2006003a000003001500080002f82900007a8000140017000000630002f8290007ab50102002f8290000010001330018000c1002f72902030002f9290304"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<tdd:<ear_fcn:1 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:<special_subframe_patterns:SSP4 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:EXTENDED > > > eutra_mode:TDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{tdd:{ear_fcn:1  transmission_bandwidth:BW50  subframe_assignment:SA2  special_subframe_info:{special_subframe_patterns:SSP4  cyclic_prefix_dl:NORMAL  cyclic_prefix_ul:EXTENDED}}}  eutra_mode:TDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -266,7 +267,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "2006002a000002001500080002f82900007a8000140017000000630002f8290007ab50102002f829400001320820"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<tdd:<ear_fcn:1 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:<special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL > additional_special_subframe_info:<additional_special_subframe_patterns:SSP9 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:EXTENDED > > > eutra_mode:TDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{tdd:{ear_fcn:1  transmission_bandwidth:BW50  subframe_assignment:SA2  special_subframe_info:{special_subframe_patterns:SSP4  cyclic_prefix_dl:EXTENDED  cyclic_prefix_ul:NORMAL}  additional_special_subframe_info:{additional_special_subframe_patterns:SSP9  cyclic_prefix_dl:NORMAL  cyclic_prefix_ul:EXTENDED}}}  eutra_mode:TDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -315,7 +316,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060032000002001500080002f82900007a800014001f000000630002f8290007ab50102002f8295000013208800000006140021220"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<tdd:<ear_fcn:2 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:<special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL > > > eutra_mode:TDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{tdd:{ear_fcn:2  transmission_bandwidth:BW50  subframe_assignment:SA2  special_subframe_info:{special_subframe_patterns:SSP4  cyclic_prefix_dl:EXTENDED  cyclic_prefix_ul:NORMAL}}}  eutra_mode:TDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -361,7 +362,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060033000002001500080002f82900007a8000140020000000630002f8290007ab50102002f8295000013208800000005e0003800102"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<tdd:<ear_fcn:1 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:<special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL > additional_special_subframe_extension_info:<additional_special_subframe_patterns_extension:SSP10 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:NORMAL > > > eutra_mode:TDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{tdd:{ear_fcn:1 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:{special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL} additional_special_subframe_extension_info:{additional_special_subframe_patterns_extension:SSP10 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:NORMAL}}} eutra_mode:TDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -410,7 +411,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060031000002001500080002f82900007a800014001e000000630002f8290007ab50102002f829500001320880000000b3400100"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<tdd:<ear_fcn:2 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:<special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL > additional_special_subframe_info:<additional_special_subframe_patterns:SSP9 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:EXTENDED > additional_special_subframe_extension_info:<additional_special_subframe_patterns_extension:SSP10 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:NORMAL > > > eutra_mode:TDD ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{tdd:{ear_fcn:2 transmission_bandwidth:BW50 subframe_assignment:SA2 special_subframe_info:{special_subframe_patterns:SSP4 cyclic_prefix_dl:EXTENDED cyclic_prefix_ul:NORMAL} additional_special_subframe_info:{additional_special_subframe_patterns:SSP9 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:EXTENDED} additional_special_subframe_extension_info:{additional_special_subframe_patterns_extension:SSP10 cyclic_prefix_dl:NORMAL cyclic_prefix_ul:NORMAL}}} eutra_mode:TDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -471,7 +472,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "2006003e000002001500080002f82900007a800014002b000000630002f8290007ab50102002f829500001320880000200b3400100006140021220005e0003800102"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80b0"},
-			enb: "CONNECTED HOME_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD number_of_antenna_ports:AN1  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED HOME_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{fdd:{ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50}} eutra_mode:FDD number_of_antenna_ports:AN1 pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:{fdd:{ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75}} eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -531,7 +532,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "2006004b000002001500090002f82940007a80b000140037010800630002f8290007ab50102002f829000001000133000000294001000000640002f9290007ac50203202f82902f929000002000344"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a40"},
-			enb: "CONNECTED SHORT_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD number_of_antenna_ports:AN1  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD prach_configuration:<root_sequence_index:15 zero_correlation_zone_configuration:7 high_speed_flag:true prach_frequency_offset:30 > ] []",
+			enb: "CONNECTED SHORT_MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  number_of_antenna_ports:AN1 pci:100  cell_id:\"02f929:0007ac50\"  tac:\"0203\"  broadcast_plmns:\"02f829\"  broadcast_plmns:\"02f929\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:3  ul_transmission_bandwidth:BW75  dl_transmission_bandwidth:BW75}}  eutra_mode:FDD  prach_configuration:{root_sequence_index:15  zero_correlation_zone_configuration:7  high_speed_flag:true  prach_frequency_offset:30}] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -600,7 +601,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060056000002001500090002f8298003007a4000140042010800630002f8290007ab50102002f829000001000133000000294001000800640002f9290007ac50203202f82902f92900000200034400000037400500000f79e0"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a40"},
-			enb: "CONNECTED SHORT_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD number_of_antenna_ports:AN1  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD mbsfn_subframe_infos:<radioframe_allocation_period:N8 radioframe_allocation_offset:3 subframe_allocation:\"28\" subframe_allocation_type:ONE_FRAME > ] []",
+			enb: "CONNECTED SHORT_MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  number_of_antenna_ports:AN1 pci:100  cell_id:\"02f929:0007ac50\"  tac:\"0203\"  broadcast_plmns:\"02f829\"  broadcast_plmns:\"02f929\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:3  ul_transmission_bandwidth:BW75  dl_transmission_bandwidth:BW75}}  eutra_mode:FDD  mbsfn_subframe_infos:{radioframe_allocation_period:N8  radioframe_allocation_offset:3  subframe_allocation:\"28\"  subframe_allocation_type:ONE_FRAME}] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -668,7 +669,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "20060054000002001500090002f8298003007a4000140040010800630002f8290007ab50102002f829000001000133000000294001000800640002f9290007ac50203202f82902f929000002000344000000384003019850"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a40"},
-			enb: "CONNECTED SHORT_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD number_of_antenna_ports:AN1 mbsfn_subframe_infos:<radioframe_allocation_period:N8 radioframe_allocation_offset:3 subframe_allocation:\"28\" subframe_allocation_type:ONE_FRAME >  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED SHORT_MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  number_of_antenna_ports:AN1  mbsfn_subframe_infos:{radioframe_allocation_period:N8  radioframe_allocation_offset:3  subframe_allocation:\"28\"  subframe_allocation_type:ONE_FRAME} pci:100  cell_id:\"02f929:0007ac50\"  tac:\"0203\"  broadcast_plmns:\"02f829\"  broadcast_plmns:\"02f929\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:3  ul_transmission_bandwidth:BW75  dl_transmission_bandwidth:BW75}}  eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -735,7 +736,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "20060052000002001500090002f8298003007a400014003e010800630002f8290007ab50102002f82900000100013300010029400100003840030198500000640002f9290007ac50203202f82902f929000002000344"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a40"},
-			enb: "CONNECTED SHORT_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD number_of_antenna_ports:AN1 prach_configuration:<root_sequence_index:15 zero_correlation_zone_configuration:7 high_speed_flag:true prach_frequency_offset:30 >  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED SHORT_MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  number_of_antenna_ports:AN1  prach_configuration:{root_sequence_index:15  zero_correlation_zone_configuration:7  high_speed_flag:true  prach_frequency_offset:30} pci:100  cell_id:\"02f929:0007ac50\"  tac:\"0203\"  broadcast_plmns:\"02f829\"  broadcast_plmns:\"02f929\"  choice_eutra_mode:{fdd:{ulear_fcn:2  dlear_fcn:3  ul_transmission_bandwidth:BW75  dl_transmission_bandwidth:BW75}}  eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -801,7 +802,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "20060054000002001500090002f8298003007a4000140040010800630002f8290007ab50102002f829000001000133000100294001000037400500000f79e00000640002f9290007ac50203202f82902f929000002000344"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a08"},
-			enb: "CONNECTED LONG_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD prach_configuration:<root_sequence_index:15 zero_correlation_zone_configuration:7 high_speed_flag:true prach_frequency_offset:30 prach_configuration_index:60 >  pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:<fdd:<ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75 > > eutra_mode:FDD ] []",
+			enb: "CONNECTED LONG_MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{fdd:{ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50}} eutra_mode:FDD prach_configuration:{root_sequence_index:15 zero_correlation_zone_configuration:7 high_speed_flag:true prach_frequency_offset:30 prach_configuration_index:60} pci:100 cell_id:\"02f929:0007ac50\" tac:\"0203\" broadcast_plmns:\"02f829\" broadcast_plmns:\"02f929\" choice_eutra_mode:{fdd:{ulear_fcn:2 dlear_fcn:3 ul_transmission_bandwidth:BW75 dl_transmission_bandwidth:BW75}} eutra_mode:FDD] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -866,7 +867,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060050000002001500090002f829c003007a080014003c010800630002f8290007ab50102002f82900000100013300000037400640000f79ef000000640002f9290007ac50203202f82902f929000002000344"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD csg_id:\"0007aba0\" freq_band_indicator_priority:BROADCASTED bandwidth_reduced_si:SCHEDULED ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{fdd:{ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50}} eutra_mode:FDD csg_id:\"0007aba0\" freq_band_indicator_priority:BROADCASTED bandwidth_reduced_si:SCHEDULED] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -917,7 +918,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "2006003e000002001500080002f82900007a800014002b000800630002f8290007ab50102002f8290000010001330002004640040007aba000a040014000b4400100"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD mbms_service_area_identities:\"02f8\" mbms_service_area_identities:\"03f9\" multiband_infos:1 multiband_infos:2 multiband_infos:3 freq_band_indicator_priority:NOT_BROADCASTED ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{fdd:{ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50}} eutra_mode:FDD mbms_service_area_identities:\"02f8\" mbms_service_area_identities:\"03f9\" multiband_infos:1 multiband_infos:2 multiband_infos:3 freq_band_indicator_priority:NOT_BROADCASTED] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -975,7 +976,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "20060044000002001500080002f82900007a8000140031000800630002f8290007ab50102002f8290000010001330002004f40050102f803f900a040010000544006200000010002"},
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD neighbour_infos:<ecgi:\"02f829:0007ab50\" pci:99 ear_fcn:1 > neighbour_infos:<ecgi:\"03f930:0008bc50\" pci:100 ear_fcn:2 > ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  neighbour_infos:{ecgi:\"02f829:0007ab50\"  pci:99  ear_fcn:1}  neighbour_infos:{ecgi:\"03f930:0008bc50\"  pci:100  ear_fcn:2}] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -1026,7 +1027,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060044000002001500080002f82900007a8000140031004000630002f8290007ab50102002f82900000100013300020002f8290007ab50006300010003f9300008bc5000640002"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD neighbour_infos:<ecgi:\"02f829:0007ab50\" pci:99 ear_fcn:1 tac:\"0102\" > neighbour_infos:<ecgi:\"03f930:0008bc50\" pci:100 ear_fcn:3 > ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:{fdd:{ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50}} eutra_mode:FDD neighbour_infos:{ecgi:\"02f829:0007ab50\" pci:99 ear_fcn:1 tac:\"0102\"} neighbour_infos:{ecgi:\"03f930:0008bc50\" pci:100 ear_fcn:3}] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -1087,7 +1088,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "20060055000002001500080002f82900007a8000140042004000630002f8290007ab50102002f82900000100013300024002f8290007ab50006300010000004c400201024003f9300008bc50006400020000005e0003800103"},
 
 		{key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "007a80"},
-			enb: "CONNECTED MACRO_ENB [pci:99 cell_id:\"02f829:0007ab50\" tac:\"0102\" broadcast_plmns:\"02f829\" choice_eutra_mode:<fdd:<ulear_fcn:1 dlear_fcn:1 ul_transmission_bandwidth:BW50 dl_transmission_bandwidth:BW50 > > eutra_mode:FDD neighbour_infos:<ecgi:\"02f829:0007ab50\" pci:99 ear_fcn:1 tac:\"0102\" > neighbour_infos:<ecgi:\"03f930:0008bc50\" pci:100 ear_fcn:3 > ] []",
+			enb: "CONNECTED MACRO_ENB [pci:99  cell_id:\"02f829:0007ab50\"  tac:\"0102\"  broadcast_plmns:\"02f829\"  choice_eutra_mode:{fdd:{ulear_fcn:1  dlear_fcn:1  ul_transmission_bandwidth:BW50  dl_transmission_bandwidth:BW50}}  eutra_mode:FDD  neighbour_infos:{ecgi:\"02f829:0007ab50\"  pci:99  ear_fcn:1  tac:\"0102\"}  neighbour_infos:{ecgi:\"03f930:0008bc50\"  pci:100  ear_fcn:3}] []",
 			/*
 				X2AP-PDU:
 				 successfulOutcome_t
@@ -1146,7 +1147,7 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 				           EARFCNExtension = 0x3
 			*/
 			packedPdu: "20060055000002001500080002f82900007a8000140042004000630002f8290007ab50102002f82900000100013300024002f8290007ab50006300010000004c400201024003f9300008bc50006400020000005e0003800103",
-			/*failure: fmt.Errorf("getAtom for path [successfulOutcome_t X2SetupResponse protocolIEs_t ProtocolIE_Container_elm GlobalENB-ID pLMN_Identity_t] failed, rc = 2" /NO_SPACE_LEFT),*/ },
+			/*failure: fmt.Errorf("getAtom for path [successfulOutcome_t X2SetupResponse protocolIEs_t ProtocolIE_Container_elm GlobalENB-ID pLMN_Identity_t] failed, rc = 2" /NO_SPACE_LEFT),*/},
 	}
 
 	converter := NewX2SetupResponseConverter(logger)
@@ -1191,7 +1192,14 @@ func TestUnpackX2SetupResponseAndExtract(t *testing.T) {
 				nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 				nb.Configuration = &entities.NodebInfo_Enb{Enb: enb}
 				embStr := fmt.Sprintf("%s %s %s %s", nb.ConnectionStatus, enb.EnbType, enb.ServedCells, enb.GuGroupIds)
-				if !strings.EqualFold(embStr, tc.enb) {
+
+				space := regexp.MustCompile(`\s+`)
+				s1 := space.ReplaceAllString(embStr, " ")
+				s2 := space.ReplaceAllString(tc.enb," ")
+
+
+
+				if !strings.EqualFold(s1, s2) {
 					t.Errorf("want: enb=%s, got: %s", tc.enb, embStr)
 				}
 			}

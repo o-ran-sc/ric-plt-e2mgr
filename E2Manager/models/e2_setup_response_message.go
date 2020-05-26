@@ -166,8 +166,8 @@ type ProtocolIESingleContainer struct {
 		Text              string `xml:",chardata"`
 		RANfunctionIDItem struct {
 			Text                string `xml:",chardata"`
-			RanFunctionID       string `xml:"ranFunctionID"`
-			RanFunctionRevision string `xml:"ranFunctionRevision"`
+			RanFunctionID       uint32 `xml:"ranFunctionID"`
+			RanFunctionRevision uint32 `xml:"ranFunctionRevision"`
 		} `xml:"RANfunctionID-Item"`
 	} `xml:"value"`
 }
