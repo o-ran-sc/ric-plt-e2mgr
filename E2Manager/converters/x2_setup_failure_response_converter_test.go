@@ -25,6 +25,7 @@ import (
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -42,7 +43,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 		failure   error
 	}{
 		{
-			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS time_to_wait:V1S criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS  time_to_wait:V1S  criticality_diagnostics:{procedure_code:33  triggering_message:UNSUCCESSFUL_OUTCOME  procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -74,7 +75,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "4006001a0000030005400200000016400100001140087821a00000008040"},
 		{
-			response: "CONNECTED_SETUP_FAILED transport_layer_cause:TRANSPORT_RESOURCE_UNAVAILABLE criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED transport_layer_cause:TRANSPORT_RESOURCE_UNAVAILABLE  criticality_diagnostics:{procedure_code:33  triggering_message:UNSUCCESSFUL_OUTCOME  procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -102,7 +103,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "400600140000020005400120001140087821a00000008040"},
 		{
-			response: "CONNECTED_SETUP_FAILED protocol_cause:ABSTRACT_SYNTAX_ERROR_IGNORE_AND_NOTIFY criticality_diagnostics:<triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED protocol_cause:ABSTRACT_SYNTAX_ERROR_IGNORE_AND_NOTIFY  criticality_diagnostics:{triggering_message:UNSUCCESSFUL_OUTCOME  procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -130,7 +131,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			packedPdu: "400600130000020005400144001140073a800000008040"},
 
 		{
-			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED criticality_diagnostics:<procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED  criticality_diagnostics:{procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -157,7 +158,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			packedPdu: "400600120000020005400168001140061a0000008040"},
 
 		{
-			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED criticality_diagnostics:<information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > information_element_criticality_diagnostics:<ie_criticality:NOTIFY ie_id:255 type_of_error:NOT_UNDERSTOOD > > ",
+			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED  criticality_diagnostics:{information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}  information_element_criticality_diagnostics:{ie_criticality:NOTIFY  ie_id:255  type_of_error:NOT_UNDERSTOOD}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -188,7 +189,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 
 
 		{
-			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED criticality_diagnostics:<procedure_code:33 > ",
+			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED  criticality_diagnostics:{procedure_code:33}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -210,7 +211,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			packedPdu: "4006000e0000020005400168001140024021"},
 
 		{
-			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED ",
+			response: "CONNECTED_SETUP_FAILED miscellaneous_cause:UNSPECIFIED",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -226,7 +227,7 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 			*/
 			packedPdu: "400600080000010005400168"},
 		{
-			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS time_to_wait:V1S criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS  time_to_wait:V1S  criticality_diagnostics:{procedure_code:33  triggering_message:UNSUCCESSFUL_OUTCOME  procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -294,8 +295,13 @@ func TestUnpackX2SetupFailureResponseAndExtract(t *testing.T) {
 				nb.SetupFailure = response
 				nb.FailureType = entities.Failure_X2_SETUP_FAILURE
 				respStr := fmt.Sprintf("%s %s", nb.ConnectionStatus, response)
-				if !strings.EqualFold(respStr, tc.response) {
-					t.Errorf("want: response=[%s], got: [%s]", tc.response, respStr)
+
+				space := regexp.MustCompile(`\s+`)
+				s1 := space.ReplaceAllString(respStr, " ")
+				s2 := space.ReplaceAllString(tc.response," ")
+
+				if !strings.EqualFold(s1, s2) {
+					t.Errorf("want: [%s], got: [%s]", tc.response, respStr)
 				}
 
 			}

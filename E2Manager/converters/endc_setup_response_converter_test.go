@@ -25,6 +25,7 @@ import (
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -44,7 +45,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 	}{
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"},
-			gnb: "CONNECTED [served_nr_cell_information:<nr_pci:5 cell_id:\"1e3f27:1f2e3d4ff0\" stac5g:\"3d44d3\" configured_stac:\"4e4f\" served_plmns:\"3e4e5e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS60 ncnrb:NRB107 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > transmission_bandwidth:<nrscs:SCS30 ncnrb:NRB133 > > > >  served_nr_cell_information:<nr_pci:5 cell_id:\"1e3f27:1f2e3d4ff0\" stac5g:\"3d44d3\" configured_stac:\"4e4f\" served_plmns:\"3e4e5e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS120 ncnrb:NRB121 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB132 > > > > nr_neighbour_infos:<nr_pci:44 nr_cgi:\"1e3f27:1f2e3d4ff0\" nr_mode:TDD choice_nr_mode:<tdd:<ar_fcn_nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB11 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > > > > ]",
+			gnb: "CONNECTED [served_nr_cell_information:{nr_pci:5  cell_id:\"1e3f27:1f2e3d4ff0\"  stac5g:\"3d44d3\"  configured_stac:\"4e4f\"  served_plmns:\"3e4e5e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS60  ncnrb:NRB107}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  transmission_bandwidth:{nrscs:SCS30  ncnrb:NRB133}}}} served_nr_cell_information:{nr_pci:5  cell_id:\"1e3f27:1f2e3d4ff0\"  stac5g:\"3d44d3\"  configured_stac:\"4e4f\"  served_plmns:\"3e4e5e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS120  ncnrb:NRB121}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB132}}}}  nr_neighbour_infos:{nr_pci:44  nr_cgi:\"1e3f27:1f2e3d4ff0\"  nr_mode:TDD  choice_nr_mode:{tdd:{ar_fcn_nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB11}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}}}}]",
 			/*
 		E2AP-PDU:
 			 successfulOutcome_t
@@ -153,7 +154,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 			packedPdu: "202400808e00000100f600808640000200fc00090002f829504a952a0a00fd007200010c0005001e3f271f2e3d4ff03d44d34e4f003e4e5e4400010000150400000a000211e148033e4e5e4c0005001e3f271f2e3d4ff03d44d34e4f003e4e5e4400010000150400000a00021a0044033e4e5e000000002c001e3f271f2e3d4ff0031e3f274400010000150400000a00020000"},
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"},
-			gnb: "CONNECTED [served_nr_cell_information:<nr_pci:5 cell_id:\"1e3f27:1f2e3d4ff0\" stac5g:\"3d44d3\" configured_stac:\"4e4f\" served_plmns:\"3e4e5e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS30 ncnrb:NRB107 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB121 > > > > nr_neighbour_infos:<nr_pci:44 nr_cgi:\"1e3f27:1f2e3d4ff0\" nr_mode:TDD choice_nr_mode:<tdd:<ar_fcn_nr_freq_info:<nr_ar_fcn:5 sulInformation:<sul_ar_fcn:6 sul_transmission_bandwidth:<nrscs:SCS120 ncnrb:NRB18 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > > > > ]",
+			gnb: "CONNECTED [served_nr_cell_information:{nr_pci:5  cell_id:\"1e3f27:1f2e3d4ff0\"  stac5g:\"3d44d3\"  configured_stac:\"4e4f\"  served_plmns:\"3e4e5e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS30  ncnrb:NRB107}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB121}}}}  nr_neighbour_infos:{nr_pci:44  nr_cgi:\"1e3f27:1f2e3d4ff0\"  nr_mode:TDD  choice_nr_mode:{tdd:{ar_fcn_nr_freq_info:{nr_ar_fcn:5  sulInformation:{sul_ar_fcn:6  sul_transmission_bandwidth:{nrscs:SCS120  ncnrb:NRB18}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}}}}]",
 			/*
 			E2AP-PDU:
 			 successfulOutcome_t
@@ -234,7 +235,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"},
-			gnb: "CONNECTED [served_nr_cell_information:<nr_pci:5 cell_id:\"1e3f27:1f2e3d4ff0\" stac5g:\"3d44d3\" configured_stac:\"4e4f\" served_plmns:\"3e4e5e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS60 ncnrb:NRB107 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > transmission_bandwidth:<nrscs:SCS30 ncnrb:NRB133 > > > >  served_nr_cell_information:<nr_pci:8 cell_id:\"2e3f45:1f2e3d4ff0\" stac5g:\"4faa3c\" configured_stac:\"1a2f\" served_plmns:\"50321e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:4 sulInformation:<sul_ar_fcn:8 sul_transmission_bandwidth:<nrscs:SCS120 ncnrb:NRB121 > > frequency_bands:<nr_frequency_band:7 supported_sul_bands:3 > > transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB132 > > > > nr_neighbour_infos:<nr_pci:44 nr_cgi:\"1e3f27:1f2e3d4ff0\" nr_mode:TDD choice_nr_mode:<tdd:<ar_fcn_nr_freq_info:<nr_ar_fcn:1 sulInformation:<sul_ar_fcn:2 sul_transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB11 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > > > > ]",
+			gnb: "CONNECTED [served_nr_cell_information:{nr_pci:5  cell_id:\"1e3f27:1f2e3d4ff0\"  stac5g:\"3d44d3\"  configured_stac:\"4e4f\"  served_plmns:\"3e4e5e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS60  ncnrb:NRB107}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  transmission_bandwidth:{nrscs:SCS30  ncnrb:NRB133}}}} served_nr_cell_information:{nr_pci:8  cell_id:\"2e3f45:1f2e3d4ff0\"  stac5g:\"4faa3c\"  configured_stac:\"1a2f\"  served_plmns:\"50321e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:4  sulInformation:{sul_ar_fcn:8  sul_transmission_bandwidth:{nrscs:SCS120  ncnrb:NRB121}}  frequency_bands:{nr_frequency_band:7  supported_sul_bands:3}}  transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB132}}}}  nr_neighbour_infos:{nr_pci:44  nr_cgi:\"1e3f27:1f2e3d4ff0\"  nr_mode:TDD  choice_nr_mode:{tdd:{ar_fcn_nr_freq_info:{nr_ar_fcn:1  sulInformation:{sul_ar_fcn:2  sul_transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB11}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}}}}]",
 			/*
 			E2AP-PDU:
 			 successfulOutcome_t
@@ -343,7 +344,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 
 		{
 			key: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"},
-			gnb: "CONNECTED [served_nr_cell_information:<nr_pci:5 cell_id:\"1e3f27:1f2e3d4ff0\" served_plmns:\"3e4e5e\" nr_mode:FDD choice_nr_mode:<fdd:<ul_freq_info:<nr_ar_fcn:5 frequency_bands:<nr_frequency_band:44 supported_sul_bands:33 > > dl_freq_info:<nr_ar_fcn:1 frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > ul_transmission_bandwidth:<nrscs:SCS120 ncnrb:NRB11 > dl_transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB135 > > > > nr_neighbour_infos:<nr_pci:44 nr_cgi:\"1e3f27:1f2e3d4ff0\" nr_mode:FDD choice_nr_mode:<fdd:<ular_fcn_freq_info:<nr_ar_fcn:5 frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > dlar_fcn_freq_info:<nr_ar_fcn:1 frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > > > > ]",
+			gnb: "CONNECTED [served_nr_cell_information:{nr_pci:5  cell_id:\"1e3f27:1f2e3d4ff0\"  served_plmns:\"3e4e5e\"  nr_mode:FDD  choice_nr_mode:{fdd:{ul_freq_info:{nr_ar_fcn:5  frequency_bands:{nr_frequency_band:44  supported_sul_bands:33}}  dl_freq_info:{nr_ar_fcn:1  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  ul_transmission_bandwidth:{nrscs:SCS120  ncnrb:NRB11}  dl_transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB135}}}}  nr_neighbour_infos:{nr_pci:44  nr_cgi:\"1e3f27:1f2e3d4ff0\"  nr_mode:FDD  choice_nr_mode:{fdd:{ular_fcn_freq_info:{nr_ar_fcn:5  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  dlar_fcn_freq_info:{nr_ar_fcn:1  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}}}}]",
 			/*
 			E2AP-PDU:
 			 successfulOutcome_t
@@ -433,7 +434,7 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 
 		{
 			key: &entities.GlobalNbId{PlmnId: "04a5c1", NbId: "4fc52bff"},
-			gnb: "CONNECTED [served_nr_cell_information:<nr_pci:9 cell_id:\"aeafa7:2a3e3b4cd0\" stac5g:\"7d4773\" configured_stac:\"477f\" served_plmns:\"7e7e7e\" nr_mode:TDD choice_nr_mode:<tdd:<nr_freq_info:<nr_ar_fcn:8 sulInformation:<sul_ar_fcn:9 sul_transmission_bandwidth:<nrscs:SCS15 ncnrb:NRB121 > > frequency_bands:<nr_frequency_band:22 supported_sul_bands:11 > > transmission_bandwidth:<nrscs:SCS60 ncnrb:NRB18 > > > > nr_neighbour_infos:<nr_pci:44 nr_cgi:\"5a5ff1:2a3e3b4cd0\" nr_mode:TDD choice_nr_mode:<tdd:<ar_fcn_nr_freq_info:<nr_ar_fcn:5 sulInformation:<sul_ar_fcn:6 sul_transmission_bandwidth:<nrscs:SCS30 ncnrb:NRB18 > > frequency_bands:<nr_frequency_band:4 supported_sul_bands:3 > > > > > nr_neighbour_infos:<nr_pci:9 nr_cgi:\"5d5caa:af3e354ac0\" nr_mode:TDD choice_nr_mode:<tdd:<ar_fcn_nr_freq_info:<nr_ar_fcn:7 sulInformation:<sul_ar_fcn:8 sul_transmission_bandwidth:<nrscs:SCS120 ncnrb:NRB25 > > frequency_bands:<nr_frequency_band:3 supported_sul_bands:1 > > > > > ]",
+			gnb: "CONNECTED [served_nr_cell_information:{nr_pci:9  cell_id:\"aeafa7:2a3e3b4cd0\"  stac5g:\"7d4773\"  configured_stac:\"477f\"  served_plmns:\"7e7e7e\"  nr_mode:TDD  choice_nr_mode:{tdd:{nr_freq_info:{nr_ar_fcn:8  sulInformation:{sul_ar_fcn:9  sul_transmission_bandwidth:{nrscs:SCS15  ncnrb:NRB121}}  frequency_bands:{nr_frequency_band:22  supported_sul_bands:11}}  transmission_bandwidth:{nrscs:SCS60  ncnrb:NRB18}}}}  nr_neighbour_infos:{nr_pci:44  nr_cgi:\"5a5ff1:2a3e3b4cd0\"  nr_mode:TDD  choice_nr_mode:{tdd:{ar_fcn_nr_freq_info:{nr_ar_fcn:5  sulInformation:{sul_ar_fcn:6  sul_transmission_bandwidth:{nrscs:SCS30  ncnrb:NRB18}}  frequency_bands:{nr_frequency_band:4  supported_sul_bands:3}}}}}  nr_neighbour_infos:{nr_pci:9  nr_cgi:\"5d5caa:af3e354ac0\"  nr_mode:TDD  choice_nr_mode:{tdd:{ar_fcn_nr_freq_info:{nr_ar_fcn:7  sulInformation:{sul_ar_fcn:8  sul_transmission_bandwidth:{nrscs:SCS120  ncnrb:NRB25}}  frequency_bands:{nr_frequency_band:3  supported_sul_bands:1}}}}}]",
 			/*
 			E2AP-PDU:
 			 successfulOutcome_t
@@ -602,8 +603,13 @@ func TestUnpackEndcX2SetupResponseAndExtract(t *testing.T) {
 				nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 				nb.Configuration = &entities.NodebInfo_Gnb{Gnb: gnb}
 				gnbStr := fmt.Sprintf("%s %s", nb.ConnectionStatus, gnb.ServedNrCells)
-				if !strings.EqualFold(gnbStr, tc.gnb) {
-					t.Errorf("want: enb=%s, got: %s", tc.gnb, gnbStr)
+
+				space := regexp.MustCompile(`\s+`)
+				s1 := space.ReplaceAllString(gnbStr, " ")
+				s2 := space.ReplaceAllString(tc.gnb," ")
+
+				if !strings.EqualFold(s1, s2) {
+					t.Errorf("want: [%s], got: [%s]", tc.gnb, gnbStr)
 				}
 
 			}

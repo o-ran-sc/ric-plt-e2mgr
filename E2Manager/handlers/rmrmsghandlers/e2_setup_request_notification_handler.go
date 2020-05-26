@@ -236,6 +236,14 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte) (*m
 		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
 
+	ranFunctionsList := setupRequest.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
+
+	for i := 0; i < len(ranFunctionsList); i++ {
+		def := models.E2smGnbNrtRanFunctionDefinition{}
+		err = xml.Unmarshal([]byte(ranFunctionsList[i].Value.RANfunctionItem.RanFunctionDefinition.Text), &def)
+		ranFunctionsList[i].Value.RANfunctionItem.RanFunctionDefinition.E2smGnbNrtRanFunctionDefinition = def
+	}
+
 	return setupRequest, e2tIpAddress, nil
 }
 
@@ -248,7 +256,7 @@ func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAdd
 		RanName:                      ranName,
 		NodeType:                     entities.Node_GNB,
 		Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
-		GlobalNbId: h.buildGlobalNbId(request),
+		GlobalNbId:                   h.buildGlobalNbId(request),
 	}
 
 	err = h.setGnbFunctions(nodebInfo, request)
@@ -265,6 +273,6 @@ func (h E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.
 func (h E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setupRequest *models.E2SetupRequestMessage) *entities.NbIdentity {
 	return &entities.NbIdentity{
 		InventoryName: ranName,
-		GlobalNbId: h.buildGlobalNbId(setupRequest),
+		GlobalNbId:    h.buildGlobalNbId(setupRequest),
 	}
 }

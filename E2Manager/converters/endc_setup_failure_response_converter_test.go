@@ -25,6 +25,7 @@ import (
 	"e2mgr/logger"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -42,7 +43,7 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 		failure   error
 	}{
 		{
-			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS time_to_wait:V1S criticality_diagnostics:<procedure_code:33 triggering_message:UNSUCCESSFUL_OUTCOME procedure_criticality:NOTIFY information_element_criticality_diagnostics:<ie_criticality:REJECT ie_id:128 type_of_error:MISSING > > ",
+			response: "CONNECTED_SETUP_FAILED network_layer_cause:HANDOVER_DESIRABLE_FOR_RADIO_REASONS  time_to_wait:V1S  criticality_diagnostics:{procedure_code:33  triggering_message:UNSUCCESSFUL_OUTCOME  procedure_criticality:NOTIFY  information_element_criticality_diagnostics:{ie_criticality:REJECT  ie_id:128  type_of_error:MISSING}}",
 			/*
 				E2AP-PDU:
 				 unsuccessfulOutcome_t
@@ -110,10 +111,14 @@ func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
 				nb.SetupFailure = response
 				nb.FailureType = entities.Failure_X2_SETUP_FAILURE
 				respStr := fmt.Sprintf("%s %s", nb.ConnectionStatus, response)
-				if !strings.EqualFold(respStr, tc.response) {
-					t.Errorf("want: response=[%s], got: [%s]", tc.response, respStr)
-				}
 
+				space := regexp.MustCompile(`\s+`)
+				s1 := space.ReplaceAllString(respStr, " ")
+				s2 := space.ReplaceAllString(tc.response," ")
+
+				if !strings.EqualFold(s1, s2) {
+					t.Errorf("want: [%s], got: [%s]", tc.response, respStr)
+				}
 			}
 		})
 	}
