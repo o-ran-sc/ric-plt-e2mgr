@@ -173,12 +173,13 @@ func (h E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(nodebInfo 
 
 func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName string, req *models.NotificationRequest, setupRequest *models.E2SetupRequestMessage) {
 
-	ricNearRtId, err := convertTo20BitString(h.config.GlobalRicId.RicNearRtId)
+	plmnId := buildPlmnId(strconv.Itoa(h.config.GlobalRicId.Mcc), strconv.Itoa(h.config.GlobalRicId.Mnc))
+
+	ricNearRtId, err := convertTo20BitString(h.config.GlobalRicId.RicId)
 	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - failed to convert RicNearRtId value %s to 20 bit string . Error: %s", ranName, h.config.GlobalRicId.RicNearRtId, err)
 		return
 	}
-	successResponse := models.NewE2SetupSuccessResponseMessage(h.config.GlobalRicId.PlmnId, ricNearRtId, setupRequest)
+	successResponse := models.NewE2SetupSuccessResponseMessage(plmnId, ricNearRtId, setupRequest)
 	h.logger.Debugf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - E2_SETUP_RESPONSE has been built successfully %+v", successResponse)
 
 	responsePayload, err := xml.Marshal(&successResponse.E2APPDU)
@@ -191,6 +192,23 @@ func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName stri
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
 	_ = h.rmrSender.Send(msg)
+}
+
+func buildPlmnId(mmc string, mnc string) string{
+	var b strings.Builder
+
+	b.WriteString(string (mmc[1]))
+	b.WriteString(string (mmc[0]))
+	if len(mnc) == 2 {
+		b.WriteString("F")
+	} else {
+		b.WriteString(string (mnc[2]))
+	}
+	b.WriteString(string (mmc[2]))
+	b.WriteString(string (mnc[1]))
+	b.WriteString(string (mnc[0]))
+
+	return b.String()
 }
 
 func replaceEmptyTagsWithSelfClosing(responsePayload []byte) []byte {

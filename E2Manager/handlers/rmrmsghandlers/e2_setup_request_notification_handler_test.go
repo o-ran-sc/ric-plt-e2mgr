@@ -302,9 +302,10 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	xmlEnGnb := readXmlFile(t, EnGnbSetupRequestXmlPath)
 	logger := tests.InitLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, GlobalRicId: struct {
-		PlmnId      string
-		RicNearRtId string
-	}{PlmnId: "131014", RicNearRtId: "10011001101010101011"}}
+		RicId string
+		Mcc   int
+		Mnc   int
+	}{Mcc: 327, Mnc: 94 ,RicId: "10011001101010101011"}}
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := tests.InitRmrSender(rmrMessengerMock, logger)
 	readerMock := &mocks.RnibReaderMock{}
@@ -360,9 +361,10 @@ func TestE2SetupRequestNotificationHandler_HandleExistingGnbInvalidStatusError(t
 func initMocks(t *testing.T) (E2SetupRequestNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock, *mocks.RoutingManagerClientMock) {
 	logger := tests.InitLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, GlobalRicId: struct {
-		PlmnId      string
-		RicNearRtId string
-	}{PlmnId: "131014", RicNearRtId: "556670"}}
+		RicId string
+		Mcc   int
+		Mnc   int
+	}{Mcc: 327, Mnc: 94 ,RicId: "AACCE"}}
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := tests.InitRmrSender(rmrMessengerMock, logger)
 	readerMock := &mocks.RnibReaderMock{}
