@@ -28,7 +28,7 @@ Documentation    Resource file
 ${docker_number}    5
 ${docker_number-1}    4
 ${url}   http://localhost:3800
-${ranName}  gnb:208-092-303030
+${ranName}  gnb_208_092_303030
 ${getNodeb}  /v1/nodeb/${ranName}
 ${update_gnb_url}   /v1/nodeb/${ranName}/update
 ${update_gnb_body}  {"servedNrCells":[{"servedNrCellInformation":{"cellId":"abcd","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"one","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}

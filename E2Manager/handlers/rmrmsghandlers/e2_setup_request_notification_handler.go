@@ -133,14 +133,12 @@ func (h E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAdd
 }
 
 func (h E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
-	ranFunctions, err := setupRequest.ExtractRanFunctionsList()
+	ranFunctions := setupRequest.ExtractRanFunctionsList()
 
-	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.setGnbFunctions - RAN name: %s - failed to update nodebInfo entity. Error: %s", nodebInfo.GetRanName(), err)
-		return err
+	if ranFunctions != nil {
+		nodebInfo.GetGnb().RanFunctions = ranFunctions
 	}
 
-	nodebInfo.GetGnb().RanFunctions = ranFunctions
 	return nil
 }
 
@@ -231,20 +229,18 @@ func (h E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte) (*m
 	h.logger.Infof("#E2SetupRequestNotificationHandler.parseSetupRequest - payload: %s", payload[pipInd+1:])
 
 	setupRequest := &models.E2SetupRequestMessage{}
-	err := xml.Unmarshal(payload[pipInd+1:], &setupRequest.E2APPDU)
+	err := xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
 	if err != nil {
 		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
 
-	ranFunctionsList := setupRequest.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
-
-	for i := 0; i < len(ranFunctionsList); i++ {
-		def := models.E2smGnbNrtRanFunctionDefinition{}
-		err = xml.Unmarshal([]byte(ranFunctionsList[i].Value.RANfunctionItem.RanFunctionDefinition.Text), &def)
-		ranFunctionsList[i].Value.RANfunctionItem.RanFunctionDefinition.E2smGnbNrtRanFunctionDefinition = def
-	}
-
 	return setupRequest, e2tIpAddress, nil
+}
+
+func normalizeXml(payload []byte) []byte {
+	xmlStr := string(payload)
+	normalized := strings.NewReplacer("&lt;", "<", "&gt;", ">").Replace(xmlStr)
+	return []byte(normalized)
 }
 
 func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {

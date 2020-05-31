@@ -263,21 +263,29 @@ type RANfunctionsList struct {
 	} `xml:"ProtocolIE-SingleContainer"`
 }
 
-func (m *E2SetupRequestMessage) ExtractRanFunctionsList() ([]*entities.RanFunction, error) {
-	list := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
-	funcs := make([]*entities.RanFunction, len(list))
-	for i := 0; i < len(funcs); i++ {
-		funcs[i] = &entities.RanFunction{}
-		funcs[i].RanFunctionId = &wrappers.UInt32Value{Value: list[i].Value.RANfunctionItem.RanFunctionID}
-		def, _ := m.buildRanFunctionDefinitionProto(&list[i].Value.RANfunctionItem.RanFunctionDefinition)
-		funcs[i].RanFunctionDefinition = def
-		funcs[i].RanFunctionRevision = &wrappers.UInt32Value{Value: list[i].Value.RANfunctionItem.RanFunctionRevision}
+func (m *E2SetupRequestMessage) ExtractRanFunctionsList() []*entities.RanFunction {
+	// TODO: verify e2SetupRequestIEs structure with Adi
+	e2SetupRequestIes := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+	if len(e2SetupRequestIes) < 2  {
+		return nil
 	}
-	return funcs, nil
+
+	ranFunctionsListContainer := e2SetupRequestIes[1].Value.RANfunctionsList.ProtocolIESingleContainer
+	funcs := make([]*entities.RanFunction, len(ranFunctionsListContainer))
+	for i := 0; i < len(funcs); i++ {
+		ranFunctionItem := ranFunctionsListContainer[i].Value.RANfunctionItem
+
+		funcs[i] = &entities.RanFunction{
+			RanFunctionId:         &wrappers.UInt32Value{Value: ranFunctionItem.RanFunctionID},
+			RanFunctionDefinition: m.buildRanFunctionDefinitionProto(&ranFunctionItem.RanFunctionDefinition),
+			RanFunctionRevision:   &wrappers.UInt32Value{Value: ranFunctionItem.RanFunctionRevision},
+		}
+	}
+	return funcs
 }
 
-func (m *E2SetupRequestMessage) buildRanFunctionDefinitionProto(def *RanFunctionDefinition) (*entities.RanFunctionDefinition, error) {
-	defProto := &entities.RanFunctionDefinition{
+func (m *E2SetupRequestMessage) buildRanFunctionDefinitionProto(def *RanFunctionDefinition) *entities.RanFunctionDefinition {
+	return &entities.RanFunctionDefinition{
 		E2SmGnbNrtRanFunctionDefinition: &entities.E2SmGnbNrtRanFunctionDefinition{
 			RanFunctionName:       buildRanFunctionNameProto(def),
 			RicEventTriggerStyles: buildRicEventTriggerStylesProto(def),
@@ -287,8 +295,6 @@ func (m *E2SetupRequestMessage) buildRanFunctionDefinitionProto(def *RanFunction
 			RicPolicyStyles:       buildRicPolicyStylesProto(def),
 		},
 	}
-
-	return defProto, nil
 }
 
 func buildRanFunctionNameProto(def *RanFunctionDefinition) *entities.RanFunctionName {
@@ -313,10 +319,11 @@ func buildRicEventTriggerStylesProto(def *RanFunctionDefinition) []*entities.Ric
 	ricEventTriggerStyles := make([]*entities.RicEventTriggerStyle, len(defRicEventTriggerStyleList))
 
 	for i, v := range defRicEventTriggerStyleList {
-		ricEventTriggerStyles[i] = &entities.RicEventTriggerStyle{}
-		ricEventTriggerStyles[i].RicEventTriggerStyleType = &wrappers.UInt32Value{Value: v.RicEventTriggerStyleType}
-		ricEventTriggerStyles[i].RicEventTriggerStyleName = &wrappers.StringValue{Value: v.RicEventTriggerStyleName}
-		ricEventTriggerStyles[i].RicEventTriggerFormatType = &wrappers.UInt32Value{Value: v.RicEventTriggerFormatType}
+		ricEventTriggerStyles[i] = &entities.RicEventTriggerStyle{
+			RicEventTriggerStyleType:  &wrappers.UInt32Value{Value: v.RicEventTriggerStyleType},
+			RicEventTriggerStyleName:  &wrappers.StringValue{Value: v.RicEventTriggerStyleName},
+			RicEventTriggerFormatType: &wrappers.UInt32Value{Value: v.RicEventTriggerFormatType},
+		}
 	}
 
 	return ricEventTriggerStyles
@@ -327,13 +334,14 @@ func buildRicReportStylesProto(def *RanFunctionDefinition) []*entities.RicReport
 	ricReportStyles := make([]*entities.RicReportStyle, len(defRicReportStyleList))
 
 	for i, v := range defRicReportStyleList {
-		ricReportStyles[i] = &entities.RicReportStyle{}
-		ricReportStyles[i].RicReportStyleType = &wrappers.UInt32Value{Value: v.RicReportStyleType}
-		ricReportStyles[i].RicReportStyleName = &wrappers.StringValue{Value: v.RicReportStyleName}
-		ricReportStyles[i].RicReportActionFormatType = &wrappers.UInt32Value{Value: v.RicReportActionFormatType}
-		ricReportStyles[i].RicReportRanParameterDefs = buildRicReportRanParameterDefsProto(v)
-		ricReportStyles[i].RicIndicationHeaderFormatType = &wrappers.UInt32Value{Value: v.RicIndicationHeaderFormatType}
-		ricReportStyles[i].RicIndicationMessageFormatType = &wrappers.UInt32Value{Value: v.RicIndicationMessageFormatType}
+		ricReportStyles[i] = &entities.RicReportStyle{
+			RicReportStyleType:             &wrappers.UInt32Value{Value: v.RicReportStyleType},
+			RicReportStyleName:             &wrappers.StringValue{Value: v.RicReportStyleName},
+			RicReportActionFormatType:      &wrappers.UInt32Value{Value: v.RicReportActionFormatType},
+			RicReportRanParameterDefs:      buildRicReportRanParameterDefsProto(v),
+			RicIndicationHeaderFormatType:  &wrappers.UInt32Value{Value: v.RicIndicationHeaderFormatType},
+			RicIndicationMessageFormatType: &wrappers.UInt32Value{Value: v.RicIndicationMessageFormatType},
+		}
 	}
 
 	return ricReportStyles
@@ -344,10 +352,11 @@ func buildRicReportRanParameterDefsProto(ricReportStyleList RicReportStyleList) 
 	ranParameterDefs := make([]*entities.RanParameterDef, len(ricReportRanParameterDefList))
 
 	for i, v := range ricReportRanParameterDefList {
-		ranParameterDefs[i] = &entities.RanParameterDef{}
-		ranParameterDefs[i].RanParameterId = &wrappers.UInt32Value{Value: v.RanParameterID}
-		ranParameterDefs[i].RanParameterName = &wrappers.StringValue{Value: v.RanParameterName}
-		ranParameterDefs[i].RanParameterType = getRanParameterTypeEnumValue(v.RanParameterType)
+		ranParameterDefs[i] = &entities.RanParameterDef{
+			RanParameterId:   &wrappers.UInt32Value{Value: v.RanParameterID},
+			RanParameterName: &wrappers.StringValue{Value: v.RanParameterName},
+			RanParameterType: getRanParameterTypeEnumValue(v.RanParameterType),
+		}
 	}
 
 	return ranParameterDefs
@@ -386,14 +395,15 @@ func buildRicInsertStylesProto(def *RanFunctionDefinition) []*entities.RicInsert
 	ricInsertStyles := make([]*entities.RicInsertStyle, len(defRicInsertStyleList))
 
 	for i, v := range defRicInsertStyleList {
-		ricInsertStyles[i] = &entities.RicInsertStyle{}
-		ricInsertStyles[i].RicInsertStyleType = &wrappers.UInt32Value{Value: v.RicInsertStyleType}
-		ricInsertStyles[i].RicInsertStyleName = &wrappers.StringValue{Value: v.RicInsertStyleName}
-		ricInsertStyles[i].RicInsertActionFormatType = &wrappers.UInt32Value{Value: v.RicInsertActionFormatType}
-		ricInsertStyles[i].RicInsertRanParameterDefs = buildRicInsertRanParameterDefsProto(v)
-		ricInsertStyles[i].RicIndicationHeaderFormatType = &wrappers.UInt32Value{Value: v.RicIndicationHeaderFormatType}
-		ricInsertStyles[i].RicIndicationMessageFormatType = &wrappers.UInt32Value{Value: v.RicIndicationMessageFormatType}
-		ricInsertStyles[i].RicCallProcessIdFormatType = &wrappers.UInt32Value{Value: v.RicCallProcessIdFormatType}
+		ricInsertStyles[i] = &entities.RicInsertStyle{
+			RicInsertStyleType:             &wrappers.UInt32Value{Value: v.RicInsertStyleType},
+			RicInsertStyleName:             &wrappers.StringValue{Value: v.RicInsertStyleName},
+			RicInsertActionFormatType:      &wrappers.UInt32Value{Value: v.RicInsertActionFormatType},
+			RicInsertRanParameterDefs:      buildRicInsertRanParameterDefsProto(v),
+			RicIndicationHeaderFormatType:  &wrappers.UInt32Value{Value: v.RicIndicationHeaderFormatType},
+			RicIndicationMessageFormatType: &wrappers.UInt32Value{Value: v.RicIndicationMessageFormatType},
+			RicCallProcessIdFormatType:     &wrappers.UInt32Value{Value: v.RicCallProcessIdFormatType},
+		}
 	}
 
 	return ricInsertStyles
@@ -404,10 +414,11 @@ func buildRicInsertRanParameterDefsProto(ricInsertStyleList RicInsertStyleList) 
 	ranParameterDefs := make([]*entities.RanParameterDef, len(ricInsertRanParameterDefList))
 
 	for i, v := range ricInsertRanParameterDefList {
-		ranParameterDefs[i] = &entities.RanParameterDef{}
-		ranParameterDefs[i].RanParameterId = &wrappers.UInt32Value{Value: v.RanParameterID}
-		ranParameterDefs[i].RanParameterName = &wrappers.StringValue{Value: v.RanParameterName}
-		ranParameterDefs[i].RanParameterType = getRanParameterTypeEnumValue(v.RanParameterType)
+		ranParameterDefs[i] = &entities.RanParameterDef{
+			RanParameterId:   &wrappers.UInt32Value{Value: v.RanParameterID},
+			RanParameterName: &wrappers.StringValue{Value: v.RanParameterName},
+			RanParameterType: getRanParameterTypeEnumValue(v.RanParameterType),
+		}
 	}
 
 	return ranParameterDefs
@@ -418,12 +429,13 @@ func buildRicControlStylesProto(def *RanFunctionDefinition) []*entities.RicContr
 	ricControlStyles := make([]*entities.RicControlStyle, len(defRicControlStyleList))
 
 	for i, v := range defRicControlStyleList {
-		ricControlStyles[i] = &entities.RicControlStyle{}
-		ricControlStyles[i].RicControlStyleType = &wrappers.UInt32Value{Value: v.RicControlStyleType}
-		ricControlStyles[i].RicControlStyleName = &wrappers.StringValue{Value: v.RicControlStyleName}
-		ricControlStyles[i].RicControlHeaderFormatType = &wrappers.UInt32Value{Value: v.RicControlHeaderFormatType}
-		ricControlStyles[i].RicControlMessageFormatType = &wrappers.UInt32Value{Value: v.RicControlMessageFormatType}
-		ricControlStyles[i].RicCallProcessIdFormatType = &wrappers.UInt32Value{Value: v.RicCallProcessIdFormatType}
+		ricControlStyles[i] = &entities.RicControlStyle{
+			RicControlStyleType:         &wrappers.UInt32Value{Value: v.RicControlStyleType},
+			RicControlStyleName:         &wrappers.StringValue{Value: v.RicControlStyleName},
+			RicControlHeaderFormatType:  &wrappers.UInt32Value{Value: v.RicControlHeaderFormatType},
+			RicControlMessageFormatType: &wrappers.UInt32Value{Value: v.RicControlMessageFormatType},
+			RicCallProcessIdFormatType:  &wrappers.UInt32Value{Value: v.RicCallProcessIdFormatType},
+		}
 	}
 
 	return ricControlStyles
@@ -434,10 +446,11 @@ func buildRicPolicyRanParameterDefsProto(ricPolicyStyleList RicPolicyStyleList) 
 	ranParameterDefs := make([]*entities.RanParameterDef, len(ricPolicyRanParameterDefList))
 
 	for i, v := range ricPolicyRanParameterDefList {
-		ranParameterDefs[i] = &entities.RanParameterDef{}
-		ranParameterDefs[i].RanParameterId = &wrappers.UInt32Value{Value: v.RanParameterID}
-		ranParameterDefs[i].RanParameterName = &wrappers.StringValue{Value: v.RanParameterName}
-		ranParameterDefs[i].RanParameterType = getRanParameterTypeEnumValue(v.RanParameterType)
+		ranParameterDefs[i] = &entities.RanParameterDef{
+			RanParameterId:   &wrappers.UInt32Value{Value: v.RanParameterID},
+			RanParameterName: &wrappers.StringValue{Value: v.RanParameterName},
+			RanParameterType: getRanParameterTypeEnumValue(v.RanParameterType),
+		}
 	}
 
 	return ranParameterDefs
@@ -448,11 +461,12 @@ func buildRicPolicyStylesProto(def *RanFunctionDefinition) []*entities.RicPolicy
 	ricPolicyStyles := make([]*entities.RicPolicyStyle, len(defRicPolicyStyleList))
 
 	for i, v := range defRicPolicyStyleList {
-		ricPolicyStyles[i] = &entities.RicPolicyStyle{}
-		ricPolicyStyles[i].RicPolicyStyleType = &wrappers.UInt32Value{Value: v.RicPolicyStyleType}
-		ricPolicyStyles[i].RicPolicyStyleName = &wrappers.StringValue{Value: v.RicPolicyStyleName}
-		ricPolicyStyles[i].RicPolicyActionFormatType = &wrappers.UInt32Value{Value: v.RicPolicyActionFormatType}
-		ricPolicyStyles[i].RicPolicyRanParameterDefs = buildRicPolicyRanParameterDefsProto(v)
+		ricPolicyStyles[i] = &entities.RicPolicyStyle{
+			RicPolicyStyleType:        &wrappers.UInt32Value{Value: v.RicPolicyStyleType},
+			RicPolicyStyleName:        &wrappers.StringValue{Value: v.RicPolicyStyleName},
+			RicPolicyActionFormatType: &wrappers.UInt32Value{Value: v.RicPolicyActionFormatType},
+			RicPolicyRanParameterDefs: buildRicPolicyRanParameterDefsProto(v),
+		}
 	}
 
 	return ricPolicyStyles
