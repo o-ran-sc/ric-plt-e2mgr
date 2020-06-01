@@ -42,6 +42,7 @@ const (
 	e2tInstanceFullAddress   = "10.0.2.15:9999"
 	nodebRanName             = "gnb:310-410-b5c67788"
 	GnbSetupRequestXmlPath   = "../../tests/resources/setupRequest_gnb.xml"
+	GnbWithoutFunctionsSetupRequestXmlPath   = "../../tests/resources/setupRequest_gnb_without_functions.xml"
 	EnGnbSetupRequestXmlPath = "../../tests/resources/setupRequest_en-gNB.xml"
 	NgEnbSetupRequestXmlPath = "../../tests/resources/setupRequest_ng-eNB.xml"
 	EnbSetupRequestXmlPath   = "../../tests/resources/setupRequest_enb.xml"
@@ -121,6 +122,26 @@ func TestParseSetupRequest_UnmarshalFailure(t *testing.T) {
 
 func TestE2SetupRequestNotificationHandler_HandleNewGnbSuccess(t *testing.T) {
 	xmlGnb := readXmlFile(t, GnbSetupRequestXmlPath)
+	handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
+	var e2tInstance = &entities.E2TInstance{}
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
+	var gnb *entities.NodebInfo
+	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
+	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
+	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
+	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
+	var errEmpty error
+	rmrMessage := &rmrCgo.MBuf{}
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	prefBytes := []byte(prefix)
+	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append(prefBytes, xmlGnb...)}
+	handler.Handle(notificationRequest)
+	assertNewNodebSuccessCalls(readerMock, t, e2tInstancesManagerMock, writerMock, routingManagerClientMock, rmrMessengerMock)
+}
+
+func TestE2SetupRequestNotificationHandler_HandleNewGnbWithoutFunctionsSuccess(t *testing.T) {
+	xmlGnb := readXmlFile(t, GnbWithoutFunctionsSetupRequestXmlPath)
 	handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	var e2tInstance = &entities.E2TInstance{}
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(e2tInstance, nil)
