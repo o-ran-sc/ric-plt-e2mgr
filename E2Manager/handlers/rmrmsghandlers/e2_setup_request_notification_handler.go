@@ -140,7 +140,10 @@ func (h E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.N
 		return err
 	}
 
-	nodebInfo.GetGnb().RanFunctions = ranFunctions
+	if ranFunctions != nil {
+		nodebInfo.GetGnb().RanFunctions = ranFunctions
+	}
+
 	return nil
 }
 
