@@ -157,7 +157,14 @@ type RANfunctionsList struct {
 }
 
 func (m *E2SetupRequestMessage) ExtractRanFunctionsList() ([]*entities.RanFunction, error) {
-	list := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList.ProtocolIESingleContainer
+
+	setupRequestIes := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+
+	if len(setupRequestIes) < 2 {
+		return nil, nil
+	}
+
+	list := setupRequestIes[1].Value.RANfunctionsList.ProtocolIESingleContainer
 	funcs := make([]*entities.RanFunction, len(list))
 	for i := 0; i < len(funcs); i++ {
 		funcs[i] = &entities.RanFunction{}
