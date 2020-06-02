@@ -69,8 +69,11 @@ var timeToWaitMap = map[TimeToWait]interface{}{
 
 func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2SetupRequestMessage) E2SetupResponseMessage {
 	outcome := SuccessfulOutcome{}
-	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, 2)
 	outcome.ProcedureCode = "1"
+
+	setupRequestIes := request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+
+	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, len(setupRequestIes))
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].ID = "4"
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].Value = GlobalRICID{GlobalRICID: struct {
 		Text         string `xml:",chardata"`
@@ -78,15 +81,17 @@ func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2Se
 		RicID        string `xml:"ric-ID"`
 	}{PLMNIdentity: plmnId, RicID: ricId}}
 
+	if len(setupRequestIes) < 2 {
+		return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
+	}
+
 	functionsIdList := extractRanFunctionsIDList(request)
 
-	if functionsIdList != nil {
-		outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].ID = "9"
-		outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].Value = RANfunctionsIDList{RANfunctionsIDList: struct {
-			Text                      string                      `xml:",chardata"`
-			ProtocolIESingleContainer []ProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
-		}{ProtocolIESingleContainer: functionsIdList}}
-	}
+	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].ID = "9"
+	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].Value = RANfunctionsIDList{RANfunctionsIDList: struct {
+		Text                      string                      `xml:",chardata"`
+		ProtocolIESingleContainer []ProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
+	}{ProtocolIESingleContainer: functionsIdList}}
 
 	return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
 }
@@ -222,13 +227,7 @@ type Cause struct {
 
 func extractRanFunctionsIDList(request *E2SetupRequestMessage) []ProtocolIESingleContainer {
 
-	setupRequestIes := request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
-
-	if len(setupRequestIes) < 2 {
-		return nil
-	}
-
-	list := &setupRequestIes[1].Value.RANfunctionsList
+	list := &request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[1].Value.RANfunctionsList
 	ids := make([]ProtocolIESingleContainer, len(list.ProtocolIESingleContainer))
 	for i := 0; i < len(ids); i++ {
 		ids[i] = convertToRANfunctionID(list, i)
