@@ -41,8 +41,8 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, 15000, config.E2TInstanceDeletionTimeoutMs)
 	assert.NotNil(t, config.GlobalRicId)
 	assert.Equal(t, "AACCE", config.GlobalRicId.RicId)
-	assert.Equal(t, 327, config.GlobalRicId.Mcc)
-	assert.Equal(t, 94, config.GlobalRicId.Mnc)
+	assert.Equal(t, "026", config.GlobalRicId.Mcc)
+	assert.Equal(t, "09", config.GlobalRicId.Mnc)
 }
 
 func TestStringer(t *testing.T) {
@@ -82,7 +82,7 @@ func TestRmrConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http":    map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -112,7 +112,7 @@ func TestLoggingConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"rmr":  map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"http": map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -143,7 +143,7 @@ func TestHttpConfigNotFoundFailure(t *testing.T) {
 	yamlMap := map[string]interface{}{
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -206,7 +206,7 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -237,8 +237,8 @@ yamlMap := map[string]interface{}{
 "rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 "logging": map[string]interface{}{"logLevel": "info"},
 "http": map[string]interface{}{"port": 3800},
-"globalRicId":    map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": ""},
-"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": ""},
+"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 }
 buf, err := yaml.Marshal(yamlMap)
 if err != nil {
@@ -248,8 +248,40 @@ err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
 if err != nil {
 t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
 }
-assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is emtpy\n",
+assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is emtpy or missing\n",
 func() { ParseConfiguration() })
+}
+
+func TestMissingRicIdFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is emtpy or missing\n",
+		func() { ParseConfiguration() })
 }
 
 func TestNonHexRicIdFailure(t *testing.T) {
@@ -269,8 +301,8 @@ func TestNonHexRicIdFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
-		"globalRicId":    map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "TEST1"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": "TEST1"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -301,8 +333,8 @@ func TestWrongRicIdLengthFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
-		"globalRicId":    map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AA43"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": "AA43"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -334,7 +366,7 @@ func TestMccNotThreeDigitsFailure(t *testing.T) {
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "31", "mnc": "94", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -366,7 +398,7 @@ func TestMncLengthIsGreaterThanThreeDigitsFailure(t *testing.T) {
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "6794", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -398,7 +430,7 @@ func TestMncLengthIsLessThanTwoDigitsFailure(t *testing.T) {
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "4", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -429,8 +461,8 @@ func TestNegativeMncFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
-		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": -2, "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "-2", "ricId": "AA443"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -461,8 +493,8 @@ func TestNegativeMccFailure(t *testing.T) {
 		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
 		"logging": map[string]interface{}{"logLevel": "info"},
 		"http": map[string]interface{}{"port": 3800},
-		"globalRicId":    map[string]interface{}{"mcc": -31, "mnc": 222, "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://iltlv740.intl.att.com:8080/ric/v1/handles/"},
+		"globalRicId":    map[string]interface{}{"mcc": "-31", "mnc": "222", "ricId": "AA443"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -473,5 +505,198 @@ func TestNegativeMccFailure(t *testing.T) {
 		t.Errorf("#TestNegativeMncFailure - failed to write configuration file: %s\n", configPath)
 	}
 	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is negative\n",
+		func() { ParseConfiguration() })
+}
+
+func TestAlphaNumericMccFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMccFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestAlphaNumericMccFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "1W2", "mnc": "222", "ricId": "AA443"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMccFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMccFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is not a number\n",
+		func() { ParseConfiguration() })
+}
+
+func TestAlphaNumericMncFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMncFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestAlphaNumericMncFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "111", "mnc": "2A8", "ricId": "AA443"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMncFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestAlphaNumericMncFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is not a number\n",
+		func() { ParseConfiguration() })
+}
+
+func TestMissingMmcFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestMissingMmcFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestMissingMmcFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mnc": "94", "ricId": "AABB3"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestMissingMmcFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestMissingMmcFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is emtpy or missing\n",
+		func() { ParseConfiguration() })
+}
+
+
+func TestEmptyMmcFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestEmptyMmcFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestEmptyMmcFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "", "mnc": "94", "ricId": "AABB3"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestEmptyMmcFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestEmptyMmcFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is emtpy or missing\n",
+		func() { ParseConfiguration() })
+}
+
+func TestEmptyMncFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestEmptyMncFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestEmptyMncFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "111", "mnc": "", "ricId": "AABB3"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestEmptyMncFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestEmptyMncFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is emtpy or missing\n",
+		func() { ParseConfiguration() })
+}
+
+func TestMissingMncFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestMissingMncFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestMissingMncFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging": map[string]interface{}{"logLevel": "info"},
+		"http": map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "111", "ricId": "AABB3"},
+		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestMissingMncFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestMissingMncFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is emtpy or missing\n",
 		func() { ParseConfiguration() })
 }

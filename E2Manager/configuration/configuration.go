@@ -50,8 +50,8 @@ type Configuration struct {
 	E2TInstanceDeletionTimeoutMs int
 	GlobalRicId                  struct {
 		RicId string
-		Mcc   int
-		Mnc   int
+		Mcc   string
+		Mnc   string
 	}
 }
 
@@ -118,8 +118,8 @@ func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper
 		panic(err.Error())
 	}
 	c.GlobalRicId.RicId = globalRicIdConfig.GetString("ricId")
-	c.GlobalRicId.Mcc = globalRicIdConfig.GetInt("mcc")
-	c.GlobalRicId.Mnc = globalRicIdConfig.GetInt("mnc")
+	c.GlobalRicId.Mcc = globalRicIdConfig.GetString("mcc")
+	c.GlobalRicId.Mnc = globalRicIdConfig.GetString("mnc")
 }
 
 func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
@@ -133,13 +133,13 @@ func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
 		return err
 	}
 
-	err = validateMcc(globalRicIdConfig.GetInt("mcc"))
+	err = validateMcc(globalRicIdConfig.GetString("mcc"))
 
 	if err != nil {
 		return err
 	}
 
-	err = validateMnc(globalRicIdConfig.GetInt("mnc"))
+	err = validateMnc(globalRicIdConfig.GetString("mnc"))
 
 	if err != nil {
 		return err
@@ -149,29 +149,45 @@ func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
 	return nil
 }
 
-func validateMcc(mcc int) error {
+func validateMcc(mcc string) error {
 
-	mccStr := strconv.Itoa(mcc)
+	if len(mcc) == 0{
+		return errors.New("#configuration.validateMcc - mcc is emtpy or missing\n")
+	}
 
-	if len(mccStr) != 3{
+	if len(mcc) != 3{
 		return errors.New("#configuration.validateMcc - mcc is not 3 digits\n")
 	}
 
-	if mcc < 0 {
+	mccInt, err := strconv.Atoi(mcc)
+
+	if err != nil{
+		return errors.New("#configuration.validateMcc - mcc is not a number\n")
+	}
+
+	if mccInt < 0 {
 		return errors.New("#configuration.validateMcc - mcc is negative\n")
 	}
 	return nil
 }
 
-func validateMnc(mnc int) error {
+func validateMnc(mnc string) error {
 
-	mncStr := strconv.Itoa(mnc)
+	if len(mnc) == 0{
+		return errors.New("#configuration.validateMnc - mnc is emtpy or missing\n")
+	}
 
-	if len(mncStr) < 2 || len(mncStr) >3 {
+	if len(mnc) < 2 || len(mnc) >3 {
 		return errors.New("#configuration.validateMnc - mnc is not 2 or 3 digits\n")
 	}
 
-	if mnc < 0 {
+	mncAsInt, err := strconv.Atoi(mnc)
+
+	if err != nil{
+		return errors.New("#configuration.validateMnc - mnc is not a number\n")
+	}
+
+	if mncAsInt < 0 {
 		return errors.New("#configuration.validateMnc - mnc is negative\n")
 	}
 
@@ -181,7 +197,7 @@ func validateMnc(mnc int) error {
 func validateRicId(ricId string) error{
 
 	if len(ricId) == 0{
-		return errors.New("#configuration.validateRicId - ricId is emtpy\n")
+		return errors.New("#configuration.validateRicId - ricId is emtpy or missing\n")
 	}
 
 	if len(ricId) != 5 {
@@ -201,7 +217,7 @@ func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
-		"globalRicId: { ricId: %s, mcc: %d, mnc: %d}",
+		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}",
 		c.Logging.LogLevel,
 		c.Http.Port,
 		c.Rmr.Port,

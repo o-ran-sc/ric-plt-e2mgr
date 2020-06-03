@@ -171,7 +171,7 @@ func (h E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(nodebInfo 
 
 func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName string, req *models.NotificationRequest, setupRequest *models.E2SetupRequestMessage) {
 
-	plmnId := buildPlmnId(strconv.Itoa(h.config.GlobalRicId.Mcc), strconv.Itoa(h.config.GlobalRicId.Mnc))
+	plmnId := buildPlmnId(h.config.GlobalRicId.Mcc, h.config.GlobalRicId.Mnc)
 
 	ricNearRtId, err := convertTo20BitString(h.config.GlobalRicId.RicId)
 	if err != nil {

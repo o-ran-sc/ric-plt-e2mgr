@@ -308,9 +308,9 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	logger := tests.InitLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, GlobalRicId: struct {
 		RicId string
-		Mcc   int
-		Mnc   int
-	}{Mcc: 327, Mnc: 94 ,RicId: "10011001101010101011"}}
+		Mcc   string
+		Mnc   string
+	}{Mcc: "327", Mnc: "94" ,RicId: "10011001101010101011"}}
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := tests.InitRmrSender(rmrMessengerMock, logger)
 	readerMock := &mocks.RnibReaderMock{}
@@ -367,9 +367,9 @@ func initMocks(t *testing.T) (E2SetupRequestNotificationHandler, *mocks.RnibRead
 	logger := tests.InitLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, GlobalRicId: struct {
 		RicId string
-		Mcc   int
-		Mnc   int
-	}{Mcc: 327, Mnc: 94 ,RicId: "AACCE"}}
+		Mcc   string
+		Mnc   string
+	}{Mcc: "327", Mnc: "94" ,RicId: "AACCE"}}
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	rmrSender := tests.InitRmrSender(rmrMessengerMock, logger)
 	readerMock := &mocks.RnibReaderMock{}
