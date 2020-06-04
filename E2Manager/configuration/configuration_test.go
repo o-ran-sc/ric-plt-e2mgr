@@ -41,8 +41,8 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, 15000, config.E2TInstanceDeletionTimeoutMs)
 	assert.NotNil(t, config.GlobalRicId)
 	assert.Equal(t, "AACCE", config.GlobalRicId.RicId)
-	assert.Equal(t, "026", config.GlobalRicId.Mcc)
-	assert.Equal(t, "09", config.GlobalRicId.Mnc)
+	assert.Equal(t, "310", config.GlobalRicId.Mcc)
+	assert.Equal(t, "411", config.GlobalRicId.Mnc)
 }
 
 func TestStringer(t *testing.T) {
@@ -248,7 +248,7 @@ err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
 if err != nil {
 t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
 }
-assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is emtpy or missing\n",
+assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is missing or empty\n",
 func() { ParseConfiguration() })
 }
 
@@ -280,7 +280,7 @@ func TestMissingRicIdFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is emtpy or missing\n",
+	assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is missing or empty\n",
 		func() { ParseConfiguration() })
 }
 
@@ -600,7 +600,7 @@ func TestMissingMmcFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestMissingMmcFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is emtpy or missing\n",
+	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is missing or empty\n",
 		func() { ParseConfiguration() })
 }
 
@@ -633,7 +633,7 @@ func TestEmptyMmcFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestEmptyMmcFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is emtpy or missing\n",
+	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is missing or empty\n",
 		func() { ParseConfiguration() })
 }
 
@@ -665,7 +665,7 @@ func TestEmptyMncFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestEmptyMncFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is emtpy or missing\n",
+	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is missing or empty\n",
 		func() { ParseConfiguration() })
 }
 
@@ -697,6 +697,6 @@ func TestMissingMncFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("#TestMissingMncFailure - failed to write configuration file: %s\n", configPath)
 	}
-	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is emtpy or missing\n",
+	assert.PanicsWithValue(t, "#configuration.validateMnc - mnc is missing or empty\n",
 		func() { ParseConfiguration() })
 }

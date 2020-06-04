@@ -163,6 +163,8 @@ func (h E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(nodebInfo 
 
 	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
 
+	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - payload: %s", responsePayload)
+
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_FAILURE, nodebInfo.RanName, responsePayload, req.TransactionId, req.GetMsgSrc())
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", nodebInfo.RanName, msg)
 	_ = h.rmrSender.WhSend(msg)
@@ -187,6 +189,8 @@ func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName stri
 
 	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
 
+	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - payload: %s", responsePayload)
+
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_RESP, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - RIC_E2_SETUP_RESP message has been built successfully. Message: %x", ranName, msg)
 	_ = h.rmrSender.Send(msg)
@@ -195,16 +199,16 @@ func (h E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName stri
 func buildPlmnId(mmc string, mnc string) string{
 	var b strings.Builder
 
-	b.WriteString(string (mmc[1]))
-	b.WriteString(string (mmc[0]))
+	b.WriteByte(mmc[1])
+	b.WriteByte(mmc[0])
 	if len(mnc) == 2 {
 		b.WriteString("F")
 	} else {
-		b.WriteString(string (mnc[2]))
+		b.WriteByte(mnc[2])
 	}
-	b.WriteString(string (mmc[2]))
-	b.WriteString(string (mnc[1]))
-	b.WriteString(string (mnc[0]))
+	b.WriteByte(mmc[2])
+	b.WriteByte(mnc[1])
+	b.WriteByte(mnc[0])
 
 	return b.String()
 }

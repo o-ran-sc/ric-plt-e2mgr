@@ -16,5 +16,5 @@ keepAliveDelayMs: 1500
 e2tInstanceDeletionTimeoutMs: 15000
 globalRicId:
   ricId: "AACCE"
-  mcc: "026"
-  mnc: "09"
+  mcc: "310"
+  mnc: "411"

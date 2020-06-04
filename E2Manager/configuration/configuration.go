@@ -152,7 +152,7 @@ func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
 func validateMcc(mcc string) error {
 
 	if len(mcc) == 0{
-		return errors.New("#configuration.validateMcc - mcc is emtpy or missing\n")
+		return errors.New("#configuration.validateMcc - mcc is missing or empty\n")
 	}
 
 	if len(mcc) != 3{
@@ -174,7 +174,7 @@ func validateMcc(mcc string) error {
 func validateMnc(mnc string) error {
 
 	if len(mnc) == 0{
-		return errors.New("#configuration.validateMnc - mnc is emtpy or missing\n")
+		return errors.New("#configuration.validateMnc - mnc is missing or empty\n")
 	}
 
 	if len(mnc) < 2 || len(mnc) >3 {
@@ -197,7 +197,7 @@ func validateMnc(mnc string) error {
 func validateRicId(ricId string) error{
 
 	if len(ricId) == 0{
-		return errors.New("#configuration.validateRicId - ricId is emtpy or missing\n")
+		return errors.New("#configuration.validateRicId - ricId is missing or empty\n")
 	}
 
 	if len(ricId) != 5 {
