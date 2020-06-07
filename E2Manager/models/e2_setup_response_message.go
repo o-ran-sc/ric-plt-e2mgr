@@ -69,14 +69,22 @@ var timeToWaitMap = map[TimeToWait]interface{}{
 
 func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2SetupRequestMessage) E2SetupResponseMessage {
 	outcome := SuccessfulOutcome{}
-	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, 2)
 	outcome.ProcedureCode = "1"
+
+	e2SetupRequestIes := request.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+
+	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs = make([]E2setupResponseIEs, len(e2SetupRequestIes))
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].ID = "4"
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[0].Value = GlobalRICID{GlobalRICID: struct {
 		Text         string `xml:",chardata"`
 		PLMNIdentity string `xml:"pLMN-Identity"`
 		RicID        string `xml:"ric-ID"`
 	}{PLMNIdentity: plmnId, RicID: ricId}}
+
+	if len(e2SetupRequestIes) < 2 {
+		return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
+	}
+
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].ID = "9"
 	outcome.Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs[1].Value = RANfunctionsIDList{RANfunctionsIDList: struct {
 		Text                      string                      `xml:",chardata"`
