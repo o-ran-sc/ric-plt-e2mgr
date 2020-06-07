@@ -38,6 +38,8 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
+const ResetRequesLogInfoElapsedTime = "#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms"
+
 type X2ResetRequestNotificationHandler struct {
 	logger                 *logger.Logger
 	rnibDataService        services.RNibDataService
@@ -61,7 +63,7 @@ func (h X2ResetRequestNotificationHandler) Handle(request *models.NotificationRe
 	nb, rNibErr := h.rnibDataService.GetNodeb(request.RanName)
 	if rNibErr != nil {
 		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - failed to retrieve nodeB entity. RanName: %s. Error: %s", request.RanName, rNibErr.Error())
-		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		h.logger.Infof(ResetRequesLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 		return
 	}
 
@@ -69,19 +71,19 @@ func (h X2ResetRequestNotificationHandler) Handle(request *models.NotificationRe
 
 	if nb.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Warnf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		h.logger.Infof(ResetRequesLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	if nb.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
 		h.logger.Errorf("#X2ResetRequestNotificationHandler.Handle - nodeB entity in incorrect state. RanName %s, ConnectionStatus %s", nb.RanName, nb.ConnectionStatus)
-		h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		h.logger.Infof(ResetRequesLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	msg := models.NewRmrMessage(rmrCgo.RIC_X2_RESET_RESP, request.RanName, e2pdus.PackedX2ResetResponse, request.TransactionId, request.GetMsgSrc())
 
 	_ = h.rmrSender.Send(msg)
-	h.logger.Infof("#X2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+	h.logger.Infof(ResetRequesLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 	_ = h.ranStatusChangeManager.Execute(rmrCgo.RAN_RESTARTED, enums.RAN_TO_RIC, nb)
 }
