@@ -36,6 +36,8 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
+const ResetResponseLogInfoElapsedTime = "#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms"
+
 type X2ResetResponseHandler struct {
 	logger                 *logger.Logger
 	rnibDataService        services.RNibDataService
@@ -64,19 +66,19 @@ func (h X2ResetResponseHandler) Handle(request *models.NotificationRequest) {
 
 	if nodebInfo.ConnectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Warnf("#X2ResetResponseHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", nodebInfo.RanName, nodebInfo.ConnectionStatus)
-		h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		h.logger.Infof(ResetResponseLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	if nodebInfo.ConnectionStatus != entities.ConnectionStatus_CONNECTED {
 		h.logger.Errorf("#X2ResetResponseHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", nodebInfo.RanName, nodebInfo.ConnectionStatus)
-		h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+		h.logger.Infof(ResetResponseLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 		return
 	}
 
 	isSuccessfulResetResponse, err := h.isSuccessfulResetResponse(ranName, request.Payload)
 
-	h.logger.Infof("#X2ResetResponseHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms", utils.ElapsedTime(request.StartTime))
+	h.logger.Infof(ResetResponseLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
 
 	if err != nil || !isSuccessfulResetResponse {
 		return

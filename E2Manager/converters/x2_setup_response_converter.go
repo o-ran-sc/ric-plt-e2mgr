@@ -44,6 +44,8 @@ const (
 	maxnoofNeighbours                = 512
 )
 
+const Format = "%02x:%02x"
+
 type X2SetupResponseConverter struct {
 	logger *logger.Logger
 }
@@ -293,7 +295,7 @@ func getServedCellsNeighbour_Info(neighbour_Information *C.Neighbour_Information
 			//pLMN_Identity:eUTRANcellIdentifier
 			plmnId := C.GoBytes(unsafe.Pointer(member.eCGI.pLMN_Identity.buf), C.int(member.eCGI.pLMN_Identity.size))
 			eUTRANcellIdentifier := C.GoBytes(unsafe.Pointer(member.eCGI.eUTRANcellIdentifier.buf), C.int(member.eCGI.eUTRANcellIdentifier.size))
-			neighbourInfo := &entities.NeighbourInformation{Ecgi: fmt.Sprintf("%02x:%02x", plmnId, eUTRANcellIdentifier)}
+			neighbourInfo := &entities.NeighbourInformation{Ecgi: fmt.Sprintf(Format, plmnId, eUTRANcellIdentifier)}
 
 			neighbourInfo.Pci = uint32(member.pCI)
 
@@ -334,7 +336,7 @@ func getServedCells(servedCellsIE *C.ServedCells_t) ([]*entities.ServedCellInfo,
 			//pLMN_Identity:eUTRANcellIdentifier
 			plmnId := C.GoBytes(unsafe.Pointer(member.servedCellInfo.cellId.pLMN_Identity.buf), C.int(member.servedCellInfo.cellId.pLMN_Identity.size))
 			eUTRANcellIdentifier := C.GoBytes(unsafe.Pointer(member.servedCellInfo.cellId.eUTRANcellIdentifier.buf), C.int(member.servedCellInfo.cellId.eUTRANcellIdentifier.size))
-			servedCellInfo.CellId = fmt.Sprintf("%02x:%02x", plmnId, eUTRANcellIdentifier)
+			servedCellInfo.CellId = fmt.Sprintf(Format, plmnId, eUTRANcellIdentifier)
 
 			servedCellInfo.Tac = fmt.Sprintf("%02x", C.GoBytes(unsafe.Pointer(member.servedCellInfo.tAC.buf), C.int(member.servedCellInfo.tAC.size)))
 
@@ -388,7 +390,7 @@ func getGUGroupIDList(guGroupIDList *C.GUGroupIDList_t) []string {
 		for _, guGroupID := range guGroupIDList_slice {
 			plmnId := C.GoBytes(unsafe.Pointer(guGroupID.pLMN_Identity.buf), C.int(guGroupID.pLMN_Identity.size))
 			mME_Group_ID := C.GoBytes(unsafe.Pointer(guGroupID.mME_Group_ID.buf), C.int(guGroupID.mME_Group_ID.size))
-			ids = append(ids, fmt.Sprintf("%02x:%02x", plmnId, mME_Group_ID))
+			ids = append(ids, fmt.Sprintf(Format, plmnId, mME_Group_ID))
 		}
 	}
 
