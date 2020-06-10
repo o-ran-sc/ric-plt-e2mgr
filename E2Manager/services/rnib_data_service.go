@@ -49,6 +49,7 @@ type RNibDataService interface {
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
+	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
 }
 
 type rNibDataService struct {
@@ -267,6 +268,21 @@ func (w *rNibDataService) RemoveE2TInstance(e2tAddress string) error {
 	})
 
 	return err
+}
+
+func (w *rNibDataService) GetGeneralConfiguration() (*entities.GeneralConfiguration, error) {
+	var generalConfiguration *entities.GeneralConfiguration = nil
+
+	err := w.retry("GetGeneralConfiguration", func() (err error) {
+		generalConfiguration, err = w.rnibReader.GetGeneralConfiguration()
+		return
+	})
+
+	if err == nil {
+		w.logger.Infof("#RnibDataService.GetGeneralConfiguration - enableRic: %t", generalConfiguration.EnableRic)
+	}
+
+	return generalConfiguration, err
 }
 
 func (w *rNibDataService) PingRnib() bool {
