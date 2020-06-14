@@ -20,7 +20,7 @@ Release-Notes
 =============
 
 
-This document provides the release notes for the Amber release of E2Manager
+This document provides the release notes for the Bronze release of E2Manager
 
 .. contents::
    :depth: 3
