@@ -40,10 +40,21 @@ Version history
 | 2019-12-02         | 2.0.10             | Shuky Har-Noy      | Amber Release      |
 |                    |                    |                    |                    |
 +--------------------+--------------------+--------------------+--------------------+
+| 2020-06-14         | 4.4.12             | Shuky Har-Noy      | Bronze Release     |
+|                    |                    |                    |                    |
++--------------------+--------------------+--------------------+--------------------+
+
+
 
 
 Summary
 -------
+The Bronze release of E2Manager supports the following flows:
+    - E2 Setup From RAN to RIC
+
+X2 flows are not supported anymore
+
+
 The Amber release of E2Manager supports the following flows:
 	- ENDC Setup
 	- X2 Setup
@@ -55,6 +66,24 @@ The Amber release of E2Manager supports the following flows:
 
 Release Data
 ------------
+
++--------------------------------------+--------------------------------------+
+| **Project**                          | RAN Intelligent Controller  	      |
+|                                      |                                      |
++--------------------------------------+--------------------------------------+
+| **Repo/commit-ID**                   | ric-plt/e2mgr                        |
+|                                      |                                      |
++--------------------------------------+--------------------------------------+
+| **Release designation**              | Bronze                               |
+|                                      |                                      |
++--------------------------------------+--------------------------------------+
+| **Release date**                     | 2020-06-14                           |
+|                                      |                                      |
++--------------------------------------+--------------------------------------+
+| **Purpose of the delivery**          | open-source E2Manager      	      |
+|                                      |                                      |
++--------------------------------------+--------------------------------------+
+
 
 +--------------------------------------+--------------------------------------+
 | **Project**                          | RAN Intelligent Controller  	      |
