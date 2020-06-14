@@ -45,6 +45,7 @@ type RNibWriter interface {
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
+	UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error
 }
 
 /*
@@ -312,6 +313,26 @@ func (w *rNibWriterInstance) RemoveE2TInstance(address string) error {
 	if err != nil {
 		return common.NewInternalError(err)
 	}
+	return nil
+}
+
+/*
+UpdateNodebConnectivityState...
+*/
+func (w *rNibWriterInstance) UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error {
+
+	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
+
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.SetAndPublish([]string{stateChangeMessageChannel, event}, pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
 	return nil
 }
 

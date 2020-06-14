@@ -92,3 +92,7 @@ func (rnibWriterMock *RnibWriterMock) RemoveServedNrCells(inventoryName string, 
 	return args.Error(0)
 }
 
+func (rnibWriterMock *RnibWriterMock) UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error {
+	args := rnibWriterMock.Called(nodebInfo, stateChangeMessageChannel, event)
+	return args.Error(0)
+}

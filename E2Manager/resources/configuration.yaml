@@ -18,3 +18,4 @@ globalRicId:
   ricId: "AACCE"
   mcc: "310"
   mnc: "411"
+stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE

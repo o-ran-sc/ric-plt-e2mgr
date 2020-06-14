@@ -743,6 +743,83 @@ func TestRemoveE2TInstanceEmptyAddressFailure(t *testing.T) {
 	sdlInstanceMock.AssertExpectations(t)
 }
 
+func TestUpdateNodebConnectivityStateSuccess(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+ 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestUpdateNodebConnectivityStateSuccess - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebConnectivityState(nodebInfo, channelName, eventName)
+	assert.Nil(t, rNibErr)
+}
+
+func TestUpdateNodebConnectivityStateMissingInventoryNameFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := &entities.NodebInfo{}
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestUpdateNodebConnectivityStateMissingInventoryNameFailure - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebConnectivityState(nodebInfo, channelName, eventName)
+
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+}
+
+func TestUpdateNodebConnectivityStateMissingGlobalNbId(t *testing.T) {
+	inventoryName := "name"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := &entities.NodebInfo{}
+	nodebInfo.RanName = inventoryName
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	setExpected = append(setExpected, nodebNameKey, data)
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebConnectivityState(nodebInfo, channelName, eventName)
+
+	assert.Nil(t, rNibErr)
+}
+
 //Integration tests
 //
 //func TestSaveEnbGnbInteg(t *testing.T){

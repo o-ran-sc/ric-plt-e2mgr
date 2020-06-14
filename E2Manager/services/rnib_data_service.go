@@ -50,23 +50,26 @@ type RNibDataService interface {
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
+	UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error
 }
 
 type rNibDataService struct {
-	logger        *logger.Logger
-	rnibReader    reader.RNibReader
-	rnibWriter    rNibWriter.RNibWriter
-	maxAttempts   int
-	retryInterval time.Duration
+	logger                    *logger.Logger
+	rnibReader                reader.RNibReader
+	rnibWriter                rNibWriter.RNibWriter
+	maxAttempts               int
+	retryInterval             time.Duration
+	stateChangeMessageChannel string
 }
 
 func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
 	return &rNibDataService{
-		logger:        logger,
-		rnibReader:    rnibReader,
-		rnibWriter:    rnibWriter,
-		maxAttempts:   config.MaxRnibConnectionAttempts,
-		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		logger:                    logger,
+		rnibReader:                rnibReader,
+		rnibWriter:                rnibWriter,
+		maxAttempts:               config.MaxRnibConnectionAttempts,
+		retryInterval:             time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		stateChangeMessageChannel: config.StateChangeMessageChannel,
 	}
 }
 
@@ -292,6 +295,17 @@ func (w *rNibDataService) PingRnib() bool {
 	})
 
 	return !isRnibConnectionError(err)
+}
+
+func (w *rNibDataService) UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error {
+	w.logger.Infof("#RnibDataService.UpdateNodebConnectivityState - nodebInfo: %s", nodebInfo)
+
+	err := w.retry("UpdateNodebConnectivityState", func() (err error) {
+		err = w.rnibWriter.UpdateNodebConnectivityState(nodebInfo, w.stateChangeMessageChannel, event)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {

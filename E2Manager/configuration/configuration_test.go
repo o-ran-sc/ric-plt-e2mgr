@@ -43,6 +43,7 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, "AACCE", config.GlobalRicId.RicId)
 	assert.Equal(t, "310", config.GlobalRicId.Mcc)
 	assert.Equal(t, "411", config.GlobalRicId.Mnc)
+	assert.Equal(t, "RAN_CONNECTION_STATUS_CHANGE", config.StateChangeMessageChannel)
 }
 
 func TestStringer(t *testing.T) {

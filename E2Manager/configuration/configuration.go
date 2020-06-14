@@ -53,6 +53,7 @@ type Configuration struct {
 		Mcc   string
 		Mnc   string
 	}
+	StateChangeMessageChannel string
 }
 
 func ParseConfiguration() *Configuration {
@@ -80,6 +81,7 @@ func ParseConfiguration() *Configuration {
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
 	config.populateGlobalRicIdConfig(viper.Sub("globalRicId"))
+	config.StateChangeMessageChannel = viper.GetString("stateChangeMessageChannel")
 	return &config
 }
 
@@ -217,7 +219,7 @@ func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
-		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}",
+		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}, StateChangeMessageChannel: %s",
 		c.Logging.LogLevel,
 		c.Http.Port,
 		c.Rmr.Port,
@@ -233,5 +235,6 @@ func (c *Configuration) String() string {
 		c.GlobalRicId.RicId,
 		c.GlobalRicId.Mcc,
 		c.GlobalRicId.Mnc,
+		c.StateChangeMessageChannel,
 	)
 }
