@@ -93,12 +93,13 @@ func NewE2SetupSuccessResponseMessage(plmnId string, ricId string, request *E2Se
 	return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
 }
 
-func NewE2SetupFailureResponseMessage(timeToWait TimeToWait) E2SetupResponseMessage {
+func NewE2SetupFailureResponseMessage(timeToWait TimeToWait, cause Cause) E2SetupResponseMessage {
 	outcome := UnsuccessfulOutcome{}
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs = make([]E2setupFailureIEs, 2)
 	outcome.ProcedureCode = "1"
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[0].ID = "1"
-	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[0].Value.Value = Cause{}
+
+	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[0].Value.Value = cause
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[1].ID = "31"
 	outcome.Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs[1].Value.Value = timeToWaitMap[timeToWait]
 	return E2SetupResponseMessage{E2APPDU: E2APPDU{Outcome: outcome}}
@@ -211,15 +212,6 @@ type E2setupFailureIEs struct {
 		Text  string `xml:",chardata"`
 		Value interface{}
 	} `xml:"value"`
-}
-
-type Cause struct {
-	XMLName   xml.Name `xml:"Cause"`
-	Text      string   `xml:",chardata"`
-	Transport struct {
-		Text                         string `xml:",chardata"`
-		TransportResourceUnavailable string `xml:"transport-resource-unavailable"`
-	} `xml:"transport"`
 }
 
 func extractRanFunctionsIDList(request *E2SetupRequestMessage) []ProtocolIESingleContainer {

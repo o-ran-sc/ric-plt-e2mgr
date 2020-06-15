@@ -32,8 +32,6 @@ Library     REST        ${url}
 Suite Teardown  Start RoutingManager Simulator
 
 
-
-
 *** Test Cases ***
 Stop Routing manager simulator and restarting simulator
     Stop RoutingManager Simulator
@@ -60,8 +58,3 @@ Get request gnb
 E2M Logs - Verify RMR Message
     ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${Setup_failure_message_type}    ${None}
     Should Be Equal As Strings    ${result}      True
-
-
-
-
-

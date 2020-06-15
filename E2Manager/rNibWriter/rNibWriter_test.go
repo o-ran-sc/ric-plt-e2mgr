@@ -564,13 +564,12 @@ func TestSaveNilEntityFailure(t *testing.T) {
 
 func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	w, _ := initSdlInstanceMock(namespace)
-	expectedErr := common.NewValidationError("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656")
 	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nb := &entities.NodebInfo{}
 	nb.Port = 5656
 	nb.Ip = "localhost"
 	actualErr := w.SaveNodeb(nbIdentity, nb)
-	assert.Equal(t, expectedErr, actualErr)
+	assert.IsType(t, &common.ValidationError{}, actualErr)
 }
 
 func TestSaveEntityFailure(t *testing.T) {

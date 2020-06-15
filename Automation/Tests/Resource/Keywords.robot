@@ -126,3 +126,7 @@ Restart simulator with less docker
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
 
+Flush And Populate DB
+    ${flush}  cleanup_db.flush
+    Sleep  2s
+
