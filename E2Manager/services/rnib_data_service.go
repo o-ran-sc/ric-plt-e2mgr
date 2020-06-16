@@ -50,7 +50,7 @@ type RNibDataService interface {
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
-	UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error
+	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error
 }
 
 type rNibDataService struct {
@@ -297,11 +297,11 @@ func (w *rNibDataService) PingRnib() bool {
 	return !isRnibConnectionError(err)
 }
 
-func (w *rNibDataService) UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error {
-	w.logger.Infof("#RnibDataService.UpdateNodebConnectivityState - nodebInfo: %s", nodebInfo)
+func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - nodebInfo: %s", nodebInfo)
 
-	err := w.retry("UpdateNodebConnectivityState", func() (err error) {
-		err = w.rnibWriter.UpdateNodebConnectivityState(nodebInfo, w.stateChangeMessageChannel, event)
+	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
+		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.stateChangeMessageChannel, event)
 		return
 	})
 

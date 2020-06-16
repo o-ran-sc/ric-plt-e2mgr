@@ -259,27 +259,27 @@ func TestPingRnibOkOtherError(t *testing.T) {
 	assert.True(t, res)
 }
 
-func TestSuccessfulUpdateNodebConnectivityState(t *testing.T) {
+func TestSuccessfulUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
 	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
 	event := "event"
 
 	nodebInfo := &entities.NodebInfo{}
-	writerMock.On("UpdateNodebConnectivityState", nodebInfo, CHANNEL_NAME, event).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, CHANNEL_NAME, event).Return(nil)
 
-	rnibDataService.UpdateNodebConnectivityState(nodebInfo, event)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebConnectivityState", 1)
+	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 1)
 }
 
-func TestConnFailureUpdateNodebConnectivityState(t *testing.T) {
+func TestConnFailureUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
 	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
 	event := "event"
 
 	nodebInfo := &entities.NodebInfo{}
 	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
-	writerMock.On("UpdateNodebConnectivityState", nodebInfo, CHANNEL_NAME, event).Return(mockErr)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, CHANNEL_NAME, event).Return(mockErr)
 
-	rnibDataService.UpdateNodebConnectivityState(nodebInfo, event)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebConnectivityState", 3)
+	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 3)
 }
 
 //func TestConnFailureThenSuccessGetNodebIdList(t *testing.T) {

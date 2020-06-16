@@ -62,7 +62,7 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 			return err
 		}
 	} else {
-		err := m.updateNodebConnectivityState(nodebInfo, event)
+		err := m.updateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 		if err != nil {
 			return err
 		}
@@ -88,16 +88,16 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 	return nil
 }
 
-func (m *RanConnectStatusChangeManager) updateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error {
+func (m *RanConnectStatusChangeManager) updateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
 
-	err := m.rnibDataService.UpdateNodebConnectivityState(nodebInfo, event)
+	err := m.rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 
 	if err != nil {
-		m.logger.Errorf("#RanConnectStatusChangeManager.updateNodebConnectivityState - RAN name: %s - Failed updating RAN's connection status in rNib. Error: %v", nodebInfo.RanName, err)
+		m.logger.Errorf("#RanConnectStatusChangeManager.updateNodebInfoOnConnectionStatusInversion - RAN name: %s - Failed updating RAN's connection status in rNib. Error: %v", nodebInfo.RanName, err)
 		return err
 	}
 
-	m.logger.Infof("#RanConnectStatusChangeManager.updateNodebConnectivityState - RAN name: %s - Successfully updated rNib.", nodebInfo.RanName)
+	m.logger.Infof("#RanConnectStatusChangeManager.updateNodebInfoOnConnectionStatusInversion - RAN name: %s - Successfully updated rNib.", nodebInfo.RanName)
 	return nil
 }
 
