@@ -17,42 +17,28 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package tests
+package managers
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"strconv"
+	"e2mgr/logger"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
-const (
-	MaxMsgSize  int    = 4096
-	Port        int    = 3801
-	Flags       int    = 0
-	MessageType int    = 1001
-	RanPort     uint16 = 879
-	RanName     string = "test"
-	RanIp       string = "10.0.0.3"
-)
-
-var (
-	DummyPayload = []byte{1, 2, 3, 4}
-	DummyXAction = []byte{5, 6, 7, 8}
-)
-
-func GetPort() string {
-	return "tcp:" + strconv.Itoa(Port)
+type ranListManagerInstance struct {
+	logger *logger.Logger
 }
 
-func GetHttpRequest() *http.Request {
-	data := map[string]interface{}{
-		"ranIp":   RanIp,
-		"ranPort": RanPort,
-		"ranName": RanName,
+type RanListManager interface {
+	UpdateRanState(nodebInfo *entities.NodebInfo) error
+}
+
+func NewRanListManager(logger *logger.Logger) RanListManager {
+	return &ranListManagerInstance{
+		logger: logger,
 	}
-	b := new(bytes.Buffer)
-	_ = json.NewEncoder(b).Encode(data)
-	req, _ := http.NewRequest("POST", "https://localhost:3800/request", b)
-	return req
+}
+
+func (m *ranListManagerInstance) UpdateRanState(nodebInfo *entities.NodebInfo) error {
+	m.logger.Infof("#ranListManagerInstance.UpdateRanState - RAN name: %s - Updating state...", nodebInfo.RanName)
+	return nil
 }

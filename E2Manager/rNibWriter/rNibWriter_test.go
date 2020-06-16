@@ -564,13 +564,12 @@ func TestSaveNilEntityFailure(t *testing.T) {
 
 func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	w, _ := initSdlInstanceMock(namespace)
-	expectedErr := common.NewValidationError("#rNibWriter.saveNodeB - Unknown responding node type, entity: ip:\"localhost\" port:5656 ")
 	nbIdentity := &entities.NbIdentity{InventoryName: "name", GlobalNbId: &entities.GlobalNbId{PlmnId: "02f829", NbId: "4a952a0a"}}
 	nb := &entities.NodebInfo{}
 	nb.Port = 5656
 	nb.Ip = "localhost"
 	actualErr := w.SaveNodeb(nbIdentity, nb)
-	assert.Equal(t, expectedErr, actualErr)
+	assert.IsType(t, &common.ValidationError{}, actualErr)
 }
 
 func TestSaveEntityFailure(t *testing.T) {
@@ -743,6 +742,114 @@ func TestRemoveE2TInstanceEmptyAddressFailure(t *testing.T) {
 	sdlInstanceMock.AssertExpectations(t)
 }
 
+func TestUpdateNodebInfoOnConnectionStatusInversionSuccess(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+ 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestUpdateNodebInfoOnConnectionStatusInversionSuccess - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+	assert.Nil(t, rNibErr)
+}
+
+func TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := &entities.NodebInfo{}
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+}
+
+func TestUpdateNodebInfoOnConnectionStatusInversionMissingGlobalNbId(t *testing.T) {
+	inventoryName := "name"
+	channelName := "RAN_CONNECT_STATE_CHANGE"
+	eventName := inventoryName + "_" + "CONNECTED"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := &entities.NodebInfo{}
+	nodebInfo.RanName = inventoryName
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	setExpected = append(setExpected, nodebNameKey, data)
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+
+	assert.Nil(t, rNibErr)
+}
+
+func TestSaveGeneralConfiguration(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	key := common.BuildGeneralConfigurationKey()
+	configurationData := "{\"enableRic\":true}"
+	configuration := &entities.GeneralConfiguration{}
+	configuration.EnableRic = true
+
+	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(nil)
+	rNibErr := w.SaveGeneralConfiguration(configuration)
+
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestSaveGeneralConfigurationDbError(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	key := common.BuildGeneralConfigurationKey()
+	configurationData := "{\"enableRic\":true}"
+	configuration := &entities.GeneralConfiguration{}
+	configuration.EnableRic = true
+
+	expectedErr := errors.New("expected error")
+
+	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(expectedErr)
+	rNibErr := w.SaveGeneralConfiguration(configuration)
+
+	assert.NotNil(t, rNibErr)
+}
+
 //Integration tests
 //
 //func TestSaveEnbGnbInteg(t *testing.T){
@@ -762,7 +869,7 @@ func TestRemoveE2TInstanceEmptyAddressFailure(t *testing.T) {
 //		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
 //		plmnId := 0x02f828
 //		nbId := 0x4a952a0a
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
+//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{RicId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
 //		err := w.SaveNodeb(nbIdentity, &nb)
 //		if err != nil{
 //			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
@@ -779,7 +886,7 @@ func TestRemoveE2TInstanceEmptyAddressFailure(t *testing.T) {
 //		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
 //		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
 //		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
-//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{PlmnId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
+//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{RicId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
 //		err = w.SaveNodeb(nbIdentity, &nb1)
 //		if err != nil{
 //			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)

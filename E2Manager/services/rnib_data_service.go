@@ -49,23 +49,28 @@ type RNibDataService interface {
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
+	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
+	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error
+	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
 }
 
 type rNibDataService struct {
-	logger        *logger.Logger
-	rnibReader    reader.RNibReader
-	rnibWriter    rNibWriter.RNibWriter
-	maxAttempts   int
-	retryInterval time.Duration
+	logger                    *logger.Logger
+	rnibReader                reader.RNibReader
+	rnibWriter                rNibWriter.RNibWriter
+	maxAttempts               int
+	retryInterval             time.Duration
+	stateChangeMessageChannel string
 }
 
 func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
 	return &rNibDataService{
-		logger:        logger,
-		rnibReader:    rnibReader,
-		rnibWriter:    rnibWriter,
-		maxAttempts:   config.MaxRnibConnectionAttempts,
-		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		logger:                    logger,
+		rnibReader:                rnibReader,
+		rnibWriter:                rnibWriter,
+		maxAttempts:               config.MaxRnibConnectionAttempts,
+		retryInterval:             time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		stateChangeMessageChannel: config.StateChangeMessageChannel,
 	}
 }
 
@@ -269,6 +274,32 @@ func (w *rNibDataService) RemoveE2TInstance(e2tAddress string) error {
 	return err
 }
 
+func (w *rNibDataService) GetGeneralConfiguration() (*entities.GeneralConfiguration, error) {
+	var generalConfiguration *entities.GeneralConfiguration = nil
+
+	err := w.retry("GetGeneralConfiguration", func() (err error) {
+		generalConfiguration, err = w.rnibReader.GetGeneralConfiguration()
+		return
+	})
+
+	if err == nil {
+		w.logger.Infof("#RnibDataService.GetGeneralConfiguration - enableRic: %t", generalConfiguration.EnableRic)
+	}
+
+	return generalConfiguration, err
+}
+
+func (w *rNibDataService) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
+	w.logger.Infof("#RnibDataService.SaveGeneralConfiguration - configuration: %+v", *config)
+
+	err := w.retry("SaveGeneralConfiguration", func() (err error) {
+		err = w.rnibWriter.SaveGeneralConfiguration(config)
+		return
+	})
+
+	return err
+}
+
 func (w *rNibDataService) PingRnib() bool {
 	err := w.retry("GetListNodebIds", func() (err error) {
 		_, err = w.rnibReader.GetListNodebIds()
@@ -276,6 +307,17 @@ func (w *rNibDataService) PingRnib() bool {
 	})
 
 	return !isRnibConnectionError(err)
+}
+
+func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - nodebInfo: %s", nodebInfo)
+
+	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
+		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.stateChangeMessageChannel, event)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) retry(rnibFunc string, f func() error) (err error) {

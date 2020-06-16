@@ -33,6 +33,8 @@ import (
 	"testing"
 )
 
+const CHANNEL_NAME = "channel"
+
 func setupRnibDataServiceTest(t *testing.T) (*rNibDataService, *mocks.RnibReaderMock, *mocks.RnibWriterMock) {
 	return setupRnibDataServiceTestWithMaxAttempts(t, 3)
 }
@@ -43,7 +45,7 @@ func setupRnibDataServiceTestWithMaxAttempts(t *testing.T, maxAttempts int) (*rN
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
 
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: maxAttempts}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: maxAttempts, StateChangeMessageChannel: CHANNEL_NAME}
 
 	readerMock := &mocks.RnibReaderMock{}
 
@@ -255,6 +257,29 @@ func TestPingRnibOkOtherError(t *testing.T) {
 	res := rnibDataService.PingRnib()
 	readerMock.AssertNumberOfCalls(t, "GetListNodebIds", 1)
 	assert.True(t, res)
+}
+
+func TestSuccessfulUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
+	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
+	event := "event"
+
+	nodebInfo := &entities.NodebInfo{}
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, CHANNEL_NAME, event).Return(nil)
+
+	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 1)
+}
+
+func TestConnFailureUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
+	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
+	event := "event"
+
+	nodebInfo := &entities.NodebInfo{}
+	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, CHANNEL_NAME, event).Return(mockErr)
+
+	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 3)
 }
 
 //func TestConnFailureThenSuccessGetNodebIdList(t *testing.T) {

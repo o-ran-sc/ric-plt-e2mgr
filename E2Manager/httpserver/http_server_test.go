@@ -39,6 +39,7 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	nodebControllerMock.On("Shutdown").Return(nil)
 	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
+	nodebControllerMock.On("SetGeneralConfiguration").Return(nil)
 
 	e2tControllerMock := &mocks.E2TControllerMock{}
 
@@ -101,6 +102,19 @@ func TestRoutePutNodebShutdown(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	nodebControllerMock.AssertNumberOfCalls(t, "Shutdown", 1)
+}
+
+func TestRoutePutNodebSetGeneralConfiguration(t *testing.T) {
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("PUT", "/v1/nodeb/parameters", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	nodebControllerMock.AssertNumberOfCalls(t, "SetGeneralConfiguration", 1)
 }
 
 func TestRouteNotFound(t *testing.T) {

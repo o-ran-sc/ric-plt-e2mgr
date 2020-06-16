@@ -156,3 +156,8 @@ func (m *RnibReaderMock) GetE2TAddresses() ([]string, error) {
 	args := m.Called()
 	return args.Get(0).([]string), args.Error(1)
 }
+
+func (m *RnibReaderMock) GetGeneralConfiguration() (*entities.GeneralConfiguration, error) {
+	args := m.Called()
+	return args.Get(0).(*entities.GeneralConfiguration), args.Error(1)
+}

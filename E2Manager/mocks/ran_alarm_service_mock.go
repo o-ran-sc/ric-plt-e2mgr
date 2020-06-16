@@ -17,42 +17,19 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package tests
+package mocks
 
 import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"strconv"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/stretchr/testify/mock"
 )
 
-const (
-	MaxMsgSize  int    = 4096
-	Port        int    = 3801
-	Flags       int    = 0
-	MessageType int    = 1001
-	RanPort     uint16 = 879
-	RanName     string = "test"
-	RanIp       string = "10.0.0.3"
-)
-
-var (
-	DummyPayload = []byte{1, 2, 3, 4}
-	DummyXAction = []byte{5, 6, 7, 8}
-)
-
-func GetPort() string {
-	return "tcp:" + strconv.Itoa(Port)
+type RanAlarmServiceMock struct {
+	mock.Mock
 }
 
-func GetHttpRequest() *http.Request {
-	data := map[string]interface{}{
-		"ranIp":   RanIp,
-		"ranPort": RanPort,
-		"ranName": RanName,
-	}
-	b := new(bytes.Buffer)
-	_ = json.NewEncoder(b).Encode(data)
-	req, _ := http.NewRequest("POST", "https://localhost:3800/request", b)
-	return req
+func (m *RanAlarmServiceMock) SetConnectivityChangeAlarm(nodebInfo *entities.NodebInfo) error {
+
+	args := m.Called(nodebInfo)
+	return args.Error(0)
 }

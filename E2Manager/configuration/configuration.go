@@ -20,8 +20,10 @@
 package configuration
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/viper"
+	"strconv"
 )
 
 type Configuration struct {
@@ -38,10 +40,7 @@ type Configuration struct {
 	RoutingManager struct {
 		BaseUrl string
 	}
-/*	Kubernetes struct {
-		ConfigPath string
-		KubeNamespace  string
-	}*/
+
 	NotificationResponseBuffer   int
 	BigRedButtonTimeoutSec       int
 	MaxRnibConnectionAttempts    int
@@ -50,9 +49,11 @@ type Configuration struct {
 	KeepAliveDelayMs             int
 	E2TInstanceDeletionTimeoutMs int
 	GlobalRicId                  struct {
-		PlmnId      string
-		RicNearRtId string
+		RicId string
+		Mcc   string
+		Mnc   string
 	}
+	StateChangeMessageChannel string
 }
 
 func ParseConfiguration() *Configuration {
@@ -72,7 +73,6 @@ func ParseConfiguration() *Configuration {
 	config.populateHttpConfig(viper.Sub("http"))
 	config.populateLoggingConfig(viper.Sub("logging"))
 	config.populateRoutingManagerConfig(viper.Sub("routingManager"))
-	//config.populateKubernetesConfig(viper.Sub("kubernetes"))
 	config.NotificationResponseBuffer = viper.GetInt("notificationResponseBuffer")
 	config.BigRedButtonTimeoutSec = viper.GetInt("bigRedButtonTimeoutSec")
 	config.MaxRnibConnectionAttempts = viper.GetInt("maxRnibConnectionAttempts")
@@ -81,6 +81,7 @@ func ParseConfiguration() *Configuration {
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
 	config.populateGlobalRicIdConfig(viper.Sub("globalRicId"))
+	config.StateChangeMessageChannel = viper.GetString("stateChangeMessageChannel")
 	return &config
 }
 
@@ -113,27 +114,112 @@ func (c *Configuration) populateRoutingManagerConfig(rmConfig *viper.Viper) {
 	c.RoutingManager.BaseUrl = rmConfig.GetString("baseUrl")
 }
 
-/*func (c *Configuration) populateKubernetesConfig(rmConfig *viper.Viper) {
-	if rmConfig == nil {
-		panic(fmt.Sprintf("#configuration.populateKubernetesConfig - failed to populate Kubernetes configuration: The entry 'kubernetes' not found\n"))
-	}
-	c.Kubernetes.ConfigPath = rmConfig.GetString("configPath")
-	c.Kubernetes.KubeNamespace = rmConfig.GetString("kubeNamespace")
-}*/
-
 func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) {
-	if globalRicIdConfig == nil {
-		panic(fmt.Sprintf("#configuration.populateGlobalRicIdConfig - failed to populate Global RicId configuration: The entry 'globalRicId' not found\n"))
+	err := validateGlobalRicIdConfig(globalRicIdConfig)
+	if err != nil {
+		panic(err.Error())
 	}
-	c.GlobalRicId.PlmnId = globalRicIdConfig.GetString("plmnId")
-	c.GlobalRicId.RicNearRtId = globalRicIdConfig.GetString("ricNearRtId")
+	c.GlobalRicId.RicId = globalRicIdConfig.GetString("ricId")
+	c.GlobalRicId.Mcc = globalRicIdConfig.GetString("mcc")
+	c.GlobalRicId.Mnc = globalRicIdConfig.GetString("mnc")
 }
+
+func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
+	if globalRicIdConfig == nil {
+		return errors.New("#configuration.validateGlobalRicIdConfig - failed to populate Global RicId configuration: The entry 'globalRicId' not found\n")
+	}
+
+	err := validateRicId(globalRicIdConfig.GetString("ricId"))
+
+	if err != nil {
+		return err
+	}
+
+	err = validateMcc(globalRicIdConfig.GetString("mcc"))
+
+	if err != nil {
+		return err
+	}
+
+	err = validateMnc(globalRicIdConfig.GetString("mnc"))
+
+	if err != nil {
+		return err
+	}
+
+
+	return nil
+}
+
+func validateMcc(mcc string) error {
+
+	if len(mcc) == 0{
+		return errors.New("#configuration.validateMcc - mcc is missing or empty\n")
+	}
+
+	if len(mcc) != 3{
+		return errors.New("#configuration.validateMcc - mcc is not 3 digits\n")
+	}
+
+	mccInt, err := strconv.Atoi(mcc)
+
+	if err != nil{
+		return errors.New("#configuration.validateMcc - mcc is not a number\n")
+	}
+
+	if mccInt < 0 {
+		return errors.New("#configuration.validateMcc - mcc is negative\n")
+	}
+	return nil
+}
+
+func validateMnc(mnc string) error {
+
+	if len(mnc) == 0{
+		return errors.New("#configuration.validateMnc - mnc is missing or empty\n")
+	}
+
+	if len(mnc) < 2 || len(mnc) >3 {
+		return errors.New("#configuration.validateMnc - mnc is not 2 or 3 digits\n")
+	}
+
+	mncAsInt, err := strconv.Atoi(mnc)
+
+	if err != nil{
+		return errors.New("#configuration.validateMnc - mnc is not a number\n")
+	}
+
+	if mncAsInt < 0 {
+		return errors.New("#configuration.validateMnc - mnc is negative\n")
+	}
+
+	return nil
+}
+
+func validateRicId(ricId string) error{
+
+	if len(ricId) == 0{
+		return errors.New("#configuration.validateRicId - ricId is missing or empty\n")
+	}
+
+	if len(ricId) != 5 {
+		return errors.New("#configuration.validateRicId - ricId length should be 5 hex characters\n")
+	}
+
+	_, err := strconv.ParseUint(ricId, 16, 64)
+	if err != nil {
+		return errors.New("#configuration.validateRicId - ricId is not hex number\n")
+	}
+
+	return nil
+}
+
 
 func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
-		"globalRicId: { plmnId: %s, ricNearRtId: %s}",//, kubernetes: {configPath: %s, kubeNamespace: %s}}",
+		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}, StateChangeMessageChannel: %s",
 		c.Logging.LogLevel,
 		c.Http.Port,
 		c.Rmr.Port,
@@ -146,9 +232,9 @@ func (c *Configuration) String() string {
 		c.KeepAliveResponseTimeoutMs,
 		c.KeepAliveDelayMs,
 		c.E2TInstanceDeletionTimeoutMs,
-		c.GlobalRicId.PlmnId,
-		c.GlobalRicId.RicNearRtId,
-/*		c.Kubernetes.ConfigPath,
-		c.Kubernetes.KubeNamespace,*/
+		c.GlobalRicId.RicId,
+		c.GlobalRicId.Mcc,
+		c.GlobalRicId.Mnc,
+		c.StateChangeMessageChannel,
 	)
 }

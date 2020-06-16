@@ -37,7 +37,7 @@ Get E2T instances
     ${headers}=  Create Dictionary    Accept=application/json
     ${resp}=    Get Request   getE2tInstances     /v1/e2t/list    headers=${headers}
     Should Be Equal As Strings   ${resp.status_code}    200
-    Should Be Equal As Strings    ${resp.content}        [{"e2tAddress":"e2t.att.com:38000","ranNames":["test1","test2","test3"]},{"e2tAddress":"e2t.att.com:38001","ranNames":[]}]
+    Should Be Equal As Strings    ${resp.content}        [{"e2tAddress":"e2t.att.com:38000","ranNames":["test1","test2","test3"]}]
     ${flush}  cleanup_db.flush
 
 

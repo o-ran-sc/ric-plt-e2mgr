@@ -35,6 +35,9 @@ Update Ran request
     Sleep  1s
     PUT    ${update_gnb_url}   ${update_gnb_body}
 
+Set General Configuration request
+    Sleep  1s
+    PUT    ${set_general_configuration}   ${set_general_configuration_body}
 
 Update Ran request not valid
     Sleep  1s
@@ -125,4 +128,8 @@ Restart simulator with less docker
     Run And Return Rc And Output    ${restart_simu}
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+
+Flush And Populate DB
+    ${flush}  cleanup_db.flush
+    Sleep  2s
 

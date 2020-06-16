@@ -32,5 +32,4 @@ ${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNo
 ${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
 ${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
 ${E2_TERM_KEEP_ALIVE_REQ_message_type_successfully_sent}     Message type: 1101 - Successfully sent RMR message
-
-
+${save_general_configuration}      RnibDataService.SaveGeneralConfiguration - configuration: {EnableRic:false}

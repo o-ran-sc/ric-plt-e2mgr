@@ -40,6 +40,8 @@ const (
 	ParamRanName = "ranName"
 	LimitRequest = 2000
 )
+const ApplicationJson = "application/json"
+const ContentType = "Content-Type"
 
 type INodebController interface {
 	Shutdown(writer http.ResponseWriter, r *http.Request)
@@ -49,6 +51,7 @@ type INodebController interface {
 	GetNodeb(writer http.ResponseWriter, r *http.Request)
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
+	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 }
 
 type NodebController struct {
@@ -90,9 +93,20 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	request.Gnb = &gnb;
+	request.Gnb = &gnb
 	request.RanName = ranName
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true)
+}
+
+func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.SetGeneralConfiguration - request: %v", c.prettifyRequest(r))
+
+	request := models.GeneralConfigurationRequest{}
+
+	if !c.extractJsonBody(r, &request, writer){
+		return
+	}
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.SetGeneralConfigurationRequest, request, false)
 }
 
 func (c *NodebController) Shutdown(writer http.ResponseWriter, r *http.Request) {
@@ -210,13 +224,13 @@ func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http
 	}
 
 	c.logger.Infof("[E2 Manager -> Client] #NodebController.handleRequest - response: %s", result)
-	writer.Header().Set("Content-Type", "application/json")
+	writer.Header().Set(ContentType, ApplicationJson)
 	writer.Write(result)
 }
 
 func (c *NodebController) validateRequestHeader(header *http.Header) error {
 
-	if header.Get("Content-Type") != "application/json" {
+	if header.Get(ContentType) != ApplicationJson {
 		c.logger.Errorf("#NodebController.validateRequestHeader - validation failure, incorrect content type")
 
 		return e2managererrors.NewHeaderValidationError()
@@ -281,7 +295,7 @@ func (c *NodebController) handleErrorResponse(err error, writer http.ResponseWri
 
 	c.logger.Errorf("[E2 Manager -> Client] #NodebController.handleErrorResponse - http status: %d, error response: %+v", httpError, errorResponseDetails)
 
-	writer.Header().Set("Content-Type", "application/json")
+	writer.Header().Set(ContentType, ApplicationJson)
 	writer.WriteHeader(httpError)
 	_, err = writer.Write(errorResponse)
 }

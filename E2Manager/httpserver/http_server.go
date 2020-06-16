@@ -49,6 +49,7 @@ func initializeRoutes(router *mux.Router, rootController controllers.IRootContro
 	rr.HandleFunc("/{ranName}", nodebController.GetNodeb).Methods(http.MethodGet)
 	rr.HandleFunc("/{ranName}/update", nodebController.UpdateGnb).Methods(http.MethodPut)
 	rr.HandleFunc("/shutdown", nodebController.Shutdown).Methods(http.MethodPut)
+	rr.HandleFunc("/parameters", nodebController.SetGeneralConfiguration).Methods(http.MethodPut)
 	rrr := r.PathPrefix("/e2t").Subrouter()
 	rrr.HandleFunc("/list", e2tController.GetE2TInstances).Methods(http.MethodGet)
 }
