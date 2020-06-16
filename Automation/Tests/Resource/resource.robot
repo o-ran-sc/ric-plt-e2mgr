@@ -30,6 +30,8 @@ ${docker_number-1}    4
 ${url}   http://localhost:3800
 ${ranName}  gnb_208_092_303030
 ${getNodeb}  /v1/nodeb/${ranName}
+${set_general_configuration}   /v1/nodeb/parameters
+${set_general_configuration_body}   {"enableRic":false}
 ${update_gnb_url}   /v1/nodeb/${ranName}/update
 ${update_gnb_body}  {"servedNrCells":[{"servedNrCellInformation":{"cellId":"abcd","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"one","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
 ${update_gnb_body_notvalid}  {"servedNrCells":[{"servedNrCellInformation":{"choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"whatever","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}

@@ -34,14 +34,15 @@ import (
 type IncomingRequest string
 
 const (
-	ShutdownRequest        IncomingRequest = "Shutdown"
-	ResetRequest           IncomingRequest = "Reset"
-	X2SetupRequest         IncomingRequest = "X2SetupRequest"
-	EndcSetupRequest       IncomingRequest = "EndcSetupRequest"
-	GetNodebRequest        IncomingRequest = "GetNodebRequest"
-	GetNodebIdListRequest  IncomingRequest = "GetNodebIdListRequest"
-	GetE2TInstancesRequest IncomingRequest = "GetE2TInstancesRequest"
-	UpdateGnbRequest       IncomingRequest = "UpdateGnbRequest"
+	SetGeneralConfigurationRequest       IncomingRequest = "SetGeneralConfiguration"
+	ShutdownRequest        				 IncomingRequest = "Shutdown"
+	ResetRequest           				 IncomingRequest = "Reset"
+	X2SetupRequest        				 IncomingRequest = "X2SetupRequest"
+	EndcSetupRequest      				 IncomingRequest = "EndcSetupRequest"
+	GetNodebRequest      				 IncomingRequest = "GetNodebRequest"
+	GetNodebIdListRequest 				 IncomingRequest = "GetNodebIdListRequest"
+	GetE2TInstancesRequest 				 IncomingRequest = "GetE2TInstancesRequest"
+	UpdateGnbRequest     				 IncomingRequest = "UpdateGnbRequest"
 )
 
 type IncomingRequestHandlerProvider struct {
@@ -68,6 +69,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		GetNodebIdListRequest:  httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
 		GetE2TInstancesRequest: httpmsghandlers.NewGetE2TInstancesRequestHandler(logger, e2tInstancesManager),
 		UpdateGnbRequest:       httpmsghandlers.NewUpdateGnbRequestHandler(logger, rNibDataService),
+		SetGeneralConfigurationRequest:       httpmsghandlers.NewSetGeneralConfigurationHandler(logger, rNibDataService),
 	}
 }
 
