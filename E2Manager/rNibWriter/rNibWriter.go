@@ -46,6 +46,7 @@ type RNibWriter interface {
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 	UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error
+	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
 }
 
 /*
@@ -66,6 +67,11 @@ func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrC
 	}
 
 	return nil
+}
+
+func (w *rNibWriterInstance) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
+
+	return w.SaveWithKeyAndMarshal(common.BuildGeneralConfigurationKey(), config)
 }
 
 /*
@@ -313,6 +319,26 @@ func (w *rNibWriterInstance) RemoveE2TInstance(address string) error {
 	if err != nil {
 		return common.NewInternalError(err)
 	}
+	return nil
+}
+
+func (w *rNibWriterInstance) SaveWithKeyAndMarshal(key string, entity interface{}) error {
+
+	data, err := json.Marshal(entity)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	var pairs []interface{}
+	pairs = append(pairs, key, data)
+
+	err = w.sdl.Set(pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
 	return nil
 }
 

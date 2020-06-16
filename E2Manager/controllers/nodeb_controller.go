@@ -51,6 +51,7 @@ type INodebController interface {
 	GetNodeb(writer http.ResponseWriter, r *http.Request)
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
+	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 }
 
 type NodebController struct {
@@ -95,6 +96,17 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	request.Gnb = &gnb;
 	request.RanName = ranName
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true)
+}
+
+func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.SetGeneralConfiguration - request: %v", c.prettifyRequest(r))
+
+	request := models.GeneralConfigurationRequest{}
+
+	if !c.extractJsonBody(r, &request, writer){
+		return
+	}
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.SetGeneralConfigurationRequest, request, false)
 }
 
 func (c *NodebController) Shutdown(writer http.ResponseWriter, r *http.Request) {

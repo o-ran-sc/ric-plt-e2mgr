@@ -78,6 +78,18 @@ func TestShutdownRequestHandler(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestSetGeneralConfigurationHandler(t *testing.T) {
+	provider := setupTest(t)
+	handler, err := provider.GetHandler(SetGeneralConfigurationRequest)
+
+	assert.NotNil(t, provider)
+	assert.Nil(t, err)
+
+	_, ok := handler.(*httpmsghandlers.SetGeneralConfigurationHandler)
+
+	assert.True(t, ok)
+}
+
 func TestX2SetupRequestHandler(t *testing.T) {
 	provider := setupTest(t)
 	handler, err := provider.GetHandler(X2SetupRequest)

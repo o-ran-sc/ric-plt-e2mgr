@@ -51,6 +51,7 @@ type RNibDataService interface {
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
 	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
 	UpdateNodebConnectivityState(nodebInfo *entities.NodebInfo, event string) error
+	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
 }
 
 type rNibDataService struct {
@@ -286,6 +287,17 @@ func (w *rNibDataService) GetGeneralConfiguration() (*entities.GeneralConfigurat
 	}
 
 	return generalConfiguration, err
+}
+
+func (w *rNibDataService) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
+	w.logger.Infof("#RnibDataService.SaveGeneralConfiguration - configuration: %+v", *config)
+
+	err := w.retry("SaveGeneralConfiguration", func() (err error) {
+		err = w.rnibWriter.SaveGeneralConfiguration(config)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) PingRnib() bool {
