@@ -819,6 +819,37 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingGlobalNbId(t *testing.
 	assert.Nil(t, rNibErr)
 }
 
+func TestSaveGeneralConfiguration(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	key := common.BuildGeneralConfigurationKey()
+	configurationData := "{\"enableRic\":true}"
+	configuration := &entities.GeneralConfiguration{}
+	configuration.EnableRic = true
+
+	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(nil)
+	rNibErr := w.SaveGeneralConfiguration(configuration)
+
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestSaveGeneralConfigurationDbError(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	key := common.BuildGeneralConfigurationKey()
+	configurationData := "{\"enableRic\":true}"
+	configuration := &entities.GeneralConfiguration{}
+	configuration.EnableRic = true
+
+	expectedErr := errors.New("expected error")
+
+	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(expectedErr)
+	rNibErr := w.SaveGeneralConfiguration(configuration)
+
+	assert.NotNil(t, rNibErr)
+}
+
 //Integration tests
 //
 //func TestSaveEnbGnbInteg(t *testing.T){

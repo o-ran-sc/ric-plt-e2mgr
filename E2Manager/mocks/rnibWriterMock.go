@@ -94,5 +94,12 @@ func (rnibWriterMock *RnibWriterMock) RemoveServedNrCells(inventoryName string, 
 
 func (rnibWriterMock *RnibWriterMock) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error {
 	args := rnibWriterMock.Called(nodebInfo, stateChangeMessageChannel, event)
+
+	return args.Error(0)
+}
+
+func (rnibWriterMock *RnibWriterMock) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
+	args := rnibWriterMock.Called(config)
+
 	return args.Error(0)
 }

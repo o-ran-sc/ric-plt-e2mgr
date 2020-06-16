@@ -81,3 +81,10 @@ func (c *NodebControllerMock) UpdateGnb(writer http.ResponseWriter, r *http.Requ
 
 	c.Called()
 }
+
+func (c *NodebControllerMock) SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	c.Called()
+}

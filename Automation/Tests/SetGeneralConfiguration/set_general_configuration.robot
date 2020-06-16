@@ -18,40 +18,31 @@
 #
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
-#
+
+
 
 *** Settings ***
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
-Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/cleanup_db.py
-Library     ../Scripts/e2t_db_script.py
+Library     REST        ${url}
+
+
+
 
 *** Test Cases ***
-
-Test New E2T Send Init
-    Stop E2
-    ${result}=    cleanup_db.flush
-    Should Be Equal As Strings  ${result}    True
-    Start E2
 
 prepare logs for tests
     Remove log files
     Save logs
 
-E2M Logs - Verify RMR Message
-    ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${E2_INIT_message_type}    ${None}
-    Should Be Equal As Strings    ${result}      True
+Set General Configuration
+    Sleep  2s
+    Set General Configuration request
+    Integer  response status  200
+    String   response body enableRic    false
 
-Verify E2T keys in DB
-    ${result}=    e2t_db_script.verify_e2t_addresses_key
-    Should Be Equal As Strings  ${result}    True
-
-    ${result}=    e2t_db_script.verify_e2t_instance_key
-    Should Be Equal As Strings  ${result}    True
-
-
-
+Verify e2mgr logs - Third retry to retrieve from db
+   ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}   ${save_general_configuration}
+   Should Be Equal As Strings    ${result}      True

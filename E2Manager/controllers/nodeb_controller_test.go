@@ -277,6 +277,39 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 	assert.Equal(t, errorResponse.Code, e2managererrors.NewRnibDbError().Code)
 }
 
+func TestSetGeneralConfigurationHandlerRnibError(t *testing.T) {
+	controller, readerMock, _, _, _ := setupControllerTest(t)
+
+	configuration := &entities.GeneralConfiguration{}
+	readerMock.On("GetGeneralConfiguration").Return(configuration, e2managererrors.NewRnibDbError())
+
+	writer := httptest.NewRecorder()
+
+	httpRequest, _ := http.NewRequest("PUT", "https://localhost:3800/v1/nodeb/parameters", strings.NewReader("{\"enableRic\":false}"))
+
+	controller.SetGeneralConfiguration(writer, httpRequest)
+
+	var errorResponse = parseJsonRequest(t, writer.Body)
+
+	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
+	assert.Equal(t, e2managererrors.NewRnibDbError().Code, errorResponse.Code)
+}
+
+func TestSetGeneralConfigurationInvalidJson(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+
+	writer := httptest.NewRecorder()
+
+	httpRequest, _ := http.NewRequest("PUT", "https://localhost:3800/v1/nodeb/parameters", strings.NewReader("{}{}"))
+
+	controller.SetGeneralConfiguration(writer, httpRequest)
+
+	var errorResponse = parseJsonRequest(t, writer.Body)
+
+	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
+	assert.Equal(t, e2managererrors.NewInvalidJsonError().Code, errorResponse.Code)
+}
+
 func controllerGetNodebTestExecuter(t *testing.T, context *controllerGetNodebTestContext) {
 	controller, readerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
