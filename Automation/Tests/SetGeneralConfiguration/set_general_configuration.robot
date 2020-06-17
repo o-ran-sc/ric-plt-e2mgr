@@ -23,8 +23,10 @@
 
 *** Settings ***
 Suite Setup   Prepare Enviorment
+Resource   ../Resource/scripts_variables.robot
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library     REST        ${url}
 
@@ -33,16 +35,16 @@ Library     REST        ${url}
 
 *** Test Cases ***
 
-prepare logs for tests
-    Remove log files
-    Save logs
-
 Set General Configuration
     Sleep  2s
     Set General Configuration request
     Integer  response status  200
-    String   response body enableRic    false
+    Boolean  response body enableRic    false
 
-Verify e2mgr logs - Third retry to retrieve from db
-   ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}   ${save_general_configuration}
+prepare logs for tests
+    Remove log files
+    Save logs
+
+Verify e2mgr logs - Save General Configuration
+  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${save_general_configuration}
    Should Be Equal As Strings    ${result}      True
