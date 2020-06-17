@@ -28,18 +28,20 @@ import (
 )
 
 type E2TAssociationManager struct {
-	logger             *logger.Logger
-	rnibDataService    services.RNibDataService
-	e2tInstanceManager IE2TInstancesManager
-	rmClient           clients.IRoutingManagerClient
+	logger                        *logger.Logger
+	rnibDataService               services.RNibDataService
+	e2tInstanceManager            IE2TInstancesManager
+	rmClient                      clients.IRoutingManagerClient
+	ranConnectStatusChangeManager IRanConnectStatusChangeManager
 }
 
-func NewE2TAssociationManager(logger *logger.Logger, rnibDataService services.RNibDataService, e2tInstanceManager IE2TInstancesManager, rmClient clients.IRoutingManagerClient) *E2TAssociationManager {
+func NewE2TAssociationManager(logger *logger.Logger, rnibDataService services.RNibDataService, e2tInstanceManager IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager IRanConnectStatusChangeManager) *E2TAssociationManager {
 	return &E2TAssociationManager{
-		logger:             logger,
-		rnibDataService:    rnibDataService,
-		e2tInstanceManager: e2tInstanceManager,
-		rmClient:           rmClient,
+		logger:                        logger,
+		rnibDataService:               rnibDataService,
+		e2tInstanceManager:            e2tInstanceManager,
+		rmClient:                      rmClient,
+		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
@@ -64,23 +66,27 @@ func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entit
 func (m *E2TAssociationManager) associateRanAndUpdateNodeb(e2tAddress string, nodebInfo *entities.NodebInfo) error {
 
 	rmErr := m.rmClient.AssociateRanToE2TInstance(e2tAddress, nodebInfo.RanName)
+
 	if rmErr != nil {
-		nodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	} else {
-		nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-		nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
+		_ =  m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
+		return e2managererrors.NewRoutingManagerError()
 	}
-	rNibErr := m.rnibDataService.UpdateNodebInfo(nodebInfo)
-	if rNibErr != nil {
-		m.logger.Errorf("#E2TAssociationManager.associateRanAndUpdateNodeb - RAN name: %s - Failed to update nodeb entity in rNib. Error: %s", nodebInfo.RanName, rNibErr)
+
+	rnibErr := m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
+
+	if rnibErr != nil {
+		return e2managererrors.NewRnibDbError()
 	}
-	var err error
-	if rmErr != nil {
-		err = e2managererrors.NewRoutingManagerError()
-	} else if rNibErr != nil{
-		err = e2managererrors.NewRnibDbError()
+
+	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
+	rnibErr = m.rnibDataService.UpdateNodebInfo(nodebInfo)
+
+	if rnibErr != nil {
+		m.logger.Errorf("#E2TAssociationManager.associateRanAndUpdateNodeb - RAN name: %s - Failed updating nodeb. Error: %s", nodebInfo.RanName, rnibErr)
+		return e2managererrors.NewRnibDbError()
 	}
-	return err
+
+	return nil
 }
 
 func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string) error {

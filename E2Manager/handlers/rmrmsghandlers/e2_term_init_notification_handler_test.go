@@ -62,7 +62,11 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
-	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock)
+
+	ranListManager := &mocks.RanListManagerMock{}
+	ranAlarmService := &mocks.RanAlarmServiceMock{}
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)
 
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManagerMock, routingManagerClientMock)
@@ -84,7 +88,10 @@ func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
-	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
+	ranListManager := managers.NewRanListManager(logger)
+	ranAlarmService := services.NewRanAlarmService(logger, config)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManager, routingManagerClient)
 	return logger, config, handler, readerMock, writerMock, httpClientMock

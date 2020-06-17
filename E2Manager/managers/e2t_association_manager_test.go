@@ -40,7 +40,7 @@ const RanName = "test"
 
 func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	log := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -49,9 +49,11 @@ func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks
 	e2tInstancesManager := NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	manager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
-
-	return manager, readerMock, writerMock, httpClientMock
+	ranListManager := NewRanListManager(log)
+	ranAlarmService := services.NewRanAlarmService(log, config)
+	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	e2tAssociationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
+	return e2tAssociationManager, readerMock, writerMock, httpClientMock
 }
 
 func mockHttpClient(httpClientMock *mocks.HttpClientMock, apiSuffix string, isSuccessful bool) {
@@ -73,9 +75,12 @@ func TestAssociateRanSuccess(t *testing.T) {
 	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	updatedNb := *nb
-	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	updatedNb2 := *nb
+	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
+	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(nil)
 	e2tInstance := &entities.E2TInstance{Address: E2TAddress}
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
 	updatedE2tInstance := *e2tInstance
@@ -108,10 +113,14 @@ func TestAssociateRanUpdateNodebError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
+
 	updatedNb := *nb
-	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNb).Return(e2managererrors.NewRnibDbError())
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	updatedNb2 := *nb
+	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
+	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(e2managererrors.NewRnibDbError())
 
 	err := manager.AssociateRan(E2TAddress, nb)
 
@@ -126,10 +135,15 @@ func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
+
 	updatedNb := *nb
-	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+
+	updatedNb2 := *nb
+	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
+	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(nil)
 	var e2tInstance *entities.E2TInstance
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, errors.New("test"))
 
@@ -146,10 +160,15 @@ func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
 	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
+
 	updatedNb := *nb
-	updatedNb.AssociatedE2TInstanceAddress = E2TAddress
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNb).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+
+	updatedNb2 := *nb
+	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
+	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(nil)
 	e2tInstance := &entities.E2TInstance{Address: E2TAddress}
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
 	updatedE2tInstance := *e2tInstance

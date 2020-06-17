@@ -44,22 +44,24 @@ var (
 )
 
 type E2SetupRequestNotificationHandler struct {
-	logger                *logger.Logger
-	config                *configuration.Configuration
-	e2tInstancesManager   managers.IE2TInstancesManager
-	rmrSender             *rmrsender.RmrSender
-	rNibDataService       services.RNibDataService
-	e2tAssociationManager *managers.E2TAssociationManager
+	logger                        *logger.Logger
+	config                        *configuration.Configuration
+	e2tInstancesManager           managers.IE2TInstancesManager
+	rmrSender                     *rmrsender.RmrSender
+	rNibDataService               services.RNibDataService
+	e2tAssociationManager         *managers.E2TAssociationManager
+	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
 }
 
-func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager) *E2SetupRequestNotificationHandler {
+func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) *E2SetupRequestNotificationHandler {
 	return &E2SetupRequestNotificationHandler{
-		logger:                logger,
-		config:                config,
-		e2tInstancesManager:   e2tInstancesManager,
-		rmrSender:             rmrSender,
-		rNibDataService:       rNibDataService,
-		e2tAssociationManager: e2tAssociationManager,
+		logger:                        logger,
+		config:                        config,
+		e2tInstancesManager:           e2tInstancesManager,
+		rmrSender:                     rmrSender,
+		rNibDataService:               rNibDataService,
+		e2tAssociationManager:         e2tAssociationManager,
+		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
@@ -148,17 +150,21 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 		return nil, err
 	}
 
+	err = h.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return nodebInfo, nil
 }
 
-func (h *E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
+func (h *E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) {
 	ranFunctions := setupRequest.ExtractRanFunctionsList()
 
 	if ranFunctions != nil {
 		nodebInfo.GetGnb().RanFunctions = ranFunctions
 	}
-
-	return nil
 }
 
 func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
@@ -167,8 +173,9 @@ func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, no
 		return errors.New("nodeB entity in incorrect state")
 	}
 
-	err := h.setGnbFunctions(nodebInfo, setupRequest)
-	return err
+	h.setGnbFunctions(nodebInfo, setupRequest)
+
+	return h.rNibDataService.UpdateNodebInfo(nodebInfo)
 }
 
 func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName string, req *models.NotificationRequest, cause models.Cause) {
@@ -283,30 +290,29 @@ func normalizeXml(payload []byte) []byte {
 	return []byte(normalized)
 }
 
-func (h E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
+func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
 
 	var err error
 	nodebInfo := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tAddress,
-		ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
 		RanName:                      ranName,
 		NodeType:                     entities.Node_GNB,
 		Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
 		GlobalNbId:                   h.buildGlobalNbId(request),
 	}
 
-	err = h.setGnbFunctions(nodebInfo, request)
+	h.setGnbFunctions(nodebInfo, request)
 	return nodebInfo, err
 }
 
-func (h E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.E2SetupRequestMessage) *entities.GlobalNbId {
+func (h *E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.E2SetupRequestMessage) *entities.GlobalNbId {
 	return &entities.GlobalNbId{
 		PlmnId: setupRequest.GetPlmnId(),
 		NbId:   setupRequest.GetNbId(),
 	}
 }
 
-func (h E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setupRequest *models.E2SetupRequestMessage) *entities.NbIdentity {
+func (h *E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setupRequest *models.E2SetupRequestMessage) *entities.NbIdentity {
 	return &entities.NbIdentity{
 		InventoryName: ranName,
 		GlobalNbId:    h.buildGlobalNbId(setupRequest),

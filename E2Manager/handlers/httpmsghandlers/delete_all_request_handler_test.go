@@ -42,6 +42,9 @@ import (
 	"testing"
 )
 
+const E2TAddress = "10.0.2.15:8989"
+const BaseRMUrl = "http://10.10.2.15:12020/routingmanager"
+
 func setupDeleteAllRequestHandlerTest(t *testing.T) (*DeleteAllRequestHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.HttpClientMock) {
 	log := initLog(t)
 	config := configuration.ParseConfiguration()

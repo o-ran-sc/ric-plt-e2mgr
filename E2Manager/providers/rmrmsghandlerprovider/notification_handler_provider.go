@@ -57,7 +57,10 @@ func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrms
 	provider.notificationHandlers[msgType] = handler
 }
 
-func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient, e2tAssociationManager *managers.E2TAssociationManager) {
+func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration,
+	rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager,
+	e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient,
+	e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) {
 
 	// Init converters
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -88,7 +91,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetRequestNotificationHandler := rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)
 	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)
 	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
-	e2SetupRequestNotificationHandler := rmrmsghandlers.NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManager, rmrSender, rnibDataService, e2tAssociationManager)
+	e2SetupRequestNotificationHandler := rmrmsghandlers.NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManager, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
 	provider.Register(rmrCgo.RIC_X2_SETUP_FAILURE, x2SetupFailureResponseHandler)

@@ -359,7 +359,9 @@ func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInf
 		return err
 	}
 
-	err = w.sdl.SetAndPublish([]string{stateChangeMessageChannel, event}, pairs)
+	//TODO: Handle "Redis deployment doesn't support MSETMPUB command" when executing SetAndPublish
+	//err = w.sdl.SetAndPublish([]string{stateChangeMessageChannel, event}, pairs)
+	err = w.sdl.Set(pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)

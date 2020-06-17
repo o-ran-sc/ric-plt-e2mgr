@@ -55,7 +55,11 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 	e2tInstancesManager := NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
+
+	ranListManager := NewRanListManager(log)
+	ranAlarmService := services.NewRanAlarmService(log, config)
+	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
 	//kubernetesManager := initKubernetesManagerTest(t)
 
 	/*shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, kubernetesManager)

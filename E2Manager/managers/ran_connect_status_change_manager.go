@@ -31,6 +31,10 @@ const (
 	NONE_RAW_EVENT         = "NONE"
 )
 
+type IRanConnectStatusChangeManager interface {
+	ChangeStatus(nodebInfo *entities.NodebInfo, nextStatus entities.ConnectionStatus) error
+}
+
 type RanConnectStatusChangeManager struct {
 	logger          *logger.Logger
 	rnibDataService services.RNibDataService

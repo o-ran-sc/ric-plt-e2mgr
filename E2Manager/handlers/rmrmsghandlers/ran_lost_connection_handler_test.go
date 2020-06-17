@@ -70,7 +70,11 @@ func setupLostConnectionHandlerTestWithRealDisconnectionManager(t *testing.T, is
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	httpClientMock := &mocks.HttpClientMock{}
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClientMock)
-	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient)
+	ranListManager := managers.NewRanListManager(logger)
+	ranAlarmService := services.NewRanAlarmService(logger, config)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+
+	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
 	handler := NewRanLostConnectionHandler(logger, ranDisconnectionManager)
 

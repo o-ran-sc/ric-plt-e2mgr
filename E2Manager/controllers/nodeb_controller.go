@@ -46,8 +46,6 @@ const ContentType = "Content-Type"
 type INodebController interface {
 	Shutdown(writer http.ResponseWriter, r *http.Request)
 	X2Reset(writer http.ResponseWriter, r *http.Request)
-	X2Setup(writer http.ResponseWriter, r *http.Request)
-	EndcSetup(writer http.ResponseWriter, r *http.Request)
 	GetNodeb(writer http.ResponseWriter, r *http.Request)
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
@@ -125,30 +123,6 @@ func (c *NodebController) X2Reset(writer http.ResponseWriter, r *http.Request) {
 	}
 	request.RanName = ranName
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ResetRequest, request, false)
-}
-
-func (c *NodebController) X2Setup(writer http.ResponseWriter, r *http.Request) {
-	c.logger.Infof("[Client -> E2 Manager] #NodebController.X2Setup - request: %v", c.prettifyRequest(r))
-
-	request := models.SetupRequest{}
-
-	if !c.extractJsonBody(r, &request, writer) {
-		return
-	}
-
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.X2SetupRequest, request, true)
-}
-
-func (c *NodebController) EndcSetup(writer http.ResponseWriter, r *http.Request) {
-	c.logger.Infof("[Client -> E2 Manager] #NodebController.EndcSetup - request: %v", c.prettifyRequest(r))
-
-	request := models.SetupRequest{}
-
-	if !c.extractJsonBody(r, &request, writer) {
-		return
-	}
-
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.EndcSetupRequest, request, true)
 }
 
 func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message , writer http.ResponseWriter) bool {

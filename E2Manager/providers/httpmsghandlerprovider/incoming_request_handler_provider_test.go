@@ -56,7 +56,10 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient)
+	ranListManager := managers.NewRanListManager(log)
+	ranAlarmService := services.NewRanAlarmService(log, config)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
 	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
 }
 
@@ -86,30 +89,6 @@ func TestSetGeneralConfigurationHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, ok := handler.(*httpmsghandlers.SetGeneralConfigurationHandler)
-
-	assert.True(t, ok)
-}
-
-func TestX2SetupRequestHandler(t *testing.T) {
-	provider := setupTest(t)
-	handler, err := provider.GetHandler(X2SetupRequest)
-
-	assert.NotNil(t, provider)
-	assert.Nil(t, err)
-
-	_, ok := handler.(*httpmsghandlers.SetupRequestHandler)
-
-	assert.True(t, ok)
-}
-
-func TestEndcSetupRequestHandler(t *testing.T) {
-	provider := setupTest(t)
-	handler, err := provider.GetHandler(EndcSetupRequest)
-
-	assert.NotNil(t, provider)
-	assert.Nil(t, err)
-
-	_, ok := handler.(*httpmsghandlers.SetupRequestHandler)
 
 	assert.True(t, ok)
 }
