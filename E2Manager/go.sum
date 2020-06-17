@@ -1,16 +1,10 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.42 h1:k3Qpj1BiBPgu+HnMJl3TAi6MlcNwxgij3nY8Kw4NYW0=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.42/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.43 h1:6ZTWb5cAXLEEz8aOs1AiwhBHNhvWogL/9csVjJWkPWQ=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.43/go.mod h1:QJ1uPPZosGbhxUWpUpeM5fLqFHdnWTrVnvW2DgyOCes=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.42 h1:EPdPmvU3iXgB4b91lNN8wl+WSpXCLi7gDm4yJTOrl/o=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.42/go.mod h1:YaQ+XEI4PcAoISxp9wUpUr2TP0J7JihpQTD0G1Lpd4A=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.43 h1:wUuNSKXzHrFwkuUQkBd4kxmrhvORjqQUmKLvUdyQmZU=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.43/go.mod h1:YaQ+XEI4PcAoISxp9wUpUr2TP0J7JihpQTD0G1Lpd4A=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.42 h1:PyAnsgqXVV3w+1utUrtvh1KfxuVMCYvUXGYOFarChto=
-gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.42/go.mod h1:K0P3Xh2NXHCwdIDY47IxeElCBVZdT4KqapPBpS7g3JU=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.43 h1:Uhp/SPVK1CByoT6v+qAg4zD6EkaBFf/tc1iyHCdAMao=
 gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.43/go.mod h1:aky9q0dXRlIT1wb63/fOL0/kH4AH6Evs/8FH2tYO1kM=
 gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2 h1:UK7awyRKIkVdokWvvkYvazlg3EWIfMnIqCcJxTnLlDA=
@@ -33,8 +27,6 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf h1:qet1QNfXsQxTZqLG4oE62mJzwPIB8+Tee4RNCL9ulrY=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
-github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a h1:idn718Q4B6AGu/h5Sxe66HYVdqdGu2l9Iebqhi/AEoA=
-github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
@@ -67,8 +59,6 @@ github.com/go-openapi/jsonpointer v0.0.0-20160704185906-46af16f9f7b1/go.mod h1:+
 github.com/go-openapi/jsonreference v0.0.0-20160704190145-13c6e3589ad9/go.mod h1:W3Z9FmVs9qj+KR4zFKmDPGiLdk1D9Rlm7cyMvf57TTg=
 github.com/go-openapi/spec v0.0.0-20160808142527-6aced65f8501/go.mod h1:J8+jY1nAiCcj+friV/PDoE1/3eeccG9LYBs0tYvLOWc=
 github.com/go-openapi/swag v0.0.0-20160704191624-1d0bd113de87/go.mod h1:DXUve3Dpr1UfpPtxFw+EFuQ41HhCWZfha5jSVRG7C7I=
-github.com/go-ozzo/ozzo-validation v3.5.0+incompatible h1:sUy/in/P6askYr16XJgTKq/0SZhiWsdg4WZGaLsGQkM=
-github.com/go-ozzo/ozzo-validation v3.5.0+incompatible/go.mod h1:gsEKFIVnabGBt6mXmxK0MoFy+cZoTJY6mu5Ll3LVLBU=
 github.com/go-redis/redis v6.15.3+incompatible h1:NZ0O90AhLSvSrvLZ/S9h7D4kl1mW2PrKyxL7MyBKO2g=
 github.com/go-redis/redis v6.15.3+incompatible/go.mod h1:W2YCLaZryXHirdd9QqwkiVUxCQsrx8SbLq9Uqk7JS7A=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
