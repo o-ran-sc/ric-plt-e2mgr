@@ -223,7 +223,7 @@ func TestSetGeneralConfigurationInvalidJson(t *testing.T) {
 
 	writer := httptest.NewRecorder()
 
-	httpRequest, _ := http.NewRequest("PUT", "https://localhost:3800/v1/nodeb/parameters", strings.NewReader("{}{}"))
+	httpRequest, _ := http.NewRequest("PUT", "https://localhost:3800/v1/nodeb/parameters", strings.NewReader("{\"enableRic\":false, \"someValue\":false}"))
 
 	controller.SetGeneralConfiguration(writer, httpRequest)
 

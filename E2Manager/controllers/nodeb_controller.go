@@ -101,7 +101,7 @@ func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r 
 
 	request := models.GeneralConfigurationRequest{}
 
-	if !c.extractJsonBody(r, &request, writer){
+	if !c.extractJsonBodyDisallowUnknownFields(r, &request, writer){
 		return
 	}
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.SetGeneralConfigurationRequest, request, false)
@@ -131,6 +131,21 @@ func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Me
 	err := jsonpb.Unmarshal(r.Body, pb)
 
 	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.extractJsonBody - unable to extract json body - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return false
+	}
+
+	return true
+}
+
+func (c *NodebController) extractJsonBodyDisallowUnknownFields(r *http.Request, request models.Request, writer http.ResponseWriter) bool {
+	defer r.Body.Close()
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&request); err != nil {
 		c.logger.Errorf("[Client -> E2 Manager] #NodebController.extractJsonBody - unable to extract json body - error: %s", err)
 		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
 		return false
