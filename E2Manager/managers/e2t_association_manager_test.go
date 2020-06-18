@@ -36,11 +36,14 @@ import (
 	"testing"
 )
 
-const RanName = "test"
+const (
+	RanName                   = "test"
+	StateChangeMessageChannel = "RAN_CONNECTION_STATUS_CHANGE"
+)
 
 func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	log := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, StateChangeMessageChannel: StateChangeMessageChannel}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -51,7 +54,7 @@ func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	ranListManager := NewRanListManager(log)
 	ranAlarmService := services.NewRanAlarmService(log, config)
-	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
 	return e2tAssociationManager, readerMock, writerMock, httpClientMock
 }
@@ -76,7 +79,7 @@ func TestAssociateRanSuccess(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
 	updatedNb2 := *nb
 	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -116,7 +119,7 @@ func TestAssociateRanUpdateNodebError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
 	updatedNb2 := *nb
 	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -138,7 +141,7 @@ func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
 
 	updatedNb2 := *nb
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -163,7 +166,7 @@ func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, "RAN_CONNECTION_STATUS_CHANGE", RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
 
 	updatedNb2 := *nb
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -316,7 +319,7 @@ func TestRemoveE2tInstanceSuccessWithOrphans(t *testing.T) {
 	e2tAddressesNew := []string{}
 	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
 
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:ranNamesToBeDissociated}
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: ranNamesToBeDissociated}
 	err := manager.RemoveE2tInstance(e2tInstance1)
 
 	assert.Nil(t, err)
@@ -337,7 +340,7 @@ func TestRemoveE2tInstanceFailureRoutingManager(t *testing.T) {
 	e2tAddressesNew := []string{}
 	writerMock.On("SaveE2TAddresses", e2tAddressesNew).Return(nil)
 
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:[]string{"test1"}}
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{"test1"}}
 	//readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance1, e2managererrors.NewRnibDbError())
 	err := manager.RemoveE2tInstance(e2tInstance1)
 
@@ -357,7 +360,7 @@ func TestRemoveE2tInstanceFailureInE2TInstanceManager(t *testing.T) {
 	var e2tAddresses []string
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, e2managererrors.NewRnibDbError())
 
-	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList:[]string{"test1"}}
+	e2tInstance1 := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{"test1"}}
 	err := manager.RemoveE2tInstance(e2tInstance1)
 
 	assert.NotNil(t, err)
