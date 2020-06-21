@@ -76,6 +76,8 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		return
 	}
 
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - got general configuration from rnib - enableRic: %t", generalConfiguration.EnableRic)
+
 	if !generalConfiguration.EnableRic {
 		cause := models.Cause{Misc: &models.CauseMisc{OmIntervention: &struct{}{}}}
 		h.handleUnsuccessfulResponse(ranName, request, cause)

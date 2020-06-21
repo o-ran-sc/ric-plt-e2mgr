@@ -34,22 +34,24 @@ type IE2TShutdownManager interface {
 }
 
 type E2TShutdownManager struct {
-	logger                *logger.Logger
-	config                *configuration.Configuration
-	rnibDataService       services.RNibDataService
-	e2TInstancesManager   IE2TInstancesManager
-	e2tAssociationManager *E2TAssociationManager
-	kubernetesManager     *KubernetesManager
+	logger                        *logger.Logger
+	config                        *configuration.Configuration
+	rnibDataService               services.RNibDataService
+	e2TInstancesManager           IE2TInstancesManager
+	e2tAssociationManager         *E2TAssociationManager
+	kubernetesManager             *KubernetesManager
+	ranConnectStatusChangeManager IRanConnectStatusChangeManager
 }
 
-func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager, kubernetes *KubernetesManager) *E2TShutdownManager {
+func NewE2TShutdownManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2TInstancesManager IE2TInstancesManager, e2tAssociationManager *E2TAssociationManager, kubernetes *KubernetesManager, ranConnectStatusChangeManager IRanConnectStatusChangeManager) *E2TShutdownManager {
 	return &E2TShutdownManager{
-		logger:                logger,
-		config:                config,
-		rnibDataService:       rnibDataService,
-		e2TInstancesManager:   e2TInstancesManager,
-		e2tAssociationManager: e2tAssociationManager,
-		kubernetesManager:     kubernetes,
+		logger:                        logger,
+		config:                        config,
+		rnibDataService:               rnibDataService,
+		e2TInstancesManager:           e2TInstancesManager,
+		e2tAssociationManager:         e2tAssociationManager,
+		kubernetesManager:             kubernetes,
+		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
@@ -97,12 +99,16 @@ func (m E2TShutdownManager) clearNodebsAssociation(ranNamesToBeDissociated []str
 			}
 			return err
 		}
-		nodeb.AssociatedE2TInstanceAddress = ""
-		nodeb.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 
+		err = m.ranConnectStatusChangeManager.ChangeStatus(nodeb, entities.ConnectionStatus_DISCONNECTED)
+		if err != nil {
+			return err
+		}
+
+		nodeb.AssociatedE2TInstanceAddress = ""
 		err = m.rnibDataService.UpdateNodebInfo(nodeb)
 		if err != nil {
-			m.logger.Errorf("#E2TShutdownManager.associateAndSetupNodebs - Failed to save nodeb %s from db.", ranName)
+			m.logger.Errorf("#E2TShutdownManager.clearNodebsAssociation - Failed to save nodeb %s to db.", ranName)
 			return err
 		}
 	}

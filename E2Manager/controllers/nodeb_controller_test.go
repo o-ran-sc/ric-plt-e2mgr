@@ -181,7 +181,7 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 
 	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient, ranConnectStatusChangeManager)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
 }

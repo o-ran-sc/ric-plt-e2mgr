@@ -60,7 +60,7 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient, ranConnectStatusChangeManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

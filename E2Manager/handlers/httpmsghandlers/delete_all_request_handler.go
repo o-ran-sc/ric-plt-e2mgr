@@ -36,24 +36,26 @@ import (
 )
 
 type DeleteAllRequestHandler struct {
-	rnibDataService     services.RNibDataService
-	rmrSender           *rmrsender.RmrSender
-	config              *configuration.Configuration
-	logger              *logger.Logger
-	e2tInstancesManager managers.IE2TInstancesManager
-	rmClient            clients.IRoutingManagerClient
+	rnibDataService               services.RNibDataService
+	rmrSender                     *rmrsender.RmrSender
+	config                        *configuration.Configuration
+	logger                        *logger.Logger
+	e2tInstancesManager           managers.IE2TInstancesManager
+	rmClient                      clients.IRoutingManagerClient
+	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
 }
 
 const PartialSuccessDueToRmErrorMessage = "Operation succeeded except for routing manager outbound call"
 
-func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient) *DeleteAllRequestHandler {
+func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) *DeleteAllRequestHandler {
 	return &DeleteAllRequestHandler{
-		logger:              logger,
-		rnibDataService:     rnibDataService,
-		rmrSender:           rmrSender,
-		config:              config,
-		e2tInstancesManager: e2tInstancesManager,
-		rmClient:            rmClient,
+		logger:                        logger,
+		rnibDataService:               rnibDataService,
+		rmrSender:                     rmrSender,
+		config:                        config,
+		e2tInstancesManager:           e2tInstancesManager,
+		rmClient:                      rmClient,
+		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
@@ -195,7 +197,7 @@ func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebIn
 		return nil, false
 	}
 
-	err :=  h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, false)
+	err := h.updateNodebInfo(node, entities.ConnectionStatus_SHUT_DOWN, false)
 
 	if err != nil {
 		return err, false
@@ -205,19 +207,21 @@ func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebIn
 }
 
 func (h *DeleteAllRequestHandler) updateNodebInfo(node *entities.NodebInfo, connectionStatus entities.ConnectionStatus, resetAssociatedE2TAddress bool) error {
-	node.ConnectionStatus = connectionStatus
 
-	if resetAssociatedE2TAddress {
-		node.AssociatedE2TInstanceAddress = ""
-	}
-
-	err := h.rnibDataService.UpdateNodebInfo(node)
-
+	err := h.ranConnectStatusChangeManager.ChangeStatus(node, connectionStatus)
 	if err != nil {
-		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s - failed updating nodeB entity in rNib. error: %s", node.RanName, err)
 		return e2managererrors.NewRnibDbError()
 	}
 
+	if resetAssociatedE2TAddress {
+		node.AssociatedE2TInstanceAddress = ""
+
+		err = h.rnibDataService.UpdateNodebInfo(node)
+		if err != nil {
+			h.logger.Errorf("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s - failed updating nodeB entity in rNib. error: %s", node.RanName, err)
+			return e2managererrors.NewRnibDbError()
+		}
+	}
 	h.logger.Infof("#DeleteAllRequestHandler.updateNodebInfo - RAN name: %s, connection status: %s", node.RanName, connectionStatus)
 	return nil
 

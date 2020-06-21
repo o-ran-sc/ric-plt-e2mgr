@@ -282,16 +282,10 @@ func (w *rNibDataService) GetGeneralConfiguration() (*entities.GeneralConfigurat
 		return
 	})
 
-	if err == nil {
-		w.logger.Infof("#RnibDataService.GetGeneralConfiguration - enableRic: %t", generalConfiguration.EnableRic)
-	}
-
 	return generalConfiguration, err
 }
 
 func (w *rNibDataService) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
-	w.logger.Infof("#RnibDataService.SaveGeneralConfiguration - configuration: %+v", *config)
-
 	err := w.retry("SaveGeneralConfiguration", func() (err error) {
 		err = w.rnibWriter.SaveGeneralConfiguration(config)
 		return

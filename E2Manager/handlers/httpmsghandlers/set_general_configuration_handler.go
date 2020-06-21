@@ -51,9 +51,14 @@ func (h *SetGeneralConfigurationHandler) Handle(request models.Request) (models.
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
+	h.logger.Infof("#SetGeneralConfigurationHandler.Handle - got general configuration from rnib - enableRic: %t", existingConfig.EnableRic)
+
 	if existingConfig.EnableRic != configuration.EnableRic {
 
 		existingConfig.EnableRic = configuration.EnableRic
+
+		h.logger.Infof("#SetGeneralConfigurationHandler.Handle - save general configuration to rnib: %+v", *existingConfig)
+
 		err := h.rnibDataService.SaveGeneralConfiguration(existingConfig)
 
 		if err != nil {
