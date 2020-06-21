@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rmrmsghandlers
 
 import (
@@ -83,7 +82,7 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 		return
 	}
 
-	if e2tInstance.State == entities.ToBeDeleted{
+	if e2tInstance.State == entities.ToBeDeleted {
 		h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T Address: %s - E2T instance status is: %s, ignore", e2tInstance.Address, e2tInstance.State)
 		return
 	}
@@ -98,7 +97,7 @@ func (h E2TermInitNotificationHandler) HandleExistingE2TInstance(e2tInstance *en
 	for _, ranName := range e2tInstance.AssociatedRanList {
 
 		if err := h.ranDisconnectionManager.DisconnectRan(ranName); err != nil {
-			if _, ok := err.(*common.ResourceNotFoundError); !ok{
+			if _, ok := err.(*common.ResourceNotFoundError); !ok {
 				break
 			}
 		}
@@ -109,7 +108,7 @@ func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string, p
 
 	err := h.routingManagerClient.AddE2TInstance(e2tAddress)
 
-	if err != nil{
+	if err != nil {
 		h.logger.Errorf("#E2TermInitNotificationHandler.HandleNewE2TInstance - e2t address: %s - routing manager failure", e2tAddress)
 		return
 	}

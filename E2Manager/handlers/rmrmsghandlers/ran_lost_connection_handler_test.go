@@ -1,4 +1,4 @@
-		//// Copyright 2019 AT&T Intellectual Property
+//// Copyright 2019 AT&T Intellectual Property
 //// Copyright 2019 Nokia
 ////
 //// Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,40 +29,23 @@ import (
 	"e2mgr/services"
 	"encoding/json"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
 	"testing"
 )
 
-const ranName = "test"
-const e2tAddress = "10.10.2.15:9800"
+const (
+	ranName    = "test"
+	e2tAddress = "10.10.2.15:9800"
+)
 
-func TestLostConnectionHandlerSuccess(t *testing.T) {
+func setupLostConnectionHandlerTest(isSuccessfulHttpPost bool) (*RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	logger, _ := logger.InitLogger(logger.InfoLevel)
-
-	notificationRequest := models.NotificationRequest{RanName: ranName}
-	ranDisconnectionManagerMock := &mocks.RanDisconnectionManagerMock{}
-	ranDisconnectionManagerMock.On("DisconnectRan", ranName).Return(nil)
-	handler := NewRanLostConnectionHandler(logger, ranDisconnectionManagerMock)
-	handler.Handle(&notificationRequest)
-	ranDisconnectionManagerMock.AssertCalled(t, "DisconnectRan", ranName)
-}
-
-func TestLostConnectionHandlerFailure(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
-
-	notificationRequest := models.NotificationRequest{RanName: ranName}
-	ranDisconnectionManagerMock := &mocks.RanDisconnectionManagerMock{}
-	ranDisconnectionManagerMock.On("DisconnectRan", ranName).Return(errors.New("error"))
-	handler := NewRanLostConnectionHandler(logger, ranDisconnectionManagerMock)
-	handler.Handle(&notificationRequest)
-	ranDisconnectionManagerMock.AssertCalled(t, "DisconnectRan", ranName)
-}
-
-func setupLostConnectionHandlerTestWithRealDisconnectionManager(t *testing.T, isSuccessfulHttpPost bool) (RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config := &configuration.Configuration{
+		RnibRetryIntervalMs:       10,
+		MaxRnibConnectionAttempts: 3,
+		StateChangeMessageChannel: StateChangeMessageChannel,
+	}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -72,28 +55,11 @@ func setupLostConnectionHandlerTestWithRealDisconnectionManager(t *testing.T, is
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClientMock)
 	ranListManager := managers.NewRanListManager(logger)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
-	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
-	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager)
+	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	handler := NewRanLostConnectionHandler(logger, ranDisconnectionManager)
-
-	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: e2tAddress}
-	var rnibErr error
-	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
-	updatedNodebInfo1 := *origNodebInfo
-	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
-	updatedNodebInfo2 := *origNodebInfo
-	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
-	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
-	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
-	e2tInstanceToSave := *e2tInstance
-	e2tInstanceToSave.AssociatedRanList = []string{}
-	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
-	mockHttpClient(httpClientMock, isSuccessfulHttpPost)
 
 	return handler, readerMock, writerMock, httpClientMock
 }
@@ -112,24 +78,86 @@ func mockHttpClient(httpClientMock *mocks.HttpClientMock, isSuccessful bool) {
 	httpClientMock.On("Post", clients.DissociateRanE2TInstanceApiSuffix, "application/json", body).Return(&http.Response{StatusCode: respStatusCode, Body: respBody}, nil)
 }
 
-func TestLostConnectionHandlerFailureWithRealDisconnectionManager(t *testing.T) {
-	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealDisconnectionManager(t, false)
+func TestLostConnectionHandlerConnectingRanSuccess(t *testing.T) {
+	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTest(true)
 
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: e2tAddress}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
+	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
+	e2tInstanceToSave := *e2tInstance
+	e2tInstanceToSave.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
+	mockHttpClient(httpClientMock, true)
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	handler.Handle(&notificationRequest)
-
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 }
 
-func TestLostConnectionHandlerSuccessWithRealDisconnectionManager(t *testing.T) {
-	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTestWithRealDisconnectionManager(t, true)
+func TestLostConnectionHandlerConnectedRanSuccess(t *testing.T) {
+	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTest(true)
 
+	origNodebInfo := &entities.NodebInfo{
+		RanName:                      ranName,
+		GlobalNbId:                   &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"},
+		ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+		AssociatedE2TInstanceAddress: e2tAddress,
+	}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo1, StateChangeMessageChannel, ranName+"_DISCONNECTED").Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
+	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
+	e2tInstanceToSave := *e2tInstance
+	e2tInstanceToSave.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
+	mockHttpClient(httpClientMock, true)
 	notificationRequest := models.NotificationRequest{RanName: ranName}
 	handler.Handle(&notificationRequest)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+}
 
+func TestLostConnectionHandlerRmDissociateFailure(t *testing.T) {
+	handler, readerMock, writerMock, httpClientMock := setupLostConnectionHandlerTest(false)
+
+	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING, AssociatedE2TInstanceAddress: e2tAddress}
+	var rnibErr error
+	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	updatedNodebInfo1 := *origNodebInfo
+	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	updatedNodebInfo2 := *origNodebInfo
+	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
+	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
+	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
+	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
+	e2tInstanceToSave := *e2tInstance
+	e2tInstanceToSave.AssociatedRanList = []string{}
+	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
+	mockHttpClient(httpClientMock, false)
+	notificationRequest := models.NotificationRequest{RanName: ranName}
+	handler.Handle(&notificationRequest)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)

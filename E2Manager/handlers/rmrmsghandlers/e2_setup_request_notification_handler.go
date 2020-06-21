@@ -72,7 +72,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 	generalConfiguration, err := h.rNibDataService.GetGeneralConfiguration()
 
 	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - Failed retrieving e2m general configuration. error: %s", err)
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - Failed retrieving e2m general configuration - quitting e2 setup flow. error: %s", err)
 		return
 	}
 

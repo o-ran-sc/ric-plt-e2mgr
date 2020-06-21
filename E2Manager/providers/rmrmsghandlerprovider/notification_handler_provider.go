@@ -58,9 +58,9 @@ func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrms
 }
 
 func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration,
-	rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, ranSetupManager *managers.RanSetupManager,
-	e2tInstancesManager managers.IE2TInstancesManager, routingManagerClient clients.IRoutingManagerClient,
-	e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) {
+	rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, e2tInstancesManager managers.IE2TInstancesManager,
+	routingManagerClient clients.IRoutingManagerClient, e2tAssociationManager *managers.E2TAssociationManager,
+	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) {
 
 	// Init converters
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -71,7 +71,7 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	x2ResetResponseExtractor := converters.NewX2ResetResponseExtractor(logger)
 
 	// Init managers
-	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager)
+	ranReconnectionManager := managers.NewRanDisconnectionManager(logger, config, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
 	x2SetupFailureResponseManager := managers.NewX2SetupFailureResponseManager(x2SetupFailureResponseConverter)

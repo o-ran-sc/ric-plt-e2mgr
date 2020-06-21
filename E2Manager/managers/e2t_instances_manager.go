@@ -399,13 +399,13 @@ func (m *E2TInstancesManager) SetE2tInstanceState(e2tAddress string, currentStat
 		return e2managererrors.NewRnibDbError()
 	}
 
-	if (currentState != e2tInstance.State) {
+	if currentState != e2tInstance.State {
 		m.logger.Warnf("#E2TInstancesManager.SetE2tInstanceState - E2T Instance address: %s - Current state is not: %s", e2tAddress, currentState)
 		return e2managererrors.NewInternalError()
 	}
 
 	e2tInstance.State = newState
-	if (newState == entities.Active) {
+	if newState == entities.Active {
 		e2tInstance.KeepAliveTimestamp = time.Now().UnixNano()
 	}
 

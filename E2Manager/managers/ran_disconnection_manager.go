@@ -31,19 +31,20 @@ type IRanDisconnectionManager interface {
 }
 
 type RanDisconnectionManager struct {
-	logger                *logger.Logger
-	config                *configuration.Configuration
-	rnibDataService       services.RNibDataService
-	ranSetupManager       *RanSetupManager
-	e2tAssociationManager *E2TAssociationManager
+	logger                        *logger.Logger
+	config                        *configuration.Configuration
+	rnibDataService               services.RNibDataService
+	e2tAssociationManager         *E2TAssociationManager
+	ranConnectStatusChangeManager IRanConnectStatusChangeManager
 }
 
-func NewRanDisconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tAssociationManager *E2TAssociationManager) *RanDisconnectionManager {
+func NewRanDisconnectionManager(logger *logger.Logger, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tAssociationManager *E2TAssociationManager, ranConnectStatusChangeManager IRanConnectStatusChangeManager) *RanDisconnectionManager {
 	return &RanDisconnectionManager{
-		logger:                logger,
-		config:                config,
-		rnibDataService:       rnibDataService,
-		e2tAssociationManager: e2tAssociationManager,
+		logger:                        logger,
+		config:                        config,
+		rnibDataService:               rnibDataService,
+		e2tAssociationManager:         e2tAssociationManager,
+		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
@@ -58,17 +59,16 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 	connectionStatus := nodebInfo.GetConnectionStatus()
 	m.logger.Infof("#RanDisconnectionManager.DisconnectRan - RAN name: %s - RAN's connection status: %s", nodebInfo.RanName, connectionStatus)
 
-
 	if connectionStatus == entities.ConnectionStatus_SHUT_DOWN {
 		m.logger.Warnf("#RanDisconnectionManager.DisconnectRan - RAN name: %s - quit. RAN's connection status is SHUT_DOWN", nodebInfo.RanName)
 		return nil
 	}
 
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
-		return m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
+		return m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	}
 
-	err = m.updateNodebInfo(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
+	err = m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 
 	if err != nil {
 		return err
@@ -80,7 +80,7 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 
 func (m *RanDisconnectionManager) updateNodebInfo(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) error {
 
-	nodebInfo.ConnectionStatus = connectionStatus;
+	nodebInfo.ConnectionStatus = connectionStatus
 	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
 
 	if err != nil {

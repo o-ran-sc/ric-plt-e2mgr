@@ -112,6 +112,7 @@ func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string)
 	}
 
 	err = m.rmClient.DissociateRanE2TInstance(e2tAddress, ranName)
+
 	if err != nil {
 		m.logger.Errorf("#E2TAssociationManager.DissociateRan - RoutingManager failure: Failed to dissociate RAN %s from E2T %s. Error: %s", ranName, e2tAddress, err)
 	} else {

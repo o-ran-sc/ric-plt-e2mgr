@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rmrreceiver
 
 import (
@@ -69,15 +68,14 @@ func initRmrReceiver(logger *logger.Logger) *RmrReceiver {
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	rmrMessenger := initRmrMessenger(logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
 	ranListManager := managers.NewRanListManager(logger)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
-	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, ranSetupManager, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager)
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	return NewRmrReceiver(logger, rmrMessenger, notificationManager)
 }

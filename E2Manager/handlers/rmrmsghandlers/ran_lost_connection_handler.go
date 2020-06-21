@@ -31,13 +31,13 @@ type RanLostConnectionHandler struct {
 	logger                  *logger.Logger
 }
 
-func NewRanLostConnectionHandler(logger *logger.Logger, ranDisconnectionManager managers.IRanDisconnectionManager) RanLostConnectionHandler {
-	return RanLostConnectionHandler{
+func NewRanLostConnectionHandler(logger *logger.Logger, ranDisconnectionManager managers.IRanDisconnectionManager) *RanLostConnectionHandler {
+	return &RanLostConnectionHandler{
 		logger:                  logger,
 		ranDisconnectionManager: ranDisconnectionManager,
 	}
 }
-func (h RanLostConnectionHandler) Handle(request *models.NotificationRequest) {
+func (h *RanLostConnectionHandler) Handle(request *models.NotificationRequest) {
 
 	ranName := request.RanName
 
