@@ -77,17 +77,3 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 	e2tAddress := nodebInfo.AssociatedE2TInstanceAddress
 	return m.e2tAssociationManager.DissociateRan(e2tAddress, nodebInfo.RanName)
 }
-
-func (m *RanDisconnectionManager) updateNodebInfo(nodebInfo *entities.NodebInfo, connectionStatus entities.ConnectionStatus) error {
-
-	nodebInfo.ConnectionStatus = connectionStatus
-	err := m.rnibDataService.UpdateNodebInfo(nodebInfo)
-
-	if err != nil {
-		m.logger.Errorf("#RanDisconnectionManager.updateNodebInfo - RAN name: %s - Failed updating RAN's connection status to %s in rNib. Error: %v", nodebInfo.RanName, connectionStatus, err)
-		return err
-	}
-
-	m.logger.Infof("#RanDisconnectionManager.updateNodebInfo - RAN name: %s - Successfully updated rNib. RAN's current connection status: %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
-	return nil
-}

@@ -159,6 +159,26 @@ func TestE2SetupRequestNotificationHandler_EnableRicFalse(t *testing.T) {
 	writerMock.AssertNotCalled(t, "SaveNodeb")
 }
 
+
+func TestE2SetupRequestNotificationHandler_HandleNewRanError(t *testing.T) {
+	xml := readXmlFile(t, GnbSetupRequestXmlPath)
+	handler, readerMock, writerMock, _, e2tInstancesManagerMock, _ := initMocks(t)
+	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
+	var gnb *entities.NodebInfo
+	readerMock.On("GetNodeb", nodebRanName).Return(gnb, common.NewResourceNotFoundError("Not found"))
+	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
+	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
+	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(common.NewInternalError(errors.New("error")))
+
+	handler.Handle(notificationRequest)
+
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	e2tInstancesManagerMock.AssertExpectations(t)
+}
+
 func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xmlPath string) {
 	xml := readXmlFile(t, xmlPath)
 	handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
@@ -180,7 +200,9 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", e2tInstanceFullAddress, []string{nodebRanName}).Return(nil)
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(&rmrCgo.MBuf{}, nil)
+
 	handler.Handle(notificationRequest)
+
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	e2tInstancesManagerMock.AssertExpectations(t)

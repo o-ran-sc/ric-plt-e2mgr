@@ -28,6 +28,8 @@ import (
 	"e2mgr/models"
 	"e2mgr/services"
 	"encoding/json"
+	"fmt"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -93,6 +95,23 @@ func TestAssociateRanSuccess(t *testing.T) {
 	err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.Nil(t, err)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	httpClientMock.AssertExpectations(t)
+}
+
+func TestAssociateRan_RnibError(t *testing.T) {
+	manager, readerMock, writerMock, httpClientMock := initE2TAssociationManagerTest(t)
+	mockHttpClient(httpClientMock, clients.AssociateRanToE2TInstanceApiSuffix, true)
+	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
+	updatedNb := *nb
+	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
+
+	err := manager.AssociateRan(E2TAddress, nb)
+
+	assert.NotNil(t, err)
+	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	httpClientMock.AssertExpectations(t)
