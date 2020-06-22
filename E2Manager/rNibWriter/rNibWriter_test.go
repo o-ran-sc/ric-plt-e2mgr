@@ -762,9 +762,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionSuccess(t *testing.T) {
 	setExpected = append(setExpected, nodebNameKey, data)
 	setExpected = append(setExpected, nodebIdKey, data)
 
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	// TODO: after SetAndPublish problem is solved, bring back this line
-	// sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
 	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
 	assert.Nil(t, rNibErr)
@@ -790,9 +788,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure(t
 	setExpected = append(setExpected, nodebNameKey, data)
 	setExpected = append(setExpected, nodebIdKey, data)
 
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	// TODO: after SetAndPublish problem is solved, bring back this line
-	//sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
 	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
 
@@ -816,9 +812,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingGlobalNbId(t *testing.
 
 	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
 	setExpected = append(setExpected, nodebNameKey, data)
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
-	// TODO: after SetAndPublish problem is solved, bring back this line
-	//sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
+	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
 	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
 
