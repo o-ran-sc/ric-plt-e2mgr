@@ -1,0 +1,6 @@
+dependencies:
+- name: ric-common
+  repository: http://127.0.0.1:8879/charts
+  version: 3.3.2
+digest: sha256:1a1b80af7610e8da957e547cdcca89b0a81b2cdeae0856d3a87c27dcad5db3c2
+generated: 2020-06-17T21:27:41.027430677Z

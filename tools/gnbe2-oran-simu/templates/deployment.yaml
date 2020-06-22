@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gnbe2-oran-simu.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "gnbe2-oran-simu.name" . }}
+    helm.sh/chart: {{ include "gnbe2-oran-simu.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "gnbe2-oran-simu.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "gnbe2-oran-simu.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      hostNetwork: true
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.internalPort }}
+#        livenessProbe:
+#          tcpSocket:
+#            port: {{ .Values.service.internalPort }}
+#        readinessProbe:
+#          tcpSocket:
+#             port: {{ .Values.service.internalPort }}
+        resources:
+        {{- toYaml .Values.resources | nindent 12 }}
+        env:
+        - name: gNBipv4
+          value: 0.0.0.0
+        - name: gNBport
+          value: "{{ .Values.service.internalPort }}"
+        - name: ricIpv4
+          value: $(SERVICE_RICPLT_E2TERM_SCTP_ALPHA_SERVICE_HOST)
+        - name: ricPort
+          value: $(SERVICE_RICPLT_E2TERM_SCTP_ALPHA_SERVICE_PORT)
+        - name: nbue
+          value: "0"
+        {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
