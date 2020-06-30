@@ -23,6 +23,8 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
+Resource   ../Resource/scripts_variables.robot
+Library    ../Scripts/find_error_script.py
 Library     ../Scripts/e2mdbscripts.py
 Library     OperatingSystem
 Library    Collections
@@ -30,11 +32,6 @@ Library     REST      ${url}
 
 
 *** Test Cases ***
-
-prepare logs for tests
-    Remove log files
-    Save logs
-
 
 Setup Ran and verify it's CONNECTED and associated
     Get Request node b gnb
@@ -54,6 +51,14 @@ Verify connection status is DISCONNECTED and RAN is not associated with E2T inst
     Missing  response body associatedE2tInstanceAddress
     String   response body connectionStatus    DISCONNECTED
 
+prepare logs for tests
+    Remove log files
+    Save logs
+
 Verify E2T instance is NOT associated with RAN
    ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     ${ranname}  ${e2tinstanceaddress}
    Should Be True    ${result} == False
+
+Verify e2mgr logs - Set and Publish Disconnect True
+  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
+   Should Be Equal As Strings    ${result}      True

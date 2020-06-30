@@ -304,7 +304,7 @@ func (w *rNibDataService) PingRnib() bool {
 }
 
 func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
-	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - nodebInfo: %s", nodebInfo)
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: %s, event: %s, nodebInfo: %s", w.stateChangeMessageChannel, event, nodebInfo)
 
 	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
 		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.stateChangeMessageChannel, event)

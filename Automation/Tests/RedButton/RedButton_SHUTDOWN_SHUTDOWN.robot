@@ -25,23 +25,33 @@ Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    red_button_keywords.robot
+Resource   ../Resource/scripts_variables.robot
+Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
 
 *** Test Cases ***
+
 Verify nodeb connection status is CONNECTED and it's associated to an e2t instance
    Verify connected and associated
 
 Execute Shutdown
    Execute Shutdown
 
+prepare logs for tests
+    Remove log files
+    Save logs
+
+Verify e2mgr logs - Set and Publish Disconnect True
+  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
+   Should Be Equal As Strings    ${result}      True
+
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
    Verify shutdown for gnb
 
 Verify E2T instance has no associated RANs
    Verify E2T instance has no associated RANs
-
 
 Execute second Shutdown
    Execute Shutdown

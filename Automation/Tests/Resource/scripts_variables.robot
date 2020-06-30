@@ -33,3 +33,4 @@ ${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts
 ${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
 ${E2_TERM_KEEP_ALIVE_REQ_message_type_successfully_sent}     Message type: 1101 - Successfully sent RMR message
 ${save_general_configuration}      SetGeneralConfigurationHandler.Handle - save general configuration to rnib: {EnableRic:false}
+${set_and_publish_disconnect}      RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE, event: gnb_208_092_303030_DISCONNECTED
