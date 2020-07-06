@@ -20,6 +20,7 @@
 package rNibWriter
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/mocks"
 	"encoding/json"
 	"errors"
@@ -33,13 +34,14 @@ import (
 )
 
 var namespace = "namespace"
+
 const (
 	RanName = "test"
 )
 
 func initSdlInstanceMock(namespace string) (w RNibWriter, sdlInstanceMock *mocks.MockSdlInstance) {
 	sdlInstanceMock = new(mocks.MockSdlInstance)
-	w = GetRNibWriter(sdlInstanceMock)
+	w = GetRNibWriter(sdlInstanceMock, configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE", RanManipulationMessageChannel: "RAN_MANIPULATION"})
 	return
 }
 
@@ -256,6 +258,7 @@ func TestSaveEnb(t *testing.T) {
 	ranName := "RAN:" + name
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nb := entities.NodebInfo{}
+	nb.RanName = name
 	nb.NodeType = entities.Node_ENB
 	nb.ConnectionStatus = 1
 	nb.Ip = "localhost"
@@ -281,7 +284,7 @@ func TestSaveEnb(t *testing.T) {
 	setExpected = append(setExpected, fmt.Sprintf("CELL:%s", cell.GetCellId()), cellData)
 	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", name, cell.GetPci()), cellData)
 
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", name + "_" + RanAddedEvent}, []interface{}{setExpected}).Return(e)
 
 	nbIdData, err := proto.Marshal(&entities.NbIdentity{InventoryName: name})
 	if err != nil {
@@ -748,7 +751,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionSuccess(t *testing.T) {
 	nbId := "4a952a0a"
 	channelName := "RAN_CONNECT_STATE_CHANGE"
 	eventName := inventoryName + "_" + "CONNECTED"
- 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
 	data, err := proto.Marshal(nodebInfo)
 	if err != nil {
@@ -827,7 +830,7 @@ func TestSaveGeneralConfiguration(t *testing.T) {
 	configuration := &entities.GeneralConfiguration{}
 	configuration.EnableRic = true
 
-	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(nil)
+	sdlInstanceMock.On("Set", []interface{}{[]interface{}{key, []byte(configurationData)}}).Return(nil)
 	rNibErr := w.SaveGeneralConfiguration(configuration)
 
 	assert.Nil(t, rNibErr)
@@ -844,7 +847,7 @@ func TestSaveGeneralConfigurationDbError(t *testing.T) {
 
 	expectedErr := errors.New("expected error")
 
-	sdlInstanceMock.On("Set",[]interface{}{[]interface{}{key, []byte(configurationData)}}).Return(expectedErr)
+	sdlInstanceMock.On("Set", []interface{}{[]interface{}{key, []byte(configurationData)}}).Return(expectedErr)
 	rNibErr := w.SaveGeneralConfiguration(configuration)
 
 	assert.NotNil(t, rNibErr)

@@ -50,6 +50,7 @@ type INodebController interface {
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
 	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
+	AddEnb(writer http.ResponseWriter, r *http.Request)
 }
 
 type NodebController struct {
@@ -67,7 +68,7 @@ func NewNodebController(logger *logger.Logger, handlerProvider *httpmsghandlerpr
 func (c *NodebController) GetNodebIdList(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.GetNodebIdList - request: %v", c.prettifyRequest(r))
 
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebIdListRequest, nil, false)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebIdListRequest, nil, false, http.StatusOK)
 }
 
 func (c *NodebController) GetNodeb(writer http.ResponseWriter, r *http.Request) {
@@ -75,7 +76,7 @@ func (c *NodebController) GetNodeb(writer http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	ranName := vars["ranName"]
 	request := models.GetNodebRequest{RanName: ranName}
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebRequest, request, false)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebRequest, request, false, http.StatusOK)
 }
 
 func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request) {
@@ -93,7 +94,31 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 
 	request.Gnb = &gnb
 	request.RanName = ranName
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true, http.StatusOK)
+}
+
+func (c *NodebController) AddEnb(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.AddEnb - request: %v", c.prettifyRequest(r))
+
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
+
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.AddEnb - unable to read request body - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return
+	}
+
+	addEnbRequest := models.AddEnbRequest{}
+	err = json.Unmarshal(body, &addEnbRequest)
+
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.AddEnb - unable to unmarshal json - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return
+	}
+
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.AddEnbRequest, &addEnbRequest, true, http.StatusCreated)
 }
 
 func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request) {
@@ -101,15 +126,15 @@ func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r 
 
 	request := models.GeneralConfigurationRequest{}
 
-	if !c.extractJsonBodyDisallowUnknownFields(r, &request, writer){
+	if !c.extractJsonBodyDisallowUnknownFields(r, &request, writer) {
 		return
 	}
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.SetGeneralConfigurationRequest, request, false)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.SetGeneralConfigurationRequest, request, false, http.StatusOK)
 }
 
 func (c *NodebController) Shutdown(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.Shutdown - request: %v", c.prettifyRequest(r))
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ShutdownRequest, nil, false)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ShutdownRequest, nil, false, http.StatusNoContent)
 }
 
 func (c *NodebController) X2Reset(writer http.ResponseWriter, r *http.Request) {
@@ -118,14 +143,15 @@ func (c *NodebController) X2Reset(writer http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ranName := vars[ParamRanName]
 
-	if r.ContentLength > 0 && !c.extractJsonBody(r, &request, writer) {
+	if err := c.extractJsonBody(r, &request); err != nil {
+		c.handleErrorResponse(err, writer)
 		return
 	}
 	request.RanName = ranName
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ResetRequest, request, false)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ResetRequest, request, false, http.StatusNoContent)
 }
 
-func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message , writer http.ResponseWriter) bool {
+func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message, writer http.ResponseWriter) bool {
 	defer r.Body.Close()
 
 	err := jsonpb.Unmarshal(r.Body, pb)
@@ -154,27 +180,25 @@ func (c *NodebController) extractJsonBodyDisallowUnknownFields(r *http.Request, 
 	return true
 }
 
-func (c *NodebController) extractJsonBody(r *http.Request, request models.Request, writer http.ResponseWriter) bool {
+func (c *NodebController) extractJsonBody(r *http.Request, request models.Request) error {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
 
 	if err != nil {
 		c.logger.Errorf("[Client -> E2 Manager] #NodebController.extractJsonBody - unable to extract json body - error: %s", err)
-		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
-		return false
+		return e2managererrors.NewInvalidJsonError()
 	}
 
 	err = json.Unmarshal(body, &request)
 	if err != nil {
 		c.logger.Errorf("[Client -> E2 Manager] #NodebController.extractJsonBody - unable to extract json body - error: %s", err)
-		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
-		return false
+		return e2managererrors.NewInvalidJsonError()
 	}
 
-	return true
+	return nil
 }
 
-func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http.Header, requestName httpmsghandlerprovider.IncomingRequest, request models.Request, validateRequestHeaders bool) {
+func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http.Header, requestName httpmsghandlerprovider.IncomingRequest, request models.Request, validateRequestHeaders bool, successStatusCode int) {
 
 	if validateRequestHeaders {
 
@@ -199,8 +223,8 @@ func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http
 		return
 	}
 
-	if response == nil {
-		writer.WriteHeader(http.StatusNoContent)
+	if successStatusCode == http.StatusNoContent {
+		writer.WriteHeader(successStatusCode)
 		c.logger.Infof("[E2 Manager -> Client] #NodebController.handleRequest - status response: %v", http.StatusNoContent)
 		return
 	}
@@ -214,6 +238,7 @@ func (c *NodebController) handleRequest(writer http.ResponseWriter, header *http
 
 	c.logger.Infof("[E2 Manager -> Client] #NodebController.handleRequest - response: %s", result)
 	writer.Header().Set(ContentType, ApplicationJson)
+	writer.WriteHeader(successStatusCode)
 	writer.Write(result)
 }
 

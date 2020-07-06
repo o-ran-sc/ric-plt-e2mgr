@@ -47,7 +47,7 @@ const BaseRMUrl = "http://10.10.2.15:12020/routingmanager"
 
 func setupDeleteAllRequestHandlerTest(t *testing.T) (*DeleteAllRequestHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.HttpClientMock) {
 	log := initLog(t)
-	config := &configuration.Configuration{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}
+	config := &configuration.Configuration{RnibWriter: configuration.RnibWriterConfig{ StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}}
 	config.BigRedButtonTimeoutSec = 1
 	config.RoutingManager.BaseUrl = BaseRMUrl
 

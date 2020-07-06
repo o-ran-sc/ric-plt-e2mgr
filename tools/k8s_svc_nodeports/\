@@ -1,0 +1,22 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  RMR_RTG_SVC: "4561"
+  RMR_SRC_ID: service-ricplt-e2term-rmr-alpha.ricplt
+  RMR_VCTL_FILE: /tmp/rmr_verbose
+  nano: "30500"
+  print: "1"
+  sctp: "36422"
+  volume: /data/outgoing/
+  SERVICE_RICPLT_E2TERM_RMR_ALPHA_SERVICE_HOST: "10.0.2.15"
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2020-06-29T11:02:03Z"
+  name: configmap-ricplt-e2term-env-alpha
+  namespace: ricplt
+  resourceVersion: "1503723"
+  selfLink: /api/v1/namespaces/ricplt/configmaps/configmap-ricplt-e2term-env-alpha
+  uid: e0f50ef9-8690-4a48-a9ff-f3c747f9fdd5

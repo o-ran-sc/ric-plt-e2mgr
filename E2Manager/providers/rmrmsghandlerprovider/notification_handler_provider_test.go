@@ -43,7 +43,7 @@ import (
 
 func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, services.RNibDataService, *rmrsender.RmrSender, managers.IE2TInstancesManager, clients.IRoutingManagerClient, *managers.E2TAssociationManager, managers.IRanConnectStatusChangeManager) {
 	logger := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, RnibWriter: configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE", RanManipulationMessageChannel: "RAN_MANIPULATION"}}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}

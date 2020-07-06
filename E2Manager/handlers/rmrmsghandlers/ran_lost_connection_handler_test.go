@@ -44,7 +44,9 @@ func setupLostConnectionHandlerTest(isSuccessfulHttpPost bool) (*RanLostConnecti
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,
-		StateChangeMessageChannel: StateChangeMessageChannel,
+		RnibWriter: configuration.RnibWriterConfig {
+			StateChangeMessageChannel: StateChangeMessageChannel,
+		},
 	}
 
 	readerMock := &mocks.RnibReaderMock{}

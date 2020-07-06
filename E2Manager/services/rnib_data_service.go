@@ -55,22 +55,22 @@ type RNibDataService interface {
 }
 
 type rNibDataService struct {
-	logger                    *logger.Logger
-	rnibReader                reader.RNibReader
-	rnibWriter                rNibWriter.RNibWriter
-	maxAttempts               int
-	retryInterval             time.Duration
-	stateChangeMessageChannel string
+	logger           *logger.Logger
+	rnibReader       reader.RNibReader
+	rnibWriter       rNibWriter.RNibWriter
+	maxAttempts      int
+	retryInterval    time.Duration
+	rnibWriterConfig configuration.RnibWriterConfig
 }
 
 func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
 	return &rNibDataService{
-		logger:                    logger,
-		rnibReader:                rnibReader,
-		rnibWriter:                rnibWriter,
-		maxAttempts:               config.MaxRnibConnectionAttempts,
-		retryInterval:             time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
-		stateChangeMessageChannel: config.StateChangeMessageChannel,
+		logger:           logger,
+		rnibReader:       rnibReader,
+		rnibWriter:       rnibWriter,
+		maxAttempts:      config.MaxRnibConnectionAttempts,
+		retryInterval:    time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		rnibWriterConfig: config.RnibWriter,
 	}
 }
 
@@ -304,10 +304,10 @@ func (w *rNibDataService) PingRnib() bool {
 }
 
 func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
-	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: %s, event: %s, nodebInfo: %s", w.stateChangeMessageChannel, event, nodebInfo)
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: %s, event: %s, nodebInfo: %s", w.rnibWriterConfig.StateChangeMessageChannel, event, nodebInfo)
 
 	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
-		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.stateChangeMessageChannel, event)
+		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.rnibWriterConfig.StateChangeMessageChannel, event)
 		return
 	})
 

@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package configuration
 
 import (
@@ -43,7 +42,8 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, "AACCE", config.GlobalRicId.RicId)
 	assert.Equal(t, "310", config.GlobalRicId.Mcc)
 	assert.Equal(t, "411", config.GlobalRicId.Mnc)
-	assert.Equal(t, "RAN_CONNECTION_STATUS_CHANGE", config.StateChangeMessageChannel)
+	assert.Equal(t, "RAN_CONNECTION_STATUS_CHANGE", config.RnibWriter.StateChangeMessageChannel)
+	assert.Equal(t, "RAN_MANIPULATION", config.RnibWriter.RanManipulationMessageChannel)
 }
 
 func TestStringer(t *testing.T) {
@@ -81,9 +81,9 @@ func TestRmrConfigNotFoundFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http":    map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -111,9 +111,9 @@ func TestLoggingConfigNotFoundFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":  map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"http": map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"http":           map[string]interface{}{"port": 3800},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -142,9 +142,9 @@ func TestHttpConfigNotFoundFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 		"globalRicId":    map[string]interface{}{"plmnId": "131014", "ricNearRtId": "556670"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
@@ -173,10 +173,10 @@ func TestRoutingManagerConfigNotFoundFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
-		"globalRicId":    map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AACCE"},
+		"rmr":         map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":     map[string]interface{}{"logLevel": "info"},
+		"http":        map[string]interface{}{"port": 3800},
+		"globalRicId": map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AACCE"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -204,10 +204,10 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -222,35 +222,35 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 }
 
 func TestEmptyRicIdFailure(t *testing.T) {
-configPath := "../resources/configuration.yaml"
-configPathTmp := "../resources/configuration.yaml_tmp"
-err := os.Rename(configPath, configPathTmp)
-if err != nil {
-t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
-}
-defer func() {
-err = os.Rename(configPathTmp, configPath)
-if err != nil {
-t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
-}
-}()
-yamlMap := map[string]interface{}{
-"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-"logging": map[string]interface{}{"logLevel": "info"},
-"http": map[string]interface{}{"port": 3800},
-"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": ""},
-"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
-}
-buf, err := yaml.Marshal(yamlMap)
-if err != nil {
-t.Errorf("#TestEmptyRicIdFailure - failed to marshal configuration map\n")
-}
-err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
-if err != nil {
-t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
-}
-assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is missing or empty\n",
-func() { ParseConfiguration() })
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestEmptyRicIdFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
+		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": ""},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestEmptyRicIdFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.validateRicId - ricId is missing or empty\n",
+		func() { ParseConfiguration() })
 }
 
 func TestMissingRicIdFailure(t *testing.T) {
@@ -267,11 +267,11 @@ func TestMissingRicIdFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -299,11 +299,11 @@ func TestNonHexRicIdFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": "TEST1"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -331,11 +331,11 @@ func TestWrongRicIdLengthFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "327", "mnc": "94", "ricId": "AA43"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -363,11 +363,11 @@ func TestMccNotThreeDigitsFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "31", "mnc": "94", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -395,11 +395,11 @@ func TestMncLengthIsGreaterThanThreeDigitsFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "6794", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -427,11 +427,11 @@ func TestMncLengthIsLessThanTwoDigitsFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "4", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -459,11 +459,11 @@ func TestNegativeMncFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "310", "mnc": "-2", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -491,11 +491,11 @@ func TestNegativeMccFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "-31", "mnc": "222", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -523,11 +523,11 @@ func TestAlphaNumericMccFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "1W2", "mnc": "222", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -555,11 +555,11 @@ func TestAlphaNumericMncFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "111", "mnc": "2A8", "ricId": "AA443"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -587,11 +587,11 @@ func TestMissingMmcFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mnc": "94", "ricId": "AABB3"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -604,7 +604,6 @@ func TestMissingMmcFailure(t *testing.T) {
 	assert.PanicsWithValue(t, "#configuration.validateMcc - mcc is missing or empty\n",
 		func() { ParseConfiguration() })
 }
-
 
 func TestEmptyMmcFailure(t *testing.T) {
 	configPath := "../resources/configuration.yaml"
@@ -620,11 +619,11 @@ func TestEmptyMmcFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "", "mnc": "94", "ricId": "AABB3"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -652,11 +651,11 @@ func TestEmptyMncFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "111", "mnc": "", "ricId": "AABB3"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
@@ -684,11 +683,11 @@ func TestMissingMncFailure(t *testing.T) {
 		}
 	}()
 	yamlMap := map[string]interface{}{
-		"rmr":     map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
-		"logging": map[string]interface{}{"logLevel": "info"},
-		"http": map[string]interface{}{"port": 3800},
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
 		"globalRicId":    map[string]interface{}{"mcc": "111", "ricId": "AABB3"},
-		"routingManager":    map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {

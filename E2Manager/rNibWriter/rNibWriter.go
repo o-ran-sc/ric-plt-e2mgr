@@ -20,6 +20,7 @@
 package rNibWriter
 
 import (
+	"e2mgr/configuration"
 	"encoding/json"
 	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -27,10 +28,16 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-const E2TAddressesKey = "E2TAddresses"
+const (
+	E2TAddressesKey = "E2TAddresses"
+	RanAddedEvent   = "ADDED"
+	RanUpdatedEvent = "UPDATED"
+	RanDeletedEvent = "DELETED"
+)
 
 type rNibWriterInstance struct {
-	sdl common.ISdlInstance
+	sdl              common.ISdlInstance
+	rnibWriterConfig configuration.RnibWriterConfig
 }
 
 /*
@@ -53,10 +60,9 @@ type RNibWriter interface {
 GetRNibWriter returns reference to RNibWriter
 */
 
-func GetRNibWriter(sdl common.ISdlInstance) RNibWriter {
-	return &rNibWriterInstance{sdl: sdl}
+func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibWriterConfig) RNibWriter {
+	return &rNibWriterInstance{sdl: sdl, rnibWriterConfig: rnibWriterConfig}
 }
-
 
 func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
 	cellKeysToRemove := buildCellKeysToRemove(inventoryName, servedNrCells)
@@ -86,22 +92,30 @@ SaveNodeb saves nodeB entity data in the redis DB according to the specified dat
 func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
 	isNotEmptyIdentity := isNotEmpty(nbIdentity)
 
-	if isNotEmptyIdentity && entity.GetNodeType() == entities.Node_UNKNOWN {
+	nodeType := entity.GetNodeType()
+
+	if isNotEmptyIdentity && nodeType == entities.Node_UNKNOWN {
 		return common.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
 	}
+
 	data, err := proto.Marshal(entity)
+
 	if err != nil {
 		return common.NewInternalError(err)
 	}
+
 	var pairs []interface{}
 	key, rNibErr := common.ValidateAndBuildNodeBNameKey(nbIdentity.InventoryName)
+
 	if rNibErr != nil {
 		return rNibErr
 	}
+
 	pairs = append(pairs, key, data)
 
 	if isNotEmptyIdentity {
-		key, rNibErr = common.ValidateAndBuildNodeBIdKey(entity.GetNodeType().String(), nbIdentity.GlobalNbId.GetPlmnId(), nbIdentity.GlobalNbId.GetNbId())
+
+		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodeType.String(), nbIdentity.GlobalNbId.GetPlmnId(), nbIdentity.GlobalNbId.GetNbId())
 		if rNibErr != nil {
 			return rNibErr
 		}
@@ -114,13 +128,20 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 			return rNibErr
 		}
 	}
+
 	if entity.GetGnb() != nil {
 		pairs, rNibErr = appendGnbCells(nbIdentity.InventoryName, entity.GetGnb().GetServedNrCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
-	err = w.sdl.Set(pairs)
+
+	if nodeType == entities.Node_ENB {
+		err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", entity.RanName, RanAddedEvent)}, pairs)
+	} else {
+		err = w.sdl.Set(pairs)
+	}
+
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -141,10 +162,13 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 	}
 
 	nbIdData, err := proto.Marshal(nbIdentity)
+
 	if err != nil {
 		return common.NewInternalError(err)
 	}
-	err = w.sdl.AddMember(entity.GetNodeType().String(), nbIdData)
+
+	err = w.sdl.AddMember(nodeType.String(), nbIdData)
+
 	if err != nil {
 		return common.NewInternalError(err)
 	}

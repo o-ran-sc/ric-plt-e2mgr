@@ -46,7 +46,7 @@ const E2TAddress3 = "10.10.2.17:9800"
 
 func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock, *KubernetesManager) {
 	log := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, E2TInstanceDeletionTimeoutMs: 15000, StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, E2TInstanceDeletionTimeoutMs: 15000, RnibWriter: configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
@@ -58,7 +58,7 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 
 	ranListManager := NewRanListManager(log)
 	ranAlarmService := services.NewRanAlarmService(log, config)
-	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
 	//kubernetesManager := initKubernetesManagerTest(t)
 
@@ -71,7 +71,7 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 }
 
 func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -84,14 +84,14 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	e2tInstance3.AssociatedRanList = []string{"test4"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
-	nodeb2 := &entities.NodebInfo{RanName:"test2", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb2 := &entities.NodebInfo{RanName: "test2", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, nil)
-	nodeb5 := &entities.NodebInfo{RanName:"test5", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb5 := &entities.NodebInfo{RanName: "test5", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test5").Return(nodeb5, nil)
 
-	e2tAddresses := []string{E2TAddress, E2TAddress2,E2TAddress3}
+	e2tAddresses := []string{E2TAddress, E2TAddress2, E2TAddress3}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, e2tInstance1.AssociatedRanList, nil)
@@ -101,7 +101,7 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	httpClientMock.On("Delete", "e2t", "application/json", body).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
 
 	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
-	writerMock.On("SaveE2TAddresses", []string{E2TAddress2,E2TAddress3}).Return(nil)
+	writerMock.On("SaveE2TAddresses", []string{E2TAddress2, E2TAddress3}).Return(nil)
 
 	/*** nodeb 1 ***/
 	nodeb1connected := *nodeb1
@@ -142,7 +142,7 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 }
 
 func TestShutdownSuccess1InstanceWithoutRans(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -168,16 +168,16 @@ func TestShutdownSuccess1InstanceWithoutRans(t *testing.T) {
 }
 
 func TestShutdownSuccess1Instance2Rans(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
-	nodeb2 := &entities.NodebInfo{RanName:"test2", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb2 := &entities.NodebInfo{RanName: "test2", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1", "test2"}, nil)
@@ -219,7 +219,7 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 }
 
 func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.ToBeDeleted
@@ -235,7 +235,7 @@ func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
 }
 
 func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -251,7 +251,7 @@ func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
 }
 
 func TestShutdownFailureRoutingManagerError(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -264,14 +264,14 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	e2tInstance3.AssociatedRanList = []string{"test4"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
-	nodeb2 := &entities.NodebInfo{RanName:"test2", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb2 := &entities.NodebInfo{RanName: "test2", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, nil)
-	nodeb5 := &entities.NodebInfo{RanName:"test5", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb5 := &entities.NodebInfo{RanName: "test5", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test5").Return(nodeb5, nil)
 
-	e2tAddresses := []string{E2TAddress, E2TAddress2,E2TAddress3}
+	e2tAddresses := []string{E2TAddress, E2TAddress2, E2TAddress3}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, e2tInstance1.AssociatedRanList, nil)
@@ -281,7 +281,7 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	httpClientMock.On("Delete", "e2t", "application/json", body).Return(&http.Response{StatusCode: http.StatusBadRequest, Body: respBody}, nil)
 
 	writerMock.On("RemoveE2TInstance", E2TAddress).Return(nil)
-	writerMock.On("SaveE2TAddresses", []string{E2TAddress2,E2TAddress3}).Return(nil)
+	writerMock.On("SaveE2TAddresses", []string{E2TAddress2, E2TAddress3}).Return(nil)
 
 	/*** nodeb 1 connected ***/
 	nodeb1connected := *nodeb1
@@ -322,14 +322,14 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 }
 
 func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
 
 	nodeb1new := *nodeb1
@@ -350,14 +350,14 @@ func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
 }
 
 func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
 
 	nodeb1new := *nodeb1
@@ -373,14 +373,14 @@ func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testi
 }
 
 func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
 	var nodeb2 *entities.NodebInfo
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, common.NewResourceNotFoundError("for testing"))
@@ -403,7 +403,7 @@ func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
 }
 
 func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -412,7 +412,7 @@ func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
 
 	var nodeb1 *entities.NodebInfo
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, common.NewInternalError(fmt.Errorf("for testing")))
-	nodeb2 := &entities.NodebInfo{RanName:"test2", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb2 := &entities.NodebInfo{RanName: "test2", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, []string{"test1", "test2"}, nil)
@@ -444,7 +444,7 @@ func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
 }
 
 func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock,_  := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -457,11 +457,11 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	e2tInstance3.AssociatedRanList = []string{"test4"}
 	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
 
-	nodeb1 := &entities.NodebInfo{RanName:"test1", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
-	nodeb2 := &entities.NodebInfo{RanName:"test2", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb2 := &entities.NodebInfo{RanName: "test2", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test2").Return(nodeb2, nil)
-	nodeb5 := &entities.NodebInfo{RanName:"test5", AssociatedE2TInstanceAddress:E2TAddress, ConnectionStatus:entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol:entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
+	nodeb5 := &entities.NodebInfo{RanName: "test5", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test5").Return(nodeb5, nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, e2tInstance1.AssociatedRanList, nil)

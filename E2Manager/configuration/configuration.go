@@ -26,6 +26,11 @@ import (
 	"strconv"
 )
 
+type RnibWriterConfig struct {
+	StateChangeMessageChannel     string
+	RanManipulationMessageChannel string
+}
+
 type Configuration struct {
 	Logging struct {
 		LogLevel string
@@ -53,7 +58,7 @@ type Configuration struct {
 		Mcc   string
 		Mnc   string
 	}
-	StateChangeMessageChannel string
+	RnibWriter RnibWriterConfig
 }
 
 func ParseConfiguration() *Configuration {
@@ -81,7 +86,7 @@ func ParseConfiguration() *Configuration {
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
 	config.populateGlobalRicIdConfig(viper.Sub("globalRicId"))
-	config.StateChangeMessageChannel = viper.GetString("stateChangeMessageChannel")
+	config.populateRnibWriterConfig(viper.Sub("rnibWriter"))
 	return &config
 }
 
@@ -112,6 +117,14 @@ func (c *Configuration) populateRoutingManagerConfig(rmConfig *viper.Viper) {
 		panic(fmt.Sprintf("#configuration.populateRoutingManagerConfig - failed to populate Routing Manager configuration: The entry 'routingManager' not found\n"))
 	}
 	c.RoutingManager.BaseUrl = rmConfig.GetString("baseUrl")
+}
+
+func (c *Configuration) populateRnibWriterConfig(rnibWriterConfig *viper.Viper) {
+	if rnibWriterConfig == nil {
+		panic(fmt.Sprintf("#configuration.populateRnibWriterConfig - failed to populate Rnib Writer configuration: The entry 'rnibWriter' not found\n"))
+	}
+	c.RnibWriter.StateChangeMessageChannel = rnibWriterConfig.GetString("stateChangeMessageChannel")
+	c.RnibWriter.RanManipulationMessageChannel = rnibWriterConfig.GetString("ranManipulationMessageChannel")
 }
 
 func (c *Configuration) populateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) {
@@ -147,23 +160,22 @@ func validateGlobalRicIdConfig(globalRicIdConfig *viper.Viper) error {
 		return err
 	}
 
-
 	return nil
 }
 
 func validateMcc(mcc string) error {
 
-	if len(mcc) == 0{
+	if len(mcc) == 0 {
 		return errors.New("#configuration.validateMcc - mcc is missing or empty\n")
 	}
 
-	if len(mcc) != 3{
+	if len(mcc) != 3 {
 		return errors.New("#configuration.validateMcc - mcc is not 3 digits\n")
 	}
 
 	mccInt, err := strconv.Atoi(mcc)
 
-	if err != nil{
+	if err != nil {
 		return errors.New("#configuration.validateMcc - mcc is not a number\n")
 	}
 
@@ -175,17 +187,17 @@ func validateMcc(mcc string) error {
 
 func validateMnc(mnc string) error {
 
-	if len(mnc) == 0{
+	if len(mnc) == 0 {
 		return errors.New("#configuration.validateMnc - mnc is missing or empty\n")
 	}
 
-	if len(mnc) < 2 || len(mnc) >3 {
+	if len(mnc) < 2 || len(mnc) > 3 {
 		return errors.New("#configuration.validateMnc - mnc is not 2 or 3 digits\n")
 	}
 
 	mncAsInt, err := strconv.Atoi(mnc)
 
-	if err != nil{
+	if err != nil {
 		return errors.New("#configuration.validateMnc - mnc is not a number\n")
 	}
 
@@ -196,9 +208,9 @@ func validateMnc(mnc string) error {
 	return nil
 }
 
-func validateRicId(ricId string) error{
+func validateRicId(ricId string) error {
 
-	if len(ricId) == 0{
+	if len(ricId) == 0 {
 		return errors.New("#configuration.validateRicId - ricId is missing or empty\n")
 	}
 
@@ -214,12 +226,11 @@ func validateRicId(ricId string) error{
 	return nil
 }
 
-
 func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
 		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
-		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}, StateChangeMessageChannel: %s",
+		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}, rnibWriter: { stateChangeMessageChannel: %s, ranManipulationChannel: %s}",
 		c.Logging.LogLevel,
 		c.Http.Port,
 		c.Rmr.Port,
@@ -235,6 +246,7 @@ func (c *Configuration) String() string {
 		c.GlobalRicId.RicId,
 		c.GlobalRicId.Mcc,
 		c.GlobalRicId.Mnc,
-		c.StateChangeMessageChannel,
+		c.RnibWriter.StateChangeMessageChannel,
+		c.RnibWriter.RanManipulationMessageChannel,
 	)
 }

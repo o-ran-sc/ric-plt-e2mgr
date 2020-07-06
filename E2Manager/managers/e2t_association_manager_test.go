@@ -45,7 +45,7 @@ const (
 
 func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	log := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, StateChangeMessageChannel: StateChangeMessageChannel}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, RnibWriter: configuration.RnibWriterConfig{ StateChangeMessageChannel: StateChangeMessageChannel}}
 
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}

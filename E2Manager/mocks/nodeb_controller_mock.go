@@ -61,24 +61,16 @@ func (c *NodebControllerMock) X2Reset(writer http.ResponseWriter, r *http.Reques
 	c.Called()
 }
 
-func (c *NodebControllerMock) X2Setup(writer http.ResponseWriter, r *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	c.Called()
-}
-
-func (c *NodebControllerMock) EndcSetup(writer http.ResponseWriter, r *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	c.Called()
-}
-
 func (c *NodebControllerMock) UpdateGnb(writer http.ResponseWriter, r *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 
+	c.Called()
+}
+
+func (c *NodebControllerMock) AddEnb(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 	c.Called()
 }
 

@@ -6,7 +6,7 @@ rmr:
   port: 3801
   maxMsgSize: 65536
 routingManager:
-  baseUrl: http://10.0.2.15:12020/ric/v1/handles/
+  baseUrl: http://10.0.2.15:31000/ric/v1/handles/
 notificationResponseBuffer: 100
 bigRedButtonTimeoutSec: 5
 maxRnibConnectionAttempts: 3
@@ -18,4 +18,6 @@ globalRicId:
   ricId: "AACCE"
   mcc: "310"
   mnc: "411"
-stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE
+rnibWriter:
+  stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE
+  ranManipulationMessageChannel: RAN_MANIPULATION

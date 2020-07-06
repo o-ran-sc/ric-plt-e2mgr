@@ -29,7 +29,7 @@ import (
 
 func Run(log *logger.Logger, port int, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) error {
 
-	router := mux.NewRouter();
+	router := mux.NewRouter()
 	initializeRoutes(router, rootController, nodebController, e2tController)
 
 	addr := fmt.Sprintf(":%d", port)
@@ -47,6 +47,7 @@ func initializeRoutes(router *mux.Router, rootController controllers.IRootContro
 	rr := r.PathPrefix("/nodeb").Subrouter()
 	rr.HandleFunc("/ids", nodebController.GetNodebIdList).Methods(http.MethodGet)
 	rr.HandleFunc("/{ranName}", nodebController.GetNodeb).Methods(http.MethodGet)
+	rr.HandleFunc("/enb", nodebController.AddEnb).Methods(http.MethodPost)
 	rr.HandleFunc("/{ranName}/update", nodebController.UpdateGnb).Methods(http.MethodPut)
 	rr.HandleFunc("/shutdown", nodebController.Shutdown).Methods(http.MethodPut)
 	rr.HandleFunc("/parameters", nodebController.SetGeneralConfiguration).Methods(http.MethodPut)

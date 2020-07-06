@@ -40,6 +40,7 @@ const (
 	GetNodebIdListRequest          IncomingRequest = "GetNodebIdListRequest"
 	GetE2TInstancesRequest         IncomingRequest = "GetE2TInstancesRequest"
 	UpdateGnbRequest               IncomingRequest = "UpdateGnbRequest"
+	AddEnbRequest                  IncomingRequest = "AddEnbRequest"
 )
 
 type IncomingRequestHandlerProvider struct {
@@ -67,6 +68,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		GetNodebIdListRequest:          httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
 		GetE2TInstancesRequest:         httpmsghandlers.NewGetE2TInstancesRequestHandler(logger, e2tInstancesManager),
 		UpdateGnbRequest:               httpmsghandlers.NewUpdateGnbRequestHandler(logger, rNibDataService),
+		AddEnbRequest:                  httpmsghandlers.NewAddEnbRequestHandler(logger, rNibDataService),
 	}
 }
 

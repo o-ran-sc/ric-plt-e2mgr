@@ -25,17 +25,17 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-type UpdateGnbResponse struct {
+type AddEnbResponse struct {
 	nodebInfo *entities.NodebInfo
 }
 
-func NewUpdateGnbResponse(nodebInfo *entities.NodebInfo) *UpdateGnbResponse {
-	return &UpdateGnbResponse{
+func NewAddEnbResponse(nodebInfo *entities.NodebInfo) *AddEnbResponse {
+	return &AddEnbResponse{
 		nodebInfo: nodebInfo,
 	}
 }
 
-func (response *UpdateGnbResponse) Marshal() ([]byte, error) {
+func (response *AddEnbResponse) Marshal() ([]byte, error) {
 	m := jsonpb.Marshaler{}
 	result, err := m.MarshalToString(response.nodebInfo)
 

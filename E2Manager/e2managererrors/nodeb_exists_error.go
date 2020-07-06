@@ -17,31 +17,22 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-package models
 
-import (
-	"e2mgr/e2managererrors"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"github.com/golang/protobuf/jsonpb"
-)
+package e2managererrors
 
-type UpdateGnbResponse struct {
-	nodebInfo *entities.NodebInfo
+type NodebExistsError struct {
+	*BaseError
 }
 
-func NewUpdateGnbResponse(nodebInfo *entities.NodebInfo) *UpdateGnbResponse {
-	return &UpdateGnbResponse{
-		nodebInfo: nodebInfo,
+func NewNodebExistsError() *NodebExistsError {
+	return &NodebExistsError{
+		&BaseError{
+			Code:    406,
+			Message: "Nodeb already exists",
+		},
 	}
 }
 
-func (response *UpdateGnbResponse) Marshal() ([]byte, error) {
-	m := jsonpb.Marshaler{}
-	result, err := m.MarshalToString(response.nodebInfo)
-
-	if err != nil {
-		return nil, e2managererrors.NewInternalError()
-	}
-
-	return []byte(result), nil
+func (e *NodebExistsError) Error() string {
+	return e.Message
 }

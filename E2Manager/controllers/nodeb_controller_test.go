@@ -56,13 +56,17 @@ const (
 	AssociatedE2TInstanceAddress = "10.0.2.15:38000"
 	ValidationFailureJson        = "{\"errorCode\":402,\"errorMessage\":\"Validation error\"}"
 	ResourceNotFoundJson         = "{\"errorCode\":404,\"errorMessage\":\"Resource not found\"}"
+	NodebExistsJson              = "{\"errorCode\":406,\"errorMessage\":\"Nodeb already exists\"}"
 	RnibErrorJson                = "{\"errorCode\":500,\"errorMessage\":\"RNIB error\"}"
 	InternalErrorJson            = "{\"errorCode\":501,\"errorMessage\":\"Internal Server Error. Please try again later\"}"
+	AddEnbUrl                    = "/nodeb/enb"
 )
 
 var (
 	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "nrPci", "servedPlmns"}
 	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode", "nrPci"}
+	EnbRequiredFields                     = []string{"enbType", "servedCells"}
+	ServedCellRequiredFields              = []string{"broadcastPlmns", "cellId", "choiceEutraMode", "eutraMode", "pci", "tac"}
 )
 
 type controllerGetNodebTestContext struct {
@@ -89,6 +93,12 @@ type updateGnbCellsParams struct {
 	err error
 }
 
+type saveNodebParams struct {
+	nodebInfo *entities.NodebInfo
+	nbIdentity *entities.NbIdentity
+	err error
+}
+
 type removeServedNrCellsParams struct {
 	servedNrCells []*entities.ServedNRCell
 	err           error
@@ -101,6 +111,14 @@ type controllerUpdateGnbTestContext struct {
 	requestBody               map[string]interface{}
 	expectedStatusCode        int
 	expectedJsonResponse      string
+}
+
+type controllerAddEnbTestContext struct {
+	getNodebInfoResult   *getNodebInfoResult
+	saveNodebParams      *saveNodebParams
+	requestBody          map[string]interface{}
+	expectedStatusCode   int
+	expectedJsonResponse string
 }
 
 func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
@@ -150,6 +168,27 @@ func buildServedNrCellInformation(propToOmit string) map[string]interface{} {
 		"nrMode": 1,
 		"nrPci":  1,
 		"servedPlmns": []interface{}{
+			"whatever",
+		},
+	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func buildServedCell(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"cellId": "whatever",
+		"choiceEutraMode": map[string]interface{}{
+			"fdd": map[string]interface{}{},
+		},
+		"eutraMode": 1,
+		"pci":       1,
+		"tac":       "whatever3",
+		"broadcastPlmns": []interface{}{
 			"whatever",
 		},
 	}
@@ -281,26 +320,29 @@ func assertControllerUpdateGnb(t *testing.T, context *controllerUpdateGnbTestCon
 	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
+}
 
-	if context.getNodebInfoResult != nil {
-		readerMock.AssertNotCalled(t, "GetNodeb")
-	}
-
-	if context.updateGnbCellsParams != nil {
-		writerMock.AssertNotCalled(t, "UpdateGnb")
-	}
-
-	if context.removeServedNrCellsParams != nil {
-		writerMock.AssertNotCalled(t, "RemoveServedNrCells")
-	}
+func assertControllerAddEnb(t *testing.T, context *controllerAddEnbTestContext, writer *httptest.ResponseRecorder, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
+	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
 }
 
 func buildUpdateGnbRequest(context *controllerUpdateGnbTestContext) *http.Request {
 	updateGnbUrl := fmt.Sprintf("/nodeb/%s/update", RanName)
 	requestBody := getJsonRequestAsBuffer(context.requestBody)
-	req, _ := http.NewRequest(http.MethodGet, updateGnbUrl, requestBody)
+	req, _ := http.NewRequest(http.MethodPut, updateGnbUrl, requestBody)
 	req.Header.Set("Content-Type", "application/json")
 	req = mux.SetURLVars(req, map[string]string{"ranName": RanName})
+	return req
+}
+
+func buildAddEnbRequest(context *controllerAddEnbTestContext) *http.Request {
+	requestBody := getJsonRequestAsBuffer(context.requestBody)
+	req, _ := http.NewRequest(http.MethodPost, AddEnbUrl, requestBody)
+	req.Header.Set("Content-Type", "application/json")
 	return req
 }
 
@@ -312,6 +354,42 @@ func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbT
 	req := buildUpdateGnbRequest(context)
 	controller.UpdateGnb(writer, req)
 	assertControllerUpdateGnb(t, context, writer, readerMock, writerMock)
+}
+
+func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock, addEnbRequest *models.AddEnbRequest) {
+	if context.getNodebInfoResult != nil {
+		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
+	}
+
+	if context.saveNodebParams != nil {
+		nodebInfo := entities.NodebInfo{
+			RanName:          addEnbRequest.RanName,
+			Ip:               addEnbRequest.Ip,
+			Port:             addEnbRequest.Port,
+			GlobalNbId:       addEnbRequest.GlobalNbId,
+			Configuration:    &entities.NodebInfo_Enb{Enb: addEnbRequest.Enb},
+			ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
+		}
+
+		nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId}
+
+		writerMock.On("SaveNodeb",&nbIdentity, &nodebInfo).Return(context.saveNodebParams.err)
+	}
+}
+
+func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestContext) {
+	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+	r := buildAddEnbRequest(context)
+	defer r.Body.Close()
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
+
+	addEnbRequest := models.AddEnbRequest{}
+
+	_ = json.Unmarshal(body, &addEnbRequest)
+	activateControllerAddEnbMocks(context, readerMock, writerMock, &addEnbRequest)
+	controller.AddEnb(writer, buildAddEnbRequest(context))
+	assertControllerAddEnb(t, context, writer, readerMock, writerMock)
 }
 
 func TestControllerUpdateGnbEmptyServedNrCells(t *testing.T) {
@@ -600,6 +678,35 @@ func TestControllerUpdateGnbSuccess(t *testing.T) {
 	controllerUpdateGnbTestExecuter(t, &context)
 }
 
+func TestControllerAddEnbSuccess(t *testing.T) {
+	context := controllerAddEnbTestContext{
+		saveNodebParams: &saveNodebParams{
+			err: nil,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
+		},
+		requestBody: map[string]interface{}{
+			"ranName": RanName,
+			"globalNbId": map[string]interface{}{
+				"plmnId": "whatever",
+				"nbId":   "whatever2",
+			},
+			"enb": map[string]interface{}{
+				"enbType": 1,
+				"servedCells": []interface{}{
+					buildServedCell(""),
+				},
+			},
+		},
+		expectedStatusCode:   http.StatusCreated,
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"DISCONNECTED\",\"globalNbId\":{\"plmnId\":\"whatever\",\"nbId\":\"whatever2\"},\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]}}",
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
 func getJsonRequestAsBuffer(requestJson map[string]interface{}) *bytes.Buffer {
 	b := new(bytes.Buffer)
 	_ = json.NewEncoder(b).Encode(requestJson)
@@ -699,7 +806,7 @@ func TestHeaderValidationFailed(t *testing.T) {
 
 	header := &http.Header{}
 
-	controller.handleRequest(writer, header, httpmsghandlerprovider.ShutdownRequest, nil, true)
+	controller.handleRequest(writer, header, httpmsghandlerprovider.ShutdownRequest, nil, true, 0)
 
 	var errorResponse = parseJsonRequest(t, writer.Body)
 	err := e2managererrors.NewHeaderValidationError()
@@ -848,12 +955,13 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 
 	// no body
 	b := new(bytes.Buffer)
+	data4Req := map[string]interface{}{}
+	_ = json.NewEncoder(b).Encode(data4Req)
 	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", b)
 	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
 
 	controller.X2Reset(writer, req)
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
-
 }
 
 func TestX2ResetHandleFailureInvalidBody(t *testing.T) {

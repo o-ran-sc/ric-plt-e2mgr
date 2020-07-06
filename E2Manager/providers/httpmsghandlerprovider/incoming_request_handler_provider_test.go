@@ -46,7 +46,7 @@ func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) 
 func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
 	log := initLog(t)
-	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
+	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, RnibWriter: configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE", RanManipulationMessageChannel: "RAN_MANIPULATION"}}
 	config.RoutingManager.BaseUrl = "http://10.10.2.15:12020/routingmanager"
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}

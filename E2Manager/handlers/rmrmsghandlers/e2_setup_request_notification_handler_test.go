@@ -455,7 +455,9 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,
-		StateChangeMessageChannel: StateChangeMessageChannel,
+		RnibWriter: configuration.RnibWriterConfig{
+			StateChangeMessageChannel: StateChangeMessageChannel,
+		},
 		GlobalRicId: struct {
 			RicId string
 			Mcc   string
@@ -522,7 +524,9 @@ func initMocks(t *testing.T) (*E2SetupRequestNotificationHandler, *mocks.RnibRea
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,
-		StateChangeMessageChannel: StateChangeMessageChannel,
+		RnibWriter: configuration.RnibWriterConfig{
+			StateChangeMessageChannel: StateChangeMessageChannel,
+		},
 		GlobalRicId: struct {
 			RicId string
 			Mcc   string
