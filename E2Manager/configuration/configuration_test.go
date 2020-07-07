@@ -221,6 +221,38 @@ func TestGlobalRicIdConfigNotFoundFailure(t *testing.T) {
 		func() { ParseConfiguration() })
 }
 
+func TestRnibWriterConfigNotFoundFailure(t *testing.T) {
+	configPath := "../resources/configuration.yaml"
+	configPathTmp := "../resources/configuration.yaml_tmp"
+	err := os.Rename(configPath, configPathTmp)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+	}
+	defer func() {
+		err = os.Rename(configPathTmp, configPath)
+		if err != nil {
+			t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to rename configuration file: %s\n", configPath)
+		}
+	}()
+	yamlMap := map[string]interface{}{
+		"rmr":            map[string]interface{}{"port": 3801, "maxMsgSize": 4096},
+		"logging":        map[string]interface{}{"logLevel": "info"},
+		"http":           map[string]interface{}{"port": 3800},
+		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
+		"globalRicId": map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AACCE"},
+	}
+	buf, err := yaml.Marshal(yamlMap)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to marshal configuration map\n")
+	}
+	err = ioutil.WriteFile("../resources/configuration.yaml", buf, 0644)
+	if err != nil {
+		t.Errorf("#TestGlobalRicIdConfigNotFoundFailure - failed to write configuration file: %s\n", configPath)
+	}
+	assert.PanicsWithValue(t, "#configuration.populateRnibWriterConfig - failed to populate Rnib Writer configuration: The entry 'rnibWriter' not found\n",
+		func() { ParseConfiguration() })
+}
+
 func TestEmptyRicIdFailure(t *testing.T) {
 	configPath := "../resources/configuration.yaml"
 	configPathTmp := "../resources/configuration.yaml_tmp"

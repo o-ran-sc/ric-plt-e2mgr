@@ -299,6 +299,10 @@ func (c *NodebController) handleErrorResponse(err error, writer http.ResponseWri
 			e2Error, _ := err.(*e2managererrors.RoutingManagerError)
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusServiceUnavailable
+		case *e2managererrors.NodebExistsError:
+			e2Error, _ := err.(*e2managererrors.NodebExistsError)
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
+			httpError = http.StatusBadRequest
 		default:
 			e2Error := e2managererrors.NewInternalError()
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}

@@ -53,22 +53,27 @@ func (r *AddEnbRequest) UnmarshalJSON(data []byte) error {
 	r.Ip = addEnbRawRequest.Ip
 	r.Port = addEnbRawRequest.Port
 
-	globalNbId := entities.GlobalNbId{}
-	err = jsonpb.UnmarshalString(string(addEnbRawRequest.GlobalNbId), &globalNbId)
+	if addEnbRawRequest.GlobalNbId != nil {
+		globalNbId := entities.GlobalNbId{}
+		err = jsonpb.UnmarshalString(string(addEnbRawRequest.GlobalNbId), &globalNbId)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		r.GlobalNbId = &globalNbId
 	}
 
-	r.GlobalNbId = &globalNbId
+	if addEnbRawRequest.Enb != nil {
+		enb := entities.Enb{}
+		err = jsonpb.UnmarshalString(string(addEnbRawRequest.Enb), &enb)
 
-	enb := entities.Enb{}
-	err = jsonpb.UnmarshalString(string(addEnbRawRequest.Enb), &enb)
+		if err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
+		r.Enb = &enb
 	}
 
-	r.Enb = &enb
 	return nil
 }

@@ -161,10 +161,6 @@ func isServedNrCellInformationValid(servedNrCellInformation *entities.ServedNRCe
 		return errors.New("nrMode")
 	}
 
-	if servedNrCellInformation.NrPci == 0 {
-		return errors.New("nrPci")
-	}
-
 	if len(servedNrCellInformation.ServedPlmns) == 0 {
 		return errors.New("servedPlmns")
 	}
@@ -203,10 +199,6 @@ func isNrNeighbourInformationValid(nrNeighbourInformation *entities.NrNeighbourI
 
 	if nrNeighbourInformation.NrMode == entities.Nr_UNKNOWN {
 		return errors.New("nrMode")
-	}
-
-	if nrNeighbourInformation.NrPci == 0 {
-		return errors.New("nrPci")
 	}
 
 	return isNrNeighbourInfoChoiceNrModeValid(nrNeighbourInformation.ChoiceNrMode)

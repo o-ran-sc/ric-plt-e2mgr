@@ -63,10 +63,11 @@ const (
 )
 
 var (
-	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "nrPci", "servedPlmns"}
-	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode", "nrPci"}
+	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "servedPlmns"}
+	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode"}
+	AddEnbRequestRequiredFields           = []string{"ranName", "enb", "globalNbId"}
 	EnbRequiredFields                     = []string{"enbType", "servedCells"}
-	ServedCellRequiredFields              = []string{"broadcastPlmns", "cellId", "choiceEutraMode", "eutraMode", "pci", "tac"}
+	ServedCellRequiredFields              = []string{"broadcastPlmns", "cellId", "choiceEutraMode", "eutraMode", "tac"}
 )
 
 type controllerGetNodebTestContext struct {
@@ -94,9 +95,9 @@ type updateGnbCellsParams struct {
 }
 
 type saveNodebParams struct {
-	nodebInfo *entities.NodebInfo
+	nodebInfo  *entities.NodebInfo
 	nbIdentity *entities.NbIdentity
-	err error
+	err        error
 }
 
 type removeServedNrCellsParams struct {
@@ -192,6 +193,37 @@ func buildServedCell(propToOmit string) map[string]interface{} {
 			"whatever",
 		},
 	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func getAddEnbRequest(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"ranName": RanName,
+		"globalNbId": map[string]interface{}{
+			"plmnId": "whatever",
+			"nbId":   "whatever2",
+		},
+		"enb": buildEnb(""),
+	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func buildEnb(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"enbType": 1,
+		"servedCells": []interface{}{
+			buildServedCell(""),
+		}}
 
 	if len(propToOmit) != 0 {
 		delete(ret, propToOmit)
@@ -371,7 +403,7 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 
 		nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId}
 
-		writerMock.On("SaveNodeb",&nbIdentity, &nodebInfo).Return(context.saveNodebParams.err)
+		writerMock.On("SaveNodeb", &nbIdentity, &nodebInfo).Return(context.saveNodebParams.err)
 	}
 }
 
@@ -379,14 +411,15 @@ func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestCon
 	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	r := buildAddEnbRequest(context)
-	defer r.Body.Close()
 	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
 
 	addEnbRequest := models.AddEnbRequest{}
 
 	_ = json.Unmarshal(body, &addEnbRequest)
 	activateControllerAddEnbMocks(context, readerMock, writerMock, &addEnbRequest)
-	controller.AddEnb(writer, buildAddEnbRequest(context))
+	r = buildAddEnbRequest(context)
+	defer r.Body.Close()
+	controller.AddEnb(writer, r)
 	assertControllerAddEnb(t, context, writer, readerMock, writerMock)
 }
 
@@ -674,6 +707,104 @@ func TestControllerUpdateGnbSuccess(t *testing.T) {
 	}
 
 	controllerUpdateGnbTestExecuter(t, &context)
+}
+
+func TestControllerAddEnbGetNodebInternalError(t *testing.T) {
+	context := controllerAddEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
+		},
+		requestBody:          getAddEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
+func TestControllerAddEnbNodebExistsFailure(t *testing.T) {
+	context := controllerAddEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{},
+			rnibError: nil,
+		},
+		requestBody:          getAddEnbRequest(""),
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: NodebExistsJson,
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
+func TestControllerAddEnbSaveNodebFailure(t *testing.T) {
+	context := controllerAddEnbTestContext{
+		saveNodebParams: &saveNodebParams{
+			err: common.NewInternalError(errors.New("#reader.SaveeNodeb - Internal Error")),
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
+		},
+		requestBody:          getAddEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
+func TestControllerAddEnbMissingRequiredRequestProps(t *testing.T) {
+
+	for _, v := range AddEnbRequestRequiredFields {
+		context := controllerAddEnbTestContext{
+			requestBody:          getAddEnbRequest(v),
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerAddEnbTestExecuter(t, &context)
+	}
+}
+
+func TestControllerAddEnbMissingRequiredEnbProps(t *testing.T) {
+
+	r := getAddEnbRequest("")
+
+	for _, v := range EnbRequiredFields {
+		r["enb"] = buildEnb(v)
+
+		context := controllerAddEnbTestContext{
+			requestBody:          r,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerAddEnbTestExecuter(t, &context)
+	}
+}
+
+func TestControllerAddEnbMissingRequiredServedCellProps(t *testing.T) {
+
+	r := getAddEnbRequest("")
+
+	for _, v := range ServedCellRequiredFields {
+		enb := r["enb"]
+
+		enbMap, _ := enb.(map[string]interface{})
+
+		enbMap["servedCells"] = []interface{}{
+			buildServedCell(v),
+		}
+
+		context := controllerAddEnbTestContext{
+			requestBody:          r,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerAddEnbTestExecuter(t, &context)
+	}
 }
 
 func TestControllerAddEnbSuccess(t *testing.T) {

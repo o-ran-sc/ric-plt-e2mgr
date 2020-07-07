@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.2
+  version: 5.2.8
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -85,6 +85,38 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  '/nodeb/enb':
+    post:
+      summary: Add ENB
+      tags:
+        - nodeb
+      operationId: AddEnb
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEnbRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddEnbResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /nodeb/shutdown:
     put:
       tags:
@@ -187,6 +219,64 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
+    AddEnbRequest:
+      type: object
+      required:
+        - ranName
+        - globalNbId
+        - enb
+      properties:
+        ranName:
+          type: string
+        globalNbId:
+          properties:
+            nbId:
+              type: string
+            plmnId:
+              type: string
+        ip:
+          type: string
+        port:
+          type: integer
+        enb:
+          $ref: '#/components/schemas/Enb'
+      additionalProperties: false
+
+    AddEnbResponse:
+      properties:
+        connectionStatus:
+          oneOf:
+            - type: string
+            - type: integer
+        failureType:
+          oneOf:
+            - type: string
+            - type: integer
+        globalNbId:
+          properties:
+            nbId:
+              type: string
+            plmnId:
+              type: string
+          additionalProperties: false
+          type: object
+        enb:
+          $ref: '#/components/schemas/Enb'
+        ip:
+          type: string
+        nodeType:
+          oneOf:
+            - type: string
+            - type: integer
+        port:
+          type: integer
+        ranName:
+          type: string
+        setupFailure:
+          $ref: '#/components/schemas/SetupFailure'
+      additionalProperties: false
+      type: object
+
     UpdateGnbRequest:
       type: object
       required:
@@ -504,6 +594,8 @@ components:
                 type: object
               tac:
                 type: string
+              additionalCellInformation:
+                $ref: '#/components/schemas/AdditionalCellInformation'
             type: object
           type: array
       type: object
@@ -856,6 +948,8 @@ components:
                 type: array
               stac5g:
                 type: string
+              additionalCellInformation:
+                $ref: '#/components/schemas/AdditionalCellInformation'
             additionalProperties: false
             type: object
         additionalProperties: false
@@ -914,4 +1008,23 @@ components:
             - type: string
             - type: integer
       additionalProperties: false
+      type: object
+    AdditionalCellInformation:
+      properties:
+        cellLatitude:
+          type: number
+        cellLongitude:
+          type: number
+        antennaHeight:
+          type: number
+        antennaAzimuthDirection:
+          type: number
+        antennaTiltAngle:
+          type: number
+        antennaMaxTransmit:
+          type: number
+        antennaMaxGain:
+          type: number
+        sectorId:
+          type: integer
       type: object

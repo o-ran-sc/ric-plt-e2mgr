@@ -208,26 +208,7 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	e2tInstancesManagerMock.AssertExpectations(t)
 }
 
-func TestE2SetupRequestNotificationHandler_HandleUpdateNodebInfoOnConnectionStatusInversionFailureForNewGnb(t *testing.T) {
-	xml := readXmlFile(t, GnbSetupRequestXmlPath)
-	handler, readerMock, writerMock, _, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
-	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
-	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
-	var gnb *entities.NodebInfo
-	readerMock.On("GetNodeb", nodebRanName).Return(gnb, common.NewResourceNotFoundError("Not found"))
-	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
-	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
-	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
-	updatedNodebInfo := *nodebInfo
-	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, StateChangeMessageChannel, nodebRanName+"_CONNECTED").Return(common.NewInternalError(errors.New("some error")))
-	handler.Handle(notificationRequest)
-	readerMock.AssertExpectations(t)
-	writerMock.AssertExpectations(t)
-	routingManagerClientMock.AssertExpectations(t)
-	e2tInstancesManagerMock.AssertExpectations(t)
-}
+
 
 func TestE2SetupRequestNotificationHandler_HandleNewGnbSuccess(t *testing.T) {
 	testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t, GnbSetupRequestXmlPath)

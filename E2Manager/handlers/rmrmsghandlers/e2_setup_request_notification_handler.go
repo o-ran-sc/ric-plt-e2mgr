@@ -152,12 +152,6 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 		return nil, err
 	}
 
-	err = h.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
-
-	if err != nil {
-		return nil, err
-	}
-
 	return nodebInfo, nil
 }
 
