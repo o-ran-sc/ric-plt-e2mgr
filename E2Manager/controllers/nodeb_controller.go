@@ -102,7 +102,7 @@ func (c *NodebController) AddEnb(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.AddEnb - request: %v", c.prettifyRequest(r))
 
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
+	body, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		c.logger.Errorf("[Client -> E2 Manager] #NodebController.AddEnb - unable to read request body - error: %s", err)

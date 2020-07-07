@@ -54,6 +54,7 @@ import (
 const (
 	RanName                      = "test"
 	AssociatedE2TInstanceAddress = "10.0.2.15:38000"
+	CorruptedJson                = "{\"errorCode\":401,\"errorMessage\":\"corrupted json\"}"
 	ValidationFailureJson        = "{\"errorCode\":402,\"errorMessage\":\"Validation error\"}"
 	ResourceNotFoundJson         = "{\"errorCode\":404,\"errorMessage\":\"Resource not found\"}"
 	NodebExistsJson              = "{\"errorCode\":406,\"errorMessage\":\"Nodeb already exists\"}"
@@ -66,6 +67,7 @@ var (
 	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "servedPlmns"}
 	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode"}
 	AddEnbRequestRequiredFields           = []string{"ranName", "enb", "globalNbId"}
+	GlobalIdRequiredFields                = []string{"plmnId", "nbId"}
 	EnbRequiredFields                     = []string{"enbType", "servedCells"}
 	ServedCellRequiredFields              = []string{"broadcastPlmns", "cellId", "choiceEutraMode", "eutraMode", "tac"}
 )
@@ -203,12 +205,9 @@ func buildServedCell(propToOmit string) map[string]interface{} {
 
 func getAddEnbRequest(propToOmit string) map[string]interface{} {
 	ret := map[string]interface{}{
-		"ranName": RanName,
-		"globalNbId": map[string]interface{}{
-			"plmnId": "whatever",
-			"nbId":   "whatever2",
-		},
-		"enb": buildEnb(""),
+		"ranName":    RanName,
+		"globalNbId": buildGlobalNbId(""),
+		"enb":        buildEnb(""),
 	}
 
 	if len(propToOmit) != 0 {
@@ -224,6 +223,19 @@ func buildEnb(propToOmit string) map[string]interface{} {
 		"servedCells": []interface{}{
 			buildServedCell(""),
 		}}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
+func buildGlobalNbId(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"plmnId": "whatever",
+		"nbId":   "whatever2",
+	}
 
 	if len(propToOmit) != 0 {
 		delete(ret, propToOmit)
@@ -396,6 +408,7 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 			RanName:          addEnbRequest.RanName,
 			Ip:               addEnbRequest.Ip,
 			Port:             addEnbRequest.Port,
+			NodeType:         entities.Node_ENB,
 			GlobalNbId:       addEnbRequest.GlobalNbId,
 			Configuration:    &entities.NodebInfo_Enb{Enb: addEnbRequest.Enb},
 			ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
@@ -767,6 +780,38 @@ func TestControllerAddEnbMissingRequiredRequestProps(t *testing.T) {
 	}
 }
 
+func TestControllerAddEnbInvalidRequest(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+
+	// Invalid json: attribute name without quotes (should be "cause":).
+	invalidJson := strings.NewReader("{ranName:\"whatever\"")
+	req, _ := http.NewRequest(http.MethodPost, AddEnbUrl, invalidJson)
+
+	controller.AddEnb(writer, req)
+	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, CorruptedJson, string(bodyBytes))
+
+}
+
+func TestControllerAddEnbMissingRequiredGlobalNbIdProps(t *testing.T) {
+
+	r := getAddEnbRequest("")
+
+	for _, v := range GlobalIdRequiredFields {
+		r["globalNbId"] = buildGlobalNbId(v)
+
+		context := controllerAddEnbTestContext{
+			requestBody:          r,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerAddEnbTestExecuter(t, &context)
+	}
+}
+
 func TestControllerAddEnbMissingRequiredEnbProps(t *testing.T) {
 
 	r := getAddEnbRequest("")
@@ -830,7 +875,7 @@ func TestControllerAddEnbSuccess(t *testing.T) {
 			},
 		},
 		expectedStatusCode:   http.StatusCreated,
-		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"DISCONNECTED\",\"globalNbId\":{\"plmnId\":\"whatever\",\"nbId\":\"whatever2\"},\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]}}",
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"DISCONNECTED\",\"globalNbId\":{\"plmnId\":\"whatever\",\"nbId\":\"whatever2\"},\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]}}",
 	}
 
 	controllerAddEnbTestExecuter(t, &context)

@@ -90,6 +90,7 @@ func (h *AddEnbRequestHandler) createNodebInfo(addEnbRequest *models.AddEnbReque
 		Port:             addEnbRequest.Port,
 		GlobalNbId:       addEnbRequest.GlobalNbId,
 		Configuration:    &entities.NodebInfo_Enb{Enb: addEnbRequest.Enb},
+		NodeType:         entities.Node_ENB,
 		ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
 	}
 

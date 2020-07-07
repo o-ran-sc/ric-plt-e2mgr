@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package httpserver
 
 import (
@@ -120,7 +119,7 @@ func TestRoutePutNodebSetGeneralConfiguration(t *testing.T) {
 }
 
 func TestRouteNotFound(t *testing.T) {
-	router, _, _,_ := setupRouterAndMocks()
+	router, _, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/no/such/route", nil)
 	if err != nil {
