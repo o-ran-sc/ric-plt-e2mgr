@@ -59,7 +59,7 @@ func TestChangeStatusSuccessNewRan(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_UNKNOWN_CONNECTION_STATUS}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, EventChannelForTest, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateRanState", &updatedNodebInfo).Return(nil)
 	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
 	err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
@@ -105,7 +105,7 @@ func TestChangeStatusSuccessEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, EventChannelForTest, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateRanState", &updatedNodebInfo).Return(nil)
 	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
 	err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
@@ -121,7 +121,7 @@ func TestChangeStatusSuccessEventDisconnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, EventChannelForTest, RanName+"_"+DISCONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+DISCONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateRanState", &updatedNodebInfo).Return(nil)
 	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
 	err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_DISCONNECTED)
@@ -151,7 +151,7 @@ func TestChangeStatusRnibErrorEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, EventChannelForTest, RanName+"_"+CONNECTED_RAW_EVENT).Return(common.NewInternalError(errors.New("Error")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(common.NewInternalError(errors.New("Error")))
 	err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
 	assert.NotNil(t, err)
 	writerMock.AssertExpectations(t)
@@ -180,7 +180,7 @@ func TestChangeStatusRanAlarmServiceErrorEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, EventChannelForTest, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateRanState", &updatedNodebInfo).Return(nil)
 	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
 	err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)

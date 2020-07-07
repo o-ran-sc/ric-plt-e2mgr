@@ -120,7 +120,7 @@ func TestLostConnectionHandlerConnectedRanSuccess(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo1, StateChangeMessageChannel, ranName+"_DISCONNECTED").Return(rnibErr)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo1, ranName+"_DISCONNECTED").Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""

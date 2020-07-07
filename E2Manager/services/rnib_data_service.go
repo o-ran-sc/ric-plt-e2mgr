@@ -52,6 +52,7 @@ type RNibDataService interface {
 	GetGeneralConfiguration() (*entities.GeneralConfiguration, error)
 	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error
 	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
+	RemoveEnb(nodebInfo *entities.NodebInfo) error
 }
 
 type rNibDataService struct {
@@ -60,7 +61,6 @@ type rNibDataService struct {
 	rnibWriter       rNibWriter.RNibWriter
 	maxAttempts      int
 	retryInterval    time.Duration
-	rnibWriterConfig configuration.RnibWriterConfig
 }
 
 func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
@@ -70,13 +70,21 @@ func NewRnibDataService(logger *logger.Logger, config *configuration.Configurati
 		rnibWriter:       rnibWriter,
 		maxAttempts:      config.MaxRnibConnectionAttempts,
 		retryInterval:    time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
-		rnibWriterConfig: config.RnibWriter,
 	}
 }
 
 func (w *rNibDataService) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
 	err := w.retry("RemoveServedNrCells", func() (err error) {
 		err = w.rnibWriter.RemoveServedNrCells(inventoryName, servedNrCells)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) RemoveEnb(nodebInfo *entities.NodebInfo) error {
+	err := w.retry("RemoveEnb", func() (err error) {
+		err = w.rnibWriter.RemoveEnb(nodebInfo)
 		return
 	})
 
@@ -304,10 +312,10 @@ func (w *rNibDataService) PingRnib() bool {
 }
 
 func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
-	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: %s, event: %s, nodebInfo: %s", w.rnibWriterConfig.StateChangeMessageChannel, event, nodebInfo)
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - event: %s, nodebInfo: %s", event, nodebInfo)
 
 	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
-		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, w.rnibWriterConfig.StateChangeMessageChannel, event)
+		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 		return
 	})
 

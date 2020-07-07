@@ -40,6 +40,8 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
 	nodebControllerMock.On("SetGeneralConfiguration").Return(nil)
+	nodebControllerMock.On("DeleteEnb").Return(nil)
+	nodebControllerMock.On("AddEnb").Return(nil)
 
 	e2tControllerMock := &mocks.E2TControllerMock{}
 
@@ -147,6 +149,34 @@ func TestRun(t *testing.T) {
 		t.Fatalf("failed to perform GET to http://localhost:11223/v1/health")
 	}
 	assert.Equal(t, 200, resp.StatusCode)
+}
+
+func TestRouteAddEnb(t *testing.T) {
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("POST", "/v1/nodeb/enb", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code, "handler returned wrong status code")
+	nodebControllerMock.AssertNumberOfCalls(t, "AddEnb", 1)
+}
+
+func TestRouteDeleteEnb(t *testing.T) {
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("DELETE", "/v1/nodeb/enb/ran1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusNoContent, rr.Code, "handler returned wrong status code")
+	nodebControllerMock.AssertNumberOfCalls(t, "DeleteEnb", 1)
 }
 
 func initLog(t *testing.T) *logger.Logger {

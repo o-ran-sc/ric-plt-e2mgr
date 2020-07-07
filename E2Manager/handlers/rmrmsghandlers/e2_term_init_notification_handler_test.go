@@ -189,7 +189,7 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "RAN_CONNECTION_STATUS_CHANGE", "test_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
 
 	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
@@ -224,7 +224,7 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "RAN_CONNECTION_STATUS_CHANGE", "test_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
 
 	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)

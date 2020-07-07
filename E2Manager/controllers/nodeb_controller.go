@@ -51,6 +51,7 @@ type INodebController interface {
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
 	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 	AddEnb(writer http.ResponseWriter, r *http.Request)
+	DeleteEnb(writer http.ResponseWriter, r *http.Request)
 }
 
 type NodebController struct {
@@ -119,6 +120,14 @@ func (c *NodebController) AddEnb(writer http.ResponseWriter, r *http.Request) {
 	}
 
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.AddEnbRequest, &addEnbRequest, true, http.StatusCreated)
+}
+
+func (c *NodebController) DeleteEnb(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.DeleteEnb - request: %v", c.prettifyRequest(r))
+	vars := mux.Vars(r)
+	ranName := vars["ranName"]
+	request := models.DeleteEnbRequest{RanName: ranName}
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.DeleteEnbRequest, request, true, http.StatusNoContent)
 }
 
 func (c *NodebController) SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request) {

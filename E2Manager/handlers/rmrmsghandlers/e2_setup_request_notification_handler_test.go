@@ -192,7 +192,7 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, StateChangeMessageChannel, nodebRanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	updatedNodebInfo2 := *nodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
@@ -290,7 +290,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(
 	writerMock.On("UpdateNodebInfo", gnbToUpdate).Return(nil)
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &gnbToUpdate2, StateChangeMessageChannel, nodebRanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &gnbToUpdate2, nodebRanName+"_CONNECTED").Return(nil)
 	gnbToUpdate3 := *gnbToUpdate
 	gnbToUpdate3.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	gnbToUpdate3.AssociatedE2TInstanceAddress = e2tInstanceFullAddress
@@ -411,13 +411,13 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 	writerMock.On("SaveNodeb", mock.Anything, nodebInfo).Return(nil)
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, StateChangeMessageChannel, nodebRanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))
 	updatedNodebInfo2 := *nodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo2, StateChangeMessageChannel, nodebRanName+"_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo2, nodebRanName+"_DISCONNECTED").Return(nil)
 	var errEmpty error
 	mbuf := getMbuf(rmrCgo.RIC_E2_SETUP_FAILURE, E2SetupFailureResponseWithTransportCause, notificationRequest)
 	rmrMessengerMock.On("WhSendMsg", mbuf, true).Return(&rmrCgo.MBuf{}, errEmpty)
@@ -462,7 +462,7 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	var gnb *entities.NodebInfo
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, StateChangeMessageChannel, mock.Anything).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", mock.Anything, mock.Anything).Return(nil)

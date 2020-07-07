@@ -70,7 +70,13 @@ func (c *NodebControllerMock) UpdateGnb(writer http.ResponseWriter, r *http.Requ
 
 func (c *NodebControllerMock) AddEnb(writer http.ResponseWriter, r *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
+	writer.WriteHeader(http.StatusCreated)
+	c.Called()
+}
+
+func (c *NodebControllerMock) DeleteEnb(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusNoContent)
 	c.Called()
 }
 

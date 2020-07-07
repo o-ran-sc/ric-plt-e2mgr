@@ -262,7 +262,7 @@ func TestSuccessfulUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
 	event := "event"
 
 	nodebInfo := &entities.NodebInfo{}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, "RAN_CONNECTION_STATUS_CHANGE", event).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, event).Return(nil)
 
 	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 1)
@@ -274,7 +274,7 @@ func TestConnFailureUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
 
 	nodebInfo := &entities.NodebInfo{}
 	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, "RAN_CONNECTION_STATUS_CHANGE", event).Return(mockErr)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", nodebInfo, event).Return(mockErr)
 
 	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 3)
@@ -333,5 +333,40 @@ func TestGetE2TInstanceOkOtherError(t *testing.T) {
 	res, err := rnibDataService.GetE2TInstance(address)
 	readerMock.AssertNumberOfCalls(t, "GetE2TInstance", 1)
 	assert.Nil(t, res)
+	assert.NotNil(t, err)
+}
+
+func TestRemoveEnbConnFailure(t *testing.T) {
+	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
+
+	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
+	nodebInfo := &entities.NodebInfo{}
+	writerMock.On("RemoveEnb", nodebInfo).Return(mockErr)
+
+	err := rnibDataService.RemoveEnb(nodebInfo)
+	writerMock.AssertNumberOfCalls(t, "RemoveEnb", 3)
+	assert.NotNil(t, err)
+}
+
+func TestRemoveEnbOkNoError(t *testing.T) {
+	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
+
+	nodebInfo := &entities.NodebInfo{}
+	writerMock.On("RemoveEnb", nodebInfo).Return(nil)
+
+	err := rnibDataService.RemoveEnb(nodebInfo)
+	writerMock.AssertNumberOfCalls(t, "RemoveEnb", 1)
+	assert.Nil(t, err)
+}
+
+func TestRemoveEnbOtherError(t *testing.T) {
+	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
+
+	mockErr := &common.InternalError{Err: fmt.Errorf("non connection error")}
+	nodebInfo := &entities.NodebInfo{}
+	writerMock.On("RemoveEnb", nodebInfo).Return(mockErr)
+
+	err := rnibDataService.RemoveEnb(nodebInfo)
+	writerMock.AssertNumberOfCalls(t, "RemoveEnb", 1)
 	assert.NotNil(t, err)
 }

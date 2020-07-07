@@ -101,7 +101,7 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	/*** nodeb 1 ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -121,7 +121,7 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	/*** nodeb 5 ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "RAN_CONNECTION_STATUS_CHANGE", "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -188,7 +188,7 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -281,7 +281,7 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -301,7 +301,7 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	/*** nodeb 5 connected ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "RAN_CONNECTION_STATUS_CHANGE", "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -329,7 +329,7 @@ func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -357,7 +357,7 @@ func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testi
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -382,7 +382,7 @@ func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -470,7 +470,7 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "RAN_CONNECTION_STATUS_CHANGE", "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
@@ -490,7 +490,7 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	/*** nodeb 5 connected ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "RAN_CONNECTION_STATUS_CHANGE", "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""

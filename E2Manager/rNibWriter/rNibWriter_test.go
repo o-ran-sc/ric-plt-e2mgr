@@ -90,7 +90,7 @@ func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 func TestRemoveServedNrCellsSuccess(t *testing.T) {
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedNrCellsToRemove := generateServedNrCells("whatever1", "whatever2")
-	sdlInstanceMock.On("Remove", buildCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(nil)
+	sdlInstanceMock.On("Remove", buildServedNRCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(nil)
 	err := w.RemoveServedNrCells(RanName, servedNrCellsToRemove)
 	assert.Nil(t, err)
 }
@@ -98,7 +98,7 @@ func TestRemoveServedNrCellsSuccess(t *testing.T) {
 func TestRemoveServedNrCellsFailure(t *testing.T) {
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedNrCellsToRemove := generateServedNrCells("whatever1", "whatever2")
-	sdlInstanceMock.On("Remove", buildCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(errors.New("expected error"))
+	sdlInstanceMock.On("Remove", buildServedNRCellKeysToRemove(RanName, servedNrCellsToRemove)).Return(errors.New("expected error"))
 	err := w.RemoveServedNrCells(RanName, servedNrCellsToRemove)
 	assert.IsType(t, &common.InternalError{}, err)
 }
@@ -749,7 +749,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionSuccess(t *testing.T) {
 	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
-	channelName := "RAN_CONNECT_STATE_CHANGE"
+	channelName := "RAN_CONNECTION_STATUS_CHANGE"
 	eventName := inventoryName + "_" + "CONNECTED"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
@@ -767,7 +767,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionSuccess(t *testing.T) {
 
 	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
-	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, eventName)
 	assert.Nil(t, rNibErr)
 }
 
@@ -775,7 +775,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure(t
 	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
-	channelName := "RAN_CONNECT_STATE_CHANGE"
+	channelName := "RAN_CONNECTION_STATUS_CHANGE"
 	eventName := inventoryName + "_" + "CONNECTED"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := &entities.NodebInfo{}
@@ -793,7 +793,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure(t
 
 	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
-	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, eventName)
 
 	assert.NotNil(t, rNibErr)
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
@@ -801,7 +801,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingInventoryNameFailure(t
 
 func TestUpdateNodebInfoOnConnectionStatusInversionMissingGlobalNbId(t *testing.T) {
 	inventoryName := "name"
-	channelName := "RAN_CONNECT_STATE_CHANGE"
+	channelName := "RAN_CONNECTION_STATUS_CHANGE"
 	eventName := inventoryName + "_" + "CONNECTED"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	nodebInfo := &entities.NodebInfo{}
@@ -817,7 +817,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionMissingGlobalNbId(t *testing.
 	setExpected = append(setExpected, nodebNameKey, data)
 	sdlInstanceMock.On("SetAndPublish", []string{channelName, eventName}, []interface{}{setExpected}).Return(e)
 
-	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, channelName, eventName)
+	rNibErr := w.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, eventName)
 
 	assert.Nil(t, rNibErr)
 }

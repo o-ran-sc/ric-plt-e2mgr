@@ -81,7 +81,7 @@ func TestAssociateRanSuccess(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, RanName+"_CONNECTED").Return(nil)
 	updatedNb2 := *nb
 	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -106,7 +106,7 @@ func TestAssociateRan_RnibError(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, RanName+"_CONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
 
 	err := manager.AssociateRan(E2TAddress, nb)
 
@@ -138,7 +138,7 @@ func TestAssociateRanUpdateNodebError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, RanName+"_CONNECTED").Return(nil)
 	updatedNb2 := *nb
 	updatedNb2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -160,7 +160,7 @@ func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, RanName+"_CONNECTED").Return(nil)
 
 	updatedNb2 := *nb
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
@@ -185,7 +185,7 @@ func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 
 	updatedNb := *nb
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, StateChangeMessageChannel, RanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, ranName+"_CONNECTED").Return(nil)
 
 	updatedNb2 := *nb
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress

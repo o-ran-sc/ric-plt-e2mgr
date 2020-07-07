@@ -52,8 +52,9 @@ type RNibWriter interface {
 	RemoveE2TInstance(e2tAddress string) error
 	UpdateGnbCells(nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) error
 	RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error
-	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error
+	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, ent string) error
 	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
+	RemoveEnb(nodebInfo *entities.NodebInfo) error
 }
 
 /*
@@ -65,7 +66,7 @@ func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibW
 }
 
 func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
-	cellKeysToRemove := buildCellKeysToRemove(inventoryName, servedNrCells)
+	cellKeysToRemove := buildServedNRCellKeysToRemove(inventoryName, servedNrCells)
 	err := w.sdl.Remove(cellKeysToRemove)
 
 	if err != nil {
@@ -149,11 +150,7 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 	ranNameIdentity := &entities.NbIdentity{InventoryName: nbIdentity.InventoryName}
 
 	if isNotEmptyIdentity {
-		nbIdData, err := proto.Marshal(ranNameIdentity)
-		if err != nil {
-			return common.NewInternalError(err)
-		}
-		err = w.sdl.RemoveMember(entities.Node_UNKNOWN.String(), nbIdData)
+		err := w.removeNbIdentity(entities.Node_UNKNOWN, ranNameIdentity)
 		if err != nil {
 			return common.NewInternalError(err)
 		}
@@ -198,7 +195,7 @@ func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, serve
 	return nil
 }
 
-func buildCellKeysToRemove(inventoryName string, servedNrCellsToRemove []*entities.ServedNRCell) []string {
+func buildServedNRCellKeysToRemove(inventoryName string, servedNrCellsToRemove []*entities.ServedNRCell) []string {
 
 	cellKeysToRemove := []string{}
 
@@ -211,6 +208,28 @@ func buildCellKeysToRemove(inventoryName string, servedNrCellsToRemove []*entiti
 		}
 
 		key, _ = common.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetServedNrCellInformation().GetNrPci())
+
+		if len(key) != 0 {
+			cellKeysToRemove = append(cellKeysToRemove, key)
+		}
+	}
+
+	return cellKeysToRemove
+}
+
+func buildServedCellInfoKeysToRemove(inventoryName string, servedCellsToRemove []*entities.ServedCellInfo) []string {
+
+	cellKeysToRemove := []string{}
+
+	for _, cell := range servedCellsToRemove {
+
+		key, _ := common.ValidateAndBuildCellIdKey(cell.GetCellId())
+
+		if len(key) != 0 {
+			cellKeysToRemove = append(cellKeysToRemove, key)
+		}
+
+		key, _ = common.ValidateAndBuildCellNamePciKey(inventoryName, cell.GetPci())
 
 		if len(key) != 0 {
 			cellKeysToRemove = append(cellKeysToRemove, key)
@@ -242,6 +261,38 @@ func buildUpdateNodebInfoPairs(nodebInfo *entities.NodebInfo) ([]interface{}, er
 	}
 
 	return pairs, nil
+}
+
+func (w *rNibWriterInstance) buildRemoveEnbKeys(nodebInfo *entities.NodebInfo) ([]string, error) {
+	keys := buildServedCellInfoKeysToRemove(nodebInfo.GetRanName(), nodebInfo.GetEnb().GetServedCells())
+
+	nodebNameKey, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.GetRanName())
+
+	if rNibErr != nil {
+		return []string{}, rNibErr
+	}
+
+	keys = append(keys, nodebNameKey)
+
+	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+
+	if buildNodebIdKeyError == nil {
+		keys = append(keys, nodebIdKey)
+	}
+
+	return keys, nil
+}
+
+func (w *rNibWriterInstance) removeNbIdentity(nodeType entities.Node_Type ,nbIdentity *entities.NbIdentity) error {
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+	err = w.sdl.RemoveMember(nodeType.String(), nbIdData)
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+	return nil
 }
 
 /*
@@ -375,7 +426,7 @@ func (w *rNibWriterInstance) SaveWithKeyAndMarshal(key string, entity interface{
 /*
 UpdateNodebInfoOnConnectionStatusInversion...
 */
-func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, stateChangeMessageChannel string, event string) error {
+func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {
 
 	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
 
@@ -383,7 +434,28 @@ func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInf
 		return err
 	}
 
-	err = w.sdl.SetAndPublish([]string{stateChangeMessageChannel, event}, pairs)
+	err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.StateChangeMessageChannel, event}, pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func (w *rNibWriterInstance) RemoveEnb(nodebInfo *entities.NodebInfo) error {
+	ranNameIdentity := &entities.NbIdentity{InventoryName: nodebInfo.RanName, GlobalNbId: nodebInfo.GetGlobalNbId()}
+	err := w.removeNbIdentity(entities.Node_ENB, ranNameIdentity)
+	if err != nil {
+		return err
+	}
+
+	keysToRemove, err := w.buildRemoveEnbKeys(nodebInfo)
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.RemoveAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanDeletedEvent)}, keysToRemove)
 
 	if err != nil {
 		return common.NewInternalError(err)

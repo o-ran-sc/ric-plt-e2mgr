@@ -129,7 +129,7 @@ func TestTwoRansGetE2TAddressesEmptyListOneGetNodebFailure(t *testing.T) {
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RAN_CONNECTION_STATUS_CHANGE", "RanName_1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
@@ -153,7 +153,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RAN_CONNECTION_STATUS_CHANGE", "RanName_1_DISCONNECTED").Return(common.NewInternalError(errors.New("error")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(common.NewInternalError(errors.New("error")))
 
 	_, err := h.Handle(nil)
 
@@ -277,7 +277,7 @@ func TestOneRanTryShuttingDownSucceedsClearFails(t *testing.T) {
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RAN_CONNECTION_STATUS_CHANGE", "RanName_1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
@@ -303,7 +303,7 @@ func TestOneRanTryShuttingDownUpdateNodebError(t *testing.T) {
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RAN_CONNECTION_STATUS_CHANGE", "RanName_1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(common.NewInternalError(errors.New("error")))
@@ -327,7 +327,7 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSendFails(t *testing.T) {
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RAN_CONNECTION_STATUS_CHANGE", "RanName_1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN,}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
