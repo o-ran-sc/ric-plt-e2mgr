@@ -22,6 +22,7 @@ package httpmsghandlers
 import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -31,12 +32,14 @@ import (
 
 type AddEnbRequestHandler struct {
 	logger          *logger.Logger
+	nodebValidator  *managers.NodebValidator
 	rNibDataService services.RNibDataService
 }
 
-func NewAddEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService) *AddEnbRequestHandler {
+func NewAddEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService, nodebValidator *managers.NodebValidator) *AddEnbRequestHandler {
 	return &AddEnbRequestHandler{
 		logger:          logger,
+		nodebValidator:  nodebValidator,
 		rNibDataService: rNibDataService,
 	}
 }
@@ -120,7 +123,7 @@ func (h *AddEnbRequestHandler) validateRequestBody(addEnbRequest *models.AddEnbR
 		return errors.New("enb")
 	}
 
-	if err := isEnbValid(addEnbRequest.Enb); err != nil {
+	if err := h.nodebValidator.IsEnbValid(addEnbRequest.Enb); err != nil {
 		return err
 	}
 
@@ -136,70 +139,5 @@ func isGlobalNbIdValid(globalNbId *entities.GlobalNbId) error {
 		return errors.New("globalNbId.nbId")
 	}
 
-	return nil
-}
-
-func isEnbValid(enb *entities.Enb) error {
-	if enb.EnbType == entities.EnbType_UNKNOWN_ENB_TYPE {
-		return errors.New("enb.enbType")
-	}
-
-	if enb.ServedCells == nil || len(enb.ServedCells) == 0 {
-		return errors.New("enb.servedCells")
-	}
-
-	for _, servedCell := range enb.ServedCells {
-		err := isServedCellValid(servedCell)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func isServedCellValid(servedCell *entities.ServedCellInfo) error {
-
-	if servedCell.CellId == "" {
-		return errors.New("servedCell.cellId")
-	}
-
-	if servedCell.EutraMode == entities.Eutra_UNKNOWN {
-		return errors.New("servedCell.eutraMode")
-	}
-
-	if servedCell.Tac == "" {
-		return errors.New("servedCell.tac")
-	}
-
-	if servedCell.BroadcastPlmns == nil || len(servedCell.BroadcastPlmns) == 0 {
-		return errors.New("servedCell.broadcastPlmns")
-	}
-
-	if servedCell.ChoiceEutraMode == nil {
-		return errors.New("servedCell.choiceEutraMode")
-	}
-
-	return isChoiceEutraModeValid(servedCell.ChoiceEutraMode)
-}
-
-func isChoiceEutraModeValid(choiceEutraMode *entities.ChoiceEUTRAMode) error {
-	if choiceEutraMode.Fdd != nil {
-		return isFddInfoValid(choiceEutraMode.Fdd)
-	}
-
-	if choiceEutraMode.Tdd != nil {
-		return isTddInfoValid(choiceEutraMode.Tdd)
-	}
-
-	return errors.New("servedCell.fdd / servedCell.tdd")
-}
-
-func isTddInfoValid(tdd *entities.TddInfo) error {
-	return nil
-}
-
-func isFddInfoValid(fdd *entities.FddInfo) error {
 	return nil
 }

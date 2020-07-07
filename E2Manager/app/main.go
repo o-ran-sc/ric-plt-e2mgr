@@ -57,22 +57,20 @@ func main() {
 	var msgImpl *rmrCgo.Context
 	rmrMessenger := msgImpl.Init("tcp:"+strconv.Itoa(config.Rmr.Port), config.Rmr.MaxMsgSize, 0, logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
-	kubernetes := managers.NewKubernetesManager(logger, config)
-	ranSetupManager := managers.NewRanSetupManager(logger, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, clients.NewHttpClient())
 	ranListManager := managers.NewRanListManager(logger)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
-	e2tShutdownManager := managers.NewE2TShutdownManager(logger, config, rnibDataService, e2tInstancesManager, e2tAssociationManager, kubernetes, ranConnectStatusChangeManager)
+	e2tShutdownManager := managers.NewE2TShutdownManager(logger, config, rnibDataService, e2tInstancesManager, e2tAssociationManager, ranConnectStatusChangeManager)
 	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(logger, rmrSender, e2tInstancesManager, e2tShutdownManager, config)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
 	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager)
 
 	notificationManager := notificationmanager.NewNotificationManager(logger, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)
-
+	nodebValidator := managers.NewNodebValidator()
 	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
 
 	defer rmrMessenger.Close()
@@ -80,7 +78,7 @@ func main() {
 	go rmrReceiver.ListenAndHandle()
 	go e2tKeepAliveWorker.Execute()
 
-	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, routingManagerClient, ranConnectStatusChangeManager)
+	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager, nodebValidator)
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
 	e2tController := controllers.NewE2TController(logger, httpMsgHandlerProvider)

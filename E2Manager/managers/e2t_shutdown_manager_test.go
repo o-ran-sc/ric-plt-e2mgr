@@ -44,7 +44,7 @@ import (
 
 const E2TAddress3 = "10.10.2.17:9800"
 
-func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock, *KubernetesManager) {
+func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, E2TInstanceDeletionTimeoutMs: 15000, RnibWriter: configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE"}}
 
@@ -60,18 +60,13 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
-	//kubernetesManager := initKubernetesManagerTest(t)
+	shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, ranConnectStatusChangeManager)
 
-	/*shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, kubernetesManager)
-
-	return shutdownManager, readerMock, writerMock, httpClientMock, kubernetesManager*/
-	shutdownManager := NewE2TShutdownManager(log, config, rnibDataService, e2tInstancesManager, associationManager, nil, ranConnectStatusChangeManager)
-
-	return shutdownManager, readerMock, writerMock, httpClientMock, nil
+	return shutdownManager, readerMock, writerMock, httpClientMock
 }
 
 func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -142,7 +137,7 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 }
 
 func TestShutdownSuccess1InstanceWithoutRans(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -168,7 +163,7 @@ func TestShutdownSuccess1InstanceWithoutRans(t *testing.T) {
 }
 
 func TestShutdownSuccess1Instance2Rans(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -219,7 +214,7 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 }
 
 func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.ToBeDeleted
@@ -235,7 +230,7 @@ func TestShutdownE2tInstanceAlreadyBeingDeleted(t *testing.T) {
 }
 
 func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -251,7 +246,7 @@ func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
 }
 
 func TestShutdownFailureRoutingManagerError(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -322,7 +317,7 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 }
 
 func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -350,7 +345,7 @@ func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
 }
 
 func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -373,7 +368,7 @@ func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testi
 }
 
 func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -403,7 +398,7 @@ func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
 }
 
 func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
@@ -444,7 +439,7 @@ func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
 }
 
 func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
-	shutdownManager, readerMock, writerMock, httpClientMock, _ := initE2TShutdownManagerTest(t)
+	shutdownManager, readerMock, writerMock, httpClientMock := initE2TShutdownManagerTest(t)
 
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
