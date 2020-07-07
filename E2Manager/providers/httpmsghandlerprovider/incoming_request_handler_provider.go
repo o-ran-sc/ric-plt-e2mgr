@@ -49,16 +49,16 @@ type IncomingRequestHandlerProvider struct {
 	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
 }
 
-func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, ranSetupManager *managers.RanSetupManager, e2tInstancesManager managers.IE2TInstancesManager, e2tAssociationManager *managers.E2TAssociationManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) *IncomingRequestHandlerProvider {
+func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, nodebValidator *managers.NodebValidator) *IncomingRequestHandlerProvider {
 
 	return &IncomingRequestHandlerProvider{
-		requestMap:                    initRequestHandlerMap(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager),
+		requestMap:                    initRequestHandlerMap(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator),
 		logger:                        logger,
 		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
 	}
 }
 
-func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, nodebValidator *managers.NodebValidator) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
 		ShutdownRequest:                httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager),
@@ -68,7 +68,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		GetNodebIdListRequest:          httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
 		GetE2TInstancesRequest:         httpmsghandlers.NewGetE2TInstancesRequestHandler(logger, e2tInstancesManager),
 		UpdateGnbRequest:               httpmsghandlers.NewUpdateGnbRequestHandler(logger, rNibDataService),
-		AddEnbRequest:                  httpmsghandlers.NewAddEnbRequestHandler(logger, rNibDataService),
+		AddEnbRequest:                  httpmsghandlers.NewAddEnbRequestHandler(logger, rNibDataService, nodebValidator),
 	}
 }
 

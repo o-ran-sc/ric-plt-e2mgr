@@ -52,15 +52,14 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
 	rmrSender := getRmrSender(rmrMessengerMock, log)
-	ranSetupManager := managers.NewRanSetupManager(log, rmrSender, rnibDataService)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	ranListManager := managers.NewRanListManager(log)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
-	e2tAssociationManager := managers.NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, ranSetupManager, e2tInstancesManager, e2tAssociationManager, rmClient, ranConnectStatusChangeManager)
+	nodebValidator := managers.NewNodebValidator()
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {
