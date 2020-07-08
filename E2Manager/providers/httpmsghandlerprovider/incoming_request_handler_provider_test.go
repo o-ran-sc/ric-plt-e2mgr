@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package httpmsghandlerprovider
 
 import (
@@ -57,9 +56,11 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 	ranListManager := managers.NewRanListManager(log)
 	ranAlarmService := services.NewRanAlarmService(log, config)
-	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	nodebValidator := managers.NewNodebValidator()
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator)
+	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
+
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

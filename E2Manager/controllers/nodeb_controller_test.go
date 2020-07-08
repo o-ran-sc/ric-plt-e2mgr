@@ -262,7 +262,9 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	ranAlarmService := &mocks.RanAlarmServiceMock{}
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	nodebValidator := managers.NewNodebValidator()
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator)
+	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
+
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
 }
@@ -949,7 +951,7 @@ func TestControllerGetNodebIdListSuccess(t *testing.T) {
 
 func TestControllerGetNodebIdListEmptySuccess(t *testing.T) {
 	var rnibError error
-	nodebIdList := []*entities.NbIdentity{}
+	var nodebIdList []*entities.NbIdentity
 
 	context := controllerGetNodebIdListTestContext{
 		nodebIdList:          nodebIdList,

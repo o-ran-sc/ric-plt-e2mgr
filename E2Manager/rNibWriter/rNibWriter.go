@@ -55,6 +55,8 @@ type RNibWriter interface {
 	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, ent string) error
 	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
 	RemoveEnb(nodebInfo *entities.NodebInfo) error
+	RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error
+	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
 }
 
 /*
@@ -67,6 +69,19 @@ func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibW
 
 func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
 	cellKeysToRemove := buildServedNRCellKeysToRemove(inventoryName, servedNrCells)
+
+	err := w.sdl.Remove(cellKeysToRemove)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func (w *rNibWriterInstance) RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error {
+	cellKeysToRemove := buildServedCellInfoKeysToRemove(inventoryName, servedCells)
+
 	err := w.sdl.Remove(cellKeysToRemove)
 
 	if err != nil {
@@ -197,7 +212,7 @@ func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, serve
 
 func buildServedNRCellKeysToRemove(inventoryName string, servedNrCellsToRemove []*entities.ServedNRCell) []string {
 
-	cellKeysToRemove := []string{}
+	var cellKeysToRemove []string
 
 	for _, cell := range servedNrCellsToRemove {
 
@@ -219,7 +234,7 @@ func buildServedNRCellKeysToRemove(inventoryName string, servedNrCellsToRemove [
 
 func buildServedCellInfoKeysToRemove(inventoryName string, servedCellsToRemove []*entities.ServedCellInfo) []string {
 
-	cellKeysToRemove := []string{}
+	var cellKeysToRemove []string
 
 	for _, cell := range servedCellsToRemove {
 
@@ -464,6 +479,28 @@ func (w *rNibWriterInstance) RemoveEnb(nodebInfo *entities.NodebInfo) error {
 	return nil
 }
 
+func (w *rNibWriterInstance) UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error {
+
+	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
+
+	if err != nil {
+		return err
+	}
+
+	pairs, err = appendEnbCells(nodebInfo.RanName, servedCells, pairs)
+
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanUpdatedEvent)}, pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	return nil
+}
 /*
 Close the writer
 */

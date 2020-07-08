@@ -41,6 +41,7 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	nodebControllerMock.On("SetGeneralConfiguration").Return(nil)
 	nodebControllerMock.On("DeleteEnb").Return(nil)
 	nodebControllerMock.On("AddEnb").Return(nil)
+	nodebControllerMock.On("UpdateEnb").Return(nil)
 
 	e2tControllerMock := &mocks.E2TControllerMock{}
 
@@ -116,6 +117,19 @@ func TestRoutePutNodebSetGeneralConfiguration(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	nodebControllerMock.AssertNumberOfCalls(t, "SetGeneralConfiguration", 1)
+}
+
+func TestRoutePutUpdateEnb(t *testing.T) {
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("PUT", "/v1/nodeb/enb/ran1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	nodebControllerMock.AssertNumberOfCalls(t, "UpdateEnb", 1)
 }
 
 func TestRouteNotFound(t *testing.T) {

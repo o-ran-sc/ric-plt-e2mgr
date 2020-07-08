@@ -48,6 +48,7 @@ type INodebController interface {
 	X2Reset(writer http.ResponseWriter, r *http.Request)
 	GetNodeb(writer http.ResponseWriter, r *http.Request)
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
+	UpdateEnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
 	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 	AddEnb(writer http.ResponseWriter, r *http.Request)
@@ -96,6 +97,24 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	request.Gnb = &gnb
 	request.RanName = ranName
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true, http.StatusOK)
+}
+
+func (c *NodebController) UpdateEnb(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.UpdateEnb - request: %v", c.prettifyRequest(r))
+	vars := mux.Vars(r)
+	ranName := vars[ParamRanName]
+
+	request := models.UpdateNodebRequest{}
+
+	enb := entities.Enb{}
+
+	if !c.extractRequestBodyToProto(r, &enb, writer) {
+		return
+	}
+
+	request.Enb = &enb
+	request.RanName = ranName
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateEnbRequest, request, true, http.StatusOK)
 }
 
 func (c *NodebController) AddEnb(writer http.ResponseWriter, r *http.Request) {

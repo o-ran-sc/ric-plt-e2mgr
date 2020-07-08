@@ -53,6 +53,8 @@ type RNibDataService interface {
 	UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error
 	SaveGeneralConfiguration(config *entities.GeneralConfiguration) error
 	RemoveEnb(nodebInfo *entities.NodebInfo) error
+	RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error
+	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
 }
 
 type rNibDataService struct {
@@ -296,6 +298,24 @@ func (w *rNibDataService) GetGeneralConfiguration() (*entities.GeneralConfigurat
 func (w *rNibDataService) SaveGeneralConfiguration(config *entities.GeneralConfiguration) error {
 	err := w.retry("SaveGeneralConfiguration", func() (err error) {
 		err = w.rnibWriter.SaveGeneralConfiguration(config)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error {
+	err := w.retry("RemoveServedCells", func() (err error) {
+		err = w.rnibWriter.RemoveServedCells(inventoryName, servedCells)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error {
+	err := w.retry("UpdateEnb", func() (err error) {
+		err = w.rnibWriter.UpdateEnb(nodebInfo, servedCells)
 		return
 	})
 

@@ -109,3 +109,15 @@ func (rnibWriterMock *RnibWriterMock) RemoveEnb(nodebInfo *entities.NodebInfo) e
 
 	return args.Error(0)
 }
+
+func (rnibWriterMock *RnibWriterMock) RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error {
+	args := rnibWriterMock.Called(inventoryName, servedCells)
+
+	return args.Error(0)
+}
+
+func (rnibWriterMock *RnibWriterMock) UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error {
+	args := rnibWriterMock.Called(nodebInfo, servedCells)
+
+	return args.Error(0)
+}
