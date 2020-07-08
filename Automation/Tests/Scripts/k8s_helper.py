@@ -19,30 +19,14 @@
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
 #
-import config
-import redis
-import time
-import k8s_helper
+
+import subprocess
 
 
-def flush(insert_e2_details=True):
-    c = config.redis_ip_address
+def extract_service_ip(service_name):
+    k8s_command = "kubectl -n ricplt get services | /bin/grep {} | /bin/grep ClusterIP |  awk \'{{print $3}}\'"\
+        .format(service_name)
 
-    p = config.redis_ip_port
+    service_ip = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)
 
-    r = redis.Redis(host=c, port=p, db=0)
-
-    e2t_ip = k8s_helper.extract_service_ip("e2term-rmr-alpha")
-    et2_address = e2t_ip + ":38000"
-
-    r.flushall()
-    r.set("{e2Manager},GENERAL", "{\"enableRic\":true}")
-
-    if insert_e2_details:
-        r.set("{e2Manager},E2TAddresses", "[\"{}\"]".format(et2_address))
-        r.set("{{e2Manager}},E2TInstance:{}".format(et2_address),
-              "{{\"address\":\"{}\",\"associatedRanList\":[],\"keepAliveTimestamp\":" + str(
-                  int((time.time() + 2) * 1000000000)) + ",\"state\":\"ACTIVE\",\"deletionTimeStamp\":0}}"
-              .format(et2_address))
-
-    return True
+    return service_ip.strip()

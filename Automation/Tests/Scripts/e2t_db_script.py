@@ -18,6 +18,7 @@
 
 import config
 import redis
+import k8s_helper
 
 
 def getRedisClientDecodeResponse():
@@ -32,8 +33,10 @@ def getRedisClientDecodeResponse():
 def verify_e2t_addresses_key():
 
     r = getRedisClientDecodeResponse()
-    
-    value = "[\"10.0.2.15:38000\"]"
+
+    e2t_ip = k8s_helper.extract_service_ip("e2term-rmr-alpha")
+
+    value = "[\"{}:38000\"]".format(e2t_ip)
 
     return r.get("{e2Manager},E2TAddresses") == value
 
@@ -42,11 +45,12 @@ def verify_e2t_instance_key():
 
     r = getRedisClientDecodeResponse()
 
-    e2_address = "\"address\":\"10.0.2.15:38000\""
+    e2t_ip = k8s_helper.extract_service_ip("e2term-rmr-alpha")
+    e2_address = "\"address\":\"{}:38000\"".format(e2t_ip)
     e2_associated_ran_list = "\"associatedRanList\":[]"
     e2_state = "\"state\":\"ACTIVE\""
 
-    e2_db_instance = r.get("{e2Manager},E2TInstance:10.0.2.15:38000")
+    e2_db_instance = r.get("{{e2Manager}},E2TInstance:{}:38000".format(e2t_ip))
 
     if e2_db_instance.find(e2_address) < 0:
         return False
@@ -56,3 +60,4 @@ def verify_e2t_instance_key():
         return False
 
     return True
+

@@ -20,5 +20,5 @@
 #   platform project (RICP).
 #
 
-redis_ip_address = 'localhost'
-redis_ip_port = 6379
+redis_ip_address = '10.0.2.15'
+redis_ip_port = 30000

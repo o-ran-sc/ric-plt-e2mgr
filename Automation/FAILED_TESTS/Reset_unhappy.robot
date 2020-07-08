@@ -31,7 +31,7 @@ Suite Teardown   Start E2
 *** Test Cases ***
 
 Pre Condition for Connecting - no E2
-    Run And Return Rc And Output    ${stop_docker_e2}
+    Run And Return Rc And Output    ${stop_e2}}
     ${result}=  Run And Return Rc And Output     ${docker_command}
     Should Be Equal As Integers    ${result[1]}    4
 

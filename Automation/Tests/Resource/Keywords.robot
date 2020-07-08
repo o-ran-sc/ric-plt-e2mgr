@@ -47,89 +47,101 @@ Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}
     Remove File  ${EXECDIR}/${e2mgr_log_filename}
     Remove File  ${EXECDIR}/${e2t_log_filename}
-    Remove File  ${EXECDIR}/${rm_sim_log_filename}
 
 Save logs
     Sleep   1s
     Run     ${Save_sim_log}
     Run     ${Save_e2mgr_log}
     Run     ${Save_e2t_log}
-    Run     ${Save_rm_sim_log}
 
 Stop Simulator
     Run And Return Rc And Output    ${stop_simu}
 
 Prepare Enviorment
-     Log To Console  Starting preparations
-     ${starting_timestamp}    Evaluate   datetime.datetime.now(datetime.timezone.utc).isoformat("T")   modules=datetime 
-     ${e2t_log_filename}      Evaluate      "e2t.${SUITE NAME}.log".replace(" ","-")
-     ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
-     ${gnb_log_filename}      Evaluate      "gnb.${SUITE NAME}.log".replace(" ","-")
-     ${rm_sim_log_filename}   Evaluate      "rm_sim.${SUITE NAME}.log".replace(" ","-")
-     ${Save_sim_log}          Evaluate   'docker logs --since ${starting_timestamp} gnbe2_oran_simu > ${gnb_log_filename}'
-     ${Save_e2mgr_log}        Evaluate   'docker logs --since ${starting_timestamp} e2mgr > ${e2mgr_log_filename}'
-     ${Save_e2t_log}          Evaluate   'docker logs --since ${starting_timestamp} e2 > ${e2t_log_filename}'
-     ${Save_rm_sim_log}       Evaluate   'docker logs --since ${starting_timestamp} rm_sim > ${rm_sim_log_filename}'
-     Set Suite Variable  ${e2t_log_filename}
-     Set Suite Variable  ${e2mgr_log_filename}  
-     Set Suite Variable  ${gnb_log_filename}   
-     Set Suite Variable  ${rm_sim_log_filename}
-     Set Suite Variable  ${Save_sim_log}
-     Set Suite Variable  ${Save_e2mgr_log}
-     Set Suite Variable  ${Save_e2t_log}
-     Set Suite Variable  ${Save_rm_sim_log}
+     [Arguments]    ${prepare_logs_only}=${False}
+     prepare enviorment step 1 - init logs
+     run keyword if  ${prepare_logs_only}==${False}    Prepare Enviorment Step 2
+     wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
-	 Log To Console  Ready to flush db
-     ${flush}  cleanup_db.flush
-     Should Be Equal As Strings  ${flush}  True
-     Run And Return Rc And Output    ${stop_simu}
-     Run And Return Rc And Output    ${docker_Remove}
-     Run And Return Rc And Output    ${run_simu_regular}
-     Sleep  3s
-     Log To Console  Validating dockers are up
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number}
+Prepare Enviorment Step 1 - Init logs
+    ${starting_timestamp}    Evaluate   datetime.datetime.now(datetime.timezone.utc).isoformat("T")   modules=datetime
+    ${e2t_log_filename}      Evaluate      "e2t.${SUITE NAME}.log".replace(" ","-")
+    ${e2mgr_log_filename}    Evaluate      "e2mgr.${SUITE NAME}.log".replace(" ","-")
+    ${gnb_log_filename}      Evaluate      "gnb.${SUITE NAME}.log".replace(" ","-")
+    ${Save_sim_log}          Evaluate  "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${gnbe2_sim_pod}) > ${gnb_log_filename}"
+    ${Save_e2mgr_log}        Evaluate   "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${e2mgr_pod}) > ${e2mgr_log_filename}"
+    ${Save_e2t_log}          Evaluate   "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${e2term_pod}) > ${e2t_log_filename}"
+
+    Set Suite Variable  ${e2t_log_filename}
+    Set Suite Variable  ${e2mgr_log_filename}
+    Set Suite Variable  ${gnb_log_filename}
+    Set Suite Variable  ${Save_sim_log}
+    Set Suite Variable  ${Save_e2mgr_log}
+    Set Suite Variable  ${Save_e2t_log}
+
+Prepare Enviorment Step 2
+    Flush And Populate DB
+    Restart simulator
+
+Validate Required Dockers
+    [Arguments]    ${required_number_of_dockers}=${docker_number}
+    Log To Console  Validating all required dockers are up
+    ${result}=  Run And Return Rc And Output     ${docker_command}
+    Should Be Equal As Integers    ${result[1]}    ${required_number_of_dockers}
 
 Start E2
+     Log to Console  Starting E2Term
      Run And Return Rc And Output    ${start_e2}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number}
-     Sleep  2s
+     sleep  5s
 
 Stop E2
+     Log to Console  Stopping E2Term
      Run And Return Rc And Output    ${stop_e2}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
      Sleep  2s
+     Validate Required Dockers  ${docker_number-1}
 
 Start Dbass
+     Log to Console  Starting redis
      Run And Return Rc And Output    ${dbass_remove}
      Run And Return Rc And Output    ${dbass_start}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number}
+     Validate Required Dockers
 
 Stop Dbass
+     Log to Console  Stopping redis
      Run And Return Rc And Output    ${dbass_stop}
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+     Validate Required Dockers  required_number_of_dockers = ${docker_number-1}
 
 Restart simulator
+    Log to Console  Restarting gnbe2 simulator
     Run And Return Rc And Output    ${restart_simu}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number}
 
-Start RoutingManager Simulator
-    Run And Return Rc And Output    ${start_routingmanager_sim}
+Start Routing Manager
+    Log to Console  Starting routing manager
+    Run And Return Rc And Output    ${start_routing_manager}
+    sleep  5s
 
-Stop RoutingManager Simulator
-    Run And Return Rc And Output    ${stop_routingmanager_sim}
-
-Restart simulator with less docker
-    Run And Return Rc And Output    ${restart_simu}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
-
-Flush And Populate DB
-    ${flush}  cleanup_db.flush
+Stop Routing Manager
+    Log to Console  Stopping routing manager
+    Run And Return Rc And Output    ${stop_routing_manager}
     Sleep  2s
 
+Restart simulator with less docker
+    Log to Console  Restarting gnbe2 simulator
+    Run And Return Rc And Output    ${restart_simu}
+    Validate Required Dockers  required_number_of_dockers = ${docker_number-1}
+
+Flush And Populate DB
+    [Arguments]     ${insert_e2_details}=True
+    Log To Console  Flushing and populating DB
+    ${flush}  cleanup_db.flush   ${insert_e2_details}
+    Sleep  2s
+    Should Be Equal As Strings  ${flush}  True
+
+
+
+#To be deleted:
+Start RoutingManager Simulator
+    Run And Return Rc And Output    ${start_routing_manager}
+
+Stop RoutingManager Simulator
+    Run And Return Rc And Output    ${stop_routing_manager}

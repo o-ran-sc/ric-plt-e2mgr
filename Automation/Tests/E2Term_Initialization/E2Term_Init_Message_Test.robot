@@ -21,7 +21,7 @@
 #
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    ../Resource/scripts_variables.robot
@@ -34,11 +34,13 @@ Library     ../Scripts/e2t_db_script.py
 
 Test New E2T Send Init
     Stop E2
-    ${result}=    cleanup_db.flush
-    Should Be Equal As Strings  ${result}    True
+    Stop Routing Manager
+    Flush And Populate DB  ${False}
+    Start Routing Manager
     Start E2
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
-prepare logs for tests
+Prepare Logs For Tests
     Remove log files
     Save logs
 
