@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.9
+  version: 5.2.10
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -116,7 +116,44 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
+  '/nodeb/enb/{ranName}':
+    delete:
+      tags:
+        - nodeb
+      summary: Delete ENB
+      operationId: DeleteEnb
+      parameters:
+        - name: ranName
+          in: path
+          required: true
+          description: Name of RAN to delete
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteEnbResponse'
+        '400':
+          description: The specified RAN is not ENB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: A RAN with the specified name was not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /nodeb/shutdown:
     put:
       tags:
@@ -243,6 +280,41 @@ components:
       additionalProperties: false
 
     AddEnbResponse:
+      properties:
+        connectionStatus:
+          oneOf:
+            - type: string
+            - type: integer
+        failureType:
+          oneOf:
+            - type: string
+            - type: integer
+        globalNbId:
+          properties:
+            nbId:
+              type: string
+            plmnId:
+              type: string
+          additionalProperties: false
+          type: object
+        enb:
+          $ref: '#/components/schemas/Enb'
+        ip:
+          type: string
+        nodeType:
+          oneOf:
+            - type: string
+            - type: integer
+        port:
+          type: integer
+        ranName:
+          type: string
+        setupFailure:
+          $ref: '#/components/schemas/SetupFailure'
+      additionalProperties: false
+      type: object
+
+    DeleteEnbResponse:
       properties:
         connectionStatus:
           oneOf:
