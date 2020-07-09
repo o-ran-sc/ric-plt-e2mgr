@@ -145,7 +145,7 @@ func (c *NodebController) DeleteEnb(writer http.ResponseWriter, r *http.Request)
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.DeleteEnb - request: %v", c.prettifyRequest(r))
 	vars := mux.Vars(r)
 	ranName := vars["ranName"]
-	request := models.DeleteEnbRequest{RanName: ranName}
+	request := &models.DeleteEnbRequest{RanName: ranName}
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.DeleteEnbRequest, request, true, http.StatusNoContent)
 }
 

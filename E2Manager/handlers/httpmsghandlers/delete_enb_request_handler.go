@@ -33,8 +33,8 @@ type DeleteEnbRequestHandler struct {
 	rNibDataService services.RNibDataService
 }
 
-func NewDeleteEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService) *AddEnbRequestHandler {
-	return &AddEnbRequestHandler{
+func NewDeleteEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService) *DeleteEnbRequestHandler {
+	return &DeleteEnbRequestHandler{
 		logger:          logger,
 		rNibDataService: rNibDataService,
 	}
@@ -44,7 +44,7 @@ func (h *DeleteEnbRequestHandler) Handle(request models.Request) (models.IRespon
 
 	deleteEnbRequest := request.(*models.DeleteEnbRequest)
 
-	h.logger.Infof("#DeleteEnbRequestHandler.Handle - Ran name: %s", deleteEnbRequest.RanName)
+	h.logger.Infof("#DeleteEnbRequestHandler.Handle - RAN name: %s", deleteEnbRequest.RanName)
 
 	nodebInfo, err := h.rNibDataService.GetNodeb(deleteEnbRequest.RanName)
 
@@ -72,6 +72,7 @@ func (h *DeleteEnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
+	h.logger.Infof("#DeleteEnbRequestHandler.Handle - RAN name: %s - deleted successfully.", deleteEnbRequest.RanName)
 	return models.NewDeleteEnbResponse(nodebInfo), nil
 }
 

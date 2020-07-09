@@ -124,6 +124,12 @@ type controllerAddEnbTestContext struct {
 	expectedJsonResponse string
 }
 
+type controllerDeleteEnbTestContext struct {
+	getNodebInfoResult   *getNodebInfoResult
+	expectedStatusCode   int
+	expectedJsonResponse string
+}
+
 func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 
 	servedNrCells := []*entities.ServedNRCell{}
@@ -374,6 +380,14 @@ func assertControllerAddEnb(t *testing.T, context *controllerAddEnbTestContext, 
 	writerMock.AssertExpectations(t)
 }
 
+func assertControllerDeleteEnb(t *testing.T, context *controllerDeleteEnbTestContext, writer *httptest.ResponseRecorder, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
+	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+}
+
 func buildUpdateGnbRequest(context *controllerUpdateGnbTestContext) *http.Request {
 	updateGnbUrl := fmt.Sprintf("/nodeb/%s/update", RanName)
 	requestBody := getJsonRequestAsBuffer(context.requestBody)
@@ -436,6 +450,20 @@ func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestCon
 	defer r.Body.Close()
 	controller.AddEnb(writer, r)
 	assertControllerAddEnb(t, context, writer, readerMock, writerMock)
+}
+
+func controllerDeleteEnbTestExecuter(t *testing.T, context *controllerDeleteEnbTestContext) {
+	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
+	if context.getNodebInfoResult.rnibError == nil && context.getNodebInfoResult.nodebInfo.GetNodeType() == entities.Node_ENB {
+		writerMock.On("RemoveEnb", context.getNodebInfoResult.nodebInfo).Return(nil)
+	}
+	writer := httptest.NewRecorder()
+	r, _ := http.NewRequest(http.MethodDelete, AddEnbUrl+"/"+RanName, nil)
+	r.Header.Set("Content-Type", "application/json")
+	r = mux.SetURLVars(r, map[string]string{"ranName": RanName})
+	controller.DeleteEnb(writer, r)
+	assertControllerDeleteEnb(t, context, writer, readerMock, writerMock)
 }
 
 func TestControllerUpdateGnbEmptyServedNrCells(t *testing.T) {
@@ -881,6 +909,57 @@ func TestControllerAddEnbSuccess(t *testing.T) {
 	}
 
 	controllerAddEnbTestExecuter(t, &context)
+}
+
+func TestControllerDeleteEnbGetNodebInternalError(t *testing.T) {
+	context := controllerDeleteEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
+		},
+		expectedStatusCode: http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerDeleteEnbTestExecuter(t, &context)
+}
+
+func TestControllerDeleteEnbNodebNotExistsFailure(t *testing.T) {
+	context := controllerDeleteEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found"),
+		},
+		expectedStatusCode:   http.StatusNotFound,
+		expectedJsonResponse: ResourceNotFoundJson,
+	}
+
+	controllerDeleteEnbTestExecuter(t, &context)
+}
+
+func TestControllerDeleteEnbNodebNotEnb(t *testing.T) {
+	context := controllerDeleteEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{RanName: "ran1", NodeType: entities.Node_GNB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
+			rnibError: nil,
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerDeleteEnbTestExecuter(t, &context)
+}
+
+func TestControllerDeleteEnbSuccess(t *testing.T) {
+	context := controllerDeleteEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{RanName: "ran1", NodeType: entities.Node_ENB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
+			rnibError: nil,
+		},
+		expectedStatusCode: http.StatusNoContent,
+		expectedJsonResponse: "",
+	}
+	controllerDeleteEnbTestExecuter(t, &context)
 }
 
 func getJsonRequestAsBuffer(requestJson map[string]interface{}) *bytes.Buffer {

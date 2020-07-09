@@ -85,6 +85,8 @@ func (w *rNibDataService) RemoveServedNrCells(inventoryName string, servedNrCell
 }
 
 func (w *rNibDataService) RemoveEnb(nodebInfo *entities.NodebInfo) error {
+	w.logger.Infof("#RnibDataService.RemoveEnb - nodebInfo: %s", nodebInfo)
+
 	err := w.retry("RemoveEnb", func() (err error) {
 		err = w.rnibWriter.RemoveEnb(nodebInfo)
 		return
