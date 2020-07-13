@@ -44,27 +44,24 @@ func NewUpdateNodebRequestHandler(logger *logger.Logger, rNibDataService service
 
 func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
-	updateNodebRequest, ok := request.(*models.UpdateEnbRequest)
-	if ok != true {
-		//TODO updateNodebRequest := request.(*models.UpdateGnbRequest)
-	}
+	ranName := h.getRanName(request)
 
-	h.logger.Infof("#UpdateNodebRequestHandler.Handle - Ran name: %s", updateNodebRequest.RanName)
+	h.logger.Infof("#UpdateNodebRequestHandler.Handle - Ran name: %s", ranName)
 
-	err := h.updateNodebManager.Validate(updateNodebRequest)
+	err := h.updateNodebManager.Validate(request)
 	if err != nil {
 		return nil, e2managererrors.NewRequestValidationError()
 	}
 
-	nodebInfo, err := h.rNibDataService.GetNodeb(updateNodebRequest.RanName)
+	nodebInfo, err := h.rNibDataService.GetNodeb(ranName)
 	if err != nil {
 		_, ok := err.(*common.ResourceNotFoundError)
 		if !ok {
-			h.logger.Errorf("#UpdateNodebRequestHandler.Handle - RAN name: %s - failed to get nodeb entity from RNIB. Error: %s", updateNodebRequest.RanName, err)
+			h.logger.Errorf("#UpdateNodebRequestHandler.Handle - RAN name: %s - failed to get nodeb entity from RNIB. Error: %s", ranName, err)
 			return nil, e2managererrors.NewRnibDbError()
 		}
 
-		h.logger.Errorf("#UpdateNodebRequestHandler.Handle - RAN name: %s - RAN not found on RNIB. Error: %s", updateNodebRequest.RanName, err)
+		h.logger.Errorf("#UpdateNodebRequestHandler.Handle - RAN name: %s - RAN not found on RNIB. Error: %s", ranName, err)
 		return nil, e2managererrors.NewResourceNotFoundError()
 	}
 
@@ -73,7 +70,7 @@ func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResp
 		return nil, err
 	}
 
-	err = h.updateNodebManager.SetNodeb(nodebInfo, updateNodebRequest)
+	err = h.updateNodebManager.SetNodeb(nodebInfo, request)
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +81,17 @@ func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResp
 	}
 
 	return models.NewNodebResponse(nodebInfo), nil
+}
+
+func (h *UpdateNodebRequestHandler) getRanName(request models.Request) string {
+
+	var ranName string
+	updateEnbRequest, ok := request.(*models.UpdateEnbRequest)
+	if !ok {
+		//updateGnbRequest := request.(*models.UpdateGnbRequest)
+		//ranName = updateGnbRequest.RanName
+	} else {
+		ranName = updateEnbRequest.RanName
+	}
+	return ranName
 }
