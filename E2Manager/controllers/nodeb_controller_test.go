@@ -67,6 +67,7 @@ var (
 	ServedNrCellInformationRequiredFields = []string{"cellId", "choiceNrMode", "nrMode", "servedPlmns"}
 	NrNeighbourInformationRequiredFields  = []string{"nrCgi", "choiceNrMode", "nrMode"}
 	AddEnbRequestRequiredFields           = []string{"ranName", "enb", "globalNbId"}
+	UpdateEnbRequestRequiredFields        = []string{"enb"}
 	GlobalIdRequiredFields                = []string{"plmnId", "nbId"}
 	EnbRequiredFields                     = []string{"enbType", "servedCells"}
 	ServedCellRequiredFields              = []string{"broadcastPlmns", "cellId", "choiceEutraMode", "eutraMode", "tac"}
@@ -96,15 +97,33 @@ type updateGnbCellsParams struct {
 	err error
 }
 
+type updateEnbCellsParams struct {
+	err error
+}
+
 type saveNodebParams struct {
 	nodebInfo  *entities.NodebInfo
 	nbIdentity *entities.NbIdentity
 	err        error
 }
 
+type removeServedCellsParams struct {
+	servedCellInfo []*entities.ServedCellInfo
+	err            error
+}
+
 type removeServedNrCellsParams struct {
 	servedNrCells []*entities.ServedNRCell
 	err           error
+}
+
+type controllerUpdateEnbTestContext struct {
+	getNodebInfoResult      *getNodebInfoResult
+	removeServedCellsParams *removeServedCellsParams
+	updateEnbCellsParams    *updateEnbCellsParams
+	requestBody             map[string]interface{}
+	expectedStatusCode      int
+	expectedJsonResponse    string
 }
 
 type controllerUpdateGnbTestContext struct {
@@ -149,6 +168,24 @@ func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 	}
 
 	return servedNrCells
+}
+
+func generateServedCells(cellIds ...string) []*entities.ServedCellInfo {
+
+	var servedCells []*entities.ServedCellInfo
+
+	for i, v := range cellIds {
+		servedCells = append(servedCells, &entities.ServedCellInfo{
+			CellId: v,
+			ChoiceEutraMode: &entities.ChoiceEUTRAMode{
+				Fdd: &entities.FddInfo{},
+			},
+			Pci:            uint32(i + 1),
+			BroadcastPlmns: []string{"whatever"},
+		})
+	}
+
+	return servedCells
 }
 
 func buildNrNeighbourInformation(propToOmit string) map[string]interface{} {
@@ -208,6 +245,19 @@ func buildServedCell(propToOmit string) map[string]interface{} {
 
 	return ret
 }
+
+func getUpdateEnbRequest(propToOmit string) map[string]interface{} {
+	ret := map[string]interface{}{
+		"enb":        buildEnb(propToOmit),
+	}
+
+	if len(propToOmit) != 0 {
+		delete(ret, propToOmit)
+	}
+
+	return ret
+}
+
 
 func getAddEnbRequest(propToOmit string) map[string]interface{} {
 	ret := map[string]interface{}{
@@ -345,6 +395,23 @@ func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNo
 	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
 }
 
+func activateControllerUpdateEnbMocks(context *controllerUpdateEnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock,updateEnbRequest *models.UpdateEnbRequest) {
+	if context.getNodebInfoResult != nil {
+		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
+	}
+
+	if context.removeServedCellsParams != nil {
+		writerMock.On("RemoveServedCells", RanName, context.removeServedCellsParams.servedCellInfo).Return(context.removeServedCellsParams.err)
+	}
+
+	if context.updateEnbCellsParams != nil {
+		updatedNodebInfo := *context.getNodebInfoResult.nodebInfo
+		updatedNodebInfo.Configuration = &entities.NodebInfo_Enb{Enb: updateEnbRequest.Enb}
+
+		writerMock.On("UpdateEnb", &updatedNodebInfo, updateEnbRequest.Enb.ServedCells).Return(context.updateEnbCellsParams.err)
+	}
+}
+
 func activateControllerUpdateGnbMocks(context *controllerUpdateGnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
 	if context.getNodebInfoResult != nil {
 		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
@@ -372,6 +439,14 @@ func assertControllerUpdateGnb(t *testing.T, context *controllerUpdateGnbTestCon
 	writerMock.AssertExpectations(t)
 }
 
+func assertControllerUpdateEnb(t *testing.T, context *controllerUpdateEnbTestContext, writer *httptest.ResponseRecorder, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
+	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+}
+
 func assertControllerAddEnb(t *testing.T, context *controllerAddEnbTestContext, writer *httptest.ResponseRecorder, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock) {
 	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
 	bodyBytes, _ := ioutil.ReadAll(writer.Body)
@@ -388,6 +463,15 @@ func assertControllerDeleteEnb(t *testing.T, context *controllerDeleteEnbTestCon
 	writerMock.AssertExpectations(t)
 }
 
+func buildUpdateEnbRequest(context *controllerUpdateEnbTestContext) *http.Request {
+	updateEnbUrl := fmt.Sprintf("/nodeb/enb/%s", RanName)
+	requestBody := getJsonRequestAsBuffer(context.requestBody)
+	req, _ := http.NewRequest(http.MethodPut, updateEnbUrl, requestBody)
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"ranName": RanName})
+	return req
+}
+
 func buildUpdateGnbRequest(context *controllerUpdateGnbTestContext) *http.Request {
 	updateGnbUrl := fmt.Sprintf("/nodeb/%s/update", RanName)
 	requestBody := getJsonRequestAsBuffer(context.requestBody)
@@ -402,6 +486,25 @@ func buildAddEnbRequest(context *controllerAddEnbTestContext) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, AddEnbUrl, requestBody)
 	req.Header.Set("Content-Type", "application/json")
 	return req
+}
+
+func controllerUpdateEnbTestExecuter(t *testing.T, context *controllerUpdateEnbTestContext) {
+	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	writer := httptest.NewRecorder()
+
+	r := buildUpdateEnbRequest(context)
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
+
+	updateEnbRequest := models.UpdateEnbRequest{}
+	_ = json.Unmarshal(body, &updateEnbRequest)
+
+	activateControllerUpdateEnbMocks(context, readerMock, writerMock, &updateEnbRequest)
+	r = buildUpdateEnbRequest(context)
+	defer r.Body.Close()
+
+	controller.UpdateEnb(writer, r)
+
+	assertControllerUpdateEnb(t, context, writer, readerMock, writerMock)
 }
 
 func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbTestContext) {
@@ -752,6 +855,187 @@ func TestControllerUpdateGnbSuccess(t *testing.T) {
 	controllerUpdateGnbTestExecuter(t, &context)
 }
 
+func TestControllerUpdateEnbInvalidRequest(t *testing.T) {
+	controller, _, _, _, _ := setupControllerTest(t)
+
+	writer := httptest.NewRecorder()
+	invalidJson := strings.NewReader("{enb:\"whatever\"")
+
+	updateEnbUrl := fmt.Sprintf("/nodeb/enb/%s", RanName)
+	req, _ := http.NewRequest(http.MethodPut, updateEnbUrl, invalidJson)
+	req.Header.Set("Content-Type", "application/json")
+	req = mux.SetURLVars(req, map[string]string{"ranName": RanName})
+
+	controller.UpdateEnb(writer, req)
+
+	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
+	bodyBytes, _ := ioutil.ReadAll(writer.Body)
+	assert.Equal(t, CorruptedJson, string(bodyBytes))
+}
+
+func TestControllerUpdateEnbEmptyEnbType(t *testing.T) {
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: getUpdateEnbRequest(EnbRequiredFields[0]),
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbEmptyServedCells(t *testing.T) {
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: getUpdateEnbRequest(EnbRequiredFields[1]),
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbMissingEnb(t *testing.T) {
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: nil,
+		requestBody: getUpdateEnbRequest(UpdateEnbRequestRequiredFields[0]),
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbValidServedCellsGetNodebNotFound(t *testing.T) {
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusNotFound,
+		expectedJsonResponse: ResourceNotFoundJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbValidServedCellsGetNodebInternalError(t *testing.T) {
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbGetNodebSuccessGnbTypeFailure(t *testing.T) {
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_GNB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells}},
+			},
+			rnibError: nil,
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbGetNodebSuccessRemoveServedCellsFailure(t *testing.T) {
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+	context := controllerUpdateEnbTestContext{
+		removeServedCellsParams: &removeServedCellsParams{
+			err:            common.NewInternalError(errors.New("#writer.RemoveServedCells - Internal Error")),
+			servedCellInfo: oldServedCells,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_ENB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells}},
+			},
+			rnibError: nil,
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbGetNodebSuccessUpdateEnbFailure(t *testing.T) {
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+	context := controllerUpdateEnbTestContext{
+		removeServedCellsParams: &removeServedCellsParams{
+			err:           nil,
+			servedCellInfo: oldServedCells,
+		},
+		updateEnbCellsParams: &updateEnbCellsParams{
+			err: common.NewInternalError(errors.New("#writer.UpdateEnb - Internal Error")),
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_ENB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_ENB}},
+			},
+			rnibError: nil,
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbSuccess(t *testing.T) {
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+	context := controllerUpdateEnbTestContext{
+		removeServedCellsParams: &removeServedCellsParams{
+			err:           nil,
+			servedCellInfo: oldServedCells,
+		},
+		updateEnbCellsParams: &updateEnbCellsParams{
+			err: nil,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_ENB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_ENB}},
+			},
+			rnibError: nil,
+		},
+		requestBody: getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusOK,
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]},\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
 func TestControllerAddEnbGetNodebInternalError(t *testing.T) {
 	context := controllerAddEnbTestContext{
 		getNodebInfoResult: &getNodebInfoResult{
@@ -859,6 +1143,29 @@ func TestControllerAddEnbMissingRequiredEnbProps(t *testing.T) {
 	}
 }
 
+func TestControllerUpdateEnbMissingRequiredServedCellProps(t *testing.T) {
+
+	r := getUpdateEnbRequest("")
+
+	for _, v := range ServedCellRequiredFields {
+		enb := r["enb"]
+
+		enbMap, _ := enb.(map[string]interface{})
+
+		enbMap["servedCells"] = []interface{}{
+			buildServedCell(v),
+		}
+
+		context := controllerUpdateEnbTestContext{
+			requestBody:          r,
+			expectedStatusCode:   http.StatusBadRequest,
+			expectedJsonResponse: ValidationFailureJson,
+		}
+
+		controllerUpdateEnbTestExecuter(t, &context)
+	}
+}
+
 func TestControllerAddEnbMissingRequiredServedCellProps(t *testing.T) {
 
 	r := getAddEnbRequest("")
@@ -917,7 +1224,7 @@ func TestControllerDeleteEnbGetNodebInternalError(t *testing.T) {
 			nodebInfo: nil,
 			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
 		},
-		expectedStatusCode: http.StatusInternalServerError,
+		expectedStatusCode:   http.StatusInternalServerError,
 		expectedJsonResponse: RnibErrorJson,
 	}
 
@@ -956,7 +1263,7 @@ func TestControllerDeleteEnbSuccess(t *testing.T) {
 			nodebInfo: &entities.NodebInfo{RanName: "ran1", NodeType: entities.Node_ENB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
 			rnibError: nil,
 		},
-		expectedStatusCode: http.StatusNoContent,
+		expectedStatusCode:   http.StatusNoContent,
 		expectedJsonResponse: "",
 	}
 	controllerDeleteEnbTestExecuter(t, &context)

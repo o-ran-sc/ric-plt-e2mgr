@@ -157,6 +157,34 @@ func TestUpdateGnbCellsInvalidCellFailure(t *testing.T) {
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
 }
 
+func getUpdateEnbCellsSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) []interface{} {
+
+	nodebInfoData, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Fatalf("#rNibWriter_test.getUpdateEnbCellsSetExpected - Failed to marshal NodeB entity. Error: %s", err)
+	}
+
+	nodebNameKey, _ := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
+	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId)
+	setExpected := []interface{}{nodebNameKey, nodebInfoData, nodebIdKey, nodebInfoData}
+
+	for _, cell := range servedCells {
+
+		cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
+		cellData, err := proto.Marshal(&cellEntity)
+
+		if err != nil {
+			t.Fatalf("#rNibWriter_test.getUpdateEnbCellsSetExpected - Failed to marshal cell entity. Error: %s", err)
+		}
+
+		nrCellIdKey, _ := common.ValidateAndBuildCellIdKey(cell.GetCellId())
+		cellNamePciKey, _ := common.ValidateAndBuildCellNamePciKey(nodebInfo.RanName, cell.GetPci())
+		setExpected = append(setExpected, nrCellIdKey, cellData, cellNamePciKey, cellData)
+	}
+
+	return setExpected
+}
+
 func getUpdateGnbCellsSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, servedNrCells []*entities.ServedNRCell) []interface{} {
 
 	nodebInfoData, err := proto.Marshal(nodebInfo)
@@ -884,6 +912,18 @@ func TestSaveGeneralConfigurationDbError(t *testing.T) {
 
 	assert.NotNil(t, rNibErr)
 }
+
+func TestRemoveServedCellsFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	servedCellsToRemove := generateServedCells("whatever1", "whatever2")
+	expectedErr := errors.New("expected error")
+	sdlInstanceMock.On("Remove", buildServedCellInfoKeysToRemove(RanName, servedCellsToRemove)).Return(expectedErr)
+
+	rNibErr := w.RemoveServedCells(RanName, servedCellsToRemove)
+
+	assert.NotNil(t, rNibErr)
+}
+
 func TestRemoveServedCellsSuccess(t *testing.T) {
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedCellsToRemove := generateServedCells("whatever1", "whatever2")
@@ -914,35 +954,35 @@ func TestUpdateEnbInvalidCellFailure(t *testing.T) {
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
 }
 
-/*func TestUpdateEnbSdlFailure(t *testing.T) {
-	inventoryName := "ranName"
+func TestUpdateEnbSdlFailure(t *testing.T) {
+	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedCells := generateServedCells("test1", "test2")
-	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
 	nodebInfo.GetEnb().ServedCells = servedCells
-	setExpected := getUpdateEnbSetExpected(t, nodebInfo, servedCells)
+	setExpected := getUpdateEnbCellsSetExpected(t, nodebInfo, servedCells)
 	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", inventoryName + "_" + RanUpdatedEvent}, []interface{}{setExpected}).Return(errors.New("expected error"))
 	rNibErr := w.UpdateEnb(nodebInfo, servedCells)
 	assert.IsType(t, &common.InternalError{}, rNibErr)
-}*/
+}
 
-/*func TestUpdateEnbSuccess(t *testing.T) {
-	inventoryName := "ranName"
+func TestUpdateEnbSuccess(t *testing.T) {
+	inventoryName := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedCells := generateServedCells("test1", "test2")
-	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
 	nodebInfo.GetEnb().ServedCells = servedCells
-	setExpected := getUpdateEnbSetExpected(t, nodebInfo, servedCells)
+	setExpected := getUpdateEnbCellsSetExpected(t, nodebInfo, servedCells)
 
 	var e error
 	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", inventoryName + "_" + RanUpdatedEvent}, []interface{}{setExpected}).Return(e)
 	rNibErr := w.UpdateEnb(nodebInfo, servedCells)
 	assert.Nil(t, rNibErr)
-}*/
+}
 
 func getUpdateEnbSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) []interface{} {
 

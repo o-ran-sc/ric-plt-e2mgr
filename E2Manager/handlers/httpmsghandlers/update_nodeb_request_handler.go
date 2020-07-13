@@ -44,7 +44,10 @@ func NewUpdateNodebRequestHandler(logger *logger.Logger, rNibDataService service
 
 func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
-	updateNodebRequest := request.(*models.UpdateNodebRequest)
+	updateNodebRequest, ok := request.(*models.UpdateEnbRequest)
+	if ok != true {
+		//TODO updateNodebRequest := request.(*models.UpdateGnbRequest)
+	}
 
 	h.logger.Infof("#UpdateNodebRequestHandler.Handle - Ran name: %s", updateNodebRequest.RanName)
 

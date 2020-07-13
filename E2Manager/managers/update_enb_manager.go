@@ -25,6 +25,7 @@ import (
 	"e2mgr/models"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/pkg/errors"
 )
 
 type UpdateEnbManager struct {
@@ -41,12 +42,15 @@ func NewUpdateEnbManager(logger *logger.Logger, rnibDataService services.RNibDat
 	}
 }
 
-func (h *UpdateEnbManager) Validate(request *models.UpdateNodebRequest) error {
+func (h *UpdateEnbManager) Validate(request models.Request) error {
 
-	h.logger.Infof("#UpdateEnbManager.Validate - Validate incoming request, ran name: %s", request.RanName)
+	updateEnbRequest := request.(*models.UpdateEnbRequest)
 
-	if err := h.nodebValidator.IsEnbValid(request.Enb); err != nil {
-		//TODO add log
+	h.logger.Infof("#UpdateEnbManager.Validate - Validate incoming request, ran name: %s", updateEnbRequest.RanName)
+
+
+	if err := h.validateRequestBody(updateEnbRequest); err != nil {
+		h.logger.Errorf("#UpdateEnbManager.Validate - validation failure: %s is a mandatory field and cannot be empty", err)
 		return err
 	}
 
@@ -54,6 +58,11 @@ func (h *UpdateEnbManager) Validate(request *models.UpdateNodebRequest) error {
 }
 
 func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
+
+	if nodeb.NodeType != entities.Node_ENB {
+		h.logger.Errorf("#UpdateEnbManager.RemoveNodebCells - RAN name: %s - nodeb missing eNB configuration", nodeb.GetRanName())
+		return e2managererrors.NewRequestValidationError()
+	}
 
 	err := h.rnibDataService.RemoveServedCells(nodeb.GetRanName(), nodeb.GetEnb().GetServedCells())
 	if err != nil {
@@ -65,15 +74,11 @@ func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 	return nil
 }
 
-func (h *UpdateEnbManager) SetNodeb(nodeb *entities.NodebInfo, request *models.UpdateNodebRequest) error {
+func (h *UpdateEnbManager) SetNodeb(nodeb *entities.NodebInfo, request models.Request) error {
 
-	ranName := nodeb.GetRanName()
+	updateEnbRequest := request.(*models.UpdateEnbRequest)
 
-	if nodeb.NodeType != entities.Node_ENB {
-		h.logger.Errorf("#UpdateEnbManager.SetNodeb - RAN name: %s - nodeb missing eNB configuration", ranName)
-		return e2managererrors.NewRequestValidationError()
-	}
-	nodeb.Configuration = &entities.NodebInfo_Enb{Enb: request.Enb}
+	nodeb.Configuration = &entities.NodebInfo_Enb{Enb: updateEnbRequest.Enb}
 
 	return nil
 }
@@ -86,6 +91,19 @@ func (h *UpdateEnbManager) UpdateNodeb(nodeb *entities.NodebInfo) error {
 		return e2managererrors.NewRnibDbError()
 	}
 	h.logger.Infof("#UpdateEnbManager.UpdateNodeb - RAN name: %s - Successfully updated eNB", nodeb.GetRanName())
+
+	return nil
+}
+
+func (h *UpdateEnbManager) validateRequestBody(request *models.UpdateEnbRequest) error {
+
+	if request.Enb == nil {
+		return errors.New("enb")
+	}
+
+	if err := h.nodebValidator.IsEnbValid(request.Enb); err != nil {
+		return err
+	}
 
 	return nil
 }

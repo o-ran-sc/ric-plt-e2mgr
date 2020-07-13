@@ -101,20 +101,31 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 
 func (c *NodebController) UpdateEnb(writer http.ResponseWriter, r *http.Request) {
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.UpdateEnb - request: %v", c.prettifyRequest(r))
-	vars := mux.Vars(r)
-	ranName := vars[ParamRanName]
 
-	request := models.UpdateNodebRequest{}
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
 
-	enb := entities.Enb{}
-
-	if !c.extractRequestBodyToProto(r, &enb, writer) {
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.UpdateEnb - unable to read request body - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
 		return
 	}
 
-	request.Enb = &enb
-	request.RanName = ranName
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateEnbRequest, request, true, http.StatusOK)
+	updateEnbRequest := models.UpdateEnbRequest{}
+	err = json.Unmarshal(body, &updateEnbRequest)
+
+	if err != nil {
+		c.logger.Errorf("[Client -> E2 Manager] #NodebController.UpdateEnb - unable to unmarshal json - error: %s", err)
+		c.handleErrorResponse(e2managererrors.NewInvalidJsonError(), writer)
+		return
+	}
+
+	vars := mux.Vars(r)
+	ranName := vars[ParamRanName]
+
+	updateEnbRequest.RanName = ranName
+
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateEnbRequest, &updateEnbRequest, true, http.StatusOK)
 }
 
 func (c *NodebController) AddEnb(writer http.ResponseWriter, r *http.Request) {

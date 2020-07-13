@@ -19,10 +19,40 @@
 
 package models
 
-import "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+import (
+	"encoding/json"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/golang/protobuf/jsonpb"
+)
+
+type UpdateEnbRawRequest struct {
+	RanName    string
+	Enb        json.RawMessage
+}
 
 type UpdateEnbRequest struct {
-	RanName string
-	*entities.Enb
-	*entities.Gnb
+	RanName    string
+	Enb        *entities.Enb
+}
+
+func (r *UpdateEnbRequest) UnmarshalJSON(data []byte) error {
+	updateEnbRawRequest := UpdateEnbRawRequest{}
+	err := json.Unmarshal(data, &updateEnbRawRequest)
+
+	if err != nil {
+		return err
+	}
+
+	if updateEnbRawRequest.Enb != nil {
+		enb := entities.Enb{}
+		err = jsonpb.UnmarshalString(string(updateEnbRawRequest.Enb), &enb)
+
+		if err != nil {
+			return err
+		}
+
+		r.Enb = &enb
+	}
+
+	return nil
 }
