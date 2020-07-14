@@ -50,7 +50,7 @@ func TestHandleGetNodebSuccess(t *testing.T) {
 	response, err := handler.Handle(models.GetNodebRequest{RanName: ranName})
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
-	assert.IsType(t, &models.GetNodebResponse{}, response)
+	assert.IsType(t, &models.NodebResponse{}, response)
 }
 
 func TestHandleGetNodebFailure(t *testing.T) {

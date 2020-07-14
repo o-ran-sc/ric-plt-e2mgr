@@ -53,7 +53,7 @@ func TestHandleDeleteEnbSuccess(t *testing.T) {
 	result, err := handler.Handle(&models.DeleteEnbRequest{RanName: ranName})
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
-	assert.IsType(t, &models.DeleteEnbResponse{}, result)
+	assert.IsType(t, &models.NodebResponse{}, result)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 }

@@ -50,7 +50,7 @@ func (handler *GetNodebRequestHandler) Handle(request models.Request) (models.IR
 		return nil, rnibErrorToE2ManagerError(err)
 	}
 
-	return models.NewGetNodebResponse(nodeb), nil
+	return models.NewNodebResponse(nodeb), nil
 }
 
 func rnibErrorToE2ManagerError(err error) error {

@@ -80,7 +80,7 @@ func (h *AddEnbRequestHandler) Handle(request models.Request) (models.IResponse,
 
 	_ = h.createNbIdentity(addEnbRequest) // TODO: add call to ranListManager
 
-	return models.NewAddEnbResponse(nodebInfo), nil
+	return models.NewNodebResponse(nodebInfo), nil
 }
 
 func (h *AddEnbRequestHandler) createNodebInfo(addEnbRequest *models.AddEnbRequest) *entities.NodebInfo {
