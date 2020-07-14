@@ -28,8 +28,8 @@ type RnibWriterMock struct {
 	mock.Mock
 }
 
-func (rnibWriterMock *RnibWriterMock) SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error {
-	args := rnibWriterMock.Called(nbIdentity, nb)
+func (rnibWriterMock *RnibWriterMock) SaveNodeb(nodebInfo *entities.NodebInfo) error {
+	args := rnibWriterMock.Called(nodebInfo)
 
 	errArg := args.Get(0)
 
@@ -119,5 +119,14 @@ func (rnibWriterMock *RnibWriterMock) RemoveServedCells(inventoryName string, se
 func (rnibWriterMock *RnibWriterMock) UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error {
 	args := rnibWriterMock.Called(nodebInfo, servedCells)
 
+	return args.Error(0)
+}
+
+func (rnibWriterMock *RnibWriterMock) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	args := rnibWriterMock.Called(nodeType, nbIdentity)
+	return args.Error(0)
+}
+func (rnibWriterMock *RnibWriterMock) RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	args := rnibWriterMock.Called(nodeType, nbIdentity)
 	return args.Error(0)
 }

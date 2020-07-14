@@ -533,9 +533,9 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 			ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
 		}
 
-		nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId}
-
-		writerMock.On("SaveNodeb", &nbIdentity, &nodebInfo).Return(context.saveNodebParams.err)
+		//nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId}
+		writerMock.On("SaveNodeb", &nodebInfo).Return(context.saveNodebParams.err)
+		// TODO: add writerMock.On("AddNbIdentity")
 	}
 }
 

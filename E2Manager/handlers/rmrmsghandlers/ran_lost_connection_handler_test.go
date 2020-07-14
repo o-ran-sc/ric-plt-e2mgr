@@ -55,7 +55,7 @@ func setupLostConnectionHandlerTest(isSuccessfulHttpPost bool) (*RanLostConnecti
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	httpClientMock := &mocks.HttpClientMock{}
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClientMock)
-	ranListManager := managers.NewRanListManager(logger)
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 

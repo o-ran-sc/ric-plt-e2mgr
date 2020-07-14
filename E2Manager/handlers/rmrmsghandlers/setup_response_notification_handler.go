@@ -80,7 +80,7 @@ func (h SetupResponseNotificationHandler) Handle(request *models.NotificationReq
 		return
 	}
 
-	rnibErr = h.rnibDataService.SaveNodeb(nbIdentity, nodebInfo)
+	rnibErr = h.rnibDataService.SaveNodeb(nodebInfo)
 
 	if rnibErr != nil {
 		h.logger.Errorf("#SetupResponseNotificationHandler - RAN name: %s - Error saving RAN to rNib: %v", request.RanName, rnibErr)

@@ -28,8 +28,34 @@ type RanListManagerMock struct {
 	mock.Mock
 }
 
+// TODO: remove after replaced with UpdateNbIdentityConnectionStatus
 func (m *RanListManagerMock) UpdateRanState(nodebInfo *entities.NodebInfo) error {
 
 	args := m.Called(nodebInfo)
 	return args.Error(0)
+}
+
+func (m *RanListManagerMock) InitNbIdentityMap() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+func (m *RanListManagerMock) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	args := m.Called(nodeType, nbIdentity)
+	return args.Error(0)
+}
+
+func (m *RanListManagerMock) UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error {
+	args := m.Called(nodeType, ranName, connectionStatus)
+	return args.Error(0)
+}
+
+func (m *RanListManagerMock) RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error {
+	args := m.Called(nodeType, ranName)
+	return args.Error(0)
+}
+
+func (m *RanListManagerMock) GetNbIdentityList() []*entities.NbIdentity {
+	args := m.Called()
+	return args.Get(0).([]*entities.NbIdentity)
 }

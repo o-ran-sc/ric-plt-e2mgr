@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package services
 
 import (
@@ -47,9 +46,7 @@ func setupRnibDataServiceTestWithMaxAttempts(t *testing.T, maxAttempts int) (*rN
 
 	readerMock := &mocks.RnibReaderMock{}
 
-
 	writerMock := &mocks.RnibWriterMock{}
-
 
 	rnibDataService := NewRnibDataService(logger, config, readerMock, writerMock)
 	assert.NotNil(t, rnibDataService)
@@ -61,10 +58,9 @@ func TestSuccessfulSaveNodeb(t *testing.T) {
 	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
 
 	nodebInfo := &entities.NodebInfo{}
-	nbIdentity := &entities.NbIdentity{}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
+	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
 
-	rnibDataService.SaveNodeb(nbIdentity, nodebInfo)
+	rnibDataService.SaveNodeb(nodebInfo)
 	writerMock.AssertNumberOfCalls(t, "SaveNodeb", 1)
 }
 
@@ -72,11 +68,10 @@ func TestConnFailureSaveNodeb(t *testing.T) {
 	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
 
 	nodebInfo := &entities.NodebInfo{}
-	nbIdentity := &entities.NbIdentity{}
 	mockErr := &common.InternalError{Err: &net.OpError{Err: fmt.Errorf("connection error")}}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(mockErr)
+	writerMock.On("SaveNodeb", nodebInfo).Return(mockErr)
 
-	rnibDataService.SaveNodeb(nbIdentity, nodebInfo)
+	rnibDataService.SaveNodeb(nodebInfo)
 	writerMock.AssertNumberOfCalls(t, "SaveNodeb", 3)
 }
 
@@ -84,11 +79,10 @@ func TestNonConnFailureSaveNodeb(t *testing.T) {
 	rnibDataService, _, writerMock := setupRnibDataServiceTest(t)
 
 	nodebInfo := &entities.NodebInfo{}
-	nbIdentity := &entities.NbIdentity{}
 	mockErr := &common.InternalError{Err: fmt.Errorf("non connection failure")}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(mockErr)
+	writerMock.On("SaveNodeb", nodebInfo).Return(mockErr)
 
-	rnibDataService.SaveNodeb(nbIdentity, nodebInfo)
+	rnibDataService.SaveNodeb(nodebInfo)
 	writerMock.AssertNumberOfCalls(t, "SaveNodeb", 1)
 }
 
@@ -159,7 +153,7 @@ func TestConnFailureGetNodeb(t *testing.T) {
 
 	res, err := rnibDataService.GetNodeb(invName)
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 3)
-	assert.True(t, strings.Contains(err.Error(), "connection error", ))
+	assert.True(t, strings.Contains(err.Error(), "connection error"))
 	assert.Equal(t, nodeb, res)
 }
 
@@ -184,7 +178,7 @@ func TestConnFailureGetNodebIdList(t *testing.T) {
 
 	res, err := rnibDataService.GetListNodebIds()
 	readerMock.AssertNumberOfCalls(t, "GetListNodebIds", 3)
-	assert.True(t, strings.Contains(err.Error(), "connection error", ))
+	assert.True(t, strings.Contains(err.Error(), "connection error"))
 	assert.Equal(t, nodeIds, res)
 }
 
@@ -200,12 +194,12 @@ func TestConnFailureTwiceGetNodebIdList(t *testing.T) {
 
 	res, err := rnibDataService.GetListNodebIds()
 	readerMock.AssertNumberOfCalls(t, "GetListNodebIds", 3)
-	assert.True(t, strings.Contains(err.Error(), "connection error", ))
+	assert.True(t, strings.Contains(err.Error(), "connection error"))
 	assert.Equal(t, nodeIds, res)
 
 	res2, err := rnibDataService.GetNodeb(invName)
 	readerMock.AssertNumberOfCalls(t, "GetNodeb", 3)
-	assert.True(t, strings.Contains(err.Error(), "connection error", ))
+	assert.True(t, strings.Contains(err.Error(), "connection error"))
 	assert.Equal(t, nodeb, res2)
 }
 
@@ -218,7 +212,7 @@ func TestConnFailureWithAnotherConfig(t *testing.T) {
 
 	res, err := rnibDataService.GetListNodebIds()
 	readerMock.AssertNumberOfCalls(t, "GetListNodebIds", 5)
-	assert.True(t, strings.Contains(err.Error(), "connection error", ))
+	assert.True(t, strings.Contains(err.Error(), "connection error"))
 	assert.Equal(t, nodeIds, res)
 }
 
@@ -279,21 +273,6 @@ func TestConnFailureUpdateNodebInfoOnConnectionStatusInversion(t *testing.T) {
 	rnibDataService.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 3)
 }
-
-//func TestConnFailureThenSuccessGetNodebIdList(t *testing.T) {
-//	rnibDataService, readerMock, _ := setupRnibDataServiceTest(t)
-//
-//	var nilNodeIds []*entities.NbIdentity = nil
-//	nodeIds := []*entities.NbIdentity{}
-//	mockErr := &common.InternalError{Err: &net.OpError{Err:fmt.Errorf("connection error")}}
-//	//readerMock.On("GetListNodebIds").Return(nilNodeIds, mockErr)
-//	//readerMock.On("GetListNodebIds").Return(nodeIds, nil)
-//
-//	res, err := rnibDataService.GetListNodebIds()
-//	readerMock.AssertNumberOfCalls(t, "GetListNodebIds", 2)
-//	assert.True(t, strings.Contains(err.Error(),"connection failure", ))
-//	assert.Equal(t, nodeIds, res)
-//}
 
 func TestGetE2TInstanceConnFailure(t *testing.T) {
 	rnibDataService, readerMock, _ := setupRnibDataServiceTest(t)

@@ -55,7 +55,7 @@ func setupE2TControllerTest(t *testing.T) (*E2TController, *mocks.RnibReaderMock
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, nil)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
 
-	ranListManager := managers.NewRanListManager(log)
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
 	nodebValidator := managers.NewNodebValidator()

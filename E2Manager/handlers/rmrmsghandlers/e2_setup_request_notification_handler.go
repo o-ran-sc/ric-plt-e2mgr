@@ -137,20 +137,15 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAddress string, setupRequest *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
 
-	nodebInfo, err := h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
+	nodebInfo := h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
+	err := h.rNibDataService.SaveNodeb(nodebInfo)
 
 	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleNewRan - RAN name: %s - failed to build nodebInfo entity. Error: %s", ranName, err)
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleNewRan - RAN name: %s - failed saving nodebInfo. Error: %s", ranName, err)
 		return nil, err
 	}
 
-	nbIdentity := h.buildNbIdentity(ranName, setupRequest)
-	err = h.rNibDataService.SaveNodeb(nbIdentity, nodebInfo)
-
-	if err != nil {
-		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleNewRan - RAN name: %s - failed to save nodebInfo entity. Error: %s", ranName, err)
-		return nil, err
-	}
+	_ = h.buildNbIdentity(ranName, setupRequest) // TODO: add call to ranListManager
 
 	return nodebInfo, nil
 }
@@ -286,9 +281,7 @@ func normalizeXml(payload []byte) []byte {
 	return []byte(normalized)
 }
 
-func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
-
-	var err error
+func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) *entities.NodebInfo {
 	nodebInfo := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tAddress,
 		RanName:                      ranName,
@@ -298,7 +291,7 @@ func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAd
 	}
 
 	h.setGnbFunctions(nodebInfo, request)
-	return nodebInfo, err
+	return nodebInfo
 }
 
 func (h *E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.E2SetupRequestMessage) *entities.GlobalNbId {

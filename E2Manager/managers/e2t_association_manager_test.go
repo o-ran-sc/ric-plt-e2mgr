@@ -54,7 +54,7 @@ func initE2TAssociationManagerTest(t *testing.T) (*E2TAssociationManager, *mocks
 	e2tInstancesManager := NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	ranListManager := NewRanListManager(log)
+	ranListManager := NewRanListManager(log, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)

@@ -54,7 +54,7 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, log)
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	ranListManager := managers.NewRanListManager(log)
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	nodebValidator := managers.NewNodebValidator()

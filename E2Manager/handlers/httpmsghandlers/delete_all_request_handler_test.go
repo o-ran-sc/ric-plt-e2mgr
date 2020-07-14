@@ -62,7 +62,7 @@ func setupDeleteAllRequestHandlerTest(t *testing.T) (*DeleteAllRequestHandler, *
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 
-	ranListManager := managers.NewRanListManager(log)
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService,ranListManager, ranAlarmService)
 

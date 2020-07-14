@@ -56,7 +56,7 @@ func initE2TShutdownManagerTest(t *testing.T) (*E2TShutdownManager, *mocks.RnibR
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
 
-	ranListManager := NewRanListManager(log)
+	ranListManager := NewRanListManager(log, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(log, config)
 	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	associationManager := NewE2TAssociationManager(log, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager)

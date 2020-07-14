@@ -149,7 +149,7 @@ func executeHandleSetupSuccessResponse(t *testing.T, tc setupSuccessResponseTest
 	}
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
-	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
+	testContext.writerMock.On("SaveNodeb", mock.Anything).Return(tc.saveNodebMockError)
 	testContext.rmrMessengerMock.On("SendMsg", tc.statusChangeMbuf, true).Return(&rmrCgo.MBuf{}, tc.sendMsgError)
 	handler.Handle(&notificationRequest)
 
@@ -186,7 +186,7 @@ func executeHandleSetupFailureResponse(t *testing.T, tc setupFailureResponseTest
 	}
 
 	testContext.readerMock.On("GetNodeb", RanName).Return(nodebInfo, rnibErr)
-	testContext.writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(tc.saveNodebMockError)
+	testContext.writerMock.On("SaveNodeb", mock.Anything).Return(tc.saveNodebMockError)
 	handler.Handle(&notificationRequest)
 
 	return testContext, nodebInfo
@@ -207,7 +207,7 @@ func TestX2SetupResponse(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, entities.Node_ENB, nodebInfo.NodeType)
 
@@ -229,7 +229,7 @@ func TestX2SetupFailureResponse(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupFailureResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, entities.Failure_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
@@ -251,7 +251,7 @@ func TestEndcSetupResponse(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, entities.Node_GNB, nodebInfo.NodeType)
 	assert.IsType(t, &entities.NodebInfo_Gnb{}, nodebInfo.Configuration)
@@ -273,7 +273,7 @@ func TestEndcSetupFailureResponse(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupFailureResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED_SETUP_FAILED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, entities.Failure_ENDC_X2_SETUP_FAILURE, nodebInfo.FailureType)
 	assert.NotNil(t, nodebInfo.SetupFailure)
@@ -309,7 +309,7 @@ func TestSetupResponseSaveNodebFailure(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	testContext.rmrMessengerMock.AssertNotCalled(t, "SendMsg")
 }
 
@@ -328,7 +328,7 @@ func TestSetupResponseStatusChangeSendFailure(t *testing.T) {
 
 	testContext, nodebInfo := executeHandleSetupSuccessResponse(t, tc)
 	testContext.readerMock.AssertCalled(t, "GetNodeb", RanName)
-	testContext.writerMock.AssertCalled(t, "SaveNodeb", mock.Anything, nodebInfo)
+	testContext.writerMock.AssertCalled(t, "SaveNodeb", nodebInfo)
 	assert.EqualValues(t, entities.ConnectionStatus_CONNECTED, nodebInfo.ConnectionStatus)
 	assert.EqualValues(t, entities.Node_ENB, nodebInfo.NodeType)
 

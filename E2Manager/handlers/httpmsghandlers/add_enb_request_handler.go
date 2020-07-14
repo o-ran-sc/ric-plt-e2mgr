@@ -70,15 +70,15 @@ func (h *AddEnbRequestHandler) Handle(request models.Request) (models.IResponse,
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
-	nbIdentity := h.createNbIdentity(addEnbRequest)
 	nodebInfo := h.createNodebInfo(addEnbRequest)
-
-	err = h.rNibDataService.SaveNodeb(nbIdentity, nodebInfo)
+	err = h.rNibDataService.SaveNodeb(nodebInfo)
 
 	if err != nil {
 		h.logger.Errorf("#AddEnbRequestHandler.Handle - RAN name: %s - failed to save nodeb entity in RNIB. Error: %s", addEnbRequest.RanName, err)
 		return nil, e2managererrors.NewRnibDbError()
 	}
+
+	_ = h.createNbIdentity(addEnbRequest) // TODO: add call to ranListManager
 
 	return models.NewAddEnbResponse(nodebInfo), nil
 }
@@ -98,12 +98,11 @@ func (h *AddEnbRequestHandler) createNodebInfo(addEnbRequest *models.AddEnbReque
 }
 
 func (h *AddEnbRequestHandler) createNbIdentity(addEnbRequest *models.AddEnbRequest) *entities.NbIdentity {
-	nbIdentity := entities.NbIdentity{
-		GlobalNbId:    addEnbRequest.GlobalNbId,
-		InventoryName: addEnbRequest.RanName,
+	return &entities.NbIdentity{
+		GlobalNbId:       addEnbRequest.GlobalNbId,
+		InventoryName:    addEnbRequest.RanName,
+		ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
 	}
-
-	return &nbIdentity
 }
 
 func (h *AddEnbRequestHandler) validateRequestBody(addEnbRequest *models.AddEnbRequest) error {

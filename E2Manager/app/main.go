@@ -54,12 +54,21 @@ func main() {
 	sdl := sdlgo.NewSdlInstance("e2Manager", db)
 	defer sdl.Close()
 	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter(sdl, config.RnibWriter))
+
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
+
+	err = ranListManager.InitNbIdentityMap()
+
+	if err != nil {
+		logger.Errorf("#app.main - quit")
+		os.Exit(1)
+	}
+
 	var msgImpl *rmrCgo.Context
 	rmrMessenger := msgImpl.Init("tcp:"+strconv.Itoa(config.Rmr.Port), config.Rmr.MaxMsgSize, 0, logger)
 	rmrSender := rmrsender.NewRmrSender(logger, rmrMessenger)
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, clients.NewHttpClient())
-	ranListManager := managers.NewRanListManager(logger)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)

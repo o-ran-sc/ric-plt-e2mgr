@@ -44,7 +44,7 @@ type rNibWriterInstance struct {
 RNibWriter interface allows saving data to the redis DB
 */
 type RNibWriter interface {
-	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error
+	SaveNodeb(nodebInfo *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
@@ -57,6 +57,8 @@ type RNibWriter interface {
 	RemoveEnb(nodebInfo *entities.NodebInfo) error
 	RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error
 	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
+	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
+	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 }
 
 /*
@@ -65,6 +67,21 @@ GetRNibWriter returns reference to RNibWriter
 
 func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibWriterConfig) RNibWriter {
 	return &rNibWriterInstance{sdl: sdl, rnibWriterConfig: rnibWriterConfig}
+}
+
+func (w *rNibWriterInstance) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	nbIdData, err := proto.Marshal(nbIdentity)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	err = w.sdl.AddMember(nodeType.String(), nbIdData)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+	return nil
 }
 
 func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
@@ -105,23 +122,16 @@ func (w *rNibWriterInstance) SaveGeneralConfiguration(config *entities.GeneralCo
 /*
 SaveNodeb saves nodeB entity data in the redis DB according to the specified data model
 */
-func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *entities.NodebInfo) error {
-	isNotEmptyIdentity := isNotEmpty(nbIdentity)
+func (w *rNibWriterInstance) SaveNodeb(nodebInfo *entities.NodebInfo) error {
 
-	nodeType := entity.GetNodeType()
-
-	if isNotEmptyIdentity && nodeType == entities.Node_UNKNOWN {
-		return common.NewValidationError(fmt.Sprintf("#rNibWriter.saveNodeB - Unknown responding node type, entity: %v", entity))
-	}
-
-	data, err := proto.Marshal(entity)
+	data, err := proto.Marshal(nodebInfo)
 
 	if err != nil {
 		return common.NewInternalError(err)
 	}
 
 	var pairs []interface{}
-	key, rNibErr := common.ValidateAndBuildNodeBNameKey(nbIdentity.InventoryName)
+	key, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
 
 	if rNibErr != nil {
 		return rNibErr
@@ -129,31 +139,31 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 
 	pairs = append(pairs, key, data)
 
-	if isNotEmptyIdentity {
+	if nodebInfo.GlobalNbId != nil {
 
-		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodeType.String(), nbIdentity.GlobalNbId.GetPlmnId(), nbIdentity.GlobalNbId.GetNbId())
+		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
 		if rNibErr != nil {
 			return rNibErr
 		}
 		pairs = append(pairs, key, data)
 	}
 
-	if entity.GetEnb() != nil {
-		pairs, rNibErr = appendEnbCells(nbIdentity.InventoryName, entity.GetEnb().GetServedCells(), pairs)
+	if nodebInfo.GetEnb() != nil {
+		pairs, rNibErr = appendEnbCells(nodebInfo.RanName, nodebInfo.GetEnb().GetServedCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
 
-	if entity.GetGnb() != nil {
-		pairs, rNibErr = appendGnbCells(nbIdentity.InventoryName, entity.GetGnb().GetServedNrCells(), pairs)
+	if nodebInfo.GetGnb() != nil {
+		pairs, rNibErr = appendGnbCells(nodebInfo.RanName, nodebInfo.GetGnb().GetServedNrCells(), pairs)
 		if rNibErr != nil {
 			return rNibErr
 		}
 	}
 
-	if nodeType == entities.Node_ENB {
-		err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", entity.RanName, RanAddedEvent)}, pairs)
+	if nodebInfo.GetNodeType() == entities.Node_ENB {
+		err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanAddedEvent)}, pairs)
 	} else {
 		err = w.sdl.Set(pairs)
 	}
@@ -162,28 +172,6 @@ func (w *rNibWriterInstance) SaveNodeb(nbIdentity *entities.NbIdentity, entity *
 		return common.NewInternalError(err)
 	}
 
-	ranNameIdentity := &entities.NbIdentity{InventoryName: nbIdentity.InventoryName}
-
-	if isNotEmptyIdentity {
-		err := w.removeNbIdentity(entities.Node_UNKNOWN, ranNameIdentity)
-		if err != nil {
-			return common.NewInternalError(err)
-		}
-	} else {
-		nbIdentity = ranNameIdentity
-	}
-
-	nbIdData, err := proto.Marshal(nbIdentity)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
-
-	err = w.sdl.AddMember(nodeType.String(), nbIdData)
-
-	if err != nil {
-		return common.NewInternalError(err)
-	}
 	return nil
 }
 
@@ -298,7 +286,7 @@ func (w *rNibWriterInstance) buildRemoveEnbKeys(nodebInfo *entities.NodebInfo) (
 	return keys, nil
 }
 
-func (w *rNibWriterInstance) removeNbIdentity(nodeType entities.Node_Type ,nbIdentity *entities.NbIdentity) error {
+func (w *rNibWriterInstance) RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
 	nbIdData, err := proto.Marshal(nbIdentity)
 	if err != nil {
 		return common.NewInternalError(err)
@@ -459,12 +447,6 @@ func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInf
 }
 
 func (w *rNibWriterInstance) RemoveEnb(nodebInfo *entities.NodebInfo) error {
-	ranNameIdentity := &entities.NbIdentity{InventoryName: nodebInfo.RanName, GlobalNbId: nodebInfo.GetGlobalNbId()}
-	err := w.removeNbIdentity(entities.Node_ENB, ranNameIdentity)
-	if err != nil {
-		return err
-	}
-
 	keysToRemove, err := w.buildRemoveEnbKeys(nodebInfo)
 	if err != nil {
 		return err
@@ -501,6 +483,7 @@ func (w *rNibWriterInstance) UpdateEnb(nodebInfo *entities.NodebInfo, servedCell
 
 	return nil
 }
+
 /*
 Close the writer
 */
@@ -548,8 +531,4 @@ func appendGnbCells(inventoryName string, cells []*entities.ServedNRCell, pairs 
 		pairs = append(pairs, key, cellData)
 	}
 	return pairs, nil
-}
-
-func isNotEmpty(nbIdentity *entities.NbIdentity) bool {
-	return nbIdentity.GlobalNbId != nil && nbIdentity.GlobalNbId.PlmnId != "" && nbIdentity.GlobalNbId.NbId != ""
 }

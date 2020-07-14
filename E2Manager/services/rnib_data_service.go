@@ -31,7 +31,7 @@ import (
 )
 
 type RNibDataService interface {
-	SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error
+	SaveNodeb(nodebInfo *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	GetNodeb(ranName string) (*entities.NodebInfo, error)
@@ -55,24 +55,36 @@ type RNibDataService interface {
 	RemoveEnb(nodebInfo *entities.NodebInfo) error
 	RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error
 	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
+	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 }
 
 type rNibDataService struct {
-	logger           *logger.Logger
-	rnibReader       reader.RNibReader
-	rnibWriter       rNibWriter.RNibWriter
-	maxAttempts      int
-	retryInterval    time.Duration
+	logger        *logger.Logger
+	rnibReader    reader.RNibReader
+	rnibWriter    rNibWriter.RNibWriter
+	maxAttempts   int
+	retryInterval time.Duration
 }
 
 func NewRnibDataService(logger *logger.Logger, config *configuration.Configuration, rnibReader reader.RNibReader, rnibWriter rNibWriter.RNibWriter) *rNibDataService {
 	return &rNibDataService{
-		logger:           logger,
-		rnibReader:       rnibReader,
-		rnibWriter:       rnibWriter,
-		maxAttempts:      config.MaxRnibConnectionAttempts,
-		retryInterval:    time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
+		logger:        logger,
+		rnibReader:    rnibReader,
+		rnibWriter:    rnibWriter,
+		maxAttempts:   config.MaxRnibConnectionAttempts,
+		retryInterval: time.Duration(config.RnibRetryIntervalMs) * time.Millisecond,
 	}
+}
+
+func (w *rNibDataService) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	w.logger.Infof("#RnibDataService.AddNbIdentity - nbIdentity: %s", nbIdentity)
+
+	err := w.retry("AddNbIdentity", func() (err error) {
+		err = w.rnibWriter.AddNbIdentity(nodeType, nbIdentity)
+		return
+	})
+
+	return err
 }
 
 func (w *rNibDataService) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
@@ -117,11 +129,11 @@ func (w *rNibDataService) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 	return err
 }
 
-func (w *rNibDataService) SaveNodeb(nbIdentity *entities.NbIdentity, nb *entities.NodebInfo) error {
-	w.logger.Infof("#RnibDataService.SaveNodeb - nbIdentity: %s, nodebInfo: %s", nbIdentity, nb)
+func (w *rNibDataService) SaveNodeb(nodebInfo *entities.NodebInfo) error {
+	w.logger.Infof("#RnibDataService.SaveNodeb - nodebInfo: %s", nodebInfo)
 
 	err := w.retry("SaveNodeb", func() (err error) {
-		err = w.rnibWriter.SaveNodeb(nbIdentity, nb)
+		err = w.rnibWriter.SaveNodeb(nodebInfo)
 		return
 	})
 

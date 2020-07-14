@@ -169,9 +169,9 @@ func TestE2SetupRequestNotificationHandler_HandleNewRanError(t *testing.T) {
 	readerMock.On("GetNodeb", nodebRanName).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
-	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(common.NewInternalError(errors.New("error")))
-
+	writerMock.On("SaveNodeb", nodebInfo).Return(common.NewInternalError(errors.New("error")))
+	//nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	// TODO: add writerMock.On("AddNbIdentity")
 	handler.Handle(notificationRequest)
 
 	readerMock.AssertExpectations(t)
@@ -188,8 +188,9 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	readerMock.On("GetNodeb", nodebRanName).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
-	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
-	writerMock.On("SaveNodeb", nbIdentity, nodebInfo).Return(nil)
+	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
+	//nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	// TODO: add writerMock.On("AddNbIdentity")
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
@@ -408,7 +409,7 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
-	writerMock.On("SaveNodeb", mock.Anything, nodebInfo).Return(nil)
+	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
@@ -451,7 +452,7 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	routingManagerClientMock := &mocks.RoutingManagerClientMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
-	ranListManager := managers.NewRanListManager(logger)
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 
@@ -520,7 +521,7 @@ func initMocks(t *testing.T) (*E2SetupRequestNotificationHandler, *mocks.RnibRea
 	routingManagerClientMock := &mocks.RoutingManagerClientMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
-	ranListManager := managers.NewRanListManager(logger)
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)

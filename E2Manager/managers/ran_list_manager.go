@@ -21,24 +21,89 @@ package managers
 
 import (
 	"e2mgr/logger"
+	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"sync"
 )
 
 type ranListManagerInstance struct {
-	logger *logger.Logger
+	logger          *logger.Logger
+	rnibDataService services.RNibDataService
+	mux             sync.Mutex
+	nbIdentityMap   map[string]*entities.NbIdentity
 }
 
 type RanListManager interface {
-	UpdateRanState(nodebInfo *entities.NodebInfo) error
+	InitNbIdentityMap() error
+	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
+	UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error
+	RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error
+	GetNbIdentityList() []*entities.NbIdentity
+	UpdateRanState(nodebInfo *entities.NodebInfo) error // TODO: replace with UpdateNbIdentityConnectionStatus
 }
 
-func NewRanListManager(logger *logger.Logger) RanListManager {
+func NewRanListManager(logger *logger.Logger, rnibDataService services.RNibDataService) RanListManager {
 	return &ranListManagerInstance{
-		logger: logger,
+		logger:          logger,
+		rnibDataService: rnibDataService,
+		nbIdentityMap:   make(map[string]*entities.NbIdentity),
 	}
 }
 
+// TODO: replace with UpdateNbIdentityConnectionStatus
 func (m *ranListManagerInstance) UpdateRanState(nodebInfo *entities.NodebInfo) error {
 	m.logger.Infof("#ranListManagerInstance.UpdateRanState - RAN name: %s - Updating state...", nodebInfo.RanName)
 	return nil
+}
+
+func (m *ranListManagerInstance) InitNbIdentityMap() error {
+	nbIds, err := m.rnibDataService.GetListNodebIds()
+
+	if err != nil {
+		m.logger.Errorf("#ranListManagerInstance.InitRanList - Failed fetching RAN list from DB. error: %s", err)
+		return err
+	}
+
+	for _, v := range nbIds {
+		m.nbIdentityMap[v.InventoryName] = v
+	}
+
+	m.logger.Infof("#ranListManagerInstance.InitRanList - Successfully initiated nodeb identity map")
+	return nil
+}
+
+func (m *ranListManagerInstance) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	m.nbIdentityMap[nbIdentity.InventoryName] = nbIdentity
+
+	err := m.rnibDataService.AddNbIdentity(nodeType, nbIdentity)
+
+	if err != nil {
+		m.logger.Errorf("#ranListManagerInstance.AddNbIdentity - RAN name: %s - Failed adding nodeb identity to DB. error: %s", nbIdentity.InventoryName, err)
+		return err
+	}
+
+	m.logger.Infof("#ranListManagerInstance.AddNbIdentity - RAN name: %s - Successfully added nodeb identity", nbIdentity.InventoryName)
+	return nil
+}
+
+func (m *ranListManagerInstance) UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error {
+	//TODO: implement
+	return nil
+}
+
+func (m *ranListManagerInstance) RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error {
+	//TODO: implement
+	return nil
+}
+
+func (m *ranListManagerInstance) GetNbIdentityList() []*entities.NbIdentity {
+	nbIds := make([]*entities.NbIdentity, len(m.nbIdentityMap))
+	for _, v := range m.nbIdentityMap {
+		nbIds = append(nbIds, v)
+	}
+
+	return nbIds
 }
