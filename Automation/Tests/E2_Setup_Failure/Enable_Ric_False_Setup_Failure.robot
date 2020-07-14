@@ -22,28 +22,29 @@
 
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/e2mdbscripts.py
 Library     REST        ${url}
 Suite Teardown  Flush And Populate DB
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
 Disable ric and restart simulator
     ${result}    e2mdbscripts.set_enable_ric_false
     Restart simulator
-
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
 prepare logs for tests
     Remove log files
     Save logs
-
 
 E2M Logs - Verify RMR Message
     ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${Setup_failure_message_type}    ${None}

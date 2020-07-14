@@ -21,16 +21,18 @@
 #
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment    ${True}
 Resource    ../Resource/resource.robot
 Resource    ../Resource/Keywords.robot
-Resource   ../Resource/scripts_variables.robot
 Resource    red_button_keywords.robot
 Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
@@ -50,6 +52,6 @@ Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t 
 Verify E2T instance has no associated RANs
    Verify E2T instance has no associated RANs
 
-Verify e2mgr logs - Set and Publish Disconnect
-  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
-   Should Be Equal As Strings    ${result}      True
+#Verify e2mgr logs - Set and Publish Disconnect
+#  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
+#   Should Be Equal As Strings    ${result}      True

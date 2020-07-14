@@ -21,11 +21,14 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     REST      ${url}
-Suite Teardown   Start Dbass
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 Get All nodes - 500 http - 500 RNIB error
@@ -35,4 +38,6 @@ Get All nodes - 500 http - 500 RNIB error
     Integer  response body errorCode            500
     String   response body errorMessage     RNIB error
 
-
+[Teardown]    Run Keywords
+              Start Dbass
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers

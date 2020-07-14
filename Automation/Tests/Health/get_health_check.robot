@@ -21,12 +21,15 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 
 *** Test Cases ***
@@ -34,4 +37,7 @@ Get Health
     GET     /v1/health
     Integer     response status       200
 
+Prepare logs
+    Remove log files
+    Save logs
 

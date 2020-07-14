@@ -22,23 +22,34 @@
 
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment  ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     REST        ${url}
 
 
-
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
-Update Ran Unhappy
+Update gNB
     Sleep  2s
-    Update Ran request not valid
-    Integer  response status  400
-    Integer  response body errorCode  402
-    String   response body errorMessage  Validation error
+    Update Ran request
+    Integer  response status  200
+    String   response body ranName    ${ranname}
+    String   response body connectionStatus    CONNECTED
+    String   response body nodeType     GNB
+    String   response body gnb servedNrCells 0 servedNrCellInformation cellId   abcd
+    String   response body gnb servedNrCells 0 nrNeighbourInfos 0 nrCgi  one
+    String   response body gnb servedNrCells 0 servedNrCellInformation servedPlmns 0  whatever
+
+
+
+
+
 
 
 

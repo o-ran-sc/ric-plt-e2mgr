@@ -21,12 +21,15 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 Get Request node b gnb - resource not found 404
@@ -34,4 +37,6 @@ Get Request node b gnb - resource not found 404
     Integer   response status   404
     Integer   response body errorCode   404
     String   response body errorMessage   "Resource not found"
+
+
 

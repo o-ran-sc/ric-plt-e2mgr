@@ -20,16 +20,18 @@
 #   platform project (RICP).
 #
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource   ../Resource/scripts_variables.robot
 Library    ../Scripts/find_error_script.py
 Library     ../Scripts/e2mdbscripts.py
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
@@ -38,13 +40,13 @@ Setup Ran and verify it's CONNECTED and associated
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
-    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+    String   response body associatedE2tInstanceAddress  ${e2t_alpha_address}
 
 Stop simulator
    Stop Simulator
 
 Verify connection status is DISCONNECTED and RAN is not associated with E2T instance
-    Sleep    2s
+    Sleep    30s
     GET      ${getNodeb}
     Integer  response status  200
     String   response body ranName    ${ranname}
@@ -56,9 +58,13 @@ prepare logs for tests
     Save logs
 
 Verify E2T instance is NOT associated with RAN
-   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     ${ranname}  ${e2tinstanceaddress}
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     ${ranname}  ${e2t_alpha_address}
    Should Be True    ${result} == False
 
-Verify e2mgr logs - Set and Publish Disconnect True
-  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
-   Should Be Equal As Strings    ${result}      True
+#Verify e2mgr logs - Set and Publish Disconnect True
+#  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
+#   Should Be Equal As Strings    ${result}      True
+
+[Teardown]    Run Keywords
+              Start Simulator
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers

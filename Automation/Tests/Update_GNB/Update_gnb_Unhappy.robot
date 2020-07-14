@@ -20,17 +20,30 @@
 #   platform project (RICP).
 #
 
+
 *** Settings ***
-Documentation    Message types resource file
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment  ${True}
+Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
+Library     OperatingSystem
+Library     REST        ${url}
 
 
 *** Variables ***
+${url}  ${e2mgr_address}
 
-${E2_INIT_message_type}    MType: 1100
-${Setup_failure_message_type}    MType: 12003
-${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNodeb
-${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
-${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
-${E2_TERM_KEEP_ALIVE_REQ_message_type_successfully_sent}     Message type: 1101 - Successfully sent RMR message
-${save_general_configuration}      SetGeneralConfigurationHandler.Handle - save general configuration to rnib: {EnableRic:false}
-${set_and_publish_disconnect}      RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE, event: gnb_208_092_303030_DISCONNECTED
+*** Test Cases ***
+
+Update Ran Unhappy
+    Sleep  2s
+    Update Ran request not valid
+    Integer  response status  400
+    Integer  response body errorCode  402
+    String   response body errorMessage  Validation error
+
+
+
+
+
+

@@ -76,6 +76,6 @@ Start Dbass with 4 dockers
      Run And Return Rc And Output    ${dbass_remove}
      Run And Return Rc And Output    ${dbass_start}
      Sleep  5s
-     ${result}=  Run And Return Rc And Output     ${docker_command}
-     Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+     ${result}=  Run And Return Rc And Output     ${verify_all_pods_are_ready_command}
+     Should Be Equal As Integers    ${result[1]}    ${pods_number-1}
 

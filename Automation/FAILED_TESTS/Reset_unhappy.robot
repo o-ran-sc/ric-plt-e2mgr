@@ -31,10 +31,8 @@ Suite Teardown   Start E2
 *** Test Cases ***
 
 Pre Condition for Connecting - no E2
-    Run And Return Rc And Output    ${stop_docker_e2}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    4
-
+    Stop E2
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
 
 Prepare Ran in Connecting connectionStatus
     Sleep  1s

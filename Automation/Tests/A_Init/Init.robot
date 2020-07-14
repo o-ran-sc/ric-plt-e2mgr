@@ -20,32 +20,27 @@
 #   platform project (RICP).
 #
 
+
 *** Settings ***
-Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment     ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     REST      ${url}
-
-*** Variables ***
-${url}  ${e2mgr_address}
-
 
 *** Test Cases ***
 
-Get all node ids
-    GET     v1/nodeb/ids
-    Sleep  2s
-    Integer  response status   200
-    String   response body 0 inventoryName  ${ranName}
-    String   response body 0 globalNbId plmnId   02F829
-    String   response body 0 globalNbId nbId     001100000011000000110000
+Init Environment And Validate
+    Stop All Pods Except Simulator
+    Restart simulator
+    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    1
 
-Prepare Logs For Tests
-    Remove log files
-    Save logs
+    Start E2 Manager
+    Start Dbass
+    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    3
 
+    Start Routing Manager
+    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    4
+
+    Start E2
+    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
 
 

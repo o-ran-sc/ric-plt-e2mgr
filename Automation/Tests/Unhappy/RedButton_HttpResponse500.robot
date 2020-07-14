@@ -21,11 +21,14 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     REST      ${url}
-Suite Teardown   Start Dbass
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 Red Button - Shut Dwon - 500 RNIB error
@@ -36,3 +39,6 @@ Red Button - Shut Dwon - 500 RNIB error
     String   response body errorMessage     RNIB error
 
 
+[Teardown]    Run Keywords
+              Start Dbass
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers

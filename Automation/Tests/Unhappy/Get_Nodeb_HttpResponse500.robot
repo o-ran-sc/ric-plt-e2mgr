@@ -21,14 +21,16 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
-Resource    ../Resource/scripts_variables.robot
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library     REST      ${url}
-Suite Teardown   Start Dbass
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 Get node b gnb - DB down - 500
@@ -51,3 +53,6 @@ Verify e2mgr logs - Third retry to retrieve from db
    ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}   ${third_retry_to_retrieve_from_db}
    Should Be Equal As Strings    ${result}      True
 
+[Teardown]    Run Keywords
+              Start Dbass
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers

@@ -22,22 +22,23 @@
 
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
 Library     REST        ${url}
-Suite Teardown  Start RoutingManager Simulator
 
-
+*** Variables ***
+${url}  ${e2mgr_address}
 
 
 *** Test Cases ***
 Stop Routing manager simulator and restarting simulator
-    Stop RoutingManager Simulator
-    Restart simulator with less docker
+    Stop Routing Manager
+    restart simulator
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
 
 prepare logs for tests
     Remove log files
@@ -60,6 +61,10 @@ Get request gnb
 E2M Logs - Verify RMR Message
     ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${Setup_failure_message_type}    ${None}
     Should Be Equal As Strings    ${result}      True
+
+[Teardown]    Run Keywords
+              Start Routing Manager
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
 
 

@@ -33,7 +33,7 @@ def add():
 
     r = redis.Redis(host=c, port=p, db=0)
 
-    cleanup_db.flush()
+    cleanup_db.flush(True)
 
     r.set("{e2Manager},ENB:02f829:007a80", "\n\x05test1\x12\t10.0.2.15\x18\xc9+ \x01*\x10\n\x0602f829\x12\x06007a800\x01:3\b\x01\x12/\bc\x12\x0f02f829:0007ab50\x1a\x040102\"\x0602f829*\n\n\b\b\x01\x10\x01\x18\x04 \x040\x01")
 

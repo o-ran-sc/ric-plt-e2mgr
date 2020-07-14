@@ -24,21 +24,23 @@
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/cleanup_db.py
-Library     ../Scripts/e2t_db_script.py
+Library     ../Scripts/e2mdbscripts.py
 
 *** Test Cases ***
 
 Test New E2T Send Init
     Stop E2
-    ${result}=    cleanup_db.flush
-    Should Be Equal As Strings  ${result}    True
+    Stop Routing Manager
+    Flush And Populate DB
+    Start Routing Manager
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
     Start E2
+    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
-prepare logs for tests
+Prepare Logs For Tests
     Remove log files
     Save logs
 
@@ -47,10 +49,10 @@ E2M Logs - Verify RMR Message
     Should Be Equal As Strings    ${result}      True
 
 Verify E2T keys in DB
-    ${result}=    e2t_db_script.verify_e2t_addresses_key
+    ${result}=    e2mdbscripts.verify_e2t_addresses_for_e2t_initialization_tc
     Should Be Equal As Strings  ${result}    True
 
-    ${result}=    e2t_db_script.verify_e2t_instance_key
+    ${result}=    e2mdbscripts.verify_e2t_instance_for_e2t_initialization_tc
     Should Be Equal As Strings  ${result}    True
 
 

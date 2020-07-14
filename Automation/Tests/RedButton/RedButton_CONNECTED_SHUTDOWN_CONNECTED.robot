@@ -21,15 +21,18 @@
 #
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    red_button_keywords.robot
-Resource   ../Resource/scripts_variables.robot
 Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
@@ -43,9 +46,9 @@ prepare logs for tests
     Remove log files
     Save logs
 
-Verify e2mgr logs - Set and Publish Disconnect
-  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
-   Should Be Equal As Strings    ${result}      True
+#Verify e2mgr logs - Set and Publish Disconnect
+#  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
+#   Should Be Equal As Strings    ${result}      True
 
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
    Verify shutdown for gnb
@@ -53,6 +56,7 @@ Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t 
 
 Restart simulator
    Restart simulator
+   wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
-Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
+Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance - checking again
    Verify connected and associated

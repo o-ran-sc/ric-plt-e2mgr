@@ -22,14 +22,17 @@
 
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
-Resource   ../Resource/scripts_variables.robot
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library    ../Scripts/find_error_script.py
 Library     OperatingSystem
 Library     REST        ${url}
 
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 
 

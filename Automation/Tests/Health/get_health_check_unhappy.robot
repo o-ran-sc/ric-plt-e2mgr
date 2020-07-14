@@ -21,20 +21,30 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     REST      ${url}
-Suite Teardown   Start Dbass
 
-
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 Get Health Unhappy - Dbass down
     Stop Dbass
+
     GET     /v1/health
     Integer     response status       500
+
+Prepare logs
+    Remove log files
+    Save logs
+
+[Teardown]    Run Keywords
+              Start Dbass
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
 
 

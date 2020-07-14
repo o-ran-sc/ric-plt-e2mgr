@@ -17,10 +17,10 @@
 ##############################################################################
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
-Resource    ../Resource/scripts_variables.robot
 Library     REST      ${url}
 Library    RequestsLibrary
 Library    Collections
@@ -28,17 +28,24 @@ Library    OperatingSystem
 Library    json
 Library     ../Scripts/e2mdbscripts.py
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
 Get E2T instances
+    Flush And Populate DB
     ${result}    e2mdbscripts.populate_e2t_instances_in_e2m_db_for_get_e2t_instances_tc
     Create Session  getE2tInstances  ${url}
     ${headers}=  Create Dictionary    Accept=application/json
     ${resp}=    Get Request   getE2tInstances     /v1/e2t/list    headers=${headers}
     Should Be Equal As Strings   ${resp.status_code}    200
     Should Be Equal As Strings    ${resp.content}        [{"e2tAddress":"e2t.att.com:38000","ranNames":["test1","test2","test3"]}]
-    ${flush}  cleanup_db.flush
+    Flush And Populate DB
+
+Prepare Logs For Tests
+    Remove log files
+    Save logs
 
 
 

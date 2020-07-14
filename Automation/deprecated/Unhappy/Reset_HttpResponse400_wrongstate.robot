@@ -36,8 +36,8 @@ Library     REST      ${url}
 
 Pre Condition for Connecting - no simu
     Run And Return Rc And Output    ${stop_simu}
-    ${result}=  Run And Return Rc And Output     ${docker_command}
-    Should Be Equal As Integers    ${result[1]}    ${docker_number-1}
+    ${result}=  Run And Return Rc And Output     ${verify_all_pods_are_ready_command}
+    Should Be Equal As Integers    ${result[1]}    ${pods_number-1}
 
 Reset - 400 http - 403 wrong state
     Post Request setup node b x-2

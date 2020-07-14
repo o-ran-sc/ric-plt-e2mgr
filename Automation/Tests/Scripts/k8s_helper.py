@@ -20,34 +20,13 @@
 #   platform project (RICP).
 #
 
-*** Settings ***
-Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment     ${True}
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     REST      ${url}
-
-*** Variables ***
-${url}  ${e2mgr_address}
+import subprocess
 
 
-*** Test Cases ***
+def extract_service_ip(service_name):
+    k8s_command = "kubectl -n ricplt get services | /bin/grep {} | /bin/grep ClusterIP |  awk \'{{print $3}}\'"\
+        .format(service_name)
 
-Get all node ids
-    GET     v1/nodeb/ids
-    Sleep  2s
-    Integer  response status   200
-    String   response body 0 inventoryName  ${ranName}
-    String   response body 0 globalNbId plmnId   02F829
-    String   response body 0 globalNbId nbId     001100000011000000110000
+    service_ip = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)
 
-Prepare Logs For Tests
-    Remove log files
-    Save logs
-
-
-
-
-
-
+    return service_ip.strip()

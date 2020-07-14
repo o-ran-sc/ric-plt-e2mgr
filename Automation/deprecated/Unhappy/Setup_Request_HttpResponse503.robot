@@ -26,11 +26,11 @@ Resource   ../Resource/Keywords.robot
 Resource   ../Resource/resource.robot
 Library     ../Scripts/e2mdbscripts.py
 Library     REST      ${url}
-Suite Teardown   Start RoutingManager Simulator
+Suite Teardown   Start Routing Manager And Validate Pods
 
 *** Test Cases ***
 ENDC-setup - 503 http - 511 No Routing Manager Available
-    Stop RoutingManager Simulator
+    Stop Routing Manager
     Set Headers     ${header}
     POST     /v1/nodeb/x2-setup    ${json}
     Integer  response status            503

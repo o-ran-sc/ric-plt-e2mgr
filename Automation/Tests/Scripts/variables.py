@@ -19,38 +19,10 @@
 #   This source code is part of the near-RT RIC (RAN Intelligent Controller)
 #   platform project (RICP).
 #
+import k8s_helper
 
+e2mgr_ip = k8s_helper.extract_service_ip("e2mgr-http")
+e2mgr_address = "http://" + e2mgr_ip + ":3800"
 
-*** Settings ***
-Suite Setup   Prepare Enviorment
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     REST        ${url}
-
-
-
-
-*** Test Cases ***
-
-Update Ran
-    Sleep  2s
-    Update Ran request
-    Integer  response status  200
-    String   response body ranName    ${ranname}
-    String   response body connectionStatus    CONNECTED
-    String   response body nodeType     GNB
-    String   response body gnb servedNrCells 0 servedNrCellInformation cellId   abcd
-    String   response body gnb servedNrCells 0 nrNeighbourInfos 0 nrCgi  one
-    String   response body gnb servedNrCells 0 servedNrCellInformation servedPlmns 0  whatever
-
-
-
-
-
-
-
-
-
-
-
+e2t_alpha_ip = k8s_helper.extract_service_ip("e2term-rmr-alpha")
+e2t_alpha_address = e2t_alpha_ip + ":38000"

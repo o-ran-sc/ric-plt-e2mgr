@@ -17,6 +17,7 @@
 ##############################################################################
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Documentation   Keywords file
 Resource    ../Resource/resource.robot
 Resource    ../Resource/Keywords.robot
@@ -26,13 +27,16 @@ Library    OperatingSystem
 Library    json
 Library    REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
+
 *** Keywords ***
 Verify connected and associated
    Get Request node b gnb
    Integer  response status  200
    String   response body ranName   ${ranName}
    String   response body connectionStatus    CONNECTED
-   String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+   String   response body associatedE2tInstanceAddress  ${e2t_alpha_address}
 
 Verify shutdown for gnb
     Get Request node b gnb
@@ -42,7 +46,7 @@ Verify shutdown for gnb
     Missing  response body associatedE2tInstanceAddress
 
 Verify E2T instance has no associated RANs
-    ${result}    e2mdbscripts.verify_e2t_instance_has_no_associated_rans     ${e2tinstanceaddress}
+    ${result}    e2mdbscripts.verify_e2t_instance_has_no_associated_rans     ${e2t_alpha_address}
     Should Be True    ${result}
 
 Execute Shutdown

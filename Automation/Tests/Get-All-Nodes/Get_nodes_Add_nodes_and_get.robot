@@ -21,6 +21,7 @@
 #
 
 *** Settings ***
+Variables  ../Scripts/variables.py
 Suite Setup   Prepare Enviorment
 Library      Process
 Library     ../Scripts/getnodes.py
@@ -29,11 +30,13 @@ Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     REST      ${url}
 
-
+*** Variables ***
+${url}  ${e2mgr_address}
 
 
 *** Test Cases ***
 Add nodes to redis db
+    Flush And Populate DB
     ${result}   getnodes.add
     Should Be Equal As Strings  ${result}  True
 
@@ -49,7 +52,9 @@ Get all node ids
     String   response body 1 globalNbId nbId     001234
 
 
-
+Prepare Logs For Tests
+    Remove log files
+    Save logs
 
 
 

@@ -21,33 +21,4 @@
 #
 
 *** Settings ***
-Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment     ${True}
-Resource   ../Resource/resource.robot
-Resource   ../Resource/Keywords.robot
-Library     OperatingSystem
-Library     REST      ${url}
-
-*** Variables ***
-${url}  ${e2mgr_address}
-
-
-*** Test Cases ***
-
-Get all node ids
-    GET     v1/nodeb/ids
-    Sleep  2s
-    Integer  response status   200
-    String   response body 0 inventoryName  ${ranName}
-    String   response body 0 globalNbId plmnId   02F829
-    String   response body 0 globalNbId nbId     001100000011000000110000
-
-Prepare Logs For Tests
-    Remove log files
-    Save logs
-
-
-
-
-
-
+Documentation    Init

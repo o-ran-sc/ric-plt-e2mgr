@@ -16,10 +16,10 @@ robot###########################################################################
 #
 ##############################################################################
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment    ${True}    ${False}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource   ../Resource/scripts_variables.robot
 Library    ../Scripts/find_error_script.py
 Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/rsmscripts.py
@@ -28,6 +28,8 @@ Library    OperatingSystem
 Library    Collections
 Library     REST      ${url}
 
+*** Variables ***
+${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
@@ -38,7 +40,7 @@ Get request gnb
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
     String   response body nodeType     GNB
-    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+    String   response body associatedE2tInstanceAddress  ${e2t_alpha_address}
     Integer  response body gnb ranFunctions 0 ranFunctionId  1
     Integer  response body gnb ranFunctions 0 ranFunctionRevision  1
     Integer  response body gnb ranFunctions 1 ranFunctionId  2
@@ -52,18 +54,18 @@ prepare logs for tests
     Save logs
 
 Verify RAN is associated with E2T instance
-   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance      ${ranname}    ${e2tinstanceaddress}
+   ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance      ${ranname}    ${e2t_alpha_address}
    Should Be True    ${result}
 
 Stop E2T
     Stop E2
-    Sleep  3s
 
 Prepare logs
     Remove log files
     Save logs
 
 Verify RAN is not associated with E2T instance
+    Sleep  6m
     Get Request node b gnb
     Integer  response status  200
     String   response body ranName    ${ranname}
@@ -71,11 +73,13 @@ Verify RAN is not associated with E2T instance
     String   response body connectionStatus    DISCONNECTED
 
 Verify E2T instance removed from db
-    ${result}    e2mdbscripts.verify_e2t_instance_key_exists     ${e2tinstanceaddress}
+    ${result}    e2mdbscripts.verify_e2t_instance_key_exists     ${e2t_alpha_address}
     Should Be True    ${result} == False
 
-    ${result}    e2mdbscripts.verify_e2t_instance_exists_in_addresses     ${e2tinstanceaddress}
+    ${result}    e2mdbscripts.verify_e2t_instance_exists_in_addresses     ${e2t_alpha_address}
     Should Be True    ${result} == False
 
-Start E2T
-    Start E2
+
+[Teardown]    Run Keywords
+              Start E2
+              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers

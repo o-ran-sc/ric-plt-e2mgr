@@ -22,14 +22,17 @@
 
 
 *** Settings ***
-Suite Setup   Prepare Enviorment
+Variables  ../Scripts/variables.py
+Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
-Resource    ../Resource/scripts_variables.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/rsmscripts.py
 Library     REST        ${url}
+
+*** Variables ***
+${url}  ${e2mgr_address}
 
 
 
@@ -44,7 +47,7 @@ Get request gnb
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
     String   response body nodeType     GNB
-    String   response body associatedE2tInstanceAddress  ${e2tinstanceaddress}
+    String   response body associatedE2tInstanceAddress  ${e2t_alpha_address}
     Integer  response body gnb ranFunctions 0 ranFunctionId  1
     Integer  response body gnb ranFunctions 0 ranFunctionRevision  1
     Integer  response body gnb ranFunctions 1 ranFunctionId  2
@@ -53,6 +56,7 @@ Get request gnb
     Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
 
 
-
-
+Prepare Logs For Tests
+    Remove log files
+    Save logs
 

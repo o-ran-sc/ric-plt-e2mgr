@@ -25,9 +25,8 @@ Documentation    Resource file
 
 
 *** Variables ***
-${docker_number}    5
-${docker_number-1}    4
-${url}   http://localhost:3800
+
+#REST
 ${ranName}  gnb_208_092_303030
 ${getNodeb}  /v1/nodeb/${ranName}
 ${set_general_configuration}   /v1/nodeb/parameters
@@ -35,23 +34,35 @@ ${set_general_configuration_body}   {"enableRic":false}
 ${update_gnb_url}   /v1/nodeb/${ranName}/update
 ${update_gnb_body}  {"servedNrCells":[{"servedNrCellInformation":{"cellId":"abcd","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"one","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
 ${update_gnb_body_notvalid}  {"servedNrCells":[{"servedNrCellInformation":{"choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"whatever","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
-${E2tInstanceAddress}   10.0.2.15:38000
 ${header}  {"Content-Type": "application/json"}
-${docker_command}  docker ps | grep Up | wc --lines
-${stop_simu}  docker stop gnbe2_oran_simu
-${run_simu_regular}  docker run -d --name gnbe2_oran_simu --net host --env gNBipv4=10.0.2.15 --env gNBport=5577 --env ricIpv4=10.0.2.15 --env ricPort=36422 --env nbue=0  snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/gnbe2_oran_simu:3.2-32
-${docker_Remove}    docker rm gnbe2_oran_simu
-${docker_restart}   docker restart e2mgr
-${restart_simu}  docker restart gnbe2_oran_simu
-${start_e2}  docker start e2
-${stop_e2}      docker stop e2
-${dbass_start}   docker run -d --name dbass -p 6379:6379 --env DBAAS_SERVICE_HOST=10.0.2.15  snapshot.docker.ranco-dev-tools.eastus.cloudapp.azure.com:10001/dbass:1.0.0
-${dbass_remove}    docker rm dbass
-${dbass_stop}      docker stop dbass
-${restart_simu}  docker restart gnbe2_oran_simu
-${stop_docker_e2}      docker stop e2
-${stop_routingmanager_sim}  docker stop rm_sim
-${start_routingmanager_sim}  docker start rm_sim
+
+#K8S
+${pods_number}    5
+${pods_number-1}    4
+${verify_all_pods_are_ready_command}  kubectl -n ricplt get pods | grep -E 'dbaas|e2mgr|rtmgr|gnbe2|e2term' | grep Running | grep 1/1 |wc --lines
+${stop_simu}  kubectl scale --replicas=0 deploy/oran-simulator-gnbe2-oran-simu -n=ricplt
+${start_simu}  kubectl scale --replicas=1 deploy/oran-simulator-gnbe2-oran-simu -n=ricplt
+${start_e2mgr}  kubectl scale --replicas=1 deploy/deployment-ricplt-e2mgr -n=ricplt
+${stop_e2mgr}      kubectl scale --replicas=0 deploy/deployment-ricplt-e2mgr -n=ricplt
+${start_e2}  kubectl scale --replicas=1 deploy/deployment-ricplt-e2term-alpha -n=ricplt
+${stop_e2}      kubectl scale --replicas=0 deploy/deployment-ricplt-e2term-alpha -n=ricplt
+${dbass_start}   kubectl -n ricplt scale statefulsets statefulset-ricplt-dbaas-server --replicas=1
+${dbass_stop}      kubectl -n ricplt scale statefulsets statefulset-ricplt-dbaas-server --replicas=0
+${stop_routing_manager}  kubectl scale --replicas=0 deploy/deployment-ricplt-rtmgr -n=ricplt
+${start_routing_manager}  kubectl scale --replicas=1 deploy/deployment-ricplt-rtmgr -n=ricplt
+${gnbe2_sim_pod}  kubectl -n ricplt get pods |grep gnbe2 | awk '{print $1}'
+${e2mgr_pod}  kubectl -n ricplt get pods |grep e2mgr | awk '{print $1}'
+${e2term_pod}  kubectl -n ricplt get pods |grep e2term | awk '{print $1}'
+${rtmgr_pod}  kubectl -n ricplt get pods |grep rtmgr | awk '{print $1}'
 
 
+#Logs
+${E2_INIT_message_type}    MType: 1100
+${Setup_failure_message_type}    MType: 12003
+${first_retry_to_retrieve_from_db}      RnibDataService.retry - retrying 1 GetNodeb
+${third_retry_to_retrieve_from_db}      RnibDataService.retry - after 3 attempts of GetNodeb
+${RIC_RES_STATUS_REQ_message_type_successfully_sent}     Message type: 10090 - Successfully sent RMR message
+${E2_TERM_KEEP_ALIVE_REQ_message_type_successfully_sent}     Message type: 1101 - Successfully sent RMR message
+${save_general_configuration}      SetGeneralConfigurationHandler.Handle - save general configuration to rnib: {EnableRic:false}
+${set_and_publish_disconnect}      RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE, event: gnb_208_092_303030_DISCONNECTED
 
