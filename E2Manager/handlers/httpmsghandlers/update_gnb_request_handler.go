@@ -74,7 +74,7 @@ func (h *UpdateGnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, err
 	}
 
-	return models.NewUpdateGnbResponse(nodebInfo), nil
+	return models.NewNodebResponse(nodebInfo), nil
 }
 
 func (h *UpdateGnbRequestHandler) updateGnbCells(nodebInfo *entities.NodebInfo, updateGnbRequest models.UpdateGnbRequest) error {

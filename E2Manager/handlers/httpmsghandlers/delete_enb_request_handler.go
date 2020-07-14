@@ -73,6 +73,6 @@ func (h *DeleteEnbRequestHandler) Handle(request models.Request) (models.IRespon
 	}
 
 	h.logger.Infof("#DeleteEnbRequestHandler.Handle - RAN name: %s - deleted successfully.", deleteEnbRequest.RanName)
-	return models.NewDeleteEnbResponse(nodebInfo), nil
+	return models.NewNodebResponse(nodebInfo), nil
 }
 

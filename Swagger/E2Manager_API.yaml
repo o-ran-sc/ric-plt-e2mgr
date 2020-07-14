@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.12
+  version: 5.2.14
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -28,7 +28,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetNodebResponse'
+                $ref: '#/components/schemas/NodebResponse'
         '400':
           description: The specified RAN name is invalid
           content:
@@ -66,7 +66,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteEnbResponse'
+                $ref: '#/components/schemas/NodebResponse'
         '400':
           description: The specified RAN is not ENB
           content:
@@ -147,7 +147,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateGnbResponse'
+                $ref: '#/components/schemas/NodebResponse'
         '400':
           description: Invalid input
           content:
@@ -278,7 +278,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AddEnbResponse'
+                $ref: '#/components/schemas/NodebResponse'
         '400':
           description: Invalid input
           content:
@@ -301,40 +301,6 @@ components:
         servedNrCells:
           $ref: '#/components/schemas/ServedNrCells'
       additionalProperties: false
-    UpdateGnbResponse:
-      properties:
-        connectionStatus:
-          oneOf:
-            - type: string
-            - type: integer
-        failureType:
-          oneOf:
-            - type: string
-            - type: integer
-        globalNbId:
-          properties:
-            nbId:
-              type: string
-            plmnId:
-              type: string
-          additionalProperties: false
-          type: object
-        gnb:
-          $ref: '#/components/schemas/Gnb'
-        ip:
-          type: string
-        nodeType:
-          oneOf:
-            - type: string
-            - type: integer
-        port:
-          type: integer
-        ranName:
-          type: string
-        setupFailure:
-          $ref: '#/components/schemas/SetupFailure'
-      additionalProperties: false
-      type: object
     UpdateEnbRequest:
       type: object
       required:
@@ -362,41 +328,6 @@ components:
           type: object
         inventoryName:
           type: string
-      type: object
-    GetNodebResponse:
-      properties:
-        connectionStatus:
-          oneOf:
-            - type: string
-            - type: integer
-        enb:
-          $ref: '#/components/schemas/Enb'
-        failureType:
-          oneOf:
-            - type: string
-            - type: integer
-        globalNbId:
-          properties:
-            nbId:
-              type: string
-            plmnId:
-              type: string
-          type: object
-        gnb:
-          $ref: '#/components/schemas/Gnb'
-        ip:
-          type: string
-        nodeType:
-          oneOf:
-            - type: string
-            - type: integer
-        port:
-          type: integer
-        ranName:
-          type: string
-        setupFailure:
-          $ref: '#/components/schemas/SetupFailure'
-      additionalProperties: false
       type: object
     ErrorResponse:
       type: object
@@ -1055,74 +986,6 @@ components:
         enb:
           $ref: '#/components/schemas/Enb'
       additionalProperties: false
-    AddEnbResponse:
-      properties:
-        connectionStatus:
-          oneOf:
-            - type: string
-            - type: integer
-        failureType:
-          oneOf:
-            - type: string
-            - type: integer
-        globalNbId:
-          properties:
-            nbId:
-              type: string
-            plmnId:
-              type: string
-          additionalProperties: false
-          type: object
-        enb:
-          $ref: '#/components/schemas/Enb'
-        ip:
-          type: string
-        nodeType:
-          oneOf:
-            - type: string
-            - type: integer
-        port:
-          type: integer
-        ranName:
-          type: string
-        setupFailure:
-          $ref: '#/components/schemas/SetupFailure'
-      additionalProperties: false
-      type: object
-    DeleteEnbResponse:
-      properties:
-        connectionStatus:
-          oneOf:
-            - type: string
-            - type: integer
-        failureType:
-          oneOf:
-            - type: string
-            - type: integer
-        globalNbId:
-          properties:
-            nbId:
-              type: string
-            plmnId:
-              type: string
-          additionalProperties: false
-          type: object
-        enb:
-          $ref: '#/components/schemas/Enb'
-        ip:
-          type: string
-        nodeType:
-          oneOf:
-            - type: string
-            - type: integer
-        port:
-          type: integer
-        ranName:
-          type: string
-        setupFailure:
-          $ref: '#/components/schemas/SetupFailure'
-      additionalProperties: false
-      type: object
     AdditionalCellInformation:
       properties:
         cellLatitude:
