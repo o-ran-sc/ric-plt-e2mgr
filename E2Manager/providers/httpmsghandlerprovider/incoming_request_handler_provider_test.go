@@ -60,7 +60,7 @@ func setupTest(t *testing.T) *IncomingRequestHandlerProvider {
 	nodebValidator := managers.NewNodebValidator()
 	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
 
-	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager)
+	return NewIncomingRequestHandlerProvider(log, rmrSender, configuration.ParseConfiguration(), rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
 }
 
 func TestNewIncomingRequestHandlerProvider(t *testing.T) {

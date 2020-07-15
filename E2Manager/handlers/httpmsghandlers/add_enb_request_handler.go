@@ -34,13 +34,15 @@ type AddEnbRequestHandler struct {
 	logger          *logger.Logger
 	nodebValidator  *managers.NodebValidator
 	rNibDataService services.RNibDataService
+	ranListManager  managers.RanListManager
 }
 
-func NewAddEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService, nodebValidator *managers.NodebValidator) *AddEnbRequestHandler {
+func NewAddEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService, nodebValidator *managers.NodebValidator, ranListManager managers.RanListManager) *AddEnbRequestHandler {
 	return &AddEnbRequestHandler{
 		logger:          logger,
 		nodebValidator:  nodebValidator,
 		rNibDataService: rNibDataService,
+		ranListManager:  ranListManager,
 	}
 }
 
@@ -78,7 +80,12 @@ func (h *AddEnbRequestHandler) Handle(request models.Request) (models.IResponse,
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
-	_ = h.createNbIdentity(addEnbRequest) // TODO: add call to ranListManager
+	nbIdentity := h.createNbIdentity(addEnbRequest)
+	err = h.ranListManager.AddNbIdentity(entities.Node_ENB, nbIdentity)
+
+	if err != nil {
+		return nil, e2managererrors.NewRnibDbError()
+	}
 
 	return models.NewNodebResponse(nodebInfo), nil
 }

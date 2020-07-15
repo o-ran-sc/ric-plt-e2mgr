@@ -60,7 +60,7 @@ func (m *ranListManagerInstance) InitNbIdentityMap() error {
 	nbIds, err := m.rnibDataService.GetListNodebIds()
 
 	if err != nil {
-		m.logger.Errorf("#ranListManagerInstance.InitRanList - Failed fetching RAN list from DB. error: %s", err)
+		m.logger.Errorf("#ranListManagerInstance.InitNbIdentityMap - Failed fetching RAN list from DB. error: %s", err)
 		return err
 	}
 
@@ -68,7 +68,8 @@ func (m *ranListManagerInstance) InitNbIdentityMap() error {
 		m.nbIdentityMap[v.InventoryName] = v
 	}
 
-	m.logger.Infof("#ranListManagerInstance.InitRanList - Successfully initiated nodeb identity map")
+	m.logger.Infof("#ranListManagerInstance.InitNbIdentityMap - Successfully initiated nodeb identity map")
+	m.logger.Debugf("#ranListManagerInstance.InitNbIdentityMap - nodeb Identity map: %s", m.nbIdentityMap)
 	return nil
 }
 
@@ -86,6 +87,7 @@ func (m *ranListManagerInstance) AddNbIdentity(nodeType entities.Node_Type, nbId
 	}
 
 	m.logger.Infof("#ranListManagerInstance.AddNbIdentity - RAN name: %s - Successfully added nodeb identity", nbIdentity.InventoryName)
+	m.logger.Debugf("#ranListManagerInstance.AddNbIdentity - nodeb Identity map: %s", m.nbIdentityMap)
 	return nil
 }
 

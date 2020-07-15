@@ -160,7 +160,7 @@ func TestE2SetupRequestNotificationHandler_EnableRicFalse(t *testing.T) {
 }
 
 
-func TestE2SetupRequestNotificationHandler_HandleNewRanError(t *testing.T) {
+func TestE2SetupRequestNotificationHandler_HandleNewRanSaveNodebFailure(t *testing.T) {
 	xml := readXmlFile(t, GnbSetupRequestXmlPath)
 	handler, readerMock, writerMock, _, e2tInstancesManagerMock, _ := initMocks(t)
 	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
@@ -170,10 +170,26 @@ func TestE2SetupRequestNotificationHandler_HandleNewRanError(t *testing.T) {
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
 	writerMock.On("SaveNodeb", nodebInfo).Return(common.NewInternalError(errors.New("error")))
-	//nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
-	// TODO: add writerMock.On("AddNbIdentity")
 	handler.Handle(notificationRequest)
 
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+	e2tInstancesManagerMock.AssertExpectations(t)
+}
+
+func TestE2SetupRequestNotificationHandler_HandleNewRanAddNbIdentityFailure(t *testing.T) {
+	xml := readXmlFile(t, GnbSetupRequestXmlPath)
+	handler, readerMock, writerMock, _, e2tInstancesManagerMock, _ := initMocks(t)
+	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
+	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
+	var gnb *entities.NodebInfo
+	readerMock.On("GetNodeb", nodebRanName).Return(gnb, common.NewResourceNotFoundError("Not found"))
+	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
+	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
+	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
+	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	writerMock.On("AddNbIdentity", entities.Node_GNB, nbIdentity).Return(common.NewInternalError(errors.New("error")))
+	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
 	e2tInstancesManagerMock.AssertExpectations(t)
@@ -189,8 +205,8 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xml...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
 	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
-	//nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
-	// TODO: add writerMock.On("AddNbIdentity")
+	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	writerMock.On("AddNbIdentity", entities.Node_GNB, nbIdentity).Return(nil)
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
@@ -410,6 +426,8 @@ func TestE2SetupRequestNotificationHandler_HandleAssociationError(t *testing.T) 
 	notificationRequest := &models.NotificationRequest{RanName: nodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
 	nodebInfo := getExpectedNodebForNewRan(notificationRequest.Payload)
 	writerMock.On("SaveNodeb", nodebInfo).Return(nil)
+	nbIdentity := &entities.NbIdentity{InventoryName: nodebRanName, GlobalNbId: nodebInfo.GlobalNbId}
+	writerMock.On("AddNbIdentity", entities.Node_GNB, nbIdentity).Return(nil)
 	updatedNodebInfo := *nodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, nodebRanName+"_CONNECTED").Return(nil)
@@ -457,12 +475,13 @@ func TestE2SetupRequestNotificationHandler_ConvertTo20BitStringError(t *testing.
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)
-	handler := NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
+	handler := NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager)
 	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
 	var gnb *entities.NodebInfo
 	readerMock.On("GetNodeb", mock.Anything).Return(gnb, common.NewResourceNotFoundError("Not found"))
 	writerMock.On("SaveNodeb", mock.Anything, mock.Anything).Return(nil)
+	writerMock.On("AddNbIdentity", entities.Node_GNB, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
@@ -525,6 +544,6 @@ func initMocks(t *testing.T) (*E2SetupRequestNotificationHandler, *mocks.RnibRea
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)
-	handler := NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
+	handler := NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManagerMock, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager)
 	return handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock
 }

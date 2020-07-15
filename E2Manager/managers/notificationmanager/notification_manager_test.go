@@ -53,7 +53,7 @@ func initNotificationManagerTest(t *testing.T) (*logger.Logger, *mocks.RnibReade
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, e2tInstancesManager,routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager)
+	rmrNotificationHandlerProvider.Init(logger, config, rnibDataService, rmrSender, e2tInstancesManager,routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager)
 	notificationManager := NewNotificationManager(logger, rmrNotificationHandlerProvider )
 	return logger, readerMock, notificationManager
 }

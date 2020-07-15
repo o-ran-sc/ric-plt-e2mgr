@@ -51,9 +51,10 @@ type E2SetupRequestNotificationHandler struct {
 	rNibDataService               services.RNibDataService
 	e2tAssociationManager         *managers.E2TAssociationManager
 	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
+	ranListManager managers.RanListManager
 }
 
-func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) *E2SetupRequestNotificationHandler {
+func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, ranListManager managers.RanListManager) *E2SetupRequestNotificationHandler {
 	return &E2SetupRequestNotificationHandler{
 		logger:                        logger,
 		config:                        config,
@@ -62,6 +63,7 @@ func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configu
 		rNibDataService:               rNibDataService,
 		e2tAssociationManager:         e2tAssociationManager,
 		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
+		ranListManager: ranListManager,
 	}
 }
 
@@ -145,7 +147,13 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 		return nil, err
 	}
 
-	_ = h.buildNbIdentity(ranName, setupRequest) // TODO: add call to ranListManager
+	nbIdentity := h.buildNbIdentity(ranName, setupRequest)
+
+	err = h.ranListManager.AddNbIdentity(entities.Node_GNB, nbIdentity)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return nodebInfo, nil
 }

@@ -102,9 +102,11 @@ type updateEnbCellsParams struct {
 }
 
 type saveNodebParams struct {
-	nodebInfo  *entities.NodebInfo
-	nbIdentity *entities.NbIdentity
-	err        error
+	err error
+}
+
+type addNbIdentityParams struct {
+	err error
 }
 
 type removeServedCellsParams struct {
@@ -138,6 +140,7 @@ type controllerUpdateGnbTestContext struct {
 type controllerAddEnbTestContext struct {
 	getNodebInfoResult   *getNodebInfoResult
 	saveNodebParams      *saveNodebParams
+	addNbIdentityParams  *addNbIdentityParams
 	requestBody          map[string]interface{}
 	expectedStatusCode   int
 	expectedJsonResponse string
@@ -248,7 +251,7 @@ func buildServedCell(propToOmit string) map[string]interface{} {
 
 func getUpdateEnbRequest(propToOmit string) map[string]interface{} {
 	ret := map[string]interface{}{
-		"enb":        buildEnb(propToOmit),
+		"enb": buildEnb(propToOmit),
 	}
 
 	if len(propToOmit) != 0 {
@@ -257,7 +260,6 @@ func getUpdateEnbRequest(propToOmit string) map[string]interface{} {
 
 	return ret
 }
-
 
 func getAddEnbRequest(propToOmit string) map[string]interface{} {
 	ret := map[string]interface{}{
@@ -314,13 +316,13 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	e2tInstancesManager := &mocks.E2TInstancesManagerMock{}
 	httpClientMock := &mocks.HttpClientMock{}
 	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
-	ranListManager := &mocks.RanListManagerMock{}
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
 	ranAlarmService := &mocks.RanAlarmServiceMock{}
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
 	nodebValidator := managers.NewNodebValidator()
 	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
 
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager)
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
 	controller := NewNodebController(log, handlerProvider)
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
 }
@@ -395,7 +397,7 @@ func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNo
 	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
 }
 
-func activateControllerUpdateEnbMocks(context *controllerUpdateEnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock,updateEnbRequest *models.UpdateEnbRequest) {
+func activateControllerUpdateEnbMocks(context *controllerUpdateEnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock, updateEnbRequest *models.UpdateEnbRequest) {
 	if context.getNodebInfoResult != nil {
 		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	}
@@ -533,9 +535,12 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 			ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
 		}
 
-		//nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId}
 		writerMock.On("SaveNodeb", &nodebInfo).Return(context.saveNodebParams.err)
-		// TODO: add writerMock.On("AddNbIdentity")
+	}
+
+	if context.addNbIdentityParams != nil {
+		nbIdentity := entities.NbIdentity{InventoryName: addEnbRequest.RanName, GlobalNbId: addEnbRequest.GlobalNbId, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
+		writerMock.On("AddNbIdentity", entities.Node_ENB, &nbIdentity).Return(context.addNbIdentityParams.err)
 	}
 }
 
@@ -875,8 +880,8 @@ func TestControllerUpdateEnbInvalidRequest(t *testing.T) {
 
 func TestControllerUpdateEnbEmptyEnbType(t *testing.T) {
 	context := controllerUpdateEnbTestContext{
-		getNodebInfoResult: nil,
-		requestBody: getUpdateEnbRequest(EnbRequiredFields[0]),
+		getNodebInfoResult:   nil,
+		requestBody:          getUpdateEnbRequest(EnbRequiredFields[0]),
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
 	}
@@ -886,8 +891,8 @@ func TestControllerUpdateEnbEmptyEnbType(t *testing.T) {
 
 func TestControllerUpdateEnbEmptyServedCells(t *testing.T) {
 	context := controllerUpdateEnbTestContext{
-		getNodebInfoResult: nil,
-		requestBody: getUpdateEnbRequest(EnbRequiredFields[1]),
+		getNodebInfoResult:   nil,
+		requestBody:          getUpdateEnbRequest(EnbRequiredFields[1]),
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
 	}
@@ -897,8 +902,8 @@ func TestControllerUpdateEnbEmptyServedCells(t *testing.T) {
 
 func TestControllerUpdateEnbMissingEnb(t *testing.T) {
 	context := controllerUpdateEnbTestContext{
-		getNodebInfoResult: nil,
-		requestBody: getUpdateEnbRequest(UpdateEnbRequestRequiredFields[0]),
+		getNodebInfoResult:   nil,
+		requestBody:          getUpdateEnbRequest(UpdateEnbRequestRequiredFields[0]),
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
 	}
@@ -912,7 +917,7 @@ func TestControllerUpdateEnbValidServedCellsGetNodebNotFound(t *testing.T) {
 			nodebInfo: nil,
 			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusNotFound,
 		expectedJsonResponse: ResourceNotFoundJson,
 	}
@@ -926,7 +931,7 @@ func TestControllerUpdateEnbValidServedCellsGetNodebInternalError(t *testing.T) 
 			nodebInfo: nil,
 			rnibError: common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusInternalServerError,
 		expectedJsonResponse: RnibErrorJson,
 	}
@@ -947,7 +952,7 @@ func TestControllerUpdateEnbGetNodebSuccessGnbTypeFailure(t *testing.T) {
 			},
 			rnibError: nil,
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
 	}
@@ -972,7 +977,7 @@ func TestControllerUpdateEnbGetNodebSuccessRemoveServedCellsFailure(t *testing.T
 			},
 			rnibError: nil,
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusInternalServerError,
 		expectedJsonResponse: RnibErrorJson,
 	}
@@ -984,7 +989,7 @@ func TestControllerUpdateEnbGetNodebSuccessUpdateEnbFailure(t *testing.T) {
 	oldServedCells := generateServedCells("whatever1", "whatever2")
 	context := controllerUpdateEnbTestContext{
 		removeServedCellsParams: &removeServedCellsParams{
-			err:           nil,
+			err:            nil,
 			servedCellInfo: oldServedCells,
 		},
 		updateEnbCellsParams: &updateEnbCellsParams{
@@ -1000,7 +1005,7 @@ func TestControllerUpdateEnbGetNodebSuccessUpdateEnbFailure(t *testing.T) {
 			},
 			rnibError: nil,
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusInternalServerError,
 		expectedJsonResponse: RnibErrorJson,
 	}
@@ -1012,7 +1017,7 @@ func TestControllerUpdateEnbSuccess(t *testing.T) {
 	oldServedCells := generateServedCells("whatever1", "whatever2")
 	context := controllerUpdateEnbTestContext{
 		removeServedCellsParams: &removeServedCellsParams{
-			err:           nil,
+			err:            nil,
 			servedCellInfo: oldServedCells,
 		},
 		updateEnbCellsParams: &updateEnbCellsParams{
@@ -1028,7 +1033,7 @@ func TestControllerUpdateEnbSuccess(t *testing.T) {
 			},
 			rnibError: nil,
 		},
-		requestBody: getUpdateEnbRequest(""),
+		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusOK,
 		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]},\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
 	}
@@ -1068,6 +1073,26 @@ func TestControllerAddEnbSaveNodebFailure(t *testing.T) {
 	context := controllerAddEnbTestContext{
 		saveNodebParams: &saveNodebParams{
 			err: common.NewInternalError(errors.New("#reader.SaveeNodeb - Internal Error")),
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: nil,
+			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
+		},
+		requestBody:          getAddEnbRequest(""),
+		expectedStatusCode:   http.StatusInternalServerError,
+		expectedJsonResponse: RnibErrorJson,
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
+func TestControllerAddEnbAddNbIdentityFailure(t *testing.T) {
+	context := controllerAddEnbTestContext{
+		saveNodebParams: &saveNodebParams{
+			err: nil,
+		},
+		addNbIdentityParams: &addNbIdentityParams{
+			err: common.NewInternalError(errors.New("#writer.addNbIdentity - Internal Error")),
 		},
 		getNodebInfoResult: &getNodebInfoResult{
 			nodebInfo: nil,
@@ -1194,23 +1219,14 @@ func TestControllerAddEnbSuccess(t *testing.T) {
 		saveNodebParams: &saveNodebParams{
 			err: nil,
 		},
+		addNbIdentityParams: &addNbIdentityParams{
+			err: nil,
+		},
 		getNodebInfoResult: &getNodebInfoResult{
 			nodebInfo: nil,
 			rnibError: common.NewResourceNotFoundError("#reader.GetNodeb - Not found Error"),
 		},
-		requestBody: map[string]interface{}{
-			"ranName": RanName,
-			"globalNbId": map[string]interface{}{
-				"plmnId": "whatever",
-				"nbId":   "whatever2",
-			},
-			"enb": map[string]interface{}{
-				"enbType": 1,
-				"servedCells": []interface{}{
-					buildServedCell(""),
-				},
-			},
-		},
+		requestBody:          getAddEnbRequest(""),
 		expectedStatusCode:   http.StatusCreated,
 		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"DISCONNECTED\",\"globalNbId\":{\"plmnId\":\"whatever\",\"nbId\":\"whatever2\"},\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]}}",
 	}

@@ -61,7 +61,7 @@ func setupE2TControllerTest(t *testing.T) (*E2TController, *mocks.RnibReaderMock
 	nodebValidator := managers.NewNodebValidator()
 	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
 
-	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, nil, config, rnibDataService, e2tInstancesManager, nil, ranConnectStatusChangeManager, nodebValidator, updateEnbManager)
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, nil, config, rnibDataService, e2tInstancesManager, nil, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
 	controller := NewE2TController(log, handlerProvider)
 	return controller, readerMock
 }
