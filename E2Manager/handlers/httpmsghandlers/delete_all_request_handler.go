@@ -43,11 +43,12 @@ type DeleteAllRequestHandler struct {
 	e2tInstancesManager           managers.IE2TInstancesManager
 	rmClient                      clients.IRoutingManagerClient
 	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
+	ranListManager                managers.RanListManager
 }
 
 const PartialSuccessDueToRmErrorMessage = "Operation succeeded except for routing manager outbound call"
 
-func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager) *DeleteAllRequestHandler {
+func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rnibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, ranListManager managers.RanListManager) *DeleteAllRequestHandler {
 	return &DeleteAllRequestHandler{
 		logger:                        logger,
 		rnibDataService:               rnibDataService,
@@ -56,6 +57,7 @@ func NewDeleteAllRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrS
 		e2tInstancesManager:           e2tInstancesManager,
 		rmClient:                      rmClient,
 		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
+		ranListManager:                ranListManager,
 	}
 }
 
@@ -127,13 +129,7 @@ func (h *DeleteAllRequestHandler) Handle(request models.Request) (models.IRespon
 }
 
 func (h *DeleteAllRequestHandler) updateNodebs(updateCb func(node *entities.NodebInfo) (error, bool)) (error, bool) {
-	nbIdentityList, err := h.rnibDataService.GetListNodebIds()
-
-	if err != nil {
-		h.logger.Errorf("#DeleteAllRequestHandler.updateNodebs - failed to get nodes list from rNib. Error: %s", err)
-		return e2managererrors.NewRnibDbError(), false
-	}
-
+	nbIdentityList := h.ranListManager.GetNbIdentityList()
 	updatedAtLeastOnce := false
 
 	for _, nbIdentity := range nbIdentityList {

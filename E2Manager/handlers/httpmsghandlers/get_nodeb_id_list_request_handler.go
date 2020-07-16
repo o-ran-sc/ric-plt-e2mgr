@@ -17,12 +17,11 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package httpmsghandlers
 
 import (
-	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
 )
@@ -30,23 +29,20 @@ import (
 type GetNodebIdListRequestHandler struct {
 	rNibDataService services.RNibDataService
 	logger          *logger.Logger
+	ranListManager  managers.RanListManager
 }
 
-func NewGetNodebIdListRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService) *GetNodebIdListRequestHandler {
+func NewGetNodebIdListRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService, ranListManager managers.RanListManager) *GetNodebIdListRequestHandler {
 	return &GetNodebIdListRequestHandler{
 		logger:          logger,
 		rNibDataService: rNibDataService,
+		ranListManager:  ranListManager,
 	}
 }
 
 func (handler *GetNodebIdListRequestHandler) Handle(request models.Request) (models.IResponse, error) {
 
-	nodebIdList, err := handler.rNibDataService.GetListNodebIds()
-
-	if err != nil {
-		handler.logger.Errorf("#GetNodebIdListRequestHandler.Handle - Error fetching Nodeb Identity list from rNib: %v", err)
-		return nil, e2managererrors.NewRnibDbError()
-	}
+	nodebIdList := handler.ranListManager.GetNbIdentityList()
 
 	return models.NewGetNodebIdListResponse(nodebIdList), nil
 }

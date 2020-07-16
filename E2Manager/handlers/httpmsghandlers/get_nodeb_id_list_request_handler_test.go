@@ -22,41 +22,39 @@ package httpmsghandlers
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/services"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func setupGetNodebIdListRequestHandlerTest(t *testing.T) (*GetNodebIdListRequestHandler, *mocks.RnibReaderMock) {
+func setupGetNodebIdListRequestHandlerTest(t *testing.T) (*GetNodebIdListRequestHandler, *mocks.RnibReaderMock, managers.RanListManager) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, nil)
-	handler := NewGetNodebIdListRequestHandler(log, rnibDataService)
-	return handler, readerMock
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
+
+	handler := NewGetNodebIdListRequestHandler(log, rnibDataService, ranListManager)
+	return handler, readerMock, ranListManager
 }
 
 func TestHandleGetNodebIdListSuccess(t *testing.T) {
-	handler, readerMock := setupGetNodebIdListRequestHandlerTest(t)
+	handler, readerMock, ranListManager := setupGetNodebIdListRequestHandlerTest(t)
 	var rnibError error
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, rnibError)
+
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
+
 	response, err := handler.Handle(nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
 	assert.IsType(t, &models.GetNodebIdListResponse{}, response)
-}
-
-func TestHandleGetNodebIdListFailure(t *testing.T) {
-	handler, readerMock := setupGetNodebIdListRequestHandlerTest(t)
-	var nodebIdList []*entities.NbIdentity
-	readerMock.On("GetListNodebIds").Return(nodebIdList, common.NewInternalError(errors.New("#reader.GetListNodebIds - Internal Error")))
-	response, err := handler.Handle(nil)
-	assert.NotNil(t, err)
-	assert.Nil(t, response)
 }

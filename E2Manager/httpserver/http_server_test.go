@@ -55,7 +55,7 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 func TestRouteGetNodebIds(t *testing.T) {
 	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
-	req, err := http.NewRequest("GET", "/v1/nodeb/ids", nil)
+	req, err := http.NewRequest("GET", "/v1/nodeb/states", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

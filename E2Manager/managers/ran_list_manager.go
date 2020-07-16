@@ -102,7 +102,7 @@ func (m *ranListManagerInstance) RemoveNbIdentity(nodeType entities.Node_Type, r
 }
 
 func (m *ranListManagerInstance) GetNbIdentityList() []*entities.NbIdentity {
-	nbIds := make([]*entities.NbIdentity, len(m.nbIdentityMap))
+	nbIds := make([]*entities.NbIdentity, 0, len(m.nbIdentityMap))
 	for _, v := range m.nbIdentityMap {
 		nbIds = append(nbIds, v)
 	}
