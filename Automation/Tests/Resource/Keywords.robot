@@ -35,6 +35,10 @@ Update Ran request
     Sleep  1s
     PUT    ${update_gnb_url}   ${update_gnb_body}
 
+Add eNb Request
+    Sleep  1s
+    POST    ${add_enb_url}   ${add_enb_request_body}
+
 Set General Configuration request
     Sleep  1s
     PUT    ${set_general_configuration}   ${set_general_configuration_body}
