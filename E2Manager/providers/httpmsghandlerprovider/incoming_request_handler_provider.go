@@ -63,11 +63,11 @@ func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsend
 func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, nodebValidator *managers.NodebValidator, updateEnbManager managers.IUpdateNodebManager, ranListManager managers.RanListManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
-		ShutdownRequest:                httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager),
+		ShutdownRequest:                httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, ranListManager),
 		ResetRequest:                   httpmsghandlers.NewX2ResetRequestHandler(logger, rmrSender, rNibDataService),
 		SetGeneralConfigurationRequest: httpmsghandlers.NewSetGeneralConfigurationHandler(logger, rNibDataService),
 		GetNodebRequest:                httpmsghandlers.NewGetNodebRequestHandler(logger, rNibDataService),
-		GetNodebIdListRequest:          httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService),
+		GetNodebIdListRequest:          httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService, ranListManager),
 		GetE2TInstancesRequest:         httpmsghandlers.NewGetE2TInstancesRequestHandler(logger, e2tInstancesManager),
 		UpdateGnbRequest:               httpmsghandlers.NewUpdateGnbRequestHandler(logger, rNibDataService),
 		UpdateEnbRequest:               httpmsghandlers.NewUpdateNodebRequestHandler(logger, rNibDataService, updateEnbManager),

@@ -319,6 +319,8 @@ func (w *rNibDataService) SaveGeneralConfiguration(config *entities.GeneralConfi
 }
 
 func (w *rNibDataService) RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error {
+	w.logger.Infof("#RnibDataService.RemoveServedCells - ranName: %s", inventoryName)
+
 	err := w.retry("RemoveServedCells", func() (err error) {
 		err = w.rnibWriter.RemoveServedCells(inventoryName, servedCells)
 		return
@@ -328,6 +330,8 @@ func (w *rNibDataService) RemoveServedCells(inventoryName string, servedCells []
 }
 
 func (w *rNibDataService) UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error {
+	w.logger.Infof("#RnibDataService.UpdateEnb - nodebInfo: %s", nodebInfo)
+
 	err := w.retry("UpdateEnb", func() (err error) {
 		err = w.rnibWriter.UpdateEnb(nodebInfo, servedCells)
 		return

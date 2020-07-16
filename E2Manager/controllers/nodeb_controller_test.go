@@ -302,7 +302,7 @@ func buildGlobalNbId(propToOmit string) map[string]interface{} {
 	return ret
 }
 
-func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock) {
+func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.E2TInstancesManagerMock, managers.RanListManager) {
 	log := initLog(t)
 	config := configuration.ParseConfiguration()
 
@@ -324,11 +324,11 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 
 	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
 	controller := NewNodebController(log, handlerProvider)
-	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager
+	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager, ranListManager
 }
 
 func TestShutdownHandlerRnibError(t *testing.T) {
-	controller, _, _, _, e2tInstancesManagerMock := setupControllerTest(t)
+	controller, _, _, _, e2tInstancesManagerMock, _ := setupControllerTest(t)
 	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, e2managererrors.NewRnibDbError())
 
 	writer := httptest.NewRecorder()
@@ -342,7 +342,7 @@ func TestShutdownHandlerRnibError(t *testing.T) {
 }
 
 func TestSetGeneralConfigurationHandlerRnibError(t *testing.T) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
+	controller, readerMock, _, _, _ , _:= setupControllerTest(t)
 
 	configuration := &entities.GeneralConfiguration{}
 	readerMock.On("GetGeneralConfiguration").Return(configuration, e2managererrors.NewRnibDbError())
@@ -360,7 +360,7 @@ func TestSetGeneralConfigurationHandlerRnibError(t *testing.T) {
 }
 
 func TestSetGeneralConfigurationInvalidJson(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 
@@ -375,7 +375,7 @@ func TestSetGeneralConfigurationInvalidJson(t *testing.T) {
 }
 
 func controllerGetNodebTestExecuter(t *testing.T, context *controllerGetNodebTestContext) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
+	controller, readerMock, _, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	readerMock.On("GetNodeb", context.ranName).Return(context.nodebInfo, context.rnibError)
 	req, _ := http.NewRequest(http.MethodGet, "/nodeb", nil)
@@ -387,10 +387,16 @@ func controllerGetNodebTestExecuter(t *testing.T, context *controllerGetNodebTes
 }
 
 func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNodebIdListTestContext) {
-	controller, readerMock, _, _, _ := setupControllerTest(t)
+	controller, readerMock, _, _, _, ranListManager := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	readerMock.On("GetListNodebIds").Return(context.nodebIdList, context.rnibError)
-	req, _ := http.NewRequest(http.MethodGet, "/nodeb/ids", nil)
+
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, "/nodeb/states", nil)
 	controller.GetNodebIdList(writer, req)
 	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
 	bodyBytes, _ := ioutil.ReadAll(writer.Body)
@@ -491,7 +497,7 @@ func buildAddEnbRequest(context *controllerAddEnbTestContext) *http.Request {
 }
 
 func controllerUpdateEnbTestExecuter(t *testing.T, context *controllerUpdateEnbTestContext) {
-	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	controller, readerMock, writerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 
 	r := buildUpdateEnbRequest(context)
@@ -510,7 +516,7 @@ func controllerUpdateEnbTestExecuter(t *testing.T, context *controllerUpdateEnbT
 }
 
 func controllerUpdateGnbTestExecuter(t *testing.T, context *controllerUpdateGnbTestContext) {
-	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	controller, readerMock, writerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 
 	activateControllerUpdateGnbMocks(context, readerMock, writerMock)
@@ -545,7 +551,7 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 }
 
 func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestContext) {
-	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	controller, readerMock, writerMock, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	r := buildAddEnbRequest(context)
 	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, LimitRequest))
@@ -561,7 +567,7 @@ func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestCon
 }
 
 func controllerDeleteEnbTestExecuter(t *testing.T, context *controllerDeleteEnbTestContext) {
-	controller, readerMock, writerMock, _, _ := setupControllerTest(t)
+	controller, readerMock, writerMock, _, _, _ := setupControllerTest(t)
 	readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	if context.getNodebInfoResult.rnibError == nil && context.getNodebInfoResult.nodebInfo.GetNodeType() == entities.Node_ENB {
 		writerMock.On("RemoveEnb", context.getNodebInfoResult.nodebInfo).Return(nil)
@@ -861,7 +867,7 @@ func TestControllerUpdateGnbSuccess(t *testing.T) {
 }
 
 func TestControllerUpdateEnbInvalidRequest(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	invalidJson := strings.NewReader("{enb:\"whatever\"")
@@ -1120,7 +1126,7 @@ func TestControllerAddEnbMissingRequiredRequestProps(t *testing.T) {
 }
 
 func TestControllerAddEnbInvalidRequest(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 
 	// Invalid json: attribute name without quotes (should be "cause":).
@@ -1365,20 +1371,8 @@ func TestControllerGetNodebIdListEmptySuccess(t *testing.T) {
 	controllerGetNodebIdListTestExecuter(t, &context)
 }
 
-func TestControllerGetNodebIdListInternal(t *testing.T) {
-	var nodebIdList []*entities.NbIdentity
-	context := controllerGetNodebIdListTestContext{
-		nodebIdList:          nodebIdList,
-		rnibError:            common.NewInternalError(errors.New("#reader.GetNodeb - Internal Error")),
-		expectedStatusCode:   http.StatusInternalServerError,
-		expectedJsonResponse: RnibErrorJson,
-	}
-
-	controllerGetNodebIdListTestExecuter(t, &context)
-}
-
 func TestHeaderValidationFailed(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 
@@ -1395,7 +1389,7 @@ func TestHeaderValidationFailed(t *testing.T) {
 }
 
 func TestShutdownStatusNoContent(t *testing.T) {
-	controller, readerMock, _, _, e2tInstancesManagerMock := setupControllerTest(t)
+	controller, readerMock, _, _, e2tInstancesManagerMock, _ := setupControllerTest(t)
 	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, nil)
 	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{}, nil)
 
@@ -1406,7 +1400,7 @@ func TestShutdownStatusNoContent(t *testing.T) {
 }
 
 func TestHandleInternalError(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	err := e2managererrors.NewInternalError()
@@ -1420,7 +1414,7 @@ func TestHandleInternalError(t *testing.T) {
 }
 
 func TestHandleCommandAlreadyInProgressError(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	err := e2managererrors.NewCommandAlreadyInProgressError()
 
@@ -1433,7 +1427,7 @@ func TestHandleCommandAlreadyInProgressError(t *testing.T) {
 }
 
 func TestHandleRoutingManagerError(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 	writer := httptest.NewRecorder()
 	err := e2managererrors.NewRoutingManagerError()
 
@@ -1446,7 +1440,7 @@ func TestHandleRoutingManagerError(t *testing.T) {
 }
 
 func TestHandleE2TInstanceAbsenceError(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	err := e2managererrors.NewE2TInstanceAbsenceError()
@@ -1460,7 +1454,7 @@ func TestHandleE2TInstanceAbsenceError(t *testing.T) {
 }
 
 func TestValidateHeaders(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
@@ -1490,7 +1484,7 @@ func initLog(t *testing.T) *logger.Logger {
 }
 
 func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
-	controller, readerMock, _, rmrMessengerMock, _ := setupControllerTest(t)
+	controller, readerMock, _, rmrMessengerMock, _, _ := setupControllerTest(t)
 
 	ranName := "test1"
 	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x40}
@@ -1516,7 +1510,7 @@ func TestX2ResetHandleSuccessfulRequestedCause(t *testing.T) {
 }
 
 func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
-	controller, readerMock, _, rmrMessengerMock, _ := setupControllerTest(t)
+	controller, readerMock, _, rmrMessengerMock, _, _ := setupControllerTest(t)
 
 	ranName := "test1"
 	// o&m intervention
@@ -1543,7 +1537,7 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 }
 
 func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	ranName := "test1"
 
@@ -1560,7 +1554,7 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 }
 
 func TestHandleErrorResponse(t *testing.T) {
-	controller, _, _, _, _ := setupControllerTest(t)
+	controller, _, _, _, _, _ := setupControllerTest(t)
 
 	writer := httptest.NewRecorder()
 	controller.handleErrorResponse(e2managererrors.NewRnibDbError(), writer)
