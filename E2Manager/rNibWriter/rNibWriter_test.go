@@ -1045,6 +1045,36 @@ func TestRemoveEnbRemoveAndPublishError(t *testing.T) {
 	sdlInstanceMock.AssertExpectations(t)
 }
 
+func TestRemoveNbIdentitySuccess(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#TestRemoveNbIdentitySuccess - failed to Marshal NbIdentity")
+	}
+
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), []interface{}{nbIdData}).Return(nil)
+
+	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestRemoveNbIdentityError(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#TestRemoveNbIdentitySuccess - failed to Marshal NbIdentity")
+	}
+
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), []interface{}{nbIdData}).Return(fmt.Errorf("for test"))
+
+	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
+	assert.NotNil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
 //Integration tests
 //
 //func TestSaveEnbGnbInteg(t *testing.T){

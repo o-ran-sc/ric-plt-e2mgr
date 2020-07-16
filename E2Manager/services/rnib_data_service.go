@@ -56,6 +56,7 @@ type RNibDataService interface {
 	RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error
 	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
 	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
+	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 }
 
 type rNibDataService struct {
@@ -81,6 +82,17 @@ func (w *rNibDataService) AddNbIdentity(nodeType entities.Node_Type, nbIdentity 
 
 	err := w.retry("AddNbIdentity", func() (err error) {
 		err = w.rnibWriter.AddNbIdentity(nodeType, nbIdentity)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error{
+	w.logger.Infof("#RnibDataService.RemoveNbIdentity - nbIdentity: %s", nbIdentity)
+
+	err := w.retry("RemoveNbIdentity", func() (err error) {
+		err = w.rnibWriter.RemoveNbIdentity(nodeType, nbIdentity)
 		return
 	})
 

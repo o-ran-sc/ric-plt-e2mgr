@@ -22,6 +22,7 @@ package httpmsghandlers
 import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
@@ -31,12 +32,14 @@ import (
 type DeleteEnbRequestHandler struct {
 	logger          *logger.Logger
 	rNibDataService services.RNibDataService
+	ranListManager  managers.RanListManager
 }
 
-func NewDeleteEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService) *DeleteEnbRequestHandler {
+func NewDeleteEnbRequestHandler(logger *logger.Logger, rNibDataService services.RNibDataService, ranListManager managers.RanListManager) *DeleteEnbRequestHandler {
 	return &DeleteEnbRequestHandler{
 		logger:          logger,
 		rNibDataService: rNibDataService,
+		ranListManager:  ranListManager,
 	}
 }
 
@@ -64,15 +67,18 @@ func (h *DeleteEnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewRequestValidationError()
 	}
 
-
 	err = h.rNibDataService.RemoveEnb(nodebInfo)
-
 	if err != nil {
 		h.logger.Errorf("#DeleteEnbRequestHandler.Handle - RAN name: %s - failed to delete nodeb entity in RNIB. Error: %s", deleteEnbRequest.RanName, err)
+		return nil, e2managererrors.NewRnibDbError()
+	}
+
+	err = h.ranListManager.RemoveNbIdentity(entities.Node_ENB, deleteEnbRequest.RanName)
+	if err != nil {
+		h.logger.Errorf("#DeleteEnbRequestHandler.Handle - RAN name: %s - failed to delete nbIdentity in RNIB. Error: %s", deleteEnbRequest.RanName, err)
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
 	h.logger.Infof("#DeleteEnbRequestHandler.Handle - RAN name: %s - deleted successfully.", deleteEnbRequest.RanName)
 	return models.NewNodebResponse(nodebInfo), nil
 }
-

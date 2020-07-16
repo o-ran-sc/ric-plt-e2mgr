@@ -97,7 +97,26 @@ func (m *ranListManagerInstance) UpdateNbIdentityConnectionStatus(nodeType entit
 }
 
 func (m *ranListManagerInstance) RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error {
-	//TODO: implement
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	m.logger.Infof("#ranListManagerInstance.RemoveNbIdentity - RAN name: %s - deleting nodeb identity from memory and db...", ranName)
+
+	nbIdentity, ok := m.nbIdentityMap[ranName]
+	if !ok {
+		m.logger.Infof("#ranListManagerInstance.RemoveNbIdentity - RAN name: %s - nodeb identity not found", ranName)
+		return nil
+	}
+
+	delete(m.nbIdentityMap, ranName)
+
+	err := m.rnibDataService.RemoveNbIdentity(nodeType, nbIdentity)
+	if err != nil {
+		m.logger.Errorf("#ranListManagerInstance.RemoveNbIdentity - RAN name: %s - Failed removing nodeb identity from DB. error: %s", ranName, err)
+		return err
+	}
+
+	m.logger.Infof("#ranListManagerInstance.RemoveNbIdentity - RAN name: %s - Successfully deleted nodeb identity", ranName)
 	return nil
 }
 

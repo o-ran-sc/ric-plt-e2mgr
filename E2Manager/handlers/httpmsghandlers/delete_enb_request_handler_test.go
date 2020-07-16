@@ -22,6 +22,7 @@ package httpmsghandlers
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/services"
@@ -32,20 +33,45 @@ import (
 	"testing"
 )
 
-func setupDeleteEnbRequestHandlerTest(t *testing.T) (*DeleteEnbRequestHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock) {
+func setupDeleteEnbRequestHandlerTest(t *testing.T, emptyList bool) (*DeleteEnbRequestHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock) {
 	log := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
-	handler := NewDeleteEnbRequestHandler(log, rnibDataService)
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
+	if !emptyList {
+		nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+		writerMock.On("AddNbIdentity", entities.Node_ENB, nbIdentity).Return(nil)
+		if err := ranListManager.AddNbIdentity(entities.Node_ENB, nbIdentity); err != nil {
+			t.Errorf("#setupDeleteEnbRequestHandlerTest - Failed to add nbIdentity prior to DeleteEnb test")
+		}
+	}
+	handler := NewDeleteEnbRequestHandler(log, rnibDataService, ranListManager)
 	return handler, readerMock, writerMock
 }
 
 func TestHandleDeleteEnbSuccess(t *testing.T) {
-	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t)
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 
-	ranName := "test1"
+	ranName := "ran1"
+	var rnibError error
+	nodebInfo := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_ENB}
+	readerMock.On("GetNodeb", ranName).Return(nodebInfo, rnibError)
+	writerMock.On("RemoveEnb", nodebInfo).Return(nil)
+	writerMock.On("RemoveNbIdentity", entities.Node_ENB, &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}).Return(nil)
+	result, err := handler.Handle(&models.DeleteEnbRequest{RanName: ranName})
+	assert.Nil(t, err)
+	assert.NotNil(t, result)
+	assert.IsType(t, &models.NodebResponse{}, result)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+}
+
+func TestHandleDeleteEnbSuccessNoEnb(t *testing.T) {
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, true)
+
+	ranName := "ran1"
 	var rnibError error
 	nodebInfo := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_ENB}
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, rnibError)
@@ -59,9 +85,9 @@ func TestHandleDeleteEnbSuccess(t *testing.T) {
 }
 
 func TestHandleDeleteEnbInternalGetNodebError(t *testing.T) {
-	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t)
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 
-	ranName := "test1"
+	ranName := "ran1"
 	rnibError := errors.New("for test")
 	var nodebInfo *entities.NodebInfo
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, rnibError)
@@ -73,9 +99,9 @@ func TestHandleDeleteEnbInternalGetNodebError(t *testing.T) {
 }
 
 func TestHandleDeleteEnbInternalRemoveEnbError(t *testing.T) {
-	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t)
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 
-	ranName := "test1"
+	ranName := "ran1"
 	rnibError := errors.New("for test")
 	nodebInfo  := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_ENB}
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, nil)
@@ -87,10 +113,26 @@ func TestHandleDeleteEnbInternalRemoveEnbError(t *testing.T) {
 	writerMock.AssertExpectations(t)
 }
 
-func TestHandleDeleteEnbResourceNotFoundError(t *testing.T) {
-	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t)
+func TestHandleDeleteEnbInternalRemoveNbIdentityError(t *testing.T) {
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 
-	ranName := "test1"
+	ranName := "ran1"
+	rnibError := errors.New("for test")
+	nodebInfo  := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_ENB}
+	readerMock.On("GetNodeb", ranName).Return(nodebInfo, nil)
+	writerMock.On("RemoveEnb", nodebInfo).Return(nil)
+	writerMock.On("RemoveNbIdentity", entities.Node_ENB, &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}).Return(rnibError)
+	result, err := handler.Handle(&models.DeleteEnbRequest{RanName: ranName})
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+	readerMock.AssertExpectations(t)
+	writerMock.AssertExpectations(t)
+}
+
+func TestHandleDeleteEnbResourceNotFoundError(t *testing.T) {
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
+
+	ranName := "ran1"
 	rnibError := common.NewResourceNotFoundError("for test")
 	var nodebInfo *entities.NodebInfo
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, rnibError)
@@ -102,9 +144,9 @@ func TestHandleDeleteEnbResourceNotFoundError(t *testing.T) {
 }
 
 func TestHandleDeleteEnbNodeTypeNotEnbError(t *testing.T) {
-	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t)
+	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 
-	ranName := "test1"
+	ranName := "ran1"
 	nodebInfo  := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", ranName).Return(nodebInfo, nil)
 	result, err := handler.Handle(&models.DeleteEnbRequest{RanName: ranName})

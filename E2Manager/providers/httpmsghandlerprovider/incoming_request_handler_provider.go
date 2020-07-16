@@ -72,7 +72,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		UpdateGnbRequest:               httpmsghandlers.NewUpdateGnbRequestHandler(logger, rNibDataService),
 		UpdateEnbRequest:               httpmsghandlers.NewUpdateNodebRequestHandler(logger, rNibDataService, updateEnbManager),
 		AddEnbRequest:                  httpmsghandlers.NewAddEnbRequestHandler(logger, rNibDataService, nodebValidator, ranListManager),
-		DeleteEnbRequest:               httpmsghandlers.NewDeleteEnbRequestHandler(logger, rNibDataService),
+		DeleteEnbRequest:               httpmsghandlers.NewDeleteEnbRequestHandler(logger, rNibDataService, ranListManager),
 	}
 }
 

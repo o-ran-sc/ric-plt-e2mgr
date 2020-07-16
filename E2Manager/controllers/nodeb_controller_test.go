@@ -327,6 +327,37 @@ func setupControllerTest(t *testing.T) (*NodebController, *mocks.RnibReaderMock,
 	return controller, readerMock, writerMock, rmrMessengerMock, e2tInstancesManager, ranListManager
 }
 
+func setupDeleteEnbControllerTest(t *testing.T, preAddNbIdentity bool) (*NodebController, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *entities.NbIdentity) {
+	log := initLog(t)
+	config := configuration.ParseConfiguration()
+
+	rmrMessengerMock := &mocks.RmrMessengerMock{}
+	readerMock := &mocks.RnibReaderMock{}
+
+	writerMock := &mocks.RnibWriterMock{}
+
+	rnibDataService := services.NewRnibDataService(log, config, readerMock, writerMock)
+	rmrSender := getRmrSender(rmrMessengerMock, log)
+	e2tInstancesManager := &mocks.E2TInstancesManagerMock{}
+	httpClientMock := &mocks.HttpClientMock{}
+	rmClient := clients.NewRoutingManagerClient(log, config, httpClientMock)
+	ranListManager := managers.NewRanListManager(log, rnibDataService)
+	var nbIdentity *entities.NbIdentity
+	if preAddNbIdentity {
+		nbIdentity = &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+		writerMock.On("AddNbIdentity", entities.Node_ENB, nbIdentity).Return(nil)
+		ranListManager.AddNbIdentity(entities.Node_ENB, nbIdentity)
+	}
+	ranAlarmService := &mocks.RanAlarmServiceMock{}
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(log, rnibDataService, ranListManager, ranAlarmService)
+	nodebValidator := managers.NewNodebValidator()
+	updateEnbManager := managers.NewUpdateEnbManager(log, rnibDataService, nodebValidator)
+
+	handlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(log, rmrSender, config, rnibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
+	controller := NewNodebController(log, handlerProvider)
+	return controller, readerMock, writerMock, nbIdentity
+}
+
 func TestShutdownHandlerRnibError(t *testing.T) {
 	controller, _, _, _, e2tInstancesManagerMock, _ := setupControllerTest(t)
 	e2tInstancesManagerMock.On("GetE2TAddresses").Return([]string{}, e2managererrors.NewRnibDbError())
@@ -566,11 +597,14 @@ func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestCon
 	assertControllerAddEnb(t, context, writer, readerMock, writerMock)
 }
 
-func controllerDeleteEnbTestExecuter(t *testing.T, context *controllerDeleteEnbTestContext) {
-	controller, readerMock, writerMock, _, _, _ := setupControllerTest(t)
+func controllerDeleteEnbTestExecuter(t *testing.T, context *controllerDeleteEnbTestContext, preAddNbIdentity bool) {
+	controller, readerMock, writerMock, nbIdentity := setupDeleteEnbControllerTest(t, preAddNbIdentity)
 	readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	if context.getNodebInfoResult.rnibError == nil && context.getNodebInfoResult.nodebInfo.GetNodeType() == entities.Node_ENB {
 		writerMock.On("RemoveEnb", context.getNodebInfoResult.nodebInfo).Return(nil)
+		if preAddNbIdentity {
+			writerMock.On("RemoveNbIdentity", entities.Node_ENB,  nbIdentity).Return(nil)
+		}
 	}
 	writer := httptest.NewRecorder()
 	r, _ := http.NewRequest(http.MethodDelete, AddEnbUrl+"/"+RanName, nil)
@@ -1250,7 +1284,7 @@ func TestControllerDeleteEnbGetNodebInternalError(t *testing.T) {
 		expectedJsonResponse: RnibErrorJson,
 	}
 
-	controllerDeleteEnbTestExecuter(t, &context)
+	controllerDeleteEnbTestExecuter(t, &context, false)
 }
 
 func TestControllerDeleteEnbNodebNotExistsFailure(t *testing.T) {
@@ -1263,7 +1297,7 @@ func TestControllerDeleteEnbNodebNotExistsFailure(t *testing.T) {
 		expectedJsonResponse: ResourceNotFoundJson,
 	}
 
-	controllerDeleteEnbTestExecuter(t, &context)
+	controllerDeleteEnbTestExecuter(t, &context, false)
 }
 
 func TestControllerDeleteEnbNodebNotEnb(t *testing.T) {
@@ -1276,19 +1310,19 @@ func TestControllerDeleteEnbNodebNotEnb(t *testing.T) {
 		expectedJsonResponse: ValidationFailureJson,
 	}
 
-	controllerDeleteEnbTestExecuter(t, &context)
+	controllerDeleteEnbTestExecuter(t, &context, false)
 }
 
 func TestControllerDeleteEnbSuccess(t *testing.T) {
 	context := controllerDeleteEnbTestContext{
 		getNodebInfoResult: &getNodebInfoResult{
-			nodebInfo: &entities.NodebInfo{RanName: "ran1", NodeType: entities.Node_ENB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
+			nodebInfo: &entities.NodebInfo{RanName: RanName, NodeType: entities.Node_ENB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
 			rnibError: nil,
 		},
 		expectedStatusCode:   http.StatusNoContent,
 		expectedJsonResponse: "",
 	}
-	controllerDeleteEnbTestExecuter(t, &context)
+	controllerDeleteEnbTestExecuter(t, &context, true)
 }
 
 func getJsonRequestAsBuffer(requestJson map[string]interface{}) *bytes.Buffer {
