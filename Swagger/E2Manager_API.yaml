@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.14
+  version: 5.2.18
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -180,7 +180,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /nodeb/ids:
+  /nodeb/states:
     get:
       tags:
         - nodeb
