@@ -37,6 +37,8 @@ var namespace = "namespace"
 
 const (
 	RanName = "test"
+	PlmnId = "02f829"
+	NbId = "4a952a0a"
 )
 
 func initSdlInstanceMock(namespace string) (w RNibWriter, sdlInstanceMock *mocks.MockSdlInstance) {
@@ -142,6 +144,34 @@ func TestUpdateGnbCellsInvalidNodebInfoFailure(t *testing.T) {
 	sdlInstanceMock.AssertNotCalled(t, "Set")
 	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
+}
+
+func TestAddNbIdentitySuccess(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	nbIdentity :=  &entities.NbIdentity{InventoryName: RanName, GlobalNbId: &entities.GlobalNbId{PlmnId: PlmnId, NbId: NbId}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Fatalf("#rNibWriter_test.TestAddNbIdentitySuccess - Failed to marshal NodeB Identity entity. Error: %v", err)
+	}
+
+	sdlInstanceMock.On("AddMember", "ENB", []interface{}{nbIdData}).Return(nil)
+	rNibErr := w.AddNbIdentity(entities.Node_ENB,nbIdentity)
+	assert.Nil(t, rNibErr)
+}
+
+func TestAddNbIdentitySdlFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	nbIdentity :=  &entities.NbIdentity{InventoryName: RanName, GlobalNbId: &entities.GlobalNbId{PlmnId: PlmnId, NbId: NbId}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Fatalf("#rNibWriter_test.TestAddNbIdentitySdlFailure - Failed to marshal NodeB Identity entity. Error: %v", err)
+	}
+
+	sdlInstanceMock.On("AddMember", "ENB", []interface{}{nbIdData}).Return(errors.New("expected error"))
+	rNibErr := w.AddNbIdentity(entities.Node_ENB,nbIdentity)
+	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
 
 func TestUpdateGnbCellsInvalidCellFailure(t *testing.T) {
