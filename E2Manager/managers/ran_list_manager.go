@@ -126,5 +126,7 @@ func (m *ranListManagerInstance) GetNbIdentityList() []*entities.NbIdentity {
 		nbIds = append(nbIds, v)
 	}
 
+	m.logger.Infof("#ranListManagerInstance.GetNbIdentityList - %d identity returned", len(nbIds))
+
 	return nbIds
 }

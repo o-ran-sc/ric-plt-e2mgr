@@ -60,7 +60,7 @@ func (h *UpdateEnbManager) Validate(request models.Request) error {
 func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 
 	if nodeb.NodeType != entities.Node_ENB {
-		h.logger.Errorf("#UpdateEnbManager.RemoveNodebCells - RAN name: %s - nodeb missing eNB configuration", nodeb.GetRanName())
+		h.logger.Errorf("#UpdateEnbManager.RemoveNodebCells - RAN name: %s - RAN is not eNB.", nodeb.RanName)
 		return e2managererrors.NewRequestValidationError()
 	}
 
