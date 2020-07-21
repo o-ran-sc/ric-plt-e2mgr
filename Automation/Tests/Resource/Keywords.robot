@@ -23,8 +23,10 @@
 *** Settings ***
 Documentation   Keywords file
 Library     ../Scripts/cleanup_db.py
+Library     ../Scripts/k8s_helper.py
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
+Library     Process
 
 *** Keywords ***
 Get Request node b gnb
@@ -37,7 +39,15 @@ Update Ran request
 
 Add eNb Request
     Sleep  1s
-    POST    ${add_enb_url}   ${add_enb_request_body}
+    POST    ${enb_url}   ${add_enb_request_body}
+
+Delete eNb Request
+    Sleep  1s
+    DELETE    ${enb_url}/${enb_ran_name}
+
+Update eNb Request
+    Sleep  1s
+    PUT    ${enb_url}/${enb_ran_name}   ${update_enb_request_body}
 
 Set General Configuration request
     Sleep  1s
@@ -51,6 +61,7 @@ Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}
     Remove File  ${EXECDIR}/${e2mgr_log_filename}
     Remove File  ${EXECDIR}/${e2t_log_filename}
+
 
 Save logs
     Sleep   1s
@@ -79,7 +90,6 @@ Init logs
     ${Save_sim_log}          Evaluate  "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${gnbe2_sim_pod}) > ${gnb_log_filename}"
     ${Save_e2mgr_log}        Evaluate   "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${e2mgr_pod}) > ${e2mgr_log_filename}"
     ${Save_e2t_log}          Evaluate   "kubectl -n ricplt logs --since-time=${starting_timestamp} $(${e2term_pod}) > ${e2t_log_filename}"
-
     Set Suite Variable  ${e2t_log_filename}
     Set Suite Variable  ${e2mgr_log_filename}
     Set Suite Variable  ${gnb_log_filename}
@@ -164,4 +174,28 @@ Stop All Pods Except Simulator
     Stop Dbass
     Stop E2
     Stop Routing Manager
+
+Start Redis Monitor
+    Log To Console  Starting redis monitor log
+    ${redis_monitor_log_filename}      Evaluate      "redis_monitor.${SUITE NAME}.log".replace(" ","-")
+    Set Suite Variable  ${redis_monitor_log_filename}
+    Remove File  ${EXECDIR}/${redis_monitor_log_filename}
+    Start Process    kubectl -n ricplt exec -it statefulset-ricplt-dbaas-server-0 redis-cli MONITOR>${EXECDIR}/${redis_monitor_log_filename}  shell=yes
+
+Stop Redis Monitor
+    Log To Console  Stopping redis monitor log
+    log_scripts.kill_redis_monitor_root_process
+
+
+Redis Monitor Logs - Verify Publish To Manipulation Channel
+    [Arguments]       ${ran_name}    ${string}
+    Log To Console  Verify Publish To Manipulation Channel
+    ${result}=  log_scripts.verify_redis_monitor_manipulation_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${string}
+    Should Be Equal As Strings    ${result}      True
+
+Redis Monitor Logs - Verify Publish To Connection Status Channel
+    [Arguments]       ${ran_name}    ${string}
+    Log To Console    Verify Publish To Connection Status Channel
+    ${result}=  log_scripts.verify_redis_monitor_connection_status_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${string}
+    Should Be Equal As Strings    ${result}      True
 

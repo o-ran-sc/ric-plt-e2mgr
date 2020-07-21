@@ -27,6 +27,7 @@ Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    red_button_keywords.robot
 Library    ../Scripts/find_error_script.py
+Library     ../Scripts/log_scripts.py
 Library     OperatingSystem
 Library     Collections
 Library     REST      ${url}
@@ -35,6 +36,9 @@ Library     REST      ${url}
 ${url}  ${e2mgr_address}
 
 *** Test Cases ***
+
+Prepare Redis Monitor Log
+    Start Redis Monitor
 
 Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
   Verify connected and associated
@@ -46,9 +50,8 @@ prepare logs for tests
     Remove log files
     Save logs
 
-#Verify e2mgr logs - Set and Publish Disconnect
-#  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
-#   Should Be Equal As Strings    ${result}      True
+Redis Monitor Logs - Verify Publish 1
+    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ran_name}    DISCONNECTED
 
 Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
    Verify shutdown for gnb
@@ -60,3 +63,9 @@ Restart simulator
 
 Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance - checking again
    Verify connected and associated
+
+Redis Monitor Logs - Verify Publish 2
+    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ran_name}    CONNECTED
+
+[Teardown]
+    Stop Redis Monitor

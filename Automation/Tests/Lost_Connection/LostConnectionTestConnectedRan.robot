@@ -26,6 +26,7 @@ Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library    ../Scripts/find_error_script.py
 Library     ../Scripts/e2mdbscripts.py
+Library     ../Scripts/log_scripts.py
 Library     OperatingSystem
 Library    Collections
 Library     REST      ${url}
@@ -34,6 +35,9 @@ Library     REST      ${url}
 ${url}  ${e2mgr_address}
 
 *** Test Cases ***
+
+Prepare Redis Monitor Log
+    Start Redis Monitor
 
 Setup Ran and verify it's CONNECTED and associated
     Get Request node b gnb
@@ -61,10 +65,10 @@ Verify E2T instance is NOT associated with RAN
    ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance     ${ranname}  ${e2t_alpha_address}
    Should Be True    ${result} == False
 
-#Verify e2mgr logs - Set and Publish Disconnect True
-#  ${result}    find_error_script.find_error     ${EXECDIR}  ${e2mgr_log_filename}    ${set_and_publish_disconnect}
-#   Should Be Equal As Strings    ${result}      True
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ran_name}    DISCONNECTED
 
 [Teardown]    Run Keywords
               Start Simulator
               AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND Stop Redis Monitor

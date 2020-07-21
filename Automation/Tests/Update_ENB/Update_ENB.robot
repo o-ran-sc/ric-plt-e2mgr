@@ -20,17 +20,17 @@
 #   platform project (RICP).
 #
 
+
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment    ${True}
-Resource    ../Resource/resource.robot
-Resource    ../Resource/Keywords.robot
-Resource    red_button_keywords.robot
-Library    ../Scripts/find_error_script.py
-Library     ../Scripts/log_scripts.py
+Suite Setup   Prepare Enviorment  ${False}
+Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
-Library     Collections
-Library     REST      ${url}
+Library     ../Scripts/log_scripts.py
+Library     ../Scripts/k8s_helper.py
+Library     REST        ${url}
+
 
 *** Variables ***
 ${url}  ${e2mgr_address}
@@ -40,24 +40,26 @@ ${url}  ${e2mgr_address}
 Prepare Redis Monitor Log
     Start Redis Monitor
 
-Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
-   Verify connected and associated
+Add eNB
+    Sleep  2s
+    Add eNb Request
 
-Execute Shutdown
-   Execute Shutdown
+Update eNb
+    Sleep    2s
+    Update eNb Request
+    Integer  response status  200
+    String   response body enb enbType    HOME_ENB
 
 prepare logs for tests
     Remove log files
     Save logs
 
-Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance
-   Verify shutdown for gnb
-
-Verify E2T instance has no associated RANs
-   Verify E2T instance has no associated RANs
+E2M Logs - Verify Update
+    ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${update_enb_log_message}
+    Should Be Equal As Strings    ${result}      True
 
 Redis Monitor Logs - Verify Publish
-    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ran_name}    DISCONNECTED
+    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${enb_ran_name}    UPDATED
 
 [Teardown]
     Stop Redis Monitor

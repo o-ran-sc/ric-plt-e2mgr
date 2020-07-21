@@ -23,12 +23,11 @@
 
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
 Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/rsmscripts.py
+Library     ../Scripts/log_scripts.py
 Library     REST        ${url}
 
 *** Variables ***
@@ -39,6 +38,12 @@ ${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
+[Setup]
+    Start Redis Monitor
+    AND Prepare Enviorment    ${True}
+
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ran_name}    CONNECTED
 
 Get request gnb
     Sleep    2s
@@ -60,3 +65,5 @@ Prepare Logs For Tests
     Remove log files
     Save logs
 
+[Teardown]
+    Stop Redis Monitor

@@ -23,10 +23,27 @@
 import subprocess
 
 
-def extract_service_ip(service_name):
-    k8s_command = "kubectl -n ricplt get services | /bin/grep {} | /bin/grep ClusterIP |  awk \'{{print $3}}\'" \
-        .format(service_name)
+def verify_log_message(file_path, message):
 
-    service_ip = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)
+    file = open(file_path, 'r')
 
-    return service_ip.strip()
+    for line in file:
+
+        if line.find(message) > 0:
+            return True
+
+    return False
+
+
+def verify_redis_monitor_manipulation_message(file_path, ran_name, action):
+    message = "\"PUBLISH\" \"{e2Manager},RAN_MANIPULATION\" \"" + ran_name + "_" + action + "\""
+    return verify_log_message(file_path, message)
+
+def verify_redis_monitor_connection_status_message(file_path, ran_name, status):
+    message = "\"PUBLISH\" \"{e2Manager},RAN_CONNECTION_STATUS_CHANGE\" \"" + ran_name + "_" + status + "\""
+    return verify_log_message(file_path, message)
+
+
+def kill_redis_monitor_root_process():
+    kill_command = "for pid in $(pidof redis-cli); do sudo kill -9 $pid; done"
+    return subprocess.check_output(["/bin/bash", "-c", kill_command], universal_newlines=True)

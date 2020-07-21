@@ -27,6 +27,8 @@ Suite Setup   Prepare Enviorment  ${False}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library     Process
+Library     ../Scripts/log_scripts.py
 Library     REST        ${url}
 
 
@@ -34,6 +36,9 @@ Library     REST        ${url}
 ${url}  ${e2mgr_address}
 
 *** Test Cases ***
+
+Prepare Redis Monitor Log
+    Start Redis Monitor
 
 Add eNB
     Sleep  2s
@@ -44,9 +49,15 @@ Add eNB
     String   response body nodeType     ENB
     String   response body enb enbType    MACRO_ENB
 
+prepare logs for tests
+    Remove log files
+    Save logs
 
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${enb_ran_name}    ADDED
 
-
+[Teardown]
+    Stop Redis Monitor
 
 
 
