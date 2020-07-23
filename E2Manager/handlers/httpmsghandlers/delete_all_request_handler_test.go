@@ -147,8 +147,10 @@ func TestTwoRansGetE2TAddressesEmptyListOneGetNodebFailure(t *testing.T) {
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, common.NewInternalError(errors.New("error")))
 	_, err = h.Handle(nil)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
-	writerMock.AssertExpectations(t)
-	readerMock.AssertExpectations(t)
+	writerMock.AssertNotCalled(t, "UpdateNodebInfo", nb2)
+	readerMock.AssertCalled(t, "GetE2TAddresses")
+	readerMock.AssertCalled(t, "GetListNodebIds")
+	readerMock.AssertCalled(t, "GetNodeb", "RanName_2")
 }
 
 func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
@@ -163,6 +165,9 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
+
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(common.NewInternalError(errors.New("error")))
@@ -171,7 +176,9 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	writerMock.AssertExpectations(t)
-	readerMock.AssertExpectations(t)
+	readerMock.AssertCalled(t, "GetE2TAddresses")
+	readerMock.AssertCalled(t, "GetListNodebIds")
+	readerMock.AssertCalled(t, "GetNodeb", "RanName_1")
 }
 
 func TestTwoRansGetE2TAddressesEmptyListOneUpdateNodebInfoFailure(t *testing.T) {
@@ -197,8 +204,10 @@ func TestTwoRansGetE2TAddressesEmptyListOneUpdateNodebInfoFailure(t *testing.T) 
 	writerMock.On("UpdateNodebInfo", updatedNb2).Return(common.NewInternalError(errors.New("error")))
 	_, err = h.Handle(nil)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
-	readerMock.AssertExpectations(t)
-	writerMock.AssertExpectations(t)
+	readerMock.AssertCalled(t, "GetE2TAddresses")
+	readerMock.AssertCalled(t, "GetListNodebIds")
+	readerMock.AssertCalled(t, "GetNodeb", "RanName_2")
+	writerMock.AssertCalled(t, "UpdateNodebInfo", updatedNb2)
 }
 
 func TestOneRanWithStateShutDown(t *testing.T) {

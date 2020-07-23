@@ -57,6 +57,7 @@ type RNibDataService interface {
 	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
 	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
+	AddEnb(nodebInfo *entities.NodebInfo) error
 }
 
 type rNibDataService struct {
@@ -362,6 +363,17 @@ func (w *rNibDataService) UpdateNodebInfoOnConnectionStatusInversion(nodebInfo *
 
 	err := w.retry("UpdateNodebInfoOnConnectionStatusInversion", func() (err error) {
 		err = w.rnibWriter.UpdateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) AddEnb(nodebInfo *entities.NodebInfo) error {
+	w.logger.Infof("#RnibDataService.AddEnb - nodebInfo: %s", nodebInfo)
+
+	err := w.retry("AddEnb", func() (err error) {
+		err = w.rnibWriter.AddEnb(nodebInfo)
 		return
 	})
 

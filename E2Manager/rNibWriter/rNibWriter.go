@@ -59,6 +59,7 @@ type RNibWriter interface {
 	UpdateEnb(nodebInfo *entities.NodebInfo, servedCells []*entities.ServedCellInfo) error
 	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
+	AddEnb(nodebInfo *entities.NodebInfo) error
 }
 
 /*
@@ -166,13 +167,48 @@ func (w *rNibWriterInstance) SaveNodeb(nodebInfo *entities.NodebInfo) error {
 		}
 	}
 
-	if nodebInfo.GetNodeType() == entities.Node_ENB {
-		channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanAddedEvent)
-		err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
-	} else {
-		err = w.sdl.Set(pairs)
+	err = w.sdl.Set(pairs)
+
+	if err != nil {
+		return common.NewInternalError(err)
 	}
 
+	return nil
+}
+
+func (w *rNibWriterInstance) AddEnb(nodebInfo *entities.NodebInfo) error {
+
+	data, err := proto.Marshal(nodebInfo)
+
+	if err != nil {
+		return common.NewInternalError(err)
+	}
+
+	var pairs []interface{}
+	key, rNibErr := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
+
+	if rNibErr != nil {
+		return rNibErr
+	}
+
+	pairs = append(pairs, key, data)
+
+	if nodebInfo.GlobalNbId != nil {
+
+		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+		if rNibErr != nil {
+			return rNibErr
+		}
+		pairs = append(pairs, key, data)
+	}
+
+	pairs, rNibErr = appendEnbCells(nodebInfo.RanName, nodebInfo.GetEnb().GetServedCells(), pairs)
+	if rNibErr != nil {
+		return rNibErr
+	}
+
+	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanAddedEvent)
+	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
