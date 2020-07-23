@@ -167,7 +167,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 
 	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
-	writerMock.On("UpdateNodebInfo", nb2)
+	writerMock.On("UpdateNodebInfo", nb2).Return(nil)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
