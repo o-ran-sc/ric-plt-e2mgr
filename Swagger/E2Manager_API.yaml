@@ -557,6 +557,10 @@ components:
       type: object
     Gnb:
       properties:
+        gnbType:
+          oneOf:
+            - type: string
+            - type: integer
         servedNrCells:
           $ref: '#/components/schemas/ServedNrCells'
         ranFunctions:
@@ -1039,5 +1043,7 @@ components:
           type: string
         setupFailure:
           $ref: '#/components/schemas/SetupFailure'
+        setupFromNetwork:
+          type: boolean
       additionalProperties: false
       type: object
