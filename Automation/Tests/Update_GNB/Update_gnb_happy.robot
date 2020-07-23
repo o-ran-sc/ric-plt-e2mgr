@@ -35,9 +35,12 @@ ${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
+Prepare Redis Monitor Log
+    Start Redis Monitor
+
 Update gNB
     Sleep  2s
-    Update Ran request
+    Update Gnb request
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
@@ -46,13 +49,16 @@ Update gNB
     String   response body gnb servedNrCells 0 nrNeighbourInfos 0 nrCgi  one
     String   response body gnb servedNrCells 0 servedNrCellInformation servedPlmns 0  whatever
 
+prepare logs for tests
+    Remove log files
+    Save logs
 
+E2M Logs - Verify Update
+    ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${update_gnb_log_message}
+    Should Be Equal As Strings    ${result}      True
 
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${ranName}    UPDATED
 
-
-
-
-
-
-
-
+[Teardown]
+    Stop Redis Monitor

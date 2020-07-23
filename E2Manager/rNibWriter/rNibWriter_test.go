@@ -141,7 +141,7 @@ func TestUpdateGnbCellsInvalidNodebInfoFailure(t *testing.T) {
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
 	servedNrCells := generateServedNrCells("test1", "test2")
 	nodebInfo := &entities.NodebInfo{}
-	sdlInstanceMock.AssertNotCalled(t, "Set")
+	sdlInstanceMock.AssertNotCalled(t, "SetAndPublish")
 	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
 }
@@ -182,7 +182,7 @@ func TestUpdateGnbCellsInvalidCellFailure(t *testing.T) {
 	servedNrCells := []*entities.ServedNRCell{{ServedNrCellInformation: &entities.ServedNRCellInformation{}}}
 	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
 	nodebInfo.GetGnb().ServedNrCells = servedNrCells
-	sdlInstanceMock.AssertNotCalled(t, "Set")
+	sdlInstanceMock.AssertNotCalled(t, "SetAndPublish")
 	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
 	assert.IsType(t, &common.ValidationError{}, rNibErr)
 }
@@ -252,7 +252,7 @@ func TestUpdateGnbCellsSdlFailure(t *testing.T) {
 	nodebInfo := generateNodebInfo(inventoryName, entities.Node_GNB, plmnId, nbId)
 	nodebInfo.GetGnb().ServedNrCells = servedNrCells
 	setExpected := getUpdateGnbCellsSetExpected(t, nodebInfo, servedNrCells)
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(errors.New("expected error"))
+	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", inventoryName + "_" + RanUpdatedEvent}, []interface{}{setExpected}).Return(errors.New("expected error"))
 	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
 	assert.IsType(t, &common.InternalError{}, rNibErr)
 }
@@ -267,7 +267,7 @@ func TestUpdateGnbCellsSuccess(t *testing.T) {
 	nodebInfo.GetGnb().ServedNrCells = servedNrCells
 	setExpected := getUpdateGnbCellsSetExpected(t, nodebInfo, servedNrCells)
 	var e error
-	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
+	sdlInstanceMock.On("SetAndPublish",[]string{"RAN_MANIPULATION", inventoryName + "_" + RanUpdatedEvent}, []interface{}{setExpected}).Return(e)
 	rNibErr := w.UpdateGnbCells(nodebInfo, servedNrCells)
 	assert.Nil(t, rNibErr)
 }

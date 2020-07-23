@@ -31,6 +31,116 @@ func NewNodebValidator() *NodebValidator {
 	return &NodebValidator{}
 }
 
+func (h *NodebValidator) IsGnbValid(gnb *entities.Gnb) error {
+	if len(gnb.ServedNrCells) == 0 {
+		return errors.New("gnb.servedNrCells")
+	}
+
+	for _, servedNrCell := range gnb.ServedNrCells {
+		if servedNrCell.ServedNrCellInformation == nil {
+			return errors.New("gnb.servedNrCellInformation")
+		}
+
+		err := isServedNrCellInformationValid(servedNrCell.ServedNrCellInformation)
+
+		if err != nil {
+			return err
+		}
+
+		if len(servedNrCell.NrNeighbourInfos) == 0 {
+			continue
+		}
+
+		for _, nrNeighbourInformation := range servedNrCell.NrNeighbourInfos {
+
+			err := isNrNeighbourInformationValid(nrNeighbourInformation)
+
+			if err != nil {
+				return err
+			}
+
+		}
+	}
+
+	return nil
+}
+
+func isServedNrCellInformationValid(servedNrCellInformation *entities.ServedNRCellInformation) error {
+	if servedNrCellInformation.CellId == "" {
+		return errors.New("servedNrCellInformation.cellId")
+	}
+
+	if servedNrCellInformation.ChoiceNrMode == nil {
+		return errors.New("servedNrCellInformation.choiceNrMode")
+	}
+
+	if servedNrCellInformation.NrMode == entities.Nr_UNKNOWN {
+		return errors.New("servedNrCellInformation.nrMode")
+	}
+
+	if len(servedNrCellInformation.ServedPlmns) == 0 {
+		return errors.New("servedNrCellInformation.servedPlmns")
+	}
+
+	return isServedNrCellInfoChoiceNrModeValid(servedNrCellInformation.ChoiceNrMode)
+}
+
+func isServedNrCellInfoChoiceNrModeValid(choiceNrMode *entities.ServedNRCellInformation_ChoiceNRMode) error {
+	if choiceNrMode.Fdd != nil {
+		return isServedNrCellInfoFddValid(choiceNrMode.Fdd)
+	}
+
+	if choiceNrMode.Tdd != nil {
+		return isServedNrCellInfoTddValid(choiceNrMode.Tdd)
+	}
+
+	return errors.New("servedNrCellInformation.choiceNrMode.fdd / servedNrCellInformation.choiceNrMode.tdd")
+}
+
+func isServedNrCellInfoTddValid(tdd *entities.ServedNRCellInformation_ChoiceNRMode_TddInfo) error {
+	return nil
+}
+
+func isServedNrCellInfoFddValid(fdd *entities.ServedNRCellInformation_ChoiceNRMode_FddInfo) error {
+	return nil
+}
+
+func isNrNeighbourInformationValid(nrNeighbourInformation *entities.NrNeighbourInformation) error {
+	if nrNeighbourInformation.NrCgi == "" {
+		return errors.New("nrNeighbourInformation.nrCgi")
+	}
+
+	if nrNeighbourInformation.ChoiceNrMode == nil {
+		return errors.New("nrNeighbourInformation.choiceNrMode")
+	}
+
+	if nrNeighbourInformation.NrMode == entities.Nr_UNKNOWN {
+		return errors.New("nrNeighbourInformation.nrMode")
+	}
+
+	return isNrNeighbourInfoChoiceNrModeValid(nrNeighbourInformation.ChoiceNrMode)
+}
+
+func isNrNeighbourInfoChoiceNrModeValid(choiceNrMode *entities.NrNeighbourInformation_ChoiceNRMode) error {
+	if choiceNrMode.Fdd != nil {
+		return isNrNeighbourInfoFddValid(choiceNrMode.Fdd)
+	}
+
+	if choiceNrMode.Tdd != nil {
+		return isNrNeighbourInfoTddValid(choiceNrMode.Tdd)
+	}
+
+	return errors.New("nrNeighbourInformation.choiceNrMode.fdd / nrNeighbourInformation.choiceNrMode.tdd")
+}
+
+func isNrNeighbourInfoTddValid(tdd *entities.NrNeighbourInformation_ChoiceNRMode_TddInfo) error {
+	return nil
+}
+
+func isNrNeighbourInfoFddValid(fdd *entities.NrNeighbourInformation_ChoiceNRMode_FddInfo) error {
+	return nil
+}
+
 func (h *NodebValidator) IsEnbValid(enb *entities.Enb) error {
 	if enb.EnbType == entities.EnbType_UNKNOWN_ENB_TYPE {
 		return errors.New("enb.enbType")

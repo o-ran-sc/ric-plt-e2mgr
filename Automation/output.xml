@@ -1,0 +1,1576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 3.2.1 (Python 3.5.2 on linux)" generated="20200629 08:18:10.961" rpa="false">
+<suite name="Automation" source="/home/vagrant/oran_repo/e2mgr/Automation" id="s1">
+<suite name="Deprecated" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated" id="s1-s1">
+<suite name="ConfigurationUpdate" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate" id="s1-s1-s1">
+<suite name="ConfigurationUpdate prepartations tests" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot" id="s1-s1-s1-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:11.656" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:11.655" endtime="20200629 08:18:11.656" status="FAIL"></status>
+</kw>
+<test name="X2 - Setup and Get" id="s1-s1-s1-s1-t1">
+<status starttime="20200629 08:18:11.656" endtime="20200629 08:18:11.657" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Run Configuration update" id="s1-s1-s1-s1-t2">
+<status starttime="20200629 08:18:11.658" endtime="20200629 08:18:11.660" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s1-s1-t3">
+<status starttime="20200629 08:18:11.661" endtime="20200629 08:18:11.662" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Confiugration update - Begin Tag Get" id="s1-s1-s1-s1-t4">
+<status starttime="20200629 08:18:11.663" endtime="20200629 08:18:11.664" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Confiugration update - End Tag Get" id="s1-s1-s1-s1-t5">
+<status starttime="20200629 08:18:11.665" endtime="20200629 08:18:11.666" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Confiugration update - Ack Tag Begin" id="s1-s1-s1-s1-t6">
+<status starttime="20200629 08:18:11.667" endtime="20200629 08:18:11.668" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Confiugration update - Ack Tag End" id="s1-s1-s1-s1-t7">
+<status starttime="20200629 08:18:11.669" endtime="20200629 08:18:11.671" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - find RIC_ENDC_CONF_UPDATE" id="s1-s1-s1-s1-t8">
+<status starttime="20200629 08:18:11.673" endtime="20200629 08:18:11.674" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - find RIC_ENDC_CONF_UPDATE_ACK" id="s1-s1-s1-s1-t9">
+<status starttime="20200629 08:18:11.675" endtime="20200629 08:18:11.676" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:11.025" endtime="20200629 08:18:11.678" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<doc>Configuration Update test</doc>
+<status starttime="20200629 08:18:11.021" endtime="20200629 08:18:11.683" status="FAIL"></status>
+</suite>
+<suite name="ENDC Reset RAN TO RIC" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC" id="s1-s1-s2">
+<suite name="Reset RAN Found" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot" id="s1-s1-s2-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:11.733" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:11.733" endtime="20200629 08:18:11.734" status="FAIL"></status>
+</kw>
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s2-s1-t1">
+<status starttime="20200629 08:18:11.734" endtime="20200629 08:18:11.737" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Run Reset from RAN" id="s1-s1-s2-s1-t2">
+<status starttime="20200629 08:18:11.738" endtime="20200629 08:18:11.739" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s2-s1-t3">
+<status starttime="20200629 08:18:11.740" endtime="20200629 08:18:11.741" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Reset Sent by simulator" id="s1-s1-s2-s1-t4">
+<status starttime="20200629 08:18:11.742" endtime="20200629 08:18:11.743" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - e2mgr logs - messege sent" id="s1-s1-s2-s1-t5">
+<status starttime="20200629 08:18:11.744" endtime="20200629 08:18:11.745" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - e2mgr logs - messege received" id="s1-s1-s2-s1-t6">
+<status starttime="20200629 08:18:11.746" endtime="20200629 08:18:11.747" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s2-s1-t7">
+<status starttime="20200629 08:18:11.748" endtime="20200629 08:18:11.749" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message not sent" id="s1-s1-s2-s1-t8">
+<status starttime="20200629 08:18:11.750" endtime="20200629 08:18:11.751" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info doesn't exist in redis" id="s1-s1-s2-s1-t9">
+<status starttime="20200629 08:18:11.752" endtime="20200629 08:18:11.753" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:11.692" endtime="20200629 08:18:11.754" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<doc>ORAN Reset - ENDC RAN to RIC Scenario 1</doc>
+<status starttime="20200629 08:18:11.687" endtime="20200629 08:18:11.759" status="FAIL"></status>
+</suite>
+<suite name="ENDC Reset RIC TO RAN" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN" id="s1-s1-s3">
+<suite name="Reset Happy no cause" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot" id="s1-s1-s3-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:11.790" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:11.789" endtime="20200629 08:18:11.790" status="FAIL"></status>
+</kw>
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s3-s1-t1">
+<status starttime="20200629 08:18:11.790" endtime="20200629 08:18:11.791" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Send Reset reqeust with no cause" id="s1-s1-s3-s1-t2">
+<status starttime="20200629 08:18:11.792" endtime="20200629 08:18:11.793" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s3-s1-t3">
+<status starttime="20200629 08:18:11.794" endtime="20200629 08:18:11.795" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s3-s1-t4">
+<status starttime="20200629 08:18:11.796" endtime="20200629 08:18:11.797" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message not sent" id="s1-s1-s3-s1-t5">
+<status starttime="20200629 08:18:11.798" endtime="20200629 08:18:11.799" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info doesn't exist in redis" id="s1-s1-s3-s1-t6">
+<status starttime="20200629 08:18:11.800" endtime="20200629 08:18:11.801" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:11.772" endtime="20200629 08:18:11.802" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="Reset Happy with cause" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot" id="s1-s1-s3-s2">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:11.823" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:11.823" endtime="20200629 08:18:11.823" status="FAIL"></status>
+</kw>
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s3-s2-t1">
+<status starttime="20200629 08:18:11.824" endtime="20200629 08:18:11.825" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Send Reset reqeust with cause" id="s1-s1-s3-s2-t2">
+<status starttime="20200629 08:18:11.825" endtime="20200629 08:18:11.826" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s3-s2-t3">
+<status starttime="20200629 08:18:11.827" endtime="20200629 08:18:11.828" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s3-s2-t4">
+<status starttime="20200629 08:18:11.829" endtime="20200629 08:18:11.830" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message not sent" id="s1-s1-s3-s2-t5">
+<status starttime="20200629 08:18:11.831" endtime="20200629 08:18:11.832" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info doesn't exist in redis" id="s1-s1-s3-s2-t6">
+<status starttime="20200629 08:18:11.833" endtime="20200629 08:18:11.834" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:11.806" endtime="20200629 08:18:11.835" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<doc>ORAN Reset API - ENDC RIC to RAN</doc>
+<status starttime="20200629 08:18:11.762" endtime="20200629 08:18:11.840" status="FAIL"></status>
+</suite>
+<suite name="LoadInfomation" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation" id="s1-s1-s4">
+<suite name="Loadinformation adding data and overwrite" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_adding_data_and_overwrite.robot" id="s1-s1-s4-s1">
+<kw name="Prepare Simulator For Load Information" type="setup">
+<msg timestamp="20200629 08:18:11.864" level="FAIL">No keyword with name 'Prepare Simulator For Load Information' found.</msg>
+<status starttime="20200629 08:18:11.864" endtime="20200629 08:18:11.864" status="FAIL"></status>
+</kw>
+<test name="Verify Load information doesn't exist in redis" id="s1-s1-s4-s1-t1">
+<status starttime="20200629 08:18:11.865" endtime="20200629 08:18:11.866" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<test name="Adding Load information to overwrite on" id="s1-s1-s4-s1-t2">
+<status starttime="20200629 08:18:11.867" endtime="20200629 08:18:11.868" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<test name="Trigger X-2 Setup for load information" id="s1-s1-s4-s1-t3">
+<status starttime="20200629 08:18:11.868" endtime="20200629 08:18:11.869" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<test name="Verify Load information exists in redis" id="s1-s1-s4-s1-t4">
+<status starttime="20200629 08:18:11.870" endtime="20200629 08:18:11.872" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<kw name="Stop Simulator" type="teardown">
+<msg timestamp="20200629 08:18:11.881" level="FAIL">No keyword with name 'Stop Simulator' found.</msg>
+<status starttime="20200629 08:18:11.881" endtime="20200629 08:18:11.881" status="FAIL">No keyword with name 'Stop Simulator' found.</status>
+</kw>
+<status starttime="20200629 08:18:11.848" endtime="20200629 08:18:11.881" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.
+
+Also suite teardown failed:
+No keyword with name 'Stop Simulator' found.</status>
+</suite>
+<suite name="Loadinformation verify saving" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_verify_saving.robot" id="s1-s1-s4-s2">
+<kw name="Prepare Simulator For Load Information" type="setup">
+<msg timestamp="20200629 08:18:11.901" level="FAIL">No keyword with name 'Prepare Simulator For Load Information' found.</msg>
+<status starttime="20200629 08:18:11.901" endtime="20200629 08:18:11.901" status="FAIL"></status>
+</kw>
+<test name="Verify Load information doesn't exist in redis" id="s1-s1-s4-s2-t1">
+<status starttime="20200629 08:18:11.901" endtime="20200629 08:18:11.903" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<test name="Trigger X-2 Setup for load information" id="s1-s1-s4-s2-t2">
+<status starttime="20200629 08:18:11.904" endtime="20200629 08:18:11.905" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<test name="Verify Load information does exist in redis" id="s1-s1-s4-s2-t3">
+<status starttime="20200629 08:18:11.906" endtime="20200629 08:18:11.907" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.</status>
+</test>
+<kw name="Stop Simulator" type="teardown">
+<msg timestamp="20200629 08:18:11.919" level="FAIL">No keyword with name 'Stop Simulator' found.</msg>
+<status starttime="20200629 08:18:11.918" endtime="20200629 08:18:11.919" status="FAIL">No keyword with name 'Stop Simulator' found.</status>
+</kw>
+<status starttime="20200629 08:18:11.885" endtime="20200629 08:18:11.919" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Simulator For Load Information' found.
+
+Also suite teardown failed:
+No keyword with name 'Stop Simulator' found.</status>
+</suite>
+<doc>ORAN Load Infomration scenarios</doc>
+<status starttime="20200629 08:18:11.844" endtime="20200629 08:18:11.923" status="FAIL"></status>
+</suite>
+<suite name="RedButton" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton" id="s1-s1-s5">
+<suite name="RedButton DISCONNECTED" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton/RedButton_DISCONNECTED.robot" id="s1-s1-s5-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:11.951" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:11.951" endtime="20200629 08:18:11.951" status="FAIL"></status>
+</kw>
+<test name="Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance" id="s1-s1-s5-s1-t1">
+<status starttime="20200629 08:18:11.951" endtime="20200629 08:18:11.953" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Execute Shutdown" id="s1-s1-s5-s1-t2">
+<status starttime="20200629 08:18:11.954" endtime="20200629 08:18:11.955" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance" id="s1-s1-s5-s1-t3">
+<status starttime="20200629 08:18:11.956" endtime="20200629 08:18:11.957" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify E2T instance has no associated RANs" id="s1-s1-s5-s1-t4">
+<status starttime="20200629 08:18:11.958" endtime="20200629 08:18:11.959" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:11.930" endtime="20200629 08:18:11.960" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<status starttime="20200629 08:18:11.926" endtime="20200629 08:18:11.964" status="FAIL"></status>
+</suite>
+<suite name="RSM Resource Status" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status" id="s1-s1-s6">
+<suite name="Resource Status False Start" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot" id="s1-s1-s6-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.005" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.004" endtime="20200629 08:18:12.005" status="FAIL"></status>
+</kw>
+<test name="Run setup" id="s1-s1-s6-s1-t1">
+<status starttime="20200629 08:18:12.005" endtime="20200629 08:18:12.006" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Put Http Start Request To RSM" id="s1-s1-s6-s1-t2">
+<status starttime="20200629 08:18:12.007" endtime="20200629 08:18:12.008" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN Info Status Is Start And True In Redis" id="s1-s1-s6-s1-t3">
+<status starttime="20200629 08:18:12.009" endtime="20200629 08:18:12.010" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Enable Resource Status Is True In General Configuration In Redis" id="s1-s1-s6-s1-t4">
+<status starttime="20200629 08:18:12.011" endtime="20200629 08:18:12.012" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s6-s1-t5">
+<status starttime="20200629 08:18:12.013" endtime="20200629 08:18:12.014" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Resource Status Request Message Sent" id="s1-s1-s6-s1-t6">
+<status starttime="20200629 08:18:12.015" endtime="20200629 08:18:12.016" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Delete All Sessions" type="teardown">
+<msg timestamp="20200629 08:18:12.027" level="FAIL">No keyword with name 'Delete All Sessions' found.</msg>
+<status starttime="20200629 08:18:12.027" endtime="20200629 08:18:12.027" status="FAIL">No keyword with name 'Delete All Sessions' found.</status>
+</kw>
+<status starttime="20200629 08:18:11.971" endtime="20200629 08:18:12.027" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Delete All Sessions' found.</status>
+</suite>
+<suite name="Resource Status False Stop" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot" id="s1-s1-s6-s2">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.056" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.056" endtime="20200629 08:18:12.057" status="FAIL"></status>
+</kw>
+<test name="Run setup" id="s1-s1-s6-s2-t1">
+<status starttime="20200629 08:18:12.057" endtime="20200629 08:18:12.058" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Put Http Stop Request To RSM" id="s1-s1-s6-s2-t2">
+<status starttime="20200629 08:18:12.059" endtime="20200629 08:18:12.060" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN Info Status Is Stop And True In Redis" id="s1-s1-s6-s2-t3">
+<status starttime="20200629 08:18:12.061" endtime="20200629 08:18:12.062" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Enable Resource Status Is False In General Configuration In Redis" id="s1-s1-s6-s2-t4">
+<status starttime="20200629 08:18:12.062" endtime="20200629 08:18:12.064" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s6-s2-t5">
+<status starttime="20200629 08:18:12.065" endtime="20200629 08:18:12.066" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Resource Status Request Message Not Sent" id="s1-s1-s6-s2-t6">
+<status starttime="20200629 08:18:12.067" endtime="20200629 08:18:12.068" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Delete All Sessions" type="teardown">
+<msg timestamp="20200629 08:18:12.080" level="FAIL">No keyword with name 'Delete All Sessions' found.</msg>
+<status starttime="20200629 08:18:12.079" endtime="20200629 08:18:12.080" status="FAIL">No keyword with name 'Delete All Sessions' found.</status>
+</kw>
+<status starttime="20200629 08:18:12.031" endtime="20200629 08:18:12.080" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Delete All Sessions' found.</status>
+</suite>
+<suite name="Resource Status True Start" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot" id="s1-s1-s6-s3">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.110" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.110" endtime="20200629 08:18:12.110" status="FAIL"></status>
+</kw>
+<test name="Run setup" id="s1-s1-s6-s3-t1">
+<status starttime="20200629 08:18:12.111" endtime="20200629 08:18:12.112" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Put Http Start Request To RSM" id="s1-s1-s6-s3-t2">
+<status starttime="20200629 08:18:12.112" endtime="20200629 08:18:12.113" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN Info Status Is Start And True In Redis" id="s1-s1-s6-s3-t3">
+<status starttime="20200629 08:18:12.114" endtime="20200629 08:18:12.115" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Enable Resource Status Is True In General Configuration In Redis" id="s1-s1-s6-s3-t4">
+<status starttime="20200629 08:18:12.116" endtime="20200629 08:18:12.118" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for RSM tests" id="s1-s1-s6-s3-t5">
+<status starttime="20200629 08:18:12.119" endtime="20200629 08:18:12.120" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Resource Status Request Message Sent" id="s1-s1-s6-s3-t6">
+<status starttime="20200629 08:18:12.120" endtime="20200629 08:18:12.123" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Delete All Sessions" type="teardown">
+<msg timestamp="20200629 08:18:12.134" level="FAIL">No keyword with name 'Delete All Sessions' found.</msg>
+<status starttime="20200629 08:18:12.134" endtime="20200629 08:18:12.134" status="FAIL">No keyword with name 'Delete All Sessions' found.</status>
+</kw>
+<status starttime="20200629 08:18:12.084" endtime="20200629 08:18:12.135" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Delete All Sessions' found.</status>
+</suite>
+<suite name="Resource Status True Stop" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot" id="s1-s1-s6-s4">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.164" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.164" endtime="20200629 08:18:12.164" status="FAIL"></status>
+</kw>
+<test name="Run setup" id="s1-s1-s6-s4-t1">
+<status starttime="20200629 08:18:12.164" endtime="20200629 08:18:12.166" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Put Http Stop Request To RSM" id="s1-s1-s6-s4-t2">
+<status starttime="20200629 08:18:12.166" endtime="20200629 08:18:12.167" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Enable Resource Status Is False In General Configuration In Redis" id="s1-s1-s6-s4-t3">
+<status starttime="20200629 08:18:12.168" endtime="20200629 08:18:12.170" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s6-s4-t4">
+<status starttime="20200629 08:18:12.170" endtime="20200629 08:18:12.171" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM Resource Status Request Message Sent" id="s1-s1-s6-s4-t5">
+<status starttime="20200629 08:18:12.172" endtime="20200629 08:18:12.173" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Delete All Sessions" type="teardown">
+<msg timestamp="20200629 08:18:12.184" level="FAIL">No keyword with name 'Delete All Sessions' found.</msg>
+<status starttime="20200629 08:18:12.184" endtime="20200629 08:18:12.184" status="FAIL">No keyword with name 'Delete All Sessions' found.</status>
+</kw>
+<status starttime="20200629 08:18:12.138" endtime="20200629 08:18:12.185" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Delete All Sessions' found.</status>
+</suite>
+<doc>Resource status</doc>
+<status starttime="20200629 08:18:11.967" endtime="20200629 08:18:12.190" status="FAIL"></status>
+</suite>
+<suite name="Unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy" id="s1-s1-s7">
+<suite name="Reset HttpResponse400" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400.robot" id="s1-s1-s7-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.219" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.219" endtime="20200629 08:18:12.219" status="FAIL"></status>
+</kw>
+<test name="Reset - 400 http - 401 Corrupted json" id="s1-s1-s7-s1-t1">
+<status starttime="20200629 08:18:12.220" endtime="20200629 08:18:12.221" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Reset - 400 http - 401 Validation error" id="s1-s1-s7-s1-t2">
+<status starttime="20200629 08:18:12.222" endtime="20200629 08:18:12.223" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.201" endtime="20200629 08:18:12.224" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="Reset HttpResponse400 wrongstate" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400_wrongstate.robot" id="s1-s1-s7-s2">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.247" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.247" endtime="20200629 08:18:12.248" status="FAIL"></status>
+</kw>
+<test name="Pre Condition for Connecting - no simu" id="s1-s1-s7-s2-t1">
+<status starttime="20200629 08:18:12.248" endtime="20200629 08:18:12.249" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Reset - 400 http - 403 wrong state" id="s1-s1-s7-s2-t2">
+<status starttime="20200629 08:18:12.250" endtime="20200629 08:18:12.251" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.227" endtime="20200629 08:18:12.252" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="Reset HttpResponse404" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse404.robot" id="s1-s1-s7-s3">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.274" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.274" endtime="20200629 08:18:12.274" status="FAIL"></status>
+</kw>
+<test name="Reset - 404 http - 404 Corrupted json" id="s1-s1-s7-s3-t1">
+<status starttime="20200629 08:18:12.274" endtime="20200629 08:18:12.276" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.255" endtime="20200629 08:18:12.277" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="Setup Request HttpResponse400" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse400.robot" id="s1-s1-s7-s4">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.298" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.298" endtime="20200629 08:18:12.298" status="FAIL"></status>
+</kw>
+<test name="Endc-setup - 400 http - 401 Corrupted json" id="s1-s1-s7-s4-t1">
+<status starttime="20200629 08:18:12.299" endtime="20200629 08:18:12.300" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Endc-setup - 400 http - 402 Validation error" id="s1-s1-s7-s4-t2">
+<status starttime="20200629 08:18:12.300" endtime="20200629 08:18:12.302" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.279" endtime="20200629 08:18:12.303" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="Setup Request HttpResponse500" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse500.robot" id="s1-s1-s7-s5">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.329" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.329" endtime="20200629 08:18:12.329" status="FAIL"></status>
+</kw>
+<test name="ENDC-setup - 500 http - 500 RNIB error" id="s1-s1-s7-s5-t1">
+<status starttime="20200629 08:18:12.329" endtime="20200629 08:18:12.331" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Start Dbass" type="teardown">
+<msg timestamp="20200629 08:18:12.336" level="FAIL">No keyword with name 'Start Dbass' found.</msg>
+<status starttime="20200629 08:18:12.336" endtime="20200629 08:18:12.336" status="FAIL">No keyword with name 'Start Dbass' found.</status>
+</kw>
+<status starttime="20200629 08:18:12.314" endtime="20200629 08:18:12.337" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Start Dbass' found.</status>
+</suite>
+<suite name="Setup Request HttpResponse503" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse503.robot" id="s1-s1-s7-s6">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.415" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.415" endtime="20200629 08:18:12.419" status="FAIL"></status>
+</kw>
+<test name="ENDC-setup - 503 http - 511 No Routing Manager Available" id="s1-s1-s7-s6-t1">
+<status starttime="20200629 08:18:12.419" endtime="20200629 08:18:12.421" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RAN is NOT associated with E2T instance" id="s1-s1-s7-s6-t2">
+<status starttime="20200629 08:18:12.422" endtime="20200629 08:18:12.423" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Start RoutingManager Simulator" type="teardown">
+<msg timestamp="20200629 08:18:12.429" level="FAIL">No keyword with name 'Start RoutingManager Simulator' found.</msg>
+<status starttime="20200629 08:18:12.429" endtime="20200629 08:18:12.429" status="FAIL">No keyword with name 'Start RoutingManager Simulator' found.</status>
+</kw>
+<status starttime="20200629 08:18:12.340" endtime="20200629 08:18:12.429" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+No keyword with name 'Start RoutingManager Simulator' found.</status>
+</suite>
+<suite name="Setup Request setup failure" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_setup_failure.robot" id="s1-s1-s7-s7">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.451" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.451" endtime="20200629 08:18:12.451" status="FAIL"></status>
+</kw>
+<test name="Post Request setup node b x2-setup - setup failure" id="s1-s1-s7-s7-t1">
+<status starttime="20200629 08:18:12.451" endtime="20200629 08:18:12.453" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.433" endtime="20200629 08:18:12.454" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<status starttime="20200629 08:18:12.196" endtime="20200629 08:18:12.462" status="FAIL"></status>
+</suite>
+<suite name="X2-Setup" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup" id="s1-s1-s8">
+<suite name="X2 Setup Existing Assoc Test" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot" id="s1-s1-s8-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.490" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.490" endtime="20200629 08:18:12.490" status="FAIL"></status>
+</kw>
+<test name="X2 - Setup Test 1" id="s1-s1-s8-s1-t1">
+<status starttime="20200629 08:18:12.490" endtime="20200629 08:18:12.491" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - Setup Test 2" id="s1-s1-s8-s1-t2">
+<status starttime="20200629 08:18:12.493" endtime="20200629 08:18:12.494" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - Get Nodeb" id="s1-s1-s8-s1-t3">
+<status starttime="20200629 08:18:12.495" endtime="20200629 08:18:12.496" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s8-s1-t4">
+<status starttime="20200629 08:18:12.497" endtime="20200629 08:18:12.498" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - RAN Connected message going to be sent" id="s1-s1-s8-s1-t5">
+<status starttime="20200629 08:18:12.499" endtime="20200629 08:18:12.500" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s8-s1-t6">
+<status starttime="20200629 08:18:12.500" endtime="20200629 08:18:12.502" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s8-s1-t7">
+<status starttime="20200629 08:18:12.502" endtime="20200629 08:18:12.504" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RAN is associated with E2T instance" id="s1-s1-s8-s1-t8">
+<status starttime="20200629 08:18:12.504" endtime="20200629 08:18:12.505" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.471" endtime="20200629 08:18:12.507" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="X2 Setup Existing Not Assoc Test" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot" id="s1-s1-s8-s2">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.528" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.528" endtime="20200629 08:18:12.529" status="FAIL"></status>
+</kw>
+<test name="X2 - Setup Test 1" id="s1-s1-s8-s2-t1">
+<status starttime="20200629 08:18:12.529" endtime="20200629 08:18:12.530" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Restart Simulator" id="s1-s1-s8-s2-t2">
+<status starttime="20200629 08:18:12.535" endtime="20200629 08:18:12.536" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RAN is NOT associated with E2T instance" id="s1-s1-s8-s2-t3">
+<status starttime="20200629 08:18:12.549" endtime="20200629 08:18:12.550" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - Setup Test 2" id="s1-s1-s8-s2-t4">
+<status starttime="20200629 08:18:12.551" endtime="20200629 08:18:12.552" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - Get Nodeb" id="s1-s1-s8-s2-t5">
+<status starttime="20200629 08:18:12.553" endtime="20200629 08:18:12.554" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s8-s2-t6">
+<status starttime="20200629 08:18:12.555" endtime="20200629 08:18:12.556" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - RAN Connected message going to be sent" id="s1-s1-s8-s2-t7">
+<status starttime="20200629 08:18:12.558" endtime="20200629 08:18:12.559" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s8-s2-t8">
+<status starttime="20200629 08:18:12.560" endtime="20200629 08:18:12.561" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s8-s2-t9">
+<status starttime="20200629 08:18:12.573" endtime="20200629 08:18:12.577" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RAN is associated with E2T instance" id="s1-s1-s8-s2-t10">
+<status starttime="20200629 08:18:12.583" endtime="20200629 08:18:12.584" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.510" endtime="20200629 08:18:12.586" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<suite name="X2 Setup reuqest test" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot" id="s1-s1-s8-s3">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.610" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.610" endtime="20200629 08:18:12.610" status="FAIL"></status>
+</kw>
+<test name="X2 - Setup Test" id="s1-s1-s8-s3-t1">
+<status starttime="20200629 08:18:12.610" endtime="20200629 08:18:12.611" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - Get Nodeb" id="s1-s1-s8-s3-t2">
+<status starttime="20200629 08:18:12.612" endtime="20200629 08:18:12.613" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s1-s8-s3-t3">
+<status starttime="20200629 08:18:12.614" endtime="20200629 08:18:12.615" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="X2 - RAN Connected message going to be sent" id="s1-s1-s8-s3-t4">
+<status starttime="20200629 08:18:12.615" endtime="20200629 08:18:12.616" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s8-s3-t5">
+<status starttime="20200629 08:18:12.617" endtime="20200629 08:18:12.618" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s8-s3-t6">
+<status starttime="20200629 08:18:12.619" endtime="20200629 08:18:12.620" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RAN is associated with E2T instance" id="s1-s1-s8-s3-t7">
+<status starttime="20200629 08:18:12.621" endtime="20200629 08:18:12.622" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.591" endtime="20200629 08:18:12.624" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<doc>X2-Setup ENB</doc>
+<status starttime="20200629 08:18:12.467" endtime="20200629 08:18:12.629" status="FAIL"></status>
+</suite>
+<suite name="X2 Reset RAN TO RIC" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC" id="s1-s1-s9">
+<suite name="Reset RAN Found" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot" id="s1-s1-s9-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.664" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.663" endtime="20200629 08:18:12.664" status="FAIL"></status>
+</kw>
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s9-s1-t1">
+<status starttime="20200629 08:18:12.664" endtime="20200629 08:18:12.665" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Run Reset from RAN" id="s1-s1-s9-s1-t2">
+<status starttime="20200629 08:18:12.666" endtime="20200629 08:18:12.667" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s9-s1-t3">
+<status starttime="20200629 08:18:12.668" endtime="20200629 08:18:12.669" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Reset Sent by simulator" id="s1-s1-s9-s1-t4">
+<status starttime="20200629 08:18:12.670" endtime="20200629 08:18:12.671" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - e2mgr logs - messege sent" id="s1-s1-s9-s1-t5">
+<status starttime="20200629 08:18:12.672" endtime="20200629 08:18:12.673" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - e2mgr logs - messege received" id="s1-s1-s9-s1-t6">
+<status starttime="20200629 08:18:12.673" endtime="20200629 08:18:12.674" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s9-s1-t7">
+<status starttime="20200629 08:18:12.675" endtime="20200629 08:18:12.676" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s9-s1-t8">
+<status starttime="20200629 08:18:12.677" endtime="20200629 08:18:12.678" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s9-s1-t9">
+<status starttime="20200629 08:18:12.679" endtime="20200629 08:18:12.680" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<status starttime="20200629 08:18:12.639" endtime="20200629 08:18:12.681" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</suite>
+<doc>ORAN Reset - X2 RAN to RIC Scenario 1</doc>
+<status starttime="20200629 08:18:12.635" endtime="20200629 08:18:12.686" status="FAIL"></status>
+</suite>
+<suite name="X2 Reset RAN TO RIC Unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy" id="s1-s1-s10">
+<suite name="Reset RNIB" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot" id="s1-s1-s10-s1">
+<kw name="Prepare Enviorment" type="setup">
+<msg timestamp="20200629 08:18:12.722" level="FAIL">No keyword with name 'Prepare Enviorment' found.</msg>
+<status starttime="20200629 08:18:12.721" endtime="20200629 08:18:12.722" status="FAIL"></status>
+</kw>
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s10-s1-t1">
+<status starttime="20200629 08:18:12.722" endtime="20200629 08:18:12.723" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Stop RNIB" id="s1-s1-s10-s1-t2">
+<status starttime="20200629 08:18:12.724" endtime="20200629 08:18:12.725" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Run Reset from RAN" id="s1-s1-s10-s1-t3">
+<status starttime="20200629 08:18:12.726" endtime="20200629 08:18:12.727" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s10-s1-t4">
+<status starttime="20200629 08:18:12.727" endtime="20200629 08:18:12.728" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs - Reset Sent by simulator" id="s1-s1-s10-s1-t5">
+<status starttime="20200629 08:18:12.729" endtime="20200629 08:18:12.730" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify logs for restart received" id="s1-s1-s10-s1-t6">
+<status starttime="20200629 08:18:12.731" endtime="20200629 08:18:12.732" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<test name="Verify for error on retrying" id="s1-s1-s10-s1-t7">
+<status starttime="20200629 08:18:12.733" endtime="20200629 08:18:12.734" critical="yes" status="FAIL">Parent suite setup failed:
+No keyword with name 'Prepare Enviorment' found.</status>
+</test>
+<kw name="Start Dbass with 4 dockers" type="teardown">
+<kw name="Run And Return Rc And Output" library="OperatingSystem">
+<doc>Runs the given command in the system and returns the RC and output.</doc>
+<arguments>
+<arg>${dbass_remove}</arg>
+</arguments>
+<msg timestamp="20200629 08:18:12.737" level="FAIL">Variable '${dbass_remove}' not found.</msg>
+<status starttime="20200629 08:18:12.736" endtime="20200629 08:18:12.737" status="FAIL"></status>
+</kw>
+<kw name="Run And Return Rc And Output" library="OperatingSystem">
+<doc>Runs the given command in the system and returns the RC and output.</doc>
+<arguments>
+<arg>${dbass_start}</arg>
+</arguments>
+<msg timestamp="20200629 08:18:12.739" level="FAIL">Variable '${dbass_start}' not found.</msg>
+<status starttime="20200629 08:18:12.738" endtime="20200629 08:18:12.739" status="FAIL"></status>
+</kw>
+<kw name="Sleep" library="BuiltIn">
+<doc>Pauses the test executed for the given time.</doc>
+<arguments>
+<arg>5s</arg>
+</arguments>
+<status starttime="20200629 08:18:12.739" endtime="20200629 08:18:12.973" status="FAIL"></status>
+</kw>
+<status starttime="20200629 08:18:12.735" endtime="20200629 08:18:12.974" status="FAIL">Several failures occurred:
+
+1) Variable '${dbass_remove}' not found.
+
+2) Variable '${dbass_start}' not found.
+
+3) Execution terminated by signal</status>
+</kw>
+<status starttime="20200629 08:18:12.695" endtime="20200629 08:18:12.974" status="FAIL">Suite setup failed:
+No keyword with name 'Prepare Enviorment' found.
+
+Also suite teardown failed:
+Several failures occurred:
+
+1) Variable '${dbass_remove}' not found.
+
+2) Variable '${dbass_start}' not found.
+
+3) Execution terminated by signal</status>
+</suite>
+<doc>ORAN Reset - RAN to RIC Scenario Unhappy</doc>
+<status starttime="20200629 08:18:12.690" endtime="20200629 08:18:12.979" status="FAIL"></status>
+</suite>
+<suite name="X2 Reset RIC TO RAN" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RIC_TO_RAN" id="s1-s1-s11">
+<suite name="Reset Happy no cause" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot" id="s1-s1-s11-s1">
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s11-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.986" endtime="20200629 08:18:12.987" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Send Reset reqeust with no cause" id="s1-s1-s11-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.988" endtime="20200629 08:18:12.989" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s11-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.990" endtime="20200629 08:18:12.991" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s11-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.992" endtime="20200629 08:18:12.993" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s11-s1-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.993" endtime="20200629 08:18:12.995" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s11-s1-t6">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:12.996" endtime="20200629 08:18:12.997" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:12.984" endtime="20200629 08:18:12.998" status="FAIL"></status>
+</suite>
+<suite name="Reset Happy with cause" source="/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot" id="s1-s1-s11-s2">
+<test name="Prepare Ran in Connected connectionStatus" id="s1-s1-s11-s2-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.003" endtime="20200629 08:18:13.004" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Send Reset reqeust with cause" id="s1-s1-s11-s2-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.005" endtime="20200629 08:18:13.007" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s1-s11-s2-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.008" endtime="20200629 08:18:13.009" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="RAN Restarted messege sent" id="s1-s1-s11-s2-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.010" endtime="20200629 08:18:13.011" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="RSM RESOURCE STATUS REQUEST message sent" id="s1-s1-s11-s2-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.012" endtime="20200629 08:18:13.013" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify RSM RAN info exists in redis" id="s1-s1-s11-s2-t6">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.014" endtime="20200629 08:18:13.015" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.001" endtime="20200629 08:18:13.016" status="FAIL"></status>
+</suite>
+<doc>ORAN Reset API - X2 RIC to RAN</doc>
+<status starttime="20200629 08:18:12.982" endtime="20200629 08:18:13.020" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:11.017" endtime="20200629 08:18:13.035" status="FAIL"></status>
+</suite>
+<suite name="FAILED TESTS" source="/home/vagrant/oran_repo/e2mgr/Automation/FAILED_TESTS" id="s1-s2">
+<suite name="Reset unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/FAILED_TESTS/Reset_unhappy.robot" id="s1-s2-s1">
+<test name="Pre Condition for Connecting - no E2" id="s1-s2-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.068" endtime="20200629 08:18:13.069" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Prepare Ran in Connecting connectionStatus" id="s1-s2-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.070" endtime="20200629 08:18:13.071" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Send Reset reqeust with no cause" id="s1-s2-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.073" endtime="20200629 08:18:13.074" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.066" endtime="20200629 08:18:13.076" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:13.064" endtime="20200629 08:18:13.080" status="FAIL"></status>
+</suite>
+<suite name="Tests" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests" id="s1-s3">
+<suite name="E2Term Initialization" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/E2Term_Initialization" id="s1-s3-s1">
+<suite name="E2Term Init Message Test" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/E2Term_Initialization/E2Term_Init_Message_Test.robot" id="s1-s3-s1-s1">
+<test name="Test New E2T Send Init" id="s1-s3-s1-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.092" endtime="20200629 08:18:13.093" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s3-s1-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.095" endtime="20200629 08:18:13.096" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="E2M Logs - Verify RMR Message" id="s1-s3-s1-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.097" endtime="20200629 08:18:13.098" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify E2T keys in DB" id="s1-s3-s1-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.099" endtime="20200629 08:18:13.100" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.090" endtime="20200629 08:18:13.102" status="FAIL"></status>
+</suite>
+<doc>E2Term-Initialization</doc>
+<status starttime="20200629 08:18:13.088" endtime="20200629 08:18:13.106" status="FAIL"></status>
+</suite>
+<suite name="Get-All-Nodes" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get-All-Nodes" id="s1-s3-s2">
+<suite name="Get nodes Add nodes and get" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get-All-Nodes/Get_nodes_Add_nodes_and_get.robot" id="s1-s3-s2-s1">
+<test name="Add nodes to redis db" id="s1-s3-s2-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.113" endtime="20200629 08:18:13.114" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Get all node ids" id="s1-s3-s2-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.115" endtime="20200629 08:18:13.116" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.111" endtime="20200629 08:18:13.117" status="FAIL"></status>
+</suite>
+<doc>Get all nodes</doc>
+<status starttime="20200629 08:18:13.109" endtime="20200629 08:18:13.120" status="FAIL"></status>
+</suite>
+<suite name="Get-All-Nodes-Real" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get-All-Nodes-Real" id="s1-s3-s3">
+<suite name="Get all nodes run setup and get all" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get-All-Nodes-Real/Get_all_nodes_run_setup_and_get_all.robot" id="s1-s3-s3-s1">
+<test name="Get all node ids" id="s1-s3-s3-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.130" endtime="20200629 08:18:13.131" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.129" endtime="20200629 08:18:13.133" status="FAIL"></status>
+</suite>
+<doc>Get all nodes</doc>
+<status starttime="20200629 08:18:13.127" endtime="20200629 08:18:13.136" status="FAIL"></status>
+</suite>
+<suite name="Get E2T Instances" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get_E2T_Instances" id="s1-s3-s4">
+<suite name="Get E2T Instances" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Get_E2T_Instances/get_e2t_instances.robot" id="s1-s3-s4-s1">
+<test name="Get E2T instances" id="s1-s3-s4-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.145" endtime="20200629 08:18:13.146" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.143" endtime="20200629 08:18:13.148" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:13.141" endtime="20200629 08:18:13.151" status="FAIL"></status>
+</suite>
+<suite name="GetNodeB-GNB" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/GetNodeB-GNB" id="s1-s3-s5">
+<suite name="GetNodeB-GNB test" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/GetNodeB-GNB/GetNodeB-GNB_test.robot" id="s1-s3-s5-s1">
+<test name="Get request gnb" id="s1-s3-s5-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.158" endtime="20200629 08:18:13.159" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.156" endtime="20200629 08:18:13.161" status="FAIL"></status>
+</suite>
+<doc>GetNodeb-GNB</doc>
+<status starttime="20200629 08:18:13.153" endtime="20200629 08:18:13.163" status="FAIL"></status>
+</suite>
+<suite name="Health" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Health" id="s1-s3-s6">
+<suite name="Get Health Check" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Health/get_health_check.robot" id="s1-s3-s6-s1">
+<test name="Get Health" id="s1-s3-s6-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.169" endtime="20200629 08:18:13.170" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.167" endtime="20200629 08:18:13.171" status="FAIL"></status>
+</suite>
+<suite name="Get Health Check Unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Health/get_health_check_unhappy.robot" id="s1-s3-s6-s2">
+<test name="Get Health Unhappy - Dbass down" id="s1-s3-s6-s2-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.175" endtime="20200629 08:18:13.177" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.174" endtime="20200629 08:18:13.178" status="FAIL"></status>
+</suite>
+<doc>ORAN health check</doc>
+<status starttime="20200629 08:18:13.166" endtime="20200629 08:18:13.180" status="FAIL"></status>
+</suite>
+<suite name="KeepAlive" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/KeepAlive" id="s1-s3-s7">
+<suite name="Keep Alive Test" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/KeepAlive/keep_alive_test.robot" id="s1-s3-s7-s1">
+<test name="Get request gnb" id="s1-s3-s7-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.186" endtime="20200629 08:18:13.187" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s3-s7-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.188" endtime="20200629 08:18:13.189" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify RAN is associated with E2T instance" id="s1-s3-s7-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.190" endtime="20200629 08:18:13.191" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Stop E2T" id="s1-s3-s7-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.192" endtime="20200629 08:18:13.193" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Prepare logs" id="s1-s3-s7-s1-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.193" endtime="20200629 08:18:13.194" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify RAN is not associated with E2T instance" id="s1-s3-s7-s1-t6">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.195" endtime="20200629 08:18:13.196" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify E2T instance removed from db" id="s1-s3-s7-s1-t7">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.197" endtime="20200629 08:18:13.198" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Start E2T" id="s1-s3-s7-s1-t8">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.199" endtime="20200629 08:18:13.200" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.184" endtime="20200629 08:18:13.202" status="FAIL"></status>
+</suite>
+<doc>Keep Alive</doc>
+<status starttime="20200629 08:18:13.183" endtime="20200629 08:18:13.206" status="FAIL"></status>
+</suite>
+<suite name="Lost Connection" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Lost_Connection" id="s1-s3-s8">
+<suite name="LostConnectionTestConnectedRan" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Lost_Connection/LostConnectionTestConnectedRan.robot" id="s1-s3-s8-s1">
+<test name="prepare logs for tests" id="s1-s3-s8-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.213" endtime="20200629 08:18:13.214" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Setup Ran and verify it's CONNECTED and associated" id="s1-s3-s8-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.215" endtime="20200629 08:18:13.216" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Stop simulator" id="s1-s3-s8-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.217" endtime="20200629 08:18:13.218" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify connection status is DISCONNECTED and RAN is not associated with E2T instance" id="s1-s3-s8-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.219" endtime="20200629 08:18:13.220" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify E2T instance is NOT associated with RAN" id="s1-s3-s8-s1-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.221" endtime="20200629 08:18:13.222" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.212" endtime="20200629 08:18:13.223" status="FAIL"></status>
+</suite>
+<doc>ORAN Lost Connection scenarios</doc>
+<status starttime="20200629 08:18:13.209" endtime="20200629 08:18:13.227" status="FAIL"></status>
+</suite>
+<suite name="RedButton" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/RedButton" id="s1-s3-s9">
+<suite name="RedButton CONNECTED" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/RedButton/RedButton_CONNECTED.robot" id="s1-s3-s9-s1">
+<test name="Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance" id="s1-s3-s9-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.233" endtime="20200629 08:18:13.235" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Execute Shutdown" id="s1-s3-s9-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.235" endtime="20200629 08:18:13.236" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance" id="s1-s3-s9-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.237" endtime="20200629 08:18:13.238" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify E2T instance has no associated RANs" id="s1-s3-s9-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.239" endtime="20200629 08:18:13.240" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.232" endtime="20200629 08:18:13.241" status="FAIL"></status>
+</suite>
+<suite name="RedButton CONNECTED SHUTDOWN CONNECTED" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/RedButton/RedButton_CONNECTED_SHUTDOWN_CONNECTED.robot" id="s1-s3-s9-s2">
+<test name="Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance" id="s1-s3-s9-s2-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.246" endtime="20200629 08:18:13.247" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Execute Shutdown" id="s1-s3-s9-s2-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.248" endtime="20200629 08:18:13.249" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance" id="s1-s3-s9-s2-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.251" endtime="20200629 08:18:13.252" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Restart simulator" id="s1-s3-s9-s2-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.253" endtime="20200629 08:18:13.254" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance" id="s1-s3-s9-s2-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.255" endtime="20200629 08:18:13.257" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.244" endtime="20200629 08:18:13.258" status="FAIL"></status>
+</suite>
+<suite name="RedButton SHUTDOWN SHUTDOWN" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/RedButton/RedButton_SHUTDOWN_SHUTDOWN.robot" id="s1-s3-s9-s3">
+<test name="Verify nodeb connection status is CONNECTED and it's associated to an e2t instance" id="s1-s3-s9-s3-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.263" endtime="20200629 08:18:13.264" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Execute Shutdown" id="s1-s3-s9-s3-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.265" endtime="20200629 08:18:13.266" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance" id="s1-s3-s9-s3-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.267" endtime="20200629 08:18:13.268" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify E2T instance has no associated RANs" id="s1-s3-s9-s3-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.269" endtime="20200629 08:18:13.270" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Execute second Shutdown" id="s1-s3-s9-s3-t5">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.271" endtime="20200629 08:18:13.272" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify again nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t instance" id="s1-s3-s9-s3-t6">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.272" endtime="20200629 08:18:13.274" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify again E2T instance has no associated RANs" id="s1-s3-s9-s3-t7">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.275" endtime="20200629 08:18:13.276" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.261" endtime="20200629 08:18:13.277" status="FAIL"></status>
+</suite>
+<doc>ORAN Red Button Scenarios</doc>
+<status starttime="20200629 08:18:13.230" endtime="20200629 08:18:13.282" status="FAIL"></status>
+</suite>
+<suite name="Setup Failure" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Setup_Failure" id="s1-s3-s10">
+<suite name="Setup failure" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Setup_Failure/Setup_failure.robot" id="s1-s3-s10-s1">
+<test name="Stop Routing manager simulator and restarting simulator" id="s1-s3-s10-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.290" endtime="20200629 08:18:13.292" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="prepare logs for tests" id="s1-s3-s10-s1-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.293" endtime="20200629 08:18:13.294" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Get request gnb" id="s1-s3-s10-s1-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.294" endtime="20200629 08:18:13.295" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="E2M Logs - Verify RMR Message" id="s1-s3-s10-s1-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.296" endtime="20200629 08:18:13.297" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.288" endtime="20200629 08:18:13.298" status="FAIL"></status>
+</suite>
+<doc>Setup Failure</doc>
+<status starttime="20200629 08:18:13.287" endtime="20200629 08:18:13.302" status="FAIL"></status>
+</suite>
+<suite name="Unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Unhappy" id="s1-s3-s11">
+<suite name="Get All Nodedb HttpResponse500" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Unhappy/Get_All_Nodedb_HttpResponse500.robot" id="s1-s3-s11-s1">
+<test name="Get All nodes - 500 http - 500 RNIB error" id="s1-s3-s11-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.307" endtime="20200629 08:18:13.309" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.306" endtime="20200629 08:18:13.310" status="FAIL"></status>
+</suite>
+<suite name="Get Nodeb HttpResponse404" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Unhappy/Get_Nodeb_HttpResponse404.robot" id="s1-s3-s11-s2">
+<test name="Get Request node b gnb - resource not found 404" id="s1-s3-s11-s2-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.314" endtime="20200629 08:18:13.315" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.312" endtime="20200629 08:18:13.316" status="FAIL"></status>
+</suite>
+<suite name="Get Nodeb HttpResponse500" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Unhappy/Get_Nodeb_HttpResponse500.robot" id="s1-s3-s11-s3">
+<test name="Get node b gnb - DB down - 500" id="s1-s3-s11-s3-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.321" endtime="20200629 08:18:13.322" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Prepare logs for tests" id="s1-s3-s11-s3-t2">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.322" endtime="20200629 08:18:13.323" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify e2mgr logs - First retry to retrieve from db" id="s1-s3-s11-s3-t3">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.324" endtime="20200629 08:18:13.325" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<test name="Verify e2mgr logs - Third retry to retrieve from db" id="s1-s3-s11-s3-t4">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.326" endtime="20200629 08:18:13.327" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.319" endtime="20200629 08:18:13.328" status="FAIL"></status>
+</suite>
+<suite name="RedButton HttpResponse500" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Unhappy/RedButton_HttpResponse500.robot" id="s1-s3-s11-s4">
+<test name="Red Button - Shut Dwon - 500 RNIB error" id="s1-s3-s11-s4-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.333" endtime="20200629 08:18:13.334" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.332" endtime="20200629 08:18:13.335" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:13.304" endtime="20200629 08:18:13.340" status="FAIL"></status>
+</suite>
+<suite name="Update Ran" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Update_Ran" id="s1-s3-s12">
+<suite name="Update ran happy" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Update_Ran/Update_ran_happy.robot" id="s1-s3-s12-s1">
+<test name="Update Ran" id="s1-s3-s12-s1-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.351" endtime="20200629 08:18:13.352" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.348" endtime="20200629 08:18:13.354" status="FAIL"></status>
+</suite>
+<suite name="Update ran Unhappy" source="/home/vagrant/oran_repo/e2mgr/Automation/Tests/Update_Ran/Update_ran_Unhappy.robot" id="s1-s3-s12-s2">
+<test name="Update Ran Unhappy" id="s1-s3-s12-s2-t1">
+<tags>
+<tag>robot:exit</tag>
+</tags>
+<status starttime="20200629 08:18:13.360" endtime="20200629 08:18:13.361" critical="yes" status="FAIL">Test execution stopped due to a fatal error.</status>
+</test>
+<status starttime="20200629 08:18:13.358" endtime="20200629 08:18:13.362" status="FAIL"></status>
+</suite>
+<doc>Update Ran</doc>
+<status starttime="20200629 08:18:13.345" endtime="20200629 08:18:13.366" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:13.087" endtime="20200629 08:18:13.373" status="FAIL"></status>
+</suite>
+<status starttime="20200629 08:18:10.964" endtime="20200629 08:18:13.396" status="FAIL"></status>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="184">Critical Tests</stat>
+<stat pass="0" fail="184">All Tests</stat>
+</total>
+<tag>
+<stat info="combined" pass="0" fail="116" combined="NOT robot:exit">NOT robot:exit</stat>
+<stat pass="0" fail="68">robot:exit</stat>
+</tag>
+<suite>
+<stat name="Automation" pass="0" fail="184" id="s1">Automation</stat>
+<stat name="Deprecated" pass="0" fail="128" id="s1-s1">Automation.Deprecated</stat>
+<stat name="ConfigurationUpdate" pass="0" fail="9" id="s1-s1-s1">Automation.Deprecated.ConfigurationUpdate</stat>
+<stat name="ConfigurationUpdate prepartations tests" pass="0" fail="9" id="s1-s1-s1-s1">Automation.Deprecated.ConfigurationUpdate.ConfigurationUpdate prepartations tests</stat>
+<stat name="ENDC Reset RAN TO RIC" pass="0" fail="9" id="s1-s1-s2">Automation.Deprecated.ENDC Reset RAN TO RIC</stat>
+<stat name="Reset RAN Found" pass="0" fail="9" id="s1-s1-s2-s1">Automation.Deprecated.ENDC Reset RAN TO RIC.Reset RAN Found</stat>
+<stat name="ENDC Reset RIC TO RAN" pass="0" fail="12" id="s1-s1-s3">Automation.Deprecated.ENDC Reset RIC TO RAN</stat>
+<stat name="Reset Happy no cause" pass="0" fail="6" id="s1-s1-s3-s1">Automation.Deprecated.ENDC Reset RIC TO RAN.Reset Happy no cause</stat>
+<stat name="Reset Happy with cause" pass="0" fail="6" id="s1-s1-s3-s2">Automation.Deprecated.ENDC Reset RIC TO RAN.Reset Happy with cause</stat>
+<stat name="LoadInfomation" pass="0" fail="7" id="s1-s1-s4">Automation.Deprecated.LoadInfomation</stat>
+<stat name="Loadinformation adding data and overwrite" pass="0" fail="4" id="s1-s1-s4-s1">Automation.Deprecated.LoadInfomation.Loadinformation adding data and overwrite</stat>
+<stat name="Loadinformation verify saving" pass="0" fail="3" id="s1-s1-s4-s2">Automation.Deprecated.LoadInfomation.Loadinformation verify saving</stat>
+<stat name="RedButton" pass="0" fail="4" id="s1-s1-s5">Automation.Deprecated.RedButton</stat>
+<stat name="RedButton DISCONNECTED" pass="0" fail="4" id="s1-s1-s5-s1">Automation.Deprecated.RedButton.RedButton DISCONNECTED</stat>
+<stat name="RSM Resource Status" pass="0" fail="23" id="s1-s1-s6">Automation.Deprecated.RSM Resource Status</stat>
+<stat name="Resource Status False Start" pass="0" fail="6" id="s1-s1-s6-s1">Automation.Deprecated.RSM Resource Status.Resource Status False Start</stat>
+<stat name="Resource Status False Stop" pass="0" fail="6" id="s1-s1-s6-s2">Automation.Deprecated.RSM Resource Status.Resource Status False Stop</stat>
+<stat name="Resource Status True Start" pass="0" fail="6" id="s1-s1-s6-s3">Automation.Deprecated.RSM Resource Status.Resource Status True Start</stat>
+<stat name="Resource Status True Stop" pass="0" fail="5" id="s1-s1-s6-s4">Automation.Deprecated.RSM Resource Status.Resource Status True Stop</stat>
+<stat name="Unhappy" pass="0" fail="11" id="s1-s1-s7">Automation.Deprecated.Unhappy</stat>
+<stat name="Reset HttpResponse400" pass="0" fail="2" id="s1-s1-s7-s1">Automation.Deprecated.Unhappy.Reset HttpResponse400</stat>
+<stat name="Reset HttpResponse400 wrongstate" pass="0" fail="2" id="s1-s1-s7-s2">Automation.Deprecated.Unhappy.Reset HttpResponse400 wrongstate</stat>
+<stat name="Reset HttpResponse404" pass="0" fail="1" id="s1-s1-s7-s3">Automation.Deprecated.Unhappy.Reset HttpResponse404</stat>
+<stat name="Setup Request HttpResponse400" pass="0" fail="2" id="s1-s1-s7-s4">Automation.Deprecated.Unhappy.Setup Request HttpResponse400</stat>
+<stat name="Setup Request HttpResponse500" pass="0" fail="1" id="s1-s1-s7-s5">Automation.Deprecated.Unhappy.Setup Request HttpResponse500</stat>
+<stat name="Setup Request HttpResponse503" pass="0" fail="2" id="s1-s1-s7-s6">Automation.Deprecated.Unhappy.Setup Request HttpResponse503</stat>
+<stat name="Setup Request setup failure" pass="0" fail="1" id="s1-s1-s7-s7">Automation.Deprecated.Unhappy.Setup Request setup failure</stat>
+<stat name="X2-Setup" pass="0" fail="25" id="s1-s1-s8">Automation.Deprecated.X2-Setup</stat>
+<stat name="X2 Setup Existing Assoc Test" pass="0" fail="8" id="s1-s1-s8-s1">Automation.Deprecated.X2-Setup.X2 Setup Existing Assoc Test</stat>
+<stat name="X2 Setup Existing Not Assoc Test" pass="0" fail="10" id="s1-s1-s8-s2">Automation.Deprecated.X2-Setup.X2 Setup Existing Not Assoc Test</stat>
+<stat name="X2 Setup reuqest test" pass="0" fail="7" id="s1-s1-s8-s3">Automation.Deprecated.X2-Setup.X2 Setup reuqest test</stat>
+<stat name="X2 Reset RAN TO RIC" pass="0" fail="9" id="s1-s1-s9">Automation.Deprecated.X2 Reset RAN TO RIC</stat>
+<stat name="Reset RAN Found" pass="0" fail="9" id="s1-s1-s9-s1">Automation.Deprecated.X2 Reset RAN TO RIC.Reset RAN Found</stat>
+<stat name="X2 Reset RAN TO RIC Unhappy" pass="0" fail="7" id="s1-s1-s10">Automation.Deprecated.X2 Reset RAN TO RIC Unhappy</stat>
+<stat name="Reset RNIB" pass="0" fail="7" id="s1-s1-s10-s1">Automation.Deprecated.X2 Reset RAN TO RIC Unhappy.Reset RNIB</stat>
+<stat name="X2 Reset RIC TO RAN" pass="0" fail="12" id="s1-s1-s11">Automation.Deprecated.X2 Reset RIC TO RAN</stat>
+<stat name="Reset Happy no cause" pass="0" fail="6" id="s1-s1-s11-s1">Automation.Deprecated.X2 Reset RIC TO RAN.Reset Happy no cause</stat>
+<stat name="Reset Happy with cause" pass="0" fail="6" id="s1-s1-s11-s2">Automation.Deprecated.X2 Reset RIC TO RAN.Reset Happy with cause</stat>
+<stat name="FAILED TESTS" pass="0" fail="3" id="s1-s2">Automation.FAILED TESTS</stat>
+<stat name="Reset unhappy" pass="0" fail="3" id="s1-s2-s1">Automation.FAILED TESTS.Reset unhappy</stat>
+<stat name="Tests" pass="0" fail="53" id="s1-s3">Automation.Tests</stat>
+<stat name="E2Term Initialization" pass="0" fail="4" id="s1-s3-s1">Automation.Tests.E2Term Initialization</stat>
+<stat name="E2Term Init Message Test" pass="0" fail="4" id="s1-s3-s1-s1">Automation.Tests.E2Term Initialization.E2Term Init Message Test</stat>
+<stat name="Get-All-Nodes" pass="0" fail="2" id="s1-s3-s2">Automation.Tests.Get-All-Nodes</stat>
+<stat name="Get nodes Add nodes and get" pass="0" fail="2" id="s1-s3-s2-s1">Automation.Tests.Get-All-Nodes.Get nodes Add nodes and get</stat>
+<stat name="Get-All-Nodes-Real" pass="0" fail="1" id="s1-s3-s3">Automation.Tests.Get-All-Nodes-Real</stat>
+<stat name="Get all nodes run setup and get all" pass="0" fail="1" id="s1-s3-s3-s1">Automation.Tests.Get-All-Nodes-Real.Get all nodes run setup and get all</stat>
+<stat name="Get E2T Instances" pass="0" fail="1" id="s1-s3-s4">Automation.Tests.Get E2T Instances</stat>
+<stat name="Get E2T Instances" pass="0" fail="1" id="s1-s3-s4-s1">Automation.Tests.Get E2T Instances.Get E2T Instances</stat>
+<stat name="GetNodeB-GNB" pass="0" fail="1" id="s1-s3-s5">Automation.Tests.GetNodeB-GNB</stat>
+<stat name="GetNodeB-GNB test" pass="0" fail="1" id="s1-s3-s5-s1">Automation.Tests.GetNodeB-GNB.GetNodeB-GNB test</stat>
+<stat name="Health" pass="0" fail="2" id="s1-s3-s6">Automation.Tests.Health</stat>
+<stat name="Get Health Check" pass="0" fail="1" id="s1-s3-s6-s1">Automation.Tests.Health.Get Health Check</stat>
+<stat name="Get Health Check Unhappy" pass="0" fail="1" id="s1-s3-s6-s2">Automation.Tests.Health.Get Health Check Unhappy</stat>
+<stat name="KeepAlive" pass="0" fail="8" id="s1-s3-s7">Automation.Tests.KeepAlive</stat>
+<stat name="Keep Alive Test" pass="0" fail="8" id="s1-s3-s7-s1">Automation.Tests.KeepAlive.Keep Alive Test</stat>
+<stat name="Lost Connection" pass="0" fail="5" id="s1-s3-s8">Automation.Tests.Lost Connection</stat>
+<stat name="LostConnectionTestConnectedRan" pass="0" fail="5" id="s1-s3-s8-s1">Automation.Tests.Lost Connection.LostConnectionTestConnectedRan</stat>
+<stat name="RedButton" pass="0" fail="16" id="s1-s3-s9">Automation.Tests.RedButton</stat>
+<stat name="RedButton CONNECTED" pass="0" fail="4" id="s1-s3-s9-s1">Automation.Tests.RedButton.RedButton CONNECTED</stat>
+<stat name="RedButton CONNECTED SHUTDOWN CONNECTED" pass="0" fail="5" id="s1-s3-s9-s2">Automation.Tests.RedButton.RedButton CONNECTED SHUTDOWN CONNECTED</stat>
+<stat name="RedButton SHUTDOWN SHUTDOWN" pass="0" fail="7" id="s1-s3-s9-s3">Automation.Tests.RedButton.RedButton SHUTDOWN SHUTDOWN</stat>
+<stat name="Setup Failure" pass="0" fail="4" id="s1-s3-s10">Automation.Tests.Setup Failure</stat>
+<stat name="Setup failure" pass="0" fail="4" id="s1-s3-s10-s1">Automation.Tests.Setup Failure.Setup failure</stat>
+<stat name="Unhappy" pass="0" fail="7" id="s1-s3-s11">Automation.Tests.Unhappy</stat>
+<stat name="Get All Nodedb HttpResponse500" pass="0" fail="1" id="s1-s3-s11-s1">Automation.Tests.Unhappy.Get All Nodedb HttpResponse500</stat>
+<stat name="Get Nodeb HttpResponse404" pass="0" fail="1" id="s1-s3-s11-s2">Automation.Tests.Unhappy.Get Nodeb HttpResponse404</stat>
+<stat name="Get Nodeb HttpResponse500" pass="0" fail="4" id="s1-s3-s11-s3">Automation.Tests.Unhappy.Get Nodeb HttpResponse500</stat>
+<stat name="RedButton HttpResponse500" pass="0" fail="1" id="s1-s3-s11-s4">Automation.Tests.Unhappy.RedButton HttpResponse500</stat>
+<stat name="Update Ran" pass="0" fail="2" id="s1-s3-s12">Automation.Tests.Update Ran</stat>
+<stat name="Update ran happy" pass="0" fail="1" id="s1-s3-s12-s1">Automation.Tests.Update Ran.Update ran happy</stat>
+<stat name="Update ran Unhappy" pass="0" fail="1" id="s1-s3-s12-s2">Automation.Tests.Update Ran.Update ran Unhappy</stat>
+</suite>
+</statistics>
+<errors>
+<msg timestamp="20200629 08:18:11.028" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.029" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot' on line 27: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.620" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.621" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot' on line 30: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.642" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ConfigurationUpdate/ConfigurationUpdate_prepartations_tests.robot' on line 33: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.695" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.696" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.716" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.717" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 30: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.719" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 33: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.719" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 34: Test library '../Scripts/find_error_script.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.720" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 35: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.775" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 25: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.776" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.776" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 27: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.778" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 29: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.779" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 30: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.781" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_no_cause.robot' on line 31: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.809" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 25: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.810" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.811" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 27: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.812" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 29: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.813" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 30: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.815" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/ENDC_Reset_RIC_TO_RAN/Reset_Happy_with_cause.robot' on line 31: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.852" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_adding_data_and_overwrite.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.852" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_adding_data_and_overwrite.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.854" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_adding_data_and_overwrite.robot' on line 29: Test library '../Scripts/loadscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.856" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_adding_data_and_overwrite.robot' on line 30: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.888" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_verify_saving.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.889" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_verify_saving.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.891" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_verify_saving.robot' on line 29: Test library '../Scripts/loadscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.893" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/LoadInfomation/Loadinformation_verify_saving.robot' on line 30: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.935" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton/RedButton_DISCONNECTED.robot' on line 24: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.936" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton/RedButton_DISCONNECTED.robot' on line 25: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.936" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton/RedButton_DISCONNECTED.robot' on line 26: Resource file 'red_button_keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.940" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RedButton/RedButton_DISCONNECTED.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:11.975" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 21: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.975" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 22: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.976" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 23: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.981" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 21: Test library '../Scripts/cleanup_db.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.981" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 22: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.989" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 26: Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /usr/local/bin
+  /usr/lib/python35.zip
+  /usr/lib/python3.5
+  /usr/lib/python3.5/plat-x86_64-linux-gnu
+  /usr/lib/python3.5/lib-dynload
+  /usr/local/lib/python3.5/dist-packages
+  /usr/lib/python3/dist-packages</msg>
+<msg timestamp="20200629 08:18:11.989" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 25: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.990" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 26: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:11.993" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_start.robot' on line 28: Variable '${url_rsm}' not found.</msg>
+<msg timestamp="20200629 08:18:12.034" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 21: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.035" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 22: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.036" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 23: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.036" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 21: Test library '../Scripts/cleanup_db.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.037" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 22: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.041" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 26: Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /usr/local/bin
+  /usr/lib/python35.zip
+  /usr/lib/python3.5
+  /usr/lib/python3.5/plat-x86_64-linux-gnu
+  /usr/lib/python3.5/lib-dynload
+  /usr/local/lib/python3.5/dist-packages
+  /usr/lib/python3/dist-packages</msg>
+<msg timestamp="20200629 08:18:12.042" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 25: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.042" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 26: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.045" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_false_stop.robot' on line 28: Variable '${url_rsm}' not found.</msg>
+<msg timestamp="20200629 08:18:12.088" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 21: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.088" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 22: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.089" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 23: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.089" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 21: Test library '../Scripts/cleanup_db.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.090" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 22: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.094" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 26: Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /usr/local/bin
+  /usr/lib/python35.zip
+  /usr/lib/python3.5
+  /usr/lib/python3.5/plat-x86_64-linux-gnu
+  /usr/lib/python3.5/lib-dynload
+  /usr/local/lib/python3.5/dist-packages
+  /usr/lib/python3/dist-packages</msg>
+<msg timestamp="20200629 08:18:12.095" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 25: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.095" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 26: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.098" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_start.robot' on line 28: Variable '${url_rsm}' not found.</msg>
+<msg timestamp="20200629 08:18:12.142" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 21: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.142" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 22: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.143" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 23: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.144" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 21: Test library '../Scripts/cleanup_db.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.144" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 22: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.148" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_keywords.robot' on line 26: Importing test library 'RequestsLibrary' failed: ImportError: No module named 'RequestsLibrary'
+Traceback (most recent call last):
+  None
+PYTHONPATH:
+  /usr/local/bin
+  /usr/lib/python35.zip
+  /usr/lib/python3.5
+  /usr/lib/python3.5/plat-x86_64-linux-gnu
+  /usr/lib/python3.5/lib-dynload
+  /usr/local/lib/python3.5/dist-packages
+  /usr/lib/python3/dist-packages</msg>
+<msg timestamp="20200629 08:18:12.149" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 25: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.150" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 26: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.153" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/RSM_Resource_Status/resource_status_true_stop.robot' on line 28: Variable '${url_rsm}' not found.</msg>
+<msg timestamp="20200629 08:18:12.205" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.206" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400.robot' on line 27: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.209" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.232" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400_wrongstate.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.233" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400_wrongstate.robot' on line 27: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.236" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse400_wrongstate.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.260" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse404.robot' on line 25: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.261" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse404.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.264" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Reset_HttpResponse404.robot' on line 28: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.284" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse400.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.285" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse400.robot' on line 27: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.287" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse400.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.319" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse500.robot' on line 25: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.320" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse500.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.322" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse500.robot' on line 27: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.375" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse503.robot' on line 25: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.375" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse503.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.376" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse503.robot' on line 27: Test library '../Scripts/e2mdbscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.379" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_HttpResponse503.robot' on line 28: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.437" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_setup_failure.robot' on line 25: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.437" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_setup_failure.robot' on line 26: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.441" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/Unhappy/Setup_Request_setup_failure.robot' on line 28: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.475" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.475" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.476" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 27: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.477" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 29: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.478" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 30: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.479" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 31: Test library '../Scripts/e2mdbscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.481" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_assoc_test.robot' on line 32: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.514" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 21: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.515" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 22: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.515" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 23: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.517" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 25: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.517" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 26: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.518" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 27: Test library '../Scripts/e2mdbscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.520" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/x2_setup_existing_not_assoc_test.robot' on line 28: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.595" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.596" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.596" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 27: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.598" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 29: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.598" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 30: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.599" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 31: Test library '../Scripts/e2mdbscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.601" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2-Setup/X2_Setup_reuqest_test.robot' on line 32: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.643" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.643" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.648" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.648" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 30: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.650" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 33: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.651" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC/Reset_RAN_Found.robot' on line 34: Test library '../Scripts/rsmscripts.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.699" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 25: Resource file '../Resource/resource.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.700" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 26: Resource file '../Resource/Keywords.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.705" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 29: Variable '${url}' not found.</msg>
+<msg timestamp="20200629 08:18:12.706" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 30: Resource file '../Resource/scripts_variables.robot' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.708" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 33: Test library '../Scripts/find_rmr_message.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:12.708" level="ERROR">Error in file '/home/vagrant/oran_repo/e2mgr/Automation/deprecated/X2_Reset_RAN_TO_RIC_Unhappy/Reset_RNIB.robot' on line 34: Test library '../Scripts/find_error_script.py' does not exist.</msg>
+<msg timestamp="20200629 08:18:13.255" level="WARN">Multiple test cases with name 'Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance' executed in test suite 'Automation.Tests.RedButton.RedButton CONNECTED SHUTDOWN CONNECTED'.</msg>
+</errors>
+</robot>

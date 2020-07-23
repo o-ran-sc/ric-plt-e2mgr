@@ -48,7 +48,6 @@ func (h *UpdateEnbManager) Validate(request models.Request) error {
 
 	h.logger.Infof("#UpdateEnbManager.Validate - Validate incoming request, ran name: %s", updateEnbRequest.RanName)
 
-
 	if err := h.validateRequestBody(updateEnbRequest); err != nil {
 		h.logger.Errorf("#UpdateEnbManager.Validate - validation failure: %s is a mandatory field and cannot be empty", err)
 		return err
@@ -64,7 +63,14 @@ func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 		return e2managererrors.NewRequestValidationError()
 	}
 
-	err := h.rnibDataService.RemoveServedCells(nodeb.GetRanName(), nodeb.GetEnb().GetServedCells())
+	servedCells := nodeb.GetEnb().GetServedCells()
+
+	if len(servedCells) == 0 {
+		h.logger.Infof("#UpdateGnbManager.RemoveNodebCells - RAN name: %s - eNB cells are nil or empty - no cells to remove", nodeb.GetRanName())
+		return nil
+	}
+
+	err := h.rnibDataService.RemoveServedCells(nodeb.GetRanName(), servedCells)
 	if err != nil {
 		h.logger.Errorf("#UpdateEnbManager.RemoveNodebCells - RAN name: %s - Failed removing eNB served cells", nodeb.GetRanName())
 		return e2managererrors.NewRnibDbError()
@@ -74,13 +80,9 @@ func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 	return nil
 }
 
-func (h *UpdateEnbManager) SetNodeb(nodeb *entities.NodebInfo, request models.Request) error {
-
+func (h *UpdateEnbManager) SetNodeb(nodeb *entities.NodebInfo, request models.Request) {
 	updateEnbRequest := request.(*models.UpdateEnbRequest)
-
 	nodeb.Configuration = &entities.NodebInfo_Enb{Enb: updateEnbRequest.Enb}
-
-	return nil
 }
 
 func (h *UpdateEnbManager) UpdateNodeb(nodeb *entities.NodebInfo) error {

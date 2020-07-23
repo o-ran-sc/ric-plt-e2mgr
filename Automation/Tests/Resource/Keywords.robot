@@ -33,7 +33,7 @@ Get Request node b gnb
     Sleep    1s
     GET      ${getNodeb}
 
-Update Ran request
+Update Gnb request
     Sleep  1s
     PUT    ${update_gnb_url}   ${update_gnb_body}
 
@@ -53,7 +53,7 @@ Set General Configuration request
     Sleep  1s
     PUT    ${set_general_configuration}   ${set_general_configuration_body}
 
-Update Ran request not valid
+Update Gnb request not valid
     Sleep  1s
     PUT    ${update_gnb_url}   ${update_gnb_body_notvalid}
 

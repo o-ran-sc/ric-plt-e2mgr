@@ -27,6 +27,6 @@ import (
 type IUpdateNodebManager interface {
 	Validate(request models.Request) error
 	RemoveNodebCells(nodeb *entities.NodebInfo) error
-	SetNodeb(nodeb *entities.NodebInfo, request models.Request) error
+	SetNodeb(nodeb *entities.NodebInfo, request models.Request)
 	UpdateNodeb(nodeb *entities.NodebInfo) error
 }

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.18
+  version: 5.2.21
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
@@ -47,11 +47,43 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/enb:
+    post:
+      summary: Add eNB
+      tags:
+        - nodeb
+      operationId: AddEnb
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddEnbRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodebResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   '/nodeb/enb/{ranName}':
     delete:
       tags:
         - nodeb
-      summary: Delete ENB
+      summary: Delete eNB
       operationId: DeleteEnb
       parameters:
         - name: ranName
@@ -88,7 +120,7 @@ paths:
     put:
       tags:
         - nodeb
-      summary: Update ENB
+      summary: Update eNB
       operationId: UpdateEnb
       parameters:
         - name: ranName
@@ -122,9 +154,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  '/nodeb/{ranName}/update':
+  '/nodeb/gnb/{ranName}':
     put:
-      summary: Update GNB
+      summary: Update gNB Cells
       tags:
         - nodeb
       operationId: UpdateGnb
@@ -256,37 +288,6 @@ paths:
                   $ref: '#/components/schemas/E2tIdentity'
         '500':
           description: Internal Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /nodeb/enb:
-    post:
-      summary: Add ENB
-      tags:
-        - nodeb
-      operationId: AddEnb
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddEnbRequest'
-        required: true
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NodebResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal error
           content:
             application/problem+json:
               schema:

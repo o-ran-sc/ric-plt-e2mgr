@@ -32,7 +32,7 @@ ${enb_ran_name}    enb_test
 ${getNodeb}  /v1/nodeb/${ranName}
 ${set_general_configuration}   /v1/nodeb/parameters
 ${set_general_configuration_body}   {"enableRic":false}
-${update_gnb_url}   /v1/nodeb/${ranName}/update
+${update_gnb_url}   /v1/nodeb/gnb/${ranName}
 ${enb_url}    /v1/nodeb/enb
 ${update_gnb_body}  {"servedNrCells":[{"servedNrCellInformation":{"cellId":"abcd","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"one","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
 ${update_gnb_body_notvalid}  {"servedNrCells":[{"servedNrCellInformation":{"choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1,"servedPlmns":["whatever"]},"nrNeighbourInfos":[{"nrCgi":"whatever","choiceNrMode":{"fdd":{}},"nrMode":1,"nrPci":1}]}]}
@@ -72,3 +72,4 @@ ${save_general_configuration}      SetGeneralConfigurationHandler.Handle - save 
 ${set_and_publish_disconnect}      RnibDataService.UpdateNodebInfoOnConnectionStatusInversion - stateChangeMessageChannel: RAN_CONNECTION_STATUS_CHANGE, event: gnb_208_092_303030_DISCONNECTED
 ${delete_enb_log_message}    RAN name: ${enb_ran_name} - deleted successfully
 ${update_enb_log_message}    RAN name: ${enb_ran_name} - Successfully updated eNB
+${update_gnb_log_message}    RAN name: ${ranName} - Successfully updated gNB cells

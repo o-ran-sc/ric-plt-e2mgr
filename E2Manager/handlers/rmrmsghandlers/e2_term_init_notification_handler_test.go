@@ -63,7 +63,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 
 	e2tInstancesManagerMock := &mocks.E2TInstancesManagerMock{}
 
-	ranListManager := &mocks.RanListManagerMock{}
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := &mocks.RanAlarmServiceMock{}
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)

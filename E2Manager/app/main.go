@@ -81,6 +81,7 @@ func main() {
 	rmrReceiver := rmrreceiver.NewRmrReceiver(logger, rmrMessenger, notificationManager)
 	nodebValidator := managers.NewNodebValidator()
 	updateEnbManager := managers.NewUpdateEnbManager(logger, rnibDataService, nodebValidator)
+	updateGnbManager := managers.NewUpdateGnbManager(logger, rnibDataService, nodebValidator)
 
 	e2tInstancesManager.ResetKeepAliveTimestampsForAllE2TInstances()
 
@@ -89,7 +90,7 @@ func main() {
 	go rmrReceiver.ListenAndHandle()
 	go e2tKeepAliveWorker.Execute()
 
-	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, ranListManager)
+	httpMsgHandlerProvider := httpmsghandlerprovider.NewIncomingRequestHandlerProvider(logger, rmrSender, config, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager, nodebValidator, updateEnbManager, updateGnbManager, ranListManager)
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
 	e2tController := controllers.NewE2TController(logger, httpMsgHandlerProvider)

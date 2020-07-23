@@ -69,6 +69,10 @@ func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibW
 	return &rNibWriterInstance{sdl: sdl, rnibWriterConfig: rnibWriterConfig}
 }
 
+func getChannelsAndEventsPair(channel string, ranName string, event string) []string {
+	return []string{channel, fmt.Sprintf("%s_%s", ranName, event)}
+}
+
 func (w *rNibWriterInstance) AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error {
 	nbIdData, err := proto.Marshal(nbIdentity)
 
@@ -163,7 +167,8 @@ func (w *rNibWriterInstance) SaveNodeb(nodebInfo *entities.NodebInfo) error {
 	}
 
 	if nodebInfo.GetNodeType() == entities.Node_ENB {
-		err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanAddedEvent)}, pairs)
+		channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanAddedEvent)
+		err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
 	} else {
 		err = w.sdl.Set(pairs)
 	}
@@ -189,7 +194,8 @@ func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, serve
 		return err
 	}
 
-	err = w.sdl.Set(pairs)
+	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
+	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -452,7 +458,8 @@ func (w *rNibWriterInstance) RemoveEnb(nodebInfo *entities.NodebInfo) error {
 		return err
 	}
 
-	err = w.sdl.RemoveAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanDeletedEvent)}, keysToRemove)
+	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanDeletedEvent)
+	err = w.sdl.RemoveAndPublish(channelsAndEvents, keysToRemove)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -475,7 +482,8 @@ func (w *rNibWriterInstance) UpdateEnb(nodebInfo *entities.NodebInfo, servedCell
 		return err
 	}
 
-	err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.RanManipulationMessageChannel, fmt.Sprintf("%s_%s", nodebInfo.RanName, RanUpdatedEvent)}, pairs)
+	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
+	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)

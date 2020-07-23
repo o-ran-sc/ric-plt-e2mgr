@@ -96,7 +96,7 @@ func (c *NodebController) UpdateGnb(writer http.ResponseWriter, r *http.Request)
 
 	request.Gnb = &gnb
 	request.RanName = ranName
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, request, true, http.StatusOK)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.UpdateGnbRequest, &request, true, http.StatusOK)
 }
 
 func (c *NodebController) UpdateEnb(writer http.ResponseWriter, r *http.Request) {

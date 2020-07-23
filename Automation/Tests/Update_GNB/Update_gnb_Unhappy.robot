@@ -35,9 +35,9 @@ ${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
-Update Ran Unhappy
+Update Gnb Unhappy
     Sleep  2s
-    Update Ran request not valid
+    Update Gnb request not valid
     Integer  response status  400
     Integer  response body errorCode  402
     String   response body errorMessage  Validation error

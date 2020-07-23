@@ -70,10 +70,7 @@ func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResp
 		return nil, err
 	}
 
-	err = h.updateNodebManager.SetNodeb(nodebInfo, request)
-	if err != nil {
-		return nil, err
-	}
+	h.updateNodebManager.SetNodeb(nodebInfo, request)
 
 	err = h.updateNodebManager.UpdateNodeb(nodebInfo)
 	if err != nil {
@@ -84,14 +81,12 @@ func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResp
 }
 
 func (h *UpdateNodebRequestHandler) getRanName(request models.Request) string {
-
-	var ranName string
-	updateEnbRequest, ok := request.(*models.UpdateEnbRequest)
-	if !ok {
-		//updateGnbRequest := request.(*models.UpdateGnbRequest)
-		//ranName = updateGnbRequest.RanName
-	} else {
-		ranName = updateEnbRequest.RanName
+	switch v := request.(type) {
+	case *models.UpdateEnbRequest:
+		return v.RanName
+	case *models.UpdateGnbRequest:
+		return v.RanName
 	}
-	return ranName
+
+	return ""
 }
