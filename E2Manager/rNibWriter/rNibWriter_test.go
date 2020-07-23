@@ -379,8 +379,7 @@ func TestSaveEnb(t *testing.T) {
 	setExpected = append(setExpected, fmt.Sprintf("CELL:%s", cell.GetCellId()), cellData)
 	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", RanName, cell.GetPci()), cellData)
 
-	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", RanName + "_" + RanAddedEvent}, []interface{}{setExpected}).Return(e)
-
+	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(e)
 	rNibErr := w.SaveNodeb(&nb)
 	assert.Nil(t, rNibErr)
 }
@@ -648,14 +647,23 @@ func TestSaveUnknownTypeEntityFailure(t *testing.T) {
 	assert.IsType(t, &common.ValidationError{}, actualErr)
 }
 
-func TestSaveEntityFailure(t *testing.T) {
+func TestSaveEntitySetFailure(t *testing.T) {
 	name := "name"
 	plmnId := "02f829"
 	nbId := "4a952a0a"
 
 	w, sdlInstanceMock := initSdlInstanceMock(namespace)
-	gnb := entities.NodebInfo{}
-	gnb.NodeType = entities.Node_GNB
+	gnb := entities.NodebInfo{
+		RanName: name,
+		NodeType:         entities.Node_GNB,
+		ConnectionStatus: 1,
+		GlobalNbId: &entities.GlobalNbId{
+			NbId:   nbId,
+			PlmnId: plmnId,
+		},
+		Ip:   "localhost",
+		Port: 5656,
+	}
 	data, err := proto.Marshal(&gnb)
 	if err != nil {
 		t.Errorf("#rNibWriter_test.TestSaveEntityFailure - Failed to marshal NodeB entity. Error: %v", err)
@@ -665,6 +673,35 @@ func TestSaveEntityFailure(t *testing.T) {
 	expectedErr := errors.New("expected error")
 	sdlInstanceMock.On("Set", []interface{}{setExpected}).Return(expectedErr)
 	rNibErr := w.SaveNodeb(&gnb)
+	assert.NotEmpty(t, rNibErr)
+}
+
+func TestSaveEntitySetAndPublishFailure(t *testing.T) {
+	name := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	enb := entities.NodebInfo{
+		RanName: name,
+		NodeType:         entities.Node_ENB,
+		ConnectionStatus: 1,
+		GlobalNbId: &entities.GlobalNbId{
+			NbId:   nbId,
+			PlmnId: plmnId,
+		},
+		Ip:   "localhost",
+		Port: 5656,
+	}
+	data, err := proto.Marshal(&enb)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEntityFailure - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	setExpected := []interface{}{"RAN:" + name, data}
+	setExpected = append(setExpected, "ENB:"+plmnId+":"+nbId, data)
+	expectedErr := errors.New("expected error")
+	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", name + "_" + RanAddedEvent}, []interface{}{setExpected}).Return(expectedErr)
+	rNibErr := w.AddEnb(&enb)
 	assert.NotEmpty(t, rNibErr)
 }
 
@@ -1103,6 +1140,88 @@ func TestRemoveNbIdentityError(t *testing.T) {
 	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
 	assert.NotNil(t, rNibErr)
 	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestAddEnb(t *testing.T) {
+	ranName := "RAN:" + RanName
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nb := entities.NodebInfo{
+		RanName:          RanName,
+		NodeType:         entities.Node_ENB,
+		ConnectionStatus: entities.ConnectionStatus_CONNECTED,
+		Ip:               "localhost",
+		Port:             5656,
+		GlobalNbId: &entities.GlobalNbId{
+			NbId:   "4a952a0a",
+			PlmnId: "02f829",
+		},
+	}
+
+	enb := entities.Enb{}
+	cell := &entities.ServedCellInfo{CellId: "aaff", Pci: 3}
+	cellEntity := entities.Cell{Type: entities.Cell_LTE_CELL, Cell: &entities.Cell_ServedCellInfo{ServedCellInfo: cell}}
+	enb.ServedCells = []*entities.ServedCellInfo{cell}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	data, err := proto.Marshal(&nb)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+
+	cellData, err := proto.Marshal(&cellEntity)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal Cell entity. Error: %v", err)
+	}
+	var setExpected []interface{}
+	setExpected = append(setExpected, ranName, data)
+	setExpected = append(setExpected, "ENB:02f829:4a952a0a", data)
+	setExpected = append(setExpected, fmt.Sprintf("CELL:%s", cell.GetCellId()), cellData)
+	setExpected = append(setExpected, fmt.Sprintf("PCI:%s:%02x", RanName, cell.GetPci()), cellData)
+
+	sdlInstanceMock.On("SetAndPublish", []string{"RAN_MANIPULATION", RanName + "_" + RanAddedEvent}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.AddEnb(&nb)
+	assert.Nil(t, rNibErr)
+}
+
+func TestAddEnbCellIdValidationFailure(t *testing.T) {
+	w, _ := initSdlInstanceMock(namespace)
+	nb := entities.NodebInfo{}
+	nb.RanName = "name"
+	nb.NodeType = entities.Node_ENB
+	nb.ConnectionStatus = 1
+	nb.Ip = "localhost"
+	nb.Port = 5656
+	enb := entities.Enb{}
+	cell := &entities.ServedCellInfo{Pci: 3}
+	enb.ServedCells = []*entities.ServedCellInfo{cell}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	rNibErr := w.AddEnb(&nb)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	assert.Equal(t, "#utils.ValidateAndBuildCellIdKey - an empty cell id received", rNibErr.Error())
+}
+
+func TestAddEnbInventoryNameValidationFailure(t *testing.T) {
+	w, _ := initSdlInstanceMock(namespace)
+	nb := entities.NodebInfo{
+		NodeType:         entities.Node_ENB,
+		ConnectionStatus: entities.ConnectionStatus_CONNECTED,
+		Ip:               "localhost",
+		Port:             5656,
+		GlobalNbId: &entities.GlobalNbId{
+			NbId:   "4a952a0a",
+			PlmnId: "02f829",
+		},
+	}
+	enb := entities.Enb{}
+	cell := &entities.ServedCellInfo{CellId: "aaa", Pci: 3}
+	enb.ServedCells = []*entities.ServedCellInfo{cell}
+	nb.Configuration = &entities.NodebInfo_Enb{Enb: &enb}
+	rNibErr := w.AddEnb(&nb)
+	assert.NotNil(t, rNibErr)
+	assert.IsType(t, &common.ValidationError{}, rNibErr)
+	assert.Equal(t, "#utils.ValidateAndBuildNodeBNameKey - an empty inventory name received", rNibErr.Error())
 }
 
 //Integration tests
