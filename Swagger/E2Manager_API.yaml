@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E2 Manager Service
   description: E2 Manager Service APIs
-  version: 5.2.21
+  version: 5.2.20
 servers:
   - url: 'http://{apiRoot}/v1'
     variables:
