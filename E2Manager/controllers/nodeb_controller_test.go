@@ -101,7 +101,7 @@ type updateEnbCellsParams struct {
 	err error
 }
 
-type saveNodebParams struct {
+type addEnbParams struct {
 	err error
 }
 
@@ -139,7 +139,7 @@ type controllerUpdateGnbTestContext struct {
 
 type controllerAddEnbTestContext struct {
 	getNodebInfoResult   *getNodebInfoResult
-	saveNodebParams      *saveNodebParams
+	addEnbParams         *addEnbParams
 	addNbIdentityParams  *addNbIdentityParams
 	requestBody          map[string]interface{}
 	expectedStatusCode   int
@@ -432,7 +432,7 @@ func controllerGetNodebIdListTestExecuter(t *testing.T, context *controllerGetNo
 	controller.GetNodebIdList(writer, req)
 	assert.Equal(t, context.expectedStatusCode, writer.Result().StatusCode)
 	bodyBytes, _ := ioutil.ReadAll(writer.Body)
-	assert.Equal(t, context.expectedJsonResponse, string(bodyBytes))
+	assert.Contains(t, context.expectedJsonResponse, string(bodyBytes))
 }
 
 func activateControllerUpdateEnbMocks(context *controllerUpdateEnbTestContext, readerMock *mocks.RnibReaderMock, writerMock *mocks.RnibWriterMock, updateEnbRequest *models.UpdateEnbRequest) {
@@ -562,7 +562,7 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 		readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
 	}
 
-	if context.saveNodebParams != nil {
+	if context.addEnbParams != nil {
 		nodebInfo := entities.NodebInfo{
 			RanName:          addEnbRequest.RanName,
 			Ip:               addEnbRequest.Ip,
@@ -573,7 +573,7 @@ func activateControllerAddEnbMocks(context *controllerAddEnbTestContext, readerM
 			ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
 		}
 
-		writerMock.On("SaveNodeb", &nodebInfo).Return(context.saveNodebParams.err)
+		writerMock.On("AddEnb", &nodebInfo).Return(context.addEnbParams.err)
 	}
 
 	if context.addNbIdentityParams != nil {
@@ -1220,8 +1220,8 @@ func TestControllerAddEnbNodebExistsFailure(t *testing.T) {
 
 func TestControllerAddEnbSaveNodebFailure(t *testing.T) {
 	context := controllerAddEnbTestContext{
-		saveNodebParams: &saveNodebParams{
-			err: common.NewInternalError(errors.New("#reader.SaveeNodeb - Internal Error")),
+		addEnbParams: &addEnbParams{
+			err: common.NewInternalError(errors.New("#reader.AddEnb - Internal Error")),
 		},
 		getNodebInfoResult: &getNodebInfoResult{
 			nodebInfo: nil,
@@ -1237,7 +1237,7 @@ func TestControllerAddEnbSaveNodebFailure(t *testing.T) {
 
 func TestControllerAddEnbAddNbIdentityFailure(t *testing.T) {
 	context := controllerAddEnbTestContext{
-		saveNodebParams: &saveNodebParams{
+		addEnbParams: &addEnbParams{
 			err: nil,
 		},
 		addNbIdentityParams: &addNbIdentityParams{
@@ -1342,7 +1342,7 @@ func TestControllerAddEnbMissingRequiredServedCellProps(t *testing.T) {
 
 func TestControllerAddEnbSuccess(t *testing.T) {
 	context := controllerAddEnbTestContext{
-		saveNodebParams: &saveNodebParams{
+		addEnbParams: &addEnbParams{
 			err: nil,
 		},
 		addNbIdentityParams: &addNbIdentityParams{
@@ -1479,7 +1479,7 @@ func TestControllerGetNodebIdListSuccess(t *testing.T) {
 		nodebIdList:          nodebIdList,
 		rnibError:            rnibError,
 		expectedStatusCode:   http.StatusOK,
-		expectedJsonResponse: "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}]",
+		expectedJsonResponse: "[{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}},{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}}][{\"inventoryName\":\"test2\",\"globalNbId\":{\"plmnId\":\"plmnId2\",\"nbId\":\"nbId2\"}},{\"inventoryName\":\"test1\",\"globalNbId\":{\"plmnId\":\"plmnId1\",\"nbId\":\"nbId1\"}}]",
 	}
 
 	controllerGetNodebIdListTestExecuter(t, &context)

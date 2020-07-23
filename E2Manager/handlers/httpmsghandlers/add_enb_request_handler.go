@@ -73,10 +73,10 @@ func (h *AddEnbRequestHandler) Handle(request models.Request) (models.IResponse,
 	}
 
 	nodebInfo := h.createNodebInfo(addEnbRequest)
-	err = h.rNibDataService.SaveNodeb(nodebInfo)
+	err = h.rNibDataService.AddEnb(nodebInfo)
 
 	if err != nil {
-		h.logger.Errorf("#AddEnbRequestHandler.Handle - RAN name: %s - failed to save nodeb entity in RNIB. Error: %s", addEnbRequest.RanName, err)
+		h.logger.Errorf("#AddEnbRequestHandler.Handle - RAN name: %s - failed to add eNB entity in RNIB. Error: %s", addEnbRequest.RanName, err)
 		return nil, e2managererrors.NewRnibDbError()
 	}
 
