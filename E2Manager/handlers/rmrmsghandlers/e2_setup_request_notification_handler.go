@@ -39,8 +39,21 @@ import (
 )
 
 var (
-	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention",
+	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention", "request-id-unknown",
 		"v60s", "v20s", "v10s", "v5s", "v2s", "v1s"}
+	gnbTypesMap = map[string]entities.GnbType{
+		"gnb":entities.GnbType_GNB,
+		"en_gnb":entities.GnbType_EN_GNB,
+	}
+	enbTypesMap = map[string]entities.EnbType{
+		"enB_macro":entities.EnbType_MACRO_ENB,
+		"enB_home":entities.EnbType_HOME_ENB,
+		"enB_shortmacro":entities.EnbType_SHORT_MACRO_ENB,
+		"enB_longmacro":entities.EnbType_LONG_MACRO_ENB,
+		"ng_enB_macro":entities.EnbType_MACRO_NG_ENB,
+		"ng_enB_shortmacro":entities.EnbType_SHORT_MACRO_NG_ENB,
+		"ng_enB_longmacro":entities.EnbType_LONG_MACRO_NG_ENB,
+	}
 )
 
 type E2SetupRequestNotificationHandler struct {
@@ -113,6 +126,10 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		}
 
 		if nodebInfo, err = h.handleNewRan(ranName, e2tIpAddress, setupRequest); err != nil {
+			if _, ok := err.(*e2managererrors.UnknownSetupRequestRanNameError); ok {
+				cause := models.Cause{RicRequest: &models.CauseRic{RequestIdUnknown: &struct{}{}}}
+				h.handleUnsuccessfulResponse(ranName, request, cause)
+			}
 			return
 		}
 
@@ -139,9 +156,13 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAddress string, setupRequest *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
 
-	nodebInfo := h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
-	err := h.rNibDataService.SaveNodeb(nodebInfo)
+	nodebInfo, err := h.buildNodebInfo(ranName, e2tIpAddress, setupRequest)
+	if err != nil {
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleNewRan - RAN name: %s - failed building nodebInfo. Error: %s", ranName, err)
+		return nil, err
+	}
 
+	err = h.rNibDataService.SaveNodeb(nodebInfo)
 	if err != nil {
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleNewRan - RAN name: %s - failed saving nodebInfo. Error: %s", ranName, err)
 		return nil, err
@@ -149,7 +170,7 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 
 	nbIdentity := h.buildNbIdentity(ranName, setupRequest)
 
-	err = h.ranListManager.AddNbIdentity(entities.Node_GNB, nbIdentity)
+	err = h.ranListManager.AddNbIdentity(nodebInfo.GetNodeType(), nbIdentity)
 
 	if err != nil {
 		return nil, err
@@ -159,8 +180,11 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 }
 
 func (h *E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) {
-	ranFunctions := setupRequest.ExtractRanFunctionsList()
+	if nodebInfo.GetNodeType() == entities.Node_ENB {
+		return
+	}
 
+	ranFunctions := setupRequest.ExtractRanFunctionsList()
 	if ranFunctions != nil {
 		nodebInfo.GetGnb().RanFunctions = ranFunctions
 	}
@@ -289,17 +313,38 @@ func normalizeXml(payload []byte) []byte {
 	return []byte(normalized)
 }
 
-func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) *entities.NodebInfo {
+func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
 	nodebInfo := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tAddress,
 		RanName:                      ranName,
-		NodeType:                     entities.Node_GNB,
-		Configuration:                &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{}},
 		GlobalNbId:                   h.buildGlobalNbId(request),
+		SetupFromNetwork: 			  true,
+	}
+	err := h.setNodeTypeAndConfiguration(nodebInfo)
+	if err != nil {
+		return nil, err
+	}
+	h.setGnbFunctions(nodebInfo, request)
+	return nodebInfo, nil
+}
+
+func (h *E2SetupRequestNotificationHandler) setNodeTypeAndConfiguration(nodebInfo *entities.NodebInfo) error {
+	for k, v := range gnbTypesMap {
+		if strings.HasPrefix(nodebInfo.RanName, k) {
+			nodebInfo.NodeType = entities.Node_GNB
+			nodebInfo.Configuration = &entities.NodebInfo_Gnb{Gnb: &entities.Gnb{GnbType: v}}
+			return nil
+		}
+	}
+	for k, v := range enbTypesMap {
+		if strings.HasPrefix(nodebInfo.RanName, k) {
+			nodebInfo.NodeType = entities.Node_ENB
+			nodebInfo.Configuration = &entities.NodebInfo_Enb{Enb: &entities.Enb{EnbType: v}}
+			return nil
+		}
 	}
 
-	h.setGnbFunctions(nodebInfo, request)
-	return nodebInfo
+	return e2managererrors.NewUnknownSetupRequestRanNameError(nodebInfo.RanName)
 }
 
 func (h *E2SetupRequestNotificationHandler) buildGlobalNbId(setupRequest *models.E2SetupRequestMessage) *entities.GlobalNbId {
