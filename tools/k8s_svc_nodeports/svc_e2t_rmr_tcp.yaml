@@ -21,7 +21,7 @@ metadata:
   name: service-ricplt-e2term-rmr-alpha-nodeport
   namespace: ricplt
   labels:
-    app: ricplt-e2term
+    app: ricplt-e2term-alpha
     chart: e2term-3.0.0
     release: r4-e2term
     heritage: Tiller
@@ -34,6 +34,6 @@ spec:
       targetPort: 30500
       name: "e2term-rmr-tcp-nodeport"      
   selector:
-      app: ricplt-e2term
+      app: ricplt-e2term-alpha
       release: r4-e2term
 
