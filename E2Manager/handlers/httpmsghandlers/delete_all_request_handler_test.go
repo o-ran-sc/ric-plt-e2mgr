@@ -147,8 +147,10 @@ func TestTwoRansGetE2TAddressesEmptyListOneGetNodebFailure(t *testing.T) {
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, common.NewInternalError(errors.New("error")))
 	_, err = h.Handle(nil)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
-	writerMock.AssertExpectations(t)
-	readerMock.AssertExpectations(t)
+	writerMock.AssertNotCalled(t, "UpdateNodebInfo", nb2)
+	readerMock.AssertCalled(t, "GetE2TAddresses")
+	readerMock.AssertCalled(t, "GetListNodebIds")
+	readerMock.AssertCalled(t, "GetNodeb", "RanName_2")
 }
 
 func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
