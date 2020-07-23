@@ -27,6 +27,8 @@ Suite Setup   Prepare Enviorment  ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library     ../Scripts/log_scripts.py
+Library     ../Scripts/k8s_helper.py
 Library     REST        ${url}
 
 
