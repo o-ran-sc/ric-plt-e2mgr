@@ -18,14 +18,17 @@ spec:
       labels:
         app.kubernetes.io/name: {{ include "e2adapter.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-    containers:
-      - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        - mountPath: /etc/e2adapter/e2adapter.conf
-          name: local-configuration-file
-          subPath: e2adapter.conf
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+          - mountPath: /etc/e2adapter/e2adapter.conf
+            name: local-configuration-file
+            subPath: e2adapter.conf
       volumes:
         - name: local-configuration-file
           configMap:
             name: e2adapter-configuration-configmap
+

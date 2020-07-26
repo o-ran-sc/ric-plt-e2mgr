@@ -19,20 +19,19 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "common.configmapname.e2adapter" . }}-configuration-configmap
+  name: e2adapter-configuration-configmap
   namespace: {{ include "common.namespace.platform" . }}
 data:
   e2adapter.conf: |
-    {{- if hasKey .Values "dummyRanConnection" }}
+    e2adapter = {
+    
+    sctp = {
+    };
+
     dummyRanConnection = {{ .Values.dummyRanConnection }};
-    {{- end }}
-    {{- if hasKey .Values "e2SctpPort" }}
-    dummyRanConnection = {{ .Values.e2SctpPort }};
-    {{- end }}
-    {{- if hasKey .Values "e2NodeType" }}
-    dummyRanConnection = {{ .Values.e2NodeType }};
-    {{- end }}
-    {{- if hasKey .Values "enbType" }}
-    dummyRanConnection = {{ .Values.enbType }};
-    {{- end }}  
+    e2SctpPort = {{ .Values.e2SctpPort }};
+    e2NodeType = {{ .Values.e2NodeType }};
+    enbType = {{ .Values.enbType }};
+    };
+
 ---
