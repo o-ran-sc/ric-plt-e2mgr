@@ -204,7 +204,7 @@ func (h *DeleteAllRequestHandler) updateNodebInfoShutDown(node *entities.NodebIn
 
 func (h *DeleteAllRequestHandler) updateNodebInfo(node *entities.NodebInfo, connectionStatus entities.ConnectionStatus, resetAssociatedE2TAddress bool) error {
 
-	err := h.ranConnectStatusChangeManager.ChangeStatus(node, connectionStatus)
+	_, err := h.ranConnectStatusChangeManager.ChangeStatus(node, connectionStatus)
 	if err != nil {
 		return e2managererrors.NewRnibDbError()
 	}

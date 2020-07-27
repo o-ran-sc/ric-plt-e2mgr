@@ -51,7 +51,7 @@ const (
 	GnbWithoutFunctionsSetupRequestXmlPath   = "../../tests/resources/setupRequest_gnb_without_functions.xml"
 	E2SetupFailureResponseWithMiscCause      = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><misc><om-intervention/></misc></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
 	E2SetupFailureResponseWithTransportCause = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><transport><transport-resource-unavailable/></transport></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
-	E2SetupFailureResponseWithRicCause      = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><ricRequest><request-id-unknown/></ricRequest></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
+	E2SetupFailureResponseWithRicCause       = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><ricRequest><request-id-unknown/></ricRequest></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
 	StateChangeMessageChannel                = "RAN_CONNECTION_STATUS_CHANGE"
 )
 
@@ -274,14 +274,14 @@ func TestE2SetupRequestNotificationHandler_HandleNewNgEnbSuccess(t *testing.T) {
 
 func TestExtractionOfNodeTypeFromRanName(t *testing.T) {
 	handler, _, _, _, _, _ := initMocks(t)
-	validRanNames := []string {"gnb_P310_410_b5c67788","en_gnb_P310_410_b5c67788","ng_enB_macro_P310_410_b5c67788","ng_enB_shortmacro_P310_410_b5c67788","ng_enB_longmacro_P310_410_b5c67788","enB_macro_P310_410_b5c67788","enB_home_P310_410_b5c67788","enB_shortmacro_P310_410_b5c67788","enB_longmacro_P310_410_b5c67788"}
-	for _,v := range validRanNames {
+	validRanNames := []string{"gnb_P310_410_b5c67788", "en_gnb_P310_410_b5c67788", "ng_enB_macro_P310_410_b5c67788", "ng_enB_shortmacro_P310_410_b5c67788", "ng_enB_longmacro_P310_410_b5c67788", "enB_macro_P310_410_b5c67788", "enB_home_P310_410_b5c67788", "enB_shortmacro_P310_410_b5c67788", "enB_longmacro_P310_410_b5c67788"}
+	for _, v := range validRanNames {
 		nodeb := &entities.NodebInfo{RanName: v}
 		err := handler.setNodeTypeAndConfiguration(nodeb)
 		assert.Nil(t, err)
 	}
-	inValidRanNames := []string {"P310_410_b5c67788","blabla_P310_410_b5c67788","ng_enB-macro_P310_410_b5c67788","ng_enb_shortmacro_P310_410_b5c67788","ng_enB-longmacro_P310_410_b5c67788","enB_new_macro_P310_410_b5c67788"}
-	for _,v := range inValidRanNames {
+	inValidRanNames := []string{"P310_410_b5c67788", "blabla_P310_410_b5c67788", "ng_enB-macro_P310_410_b5c67788", "ng_enb_shortmacro_P310_410_b5c67788", "ng_enB-longmacro_P310_410_b5c67788", "enB_new_macro_P310_410_b5c67788"}
+	for _, v := range inValidRanNames {
 		nodeb := &entities.NodebInfo{RanName: v}
 		err := handler.setNodeTypeAndConfiguration(nodeb)
 		assert.NotNil(t, err, v)
@@ -289,7 +289,14 @@ func TestExtractionOfNodeTypeFromRanName(t *testing.T) {
 }
 
 func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *testing.T, withFunctions bool) {
-	xmlGnb := readXmlFile(t, GnbSetupRequestXmlPath)
+	var xmlGnb []byte
+
+	if withFunctions {
+		xmlGnb = readXmlFile(t, GnbSetupRequestXmlPath)
+
+	} else {
+		xmlGnb = readXmlFile(t, GnbWithoutFunctionsSetupRequestXmlPath)
+	}
 	handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
@@ -311,14 +318,17 @@ func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
 	gnbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+
 	writerMock.On("UpdateNodebInfo", gnbToUpdate).Return(nil)
+	if withFunctions {
+		writerMock.On("UpdateNodebInfoAndPublish", gnbToUpdate).Return(nil)
+	}
 	e2tInstancesManagerMock.On("AddRansToInstance", e2tInstanceFullAddress, []string{gnbNodebRanName}).Return(nil)
 	var errEmpty error
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, errEmpty)
 	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 3)
 	e2tInstancesManagerMock.AssertExpectations(t)
 	rmrMessengerMock.AssertCalled(t, "SendMsg", mock.Anything, true)
 }
@@ -349,7 +359,6 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
 	gnbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
-	writerMock.On("UpdateNodebInfo", gnbToUpdate).Return(nil)
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &gnbToUpdate2, gnbNodebRanName+"_CONNECTED").Return(nil)
@@ -363,7 +372,6 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(
 	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
-	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
 	e2tInstancesManagerMock.AssertExpectations(t)
 }
 
@@ -371,7 +379,9 @@ func getExpectedNodebForExistingRan(nodeb entities.NodebInfo, payload []byte) *e
 	pipInd := bytes.IndexByte(payload, '|')
 	setupRequest := &models.E2SetupRequestMessage{}
 	_ = xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
-	nodeb.GetGnb().RanFunctions = setupRequest.ExtractRanFunctionsList()
+	if ranFuncs := setupRequest.ExtractRanFunctionsList(); ranFuncs != nil {
+		nodeb.GetGnb().RanFunctions = ranFuncs
+	}
 	return &nodeb
 }
 
@@ -412,7 +422,7 @@ func getExpectedEnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 		NodeType:                     entities.Node_ENB,
 		Configuration: &entities.NodebInfo_Enb{
 			Enb: &entities.Enb{
-				EnbType:      entities.EnbType_MACRO_ENB,
+				EnbType: entities.EnbType_MACRO_ENB,
 			},
 		},
 		GlobalNbId: &entities.GlobalNbId{

@@ -32,7 +32,7 @@ const (
 )
 
 type IRanConnectStatusChangeManager interface {
-	ChangeStatus(nodebInfo *entities.NodebInfo, nextStatus entities.ConnectionStatus) error
+	ChangeStatus(nodebInfo *entities.NodebInfo, nextStatus entities.ConnectionStatus) (bool, error)
 }
 
 type RanConnectStatusChangeManager struct {
@@ -51,8 +51,10 @@ func NewRanConnectStatusChangeManager(logger *logger.Logger, rnibDataService ser
 	}
 }
 
-func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebInfo, nextStatus entities.ConnectionStatus) error {
+func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebInfo, nextStatus entities.ConnectionStatus) (bool, error) {
 	m.logger.Infof("#RanConnectStatusChangeManager.ChangeStatus - RAN name: %s, currentStatus: %s, nextStatus: %s", nodebInfo.RanName, nodebInfo.GetConnectionStatus(), nextStatus)
+
+	var ranStatusChangePublished bool
 
 	// set the proper event
 	event := m.setEvent(nodebInfo, nextStatus)
@@ -63,13 +65,14 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 	if !isConnectivityEvent {
 		err := m.updateNodebInfo(nodebInfo)
 		if err != nil {
-			return err
+			return ranStatusChangePublished, err
 		}
 	} else {
 		err := m.updateNodebInfoOnConnectionStatusInversion(nodebInfo, event)
 		if err != nil {
-			return err
+			return ranStatusChangePublished, err
 		}
+		ranStatusChangePublished = true
 	}
 
 	// in any case, update RanListManager
@@ -89,7 +92,7 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 		}
 	}
 
-	return nil
+	return ranStatusChangePublished, nil
 }
 
 func (m *RanConnectStatusChangeManager) updateNodebInfoOnConnectionStatusInversion(nodebInfo *entities.NodebInfo, event string) error {

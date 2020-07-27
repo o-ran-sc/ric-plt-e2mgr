@@ -33,6 +33,7 @@ import (
 type RNibDataService interface {
 	SaveNodeb(nodebInfo *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
+	UpdateNodebInfoAndPublish(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	GetNodeb(ranName string) (*entities.NodebInfo, error)
 	GetListNodebIds() ([]*entities.NbIdentity, error)
@@ -136,6 +137,17 @@ func (w *rNibDataService) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
 
 	err := w.retry("UpdateNodebInfo", func() (err error) {
 		err = w.rnibWriter.UpdateNodebInfo(nodebInfo)
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) UpdateNodebInfoAndPublish(nodebInfo *entities.NodebInfo) error {
+	w.logger.Infof("#RnibDataService.UpdateNodebInfoAndPublish - nodebInfo: %s", nodebInfo)
+
+	err := w.retry("UpdateNodebInfoAndPublish", func() (err error) {
+		err = w.rnibWriter.UpdateNodebInfoAndPublish(nodebInfo)
 		return
 	})
 

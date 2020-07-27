@@ -45,37 +45,37 @@ func NewE2TAssociationManager(logger *logger.Logger, rnibDataService services.RN
 	}
 }
 
-func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entities.NodebInfo) error {
+func (m *E2TAssociationManager) AssociateRan(e2tAddress string, nodebInfo *entities.NodebInfo) (bool, error) {
 	ranName := nodebInfo.RanName
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - Associating RAN %s to E2T Instance address: %s", ranName, e2tAddress)
 
-	err := m.associateRanAndUpdateNodeb(e2tAddress, nodebInfo)
+	ranStatusChangePublished, err := m.associateRanAndUpdateNodeb(e2tAddress, nodebInfo)
 	if err != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RoutingManager failure: Failed to associate RAN %s to E2T %s. Error: %s", nodebInfo, e2tAddress, err)
-		return err
+		return ranStatusChangePublished, err
 	}
 	err = m.e2tInstanceManager.AddRansToInstance(e2tAddress, []string{ranName})
 	if err != nil {
 		m.logger.Errorf("#E2TAssociationManager.AssociateRan - RAN name: %s - Failed to add RAN to E2T instance %s. Error: %s", ranName, e2tAddress, err)
-		return e2managererrors.NewRnibDbError()
+		return ranStatusChangePublished, e2managererrors.NewRnibDbError()
 	}
 	m.logger.Infof("#E2TAssociationManager.AssociateRan - successfully associated RAN %s with E2T %s", ranName, e2tAddress)
-	return nil
+	return ranStatusChangePublished, nil
 }
 
-func (m *E2TAssociationManager) associateRanAndUpdateNodeb(e2tAddress string, nodebInfo *entities.NodebInfo) error {
+func (m *E2TAssociationManager) associateRanAndUpdateNodeb(e2tAddress string, nodebInfo *entities.NodebInfo) (bool, error) {
 
 	rmErr := m.rmClient.AssociateRanToE2TInstance(e2tAddress, nodebInfo.RanName)
 
 	if rmErr != nil {
-		_ =  m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
-		return e2managererrors.NewRoutingManagerError()
+		ranStatusChangePublished, _ := m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
+		return ranStatusChangePublished, e2managererrors.NewRoutingManagerError()
 	}
 
-	rnibErr := m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
+	ranStatusChangePublished, rnibErr := m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_CONNECTED)
 
 	if rnibErr != nil {
-		return e2managererrors.NewRnibDbError()
+		return ranStatusChangePublished, e2managererrors.NewRnibDbError()
 	}
 
 	nodebInfo.AssociatedE2TInstanceAddress = e2tAddress
@@ -83,10 +83,10 @@ func (m *E2TAssociationManager) associateRanAndUpdateNodeb(e2tAddress string, no
 
 	if rnibErr != nil {
 		m.logger.Errorf("#E2TAssociationManager.associateRanAndUpdateNodeb - RAN name: %s - Failed updating nodeb. Error: %s", nodebInfo.RanName, rnibErr)
-		return e2managererrors.NewRnibDbError()
+		return ranStatusChangePublished, e2managererrors.NewRnibDbError()
 	}
 
-	return nil
+	return ranStatusChangePublished, nil
 }
 
 func (m *E2TAssociationManager) DissociateRan(e2tAddress string, ranName string) error {

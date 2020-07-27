@@ -65,10 +65,11 @@ func (m *RanDisconnectionManager) DisconnectRan(inventoryName string) error {
 	}
 
 	if connectionStatus == entities.ConnectionStatus_SHUTTING_DOWN {
-		return m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
+		_, err = m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_SHUT_DOWN)
+		return err
 	}
 
-	err = m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
+	_, err = m.ranConnectStatusChangeManager.ChangeStatus(nodebInfo, entities.ConnectionStatus_DISCONNECTED)
 
 	if err != nil {
 		return err
