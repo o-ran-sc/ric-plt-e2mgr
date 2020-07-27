@@ -52,6 +52,18 @@ func (rnibWriterMock *RnibWriterMock) UpdateNodebInfo(nodebInfo *entities.NodebI
 	return nil
 }
 
+func (rnibWriterMock *RnibWriterMock) UpdateNodebInfoAndPublish(nodebInfo *entities.NodebInfo) error {
+	args := rnibWriterMock.Called(nodebInfo)
+
+	errArg := args.Get(0)
+
+	if errArg != nil {
+		return errArg.(error)
+	}
+
+	return nil
+}
+
 func (rnibWriterMock *RnibWriterMock) SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error {
 	args := rnibWriterMock.Called(inventoryName, ranLoadInformation)
 

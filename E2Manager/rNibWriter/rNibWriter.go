@@ -46,6 +46,7 @@ RNibWriter interface allows saving data to the redis DB
 type RNibWriter interface {
 	SaveNodeb(nodebInfo *entities.NodebInfo) error
 	UpdateNodebInfo(nodebInfo *entities.NodebInfo) error
+	UpdateNodebInfoAndPublish(nodebInfo *entities.NodebInfo) error
 	SaveRanLoadInformation(inventoryName string, ranLoadInformation *entities.RanLoadInformation) error
 	SaveE2TInstance(e2tInstance *entities.E2TInstance) error
 	SaveE2TAddresses(addresses []string) error
@@ -340,10 +341,7 @@ func (w *rNibWriterInstance) RemoveNbIdentity(nodeType entities.Node_Type, nbIde
 	return nil
 }
 
-/*
-UpdateNodebInfo...
-*/
-func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
+func (w *rNibWriterInstance) updateNodebInfo(nodebInfo *entities.NodebInfo, publish bool) error {
 
 	pairs, err := buildUpdateNodebInfoPairs(nodebInfo)
 
@@ -351,7 +349,12 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) erro
 		return err
 	}
 
-	err = w.sdl.Set(pairs)
+	if publish {
+		channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
+		err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
+	} else {
+		err = w.sdl.Set(pairs)
+	}
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -359,6 +362,21 @@ func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) erro
 
 	return nil
 }
+
+/*
+UpdateNodebInfo...
+*/
+func (w *rNibWriterInstance) UpdateNodebInfo(nodebInfo *entities.NodebInfo) error {
+	return w.updateNodebInfo(nodebInfo, false)
+}
+
+/*
+UpdateNodebInfoAndPublish...
+*/
+func (w *rNibWriterInstance) UpdateNodebInfoAndPublish(nodebInfo *entities.NodebInfo) error {
+	return w.updateNodebInfo(nodebInfo, true)
+}
+
 
 /*
 SaveRanLoadInformation stores ran load information for the provided ran

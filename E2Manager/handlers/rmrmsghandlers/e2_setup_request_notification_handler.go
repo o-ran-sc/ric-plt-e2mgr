@@ -42,17 +42,17 @@ var (
 	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention", "request-id-unknown",
 		"v60s", "v20s", "v10s", "v5s", "v2s", "v1s"}
 	gnbTypesMap = map[string]entities.GnbType{
-		"gnb":entities.GnbType_GNB,
-		"en_gnb":entities.GnbType_EN_GNB,
+		"gnb":    entities.GnbType_GNB,
+		"en_gnb": entities.GnbType_EN_GNB,
 	}
 	enbTypesMap = map[string]entities.EnbType{
-		"enB_macro":entities.EnbType_MACRO_ENB,
-		"enB_home":entities.EnbType_HOME_ENB,
-		"enB_shortmacro":entities.EnbType_SHORT_MACRO_ENB,
-		"enB_longmacro":entities.EnbType_LONG_MACRO_ENB,
-		"ng_enB_macro":entities.EnbType_MACRO_NG_ENB,
-		"ng_enB_shortmacro":entities.EnbType_SHORT_MACRO_NG_ENB,
-		"ng_enB_longmacro":entities.EnbType_LONG_MACRO_NG_ENB,
+		"enB_macro":         entities.EnbType_MACRO_ENB,
+		"enB_home":          entities.EnbType_HOME_ENB,
+		"enB_shortmacro":    entities.EnbType_SHORT_MACRO_ENB,
+		"enB_longmacro":     entities.EnbType_LONG_MACRO_ENB,
+		"ng_enB_macro":      entities.EnbType_MACRO_NG_ENB,
+		"ng_enB_shortmacro": entities.EnbType_SHORT_MACRO_NG_ENB,
+		"ng_enB_longmacro":  entities.EnbType_LONG_MACRO_NG_ENB,
 	}
 )
 
@@ -64,7 +64,7 @@ type E2SetupRequestNotificationHandler struct {
 	rNibDataService               services.RNibDataService
 	e2tAssociationManager         *managers.E2TAssociationManager
 	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager
-	ranListManager managers.RanListManager
+	ranListManager                managers.RanListManager
 }
 
 func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configuration.Configuration, e2tInstancesManager managers.IE2TInstancesManager, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, e2tAssociationManager *managers.E2TAssociationManager, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, ranListManager managers.RanListManager) *E2SetupRequestNotificationHandler {
@@ -76,7 +76,7 @@ func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configu
 		rNibDataService:               rNibDataService,
 		e2tAssociationManager:         e2tAssociationManager,
 		ranConnectStatusChangeManager: ranConnectStatusChangeManager,
-		ranListManager: ranListManager,
+		ranListManager:                ranListManager,
 	}
 }
 
@@ -117,12 +117,13 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 	nodebInfo, err := h.rNibDataService.GetNodeb(ranName)
 
+	var functionsModified bool
+
 	if err != nil {
 
 		if _, ok := err.(*common.ResourceNotFoundError); !ok {
 			h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to retrieve nodebInfo entity. Error: %s", ranName, err)
 			return
-
 		}
 
 		if nodebInfo, err = h.handleNewRan(ranName, e2tIpAddress, setupRequest); err != nil {
@@ -134,24 +135,54 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		}
 
 	} else {
-		if err = h.handleExistingRan(ranName, nodebInfo, setupRequest); err != nil {
+
+		functionsModified, err = h.handleExistingRan(ranName, nodebInfo, setupRequest)
+
+		if err != nil {
 			return
 		}
 	}
 
-	err = h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
+	ranStatusChangePublished, err := h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
 
 	if err != nil {
 
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - failed to associate E2T to nodeB entity. Error: %s", ranName, err)
 		if _, ok := err.(*e2managererrors.RoutingManagerError); ok {
+
+			if err = h.handleUpdateAndPublishNodebInfo(functionsModified, ranStatusChangePublished, nodebInfo); err != nil {
+				return
+			}
+
 			cause := models.Cause{Transport: &models.CauseTransport{TransportResourceUnavailable: &struct{}{}}}
 			h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause)
 		}
 		return
 	}
 
+	if err = h.handleUpdateAndPublishNodebInfo(functionsModified, ranStatusChangePublished, nodebInfo); err != nil {
+		return
+	}
+
 	h.handleSuccessfulResponse(ranName, request, setupRequest)
+}
+
+func (h *E2SetupRequestNotificationHandler) handleUpdateAndPublishNodebInfo(functionsModified bool, ranStatusChangePublished bool, nodebInfo *entities.NodebInfo) error {
+
+	if ranStatusChangePublished || !functionsModified {
+		return nil
+	}
+
+	err := h.rNibDataService.UpdateNodebInfoAndPublish(nodebInfo)
+
+	if err != nil {
+		h.logger.Errorf("#E2SetupRequestNotificationHandler.handleUpdateAndPublishNodebInfo - RAN name: %s - Failed at UpdateNodebInfoAndPublish. error: %s", nodebInfo.RanName, err)
+		return err
+	}
+
+	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUpdateAndPublishNodebInfo - RAN name: %s - Successfully executed UpdateNodebInfoAndPublish", nodebInfo.RanName)
+	return nil
+
 }
 
 func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAddress string, setupRequest *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {
@@ -179,26 +210,24 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 	return nodebInfo, nil
 }
 
-func (h *E2SetupRequestNotificationHandler) setGnbFunctions(nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) {
-	if nodebInfo.GetNodeType() == entities.Node_ENB {
-		return
-	}
-
-	ranFunctions := setupRequest.ExtractRanFunctionsList()
-	if ranFunctions != nil {
-		nodebInfo.GetGnb().RanFunctions = ranFunctions
-	}
-}
-
-func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) error {
+func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) (bool, error) {
 	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", ranName, nodebInfo.ConnectionStatus)
-		return errors.New("nodeB entity in incorrect state")
+		return false, errors.New("nodeB entity in incorrect state")
 	}
 
-	h.setGnbFunctions(nodebInfo, setupRequest)
+	if nodebInfo.NodeType == entities.Node_ENB {
+		return false, nil
+	}
 
-	return h.rNibDataService.UpdateNodebInfo(nodebInfo)
+	setupMessageRanFuncs := setupRequest.ExtractRanFunctionsList()
+
+	if setupMessageRanFuncs == nil || (len(setupMessageRanFuncs) == 0 && len(nodebInfo.GetGnb().RanFunctions) == 0) {
+		return false, nil
+	}
+
+	nodebInfo.GetGnb().RanFunctions = setupMessageRanFuncs
+	return true, nil
 }
 
 func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName string, req *models.NotificationRequest, cause models.Cause) {
@@ -318,13 +347,23 @@ func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAd
 		AssociatedE2TInstanceAddress: e2tAddress,
 		RanName:                      ranName,
 		GlobalNbId:                   h.buildGlobalNbId(request),
-		SetupFromNetwork: 			  true,
+		SetupFromNetwork:             true,
 	}
 	err := h.setNodeTypeAndConfiguration(nodebInfo)
 	if err != nil {
 		return nil, err
 	}
-	h.setGnbFunctions(nodebInfo, request)
+
+	if nodebInfo.NodeType == entities.Node_ENB {
+		return nodebInfo, nil
+	}
+
+	ranFuncs := request.ExtractRanFunctionsList()
+
+	if ranFuncs != nil {
+		nodebInfo.GetGnb().RanFunctions = ranFuncs
+	}
+
 	return nodebInfo, nil
 }
 

@@ -92,7 +92,7 @@ func TestAssociateRanSuccess(t *testing.T) {
 	updatedE2tInstance.AssociatedRanList = append(updatedE2tInstance.AssociatedRanList, RanName)
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
@@ -108,7 +108,7 @@ func TestAssociateRan_RnibError(t *testing.T) {
 	updatedNb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb, RanName+"_CONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
@@ -123,7 +123,7 @@ func TestAssociateRanRoutingManagerError(t *testing.T) {
 	nb := &entities.NodebInfo{RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", nb).Return(nil)
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RoutingManagerError{}, err)
@@ -144,7 +144,7 @@ func TestAssociateRanUpdateNodebError(t *testing.T) {
 	updatedNb2.AssociatedE2TInstanceAddress = E2TAddress
 	writerMock.On("UpdateNodebInfo", &updatedNb2).Return(e2managererrors.NewRnibDbError())
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
@@ -169,7 +169,7 @@ func TestAssociateRanGetE2tInstanceError(t *testing.T) {
 	var e2tInstance *entities.E2TInstance
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, errors.New("test"))
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
@@ -197,7 +197,7 @@ func TestAssociateRanSaveE2tInstanceError(t *testing.T) {
 	updatedE2tInstance.AssociatedRanList = append(updatedE2tInstance.AssociatedRanList, RanName)
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(errors.New("test"))
 
-	err := manager.AssociateRan(E2TAddress, nb)
+	_, err := manager.AssociateRan(E2TAddress, nb)
 
 	assert.NotNil(t, err)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)

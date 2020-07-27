@@ -96,7 +96,7 @@ func (m E2TShutdownManager) clearNodebsAssociation(ranNamesToBeDissociated []str
 			return err
 		}
 
-		err = m.ranConnectStatusChangeManager.ChangeStatus(nodeb, entities.ConnectionStatus_DISCONNECTED)
+		_, err = m.ranConnectStatusChangeManager.ChangeStatus(nodeb, entities.ConnectionStatus_DISCONNECTED)
 		if err != nil {
 			return err
 		}
