@@ -136,7 +136,7 @@ Stop Dbass
 Stop Simulator
     log to console  Stopping gnbe2 simulator
     Run And Return Rc And Output    ${stop_simu}
-    Sleep  70s
+    Sleep  90s
 
 Start Simulator
     log to console  Starting gnbe2 simulator
