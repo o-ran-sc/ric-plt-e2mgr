@@ -22,7 +22,6 @@
 
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    red_button_keywords.robot
@@ -37,8 +36,9 @@ ${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
-Prepare Redis Monitor Log
+[Setup]
     Start Redis Monitor
+    Prepare Enviorment    ${True}
 
 Verify nodeb connection status is CONNECTED and it's associated to an e2t instance
    Verify connected and associated

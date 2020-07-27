@@ -40,4 +40,4 @@ Get All nodes - 500 http - 500 RNIB error
 
 [Teardown]    Run Keywords
               Start Dbass
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers

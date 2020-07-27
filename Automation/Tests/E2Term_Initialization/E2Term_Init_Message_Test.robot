@@ -36,9 +36,9 @@ Test New E2T Send Init
     Stop Routing Manager
     Flush And Populate DB
     Start Routing Manager
-    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    ${pods_number-1}
     Start E2
-    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 Prepare Logs For Tests
     Remove log files

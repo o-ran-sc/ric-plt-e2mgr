@@ -70,5 +70,5 @@ Redis Monitor Logs - Verify Publish
 
 [Teardown]    Run Keywords
               Start Simulator
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
               AND Stop Redis Monitor

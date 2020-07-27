@@ -40,23 +40,31 @@ Add eNb Node
 
 
 Get all node ids
-    GET     v1/nodeb/ids
+    &{res}=   GET     v1/nodeb/states
     Sleep  2s
     Integer  response status   200
 
-    #Verify eNB node
-    String   response body 0 inventoryName    ${enb_ran_name}
-    String   response body 0 connectionStatus    DISCONNECTED
-    String   response body 0 globalNbId plmnId   def
-    String   response body 0 globalNbId nbId     abc
+    ${is_enb_first}=    set variable if  '${enb_ran_name}'=='${res.body[0].inventoryName}'   True    False
 
-    #Verify gNB node
-    String   response body 1 inventoryName  ${ranName}
-#    String   response body 1 connectionStatus    CONNECTED
-#    String   response body 1 nodeType     GNB
-    String   response body 1 globalNbId plmnId   02F829
-    String   response body 1 globalNbId nbId     001100000011000000110000
+    run keyword if  ${is_enb_first}    RUN KEYWORDS
+...      String   response body 1 inventoryName    ${ranName}
+...      AND   String   response body 1 globalNbId plmnId   02F829
+...      AND   String   response body 1 globalNbId nbId     001100000011000000110000
+...      AND   String   response body 0 inventoryName    ${enb_ran_name}
+...      AND   String   response body 0 connectionStatus    DISCONNECTED
+...      AND   String   response body 0 globalNbId plmnId   def
+...      AND   String   response body 0 globalNbId nbId     abc
+...      AND   Log To Console    enb index is 0 - all rans were verified successfully
 
+...  ELSE     RUN KEYWORDS
+...      String   response body 0 inventoryName    ${ranName}
+...      AND   String   response body 0 globalNbId plmnId   02F829
+...      AND   String   response body 0 globalNbId nbId     001100000011000000110000
+...      AND   String   response body 1 inventoryName    ${enb_ran_name}
+...      AND   String   response body 1 connectionStatus    DISCONNECTED
+...      AND   String   response body 1 globalNbId plmnId   def
+...      AND   String   response body 1 globalNbId nbId     abc
+...      AND   Log To Console    enb index is 1 - all rans were verified successfully
 
 Prepare Logs For Tests
     Remove log files

@@ -23,11 +23,9 @@
 
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment  ${False}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
-Library     Process
 Library     ../Scripts/log_scripts.py
 Library     REST        ${url}
 
@@ -36,9 +34,9 @@ Library     REST        ${url}
 ${url}  ${e2mgr_address}
 
 *** Test Cases ***
-
-Prepare Redis Monitor Log
+[Setup]
     Start Redis Monitor
+    Prepare Enviorment  ${False}
 
 Add eNB
     Sleep  2s

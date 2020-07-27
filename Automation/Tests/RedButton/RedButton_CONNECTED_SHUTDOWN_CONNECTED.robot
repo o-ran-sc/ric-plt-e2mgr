@@ -22,7 +22,6 @@
 
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment    ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Resource    red_button_keywords.robot
@@ -37,8 +36,9 @@ ${url}  ${e2mgr_address}
 
 *** Test Cases ***
 
-Prepare Redis Monitor Log
+[Setup]
     Start Redis Monitor
+    Prepare Enviorment    ${True}
 
 Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance
   Verify connected and associated
@@ -59,7 +59,7 @@ Verify nodeb's connection status is SHUT_DOWN and it's NOT associated to an e2t 
 
 Restart simulator
    Restart simulator
-   wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+   wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 Verify gnb nodeb connection status is CONNECTED and it's associated to an e2t instance - checking again
    Verify connected and associated

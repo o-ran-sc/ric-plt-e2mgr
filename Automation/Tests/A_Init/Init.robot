@@ -30,17 +30,17 @@ Resource   ../Resource/Keywords.robot
 Init Environment And Validate
     Stop All Pods Except Simulator
     Restart simulator
-    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    1
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    1
 
     Start E2 Manager
     Start Dbass
-    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    3
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    3
 
     Start Routing Manager
-    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    4
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    4
 
     Start E2
-    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 
 

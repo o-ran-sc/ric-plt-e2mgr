@@ -35,12 +35,12 @@ def verify_log_message(file_path, message):
     return False
 
 
-def verify_redis_monitor_manipulation_message(file_path, ran_name, action):
-    message = "\"PUBLISH\" \"{e2Manager},RAN_MANIPULATION\" \"" + ran_name + "_" + action + "\""
+def verify_redis_monitor_manipulation_message(file_path, ran_name, event):
+    message = "\"PUBLISH\" \"{e2Manager},RAN_MANIPULATION\" \"" + ran_name + "_" + event + "\""
     return verify_log_message(file_path, message)
 
-def verify_redis_monitor_connection_status_message(file_path, ran_name, status):
-    message = "\"PUBLISH\" \"{e2Manager},RAN_CONNECTION_STATUS_CHANGE\" \"" + ran_name + "_" + status + "\""
+def verify_redis_monitor_connection_status_message(file_path, ran_name, event):
+    message = "\"PUBLISH\" \"{e2Manager},RAN_CONNECTION_STATUS_CHANGE\" \"" + ran_name + "_" + event + "\""
     return verify_log_message(file_path, message)
 
 

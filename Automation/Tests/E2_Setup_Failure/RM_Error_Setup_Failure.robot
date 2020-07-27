@@ -38,7 +38,7 @@ ${url}  ${e2mgr_address}
 Stop routing manager and restarting gnb simulator
     Stop Routing Manager
     Restart simulator
-    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    ${pods_number-1}
 
 prepare logs for tests
     Remove log files
@@ -62,6 +62,7 @@ E2M Logs - Verify RMR Message
     ${result}    find_rmr_message.verify_logs   ${EXECDIR}   ${e2mgr_log_filename}  ${Setup_failure_message_type}    ${None}
     Should Be Equal As Strings    ${result}      True
 
-
-              Start Routing Manager
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+[Teardown]
+    Run Keywords
+    Start Routing Manager
+    AND Wait Until Keyword Succeeds  2 min    10 sec    Validate Required Dockers

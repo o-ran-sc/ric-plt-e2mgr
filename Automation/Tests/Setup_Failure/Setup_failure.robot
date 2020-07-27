@@ -38,7 +38,7 @@ ${url}  ${e2mgr_address}
 Stop Routing manager simulator and restarting simulator
     Stop Routing Manager
     restart simulator
-    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers    ${pods_number-1}
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    ${pods_number-1}
 
 prepare logs for tests
     Remove log files
@@ -64,7 +64,7 @@ E2M Logs - Verify RMR Message
 
 [Teardown]    Run Keywords
               Start Routing Manager
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 
 

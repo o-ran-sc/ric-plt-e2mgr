@@ -40,7 +40,7 @@ ${url}  ${e2mgr_address}
 Disable ric and restart simulator
     ${result}    e2mdbscripts.set_enable_ric_false
     Restart simulator
-    wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 prepare logs for tests
     Remove log files

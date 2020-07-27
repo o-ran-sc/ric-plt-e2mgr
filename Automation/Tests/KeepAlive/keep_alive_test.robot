@@ -22,7 +22,6 @@ Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library    ../Scripts/find_error_script.py
 Library     ../Scripts/find_rmr_message.py
-Library     ../Scripts/rsmscripts.py
 Library     ../Scripts/e2mdbscripts.py
 Library    OperatingSystem
 Library    Collections
@@ -82,4 +81,4 @@ Verify E2T instance removed from db
 
 [Teardown]    Run Keywords
               Start E2
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers

@@ -42,9 +42,10 @@ Prepare logs
     Remove log files
     Save logs
 
-[Teardown]    Run Keywords
-              Start Dbass
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+[Teardown]
+    Run Keywords
+    Start Dbass
+    AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 
 

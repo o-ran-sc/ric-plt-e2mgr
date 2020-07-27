@@ -55,4 +55,4 @@ Verify e2mgr logs - Third retry to retrieve from db
 
 [Teardown]    Run Keywords
               Start Dbass
-              AND wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+              AND wait until keyword succeeds  2 min    10 sec    Validate Required Dockers

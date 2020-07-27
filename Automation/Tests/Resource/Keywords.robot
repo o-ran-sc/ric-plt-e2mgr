@@ -74,11 +74,11 @@ Prepare Enviorment
      Init logs
      Flush And Populate DB    ${set_new_timestamp}
      Run keyword if  ${need_to_restart_pods}==${True}   Restart RM and GNB Simulator
-     Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+     Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
 
 Restart RM and GNB Simulator
     Restart routing manager
-    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
     Restart simulator
 
 
@@ -136,7 +136,7 @@ Stop Dbass
 Stop Simulator
     log to console  Stopping gnbe2 simulator
     Run And Return Rc And Output    ${stop_simu}
-    Sleep  50s
+    Sleep  70s
 
 Start Simulator
     log to console  Starting gnbe2 simulator
@@ -188,14 +188,13 @@ Stop Redis Monitor
 
 
 Redis Monitor Logs - Verify Publish To Manipulation Channel
-    [Arguments]       ${ran_name}    ${string}
+    [Arguments]       ${ran_name}    ${event}
     Log To Console  Verify Publish To Manipulation Channel
-    ${result}=  log_scripts.verify_redis_monitor_manipulation_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${string}
+    ${result}=  log_scripts.verify_redis_monitor_manipulation_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${event}
     Should Be Equal As Strings    ${result}      True
 
 Redis Monitor Logs - Verify Publish To Connection Status Channel
-    [Arguments]       ${ran_name}    ${string}
+    [Arguments]       ${ran_name}    ${event}
     Log To Console    Verify Publish To Connection Status Channel
-    ${result}=  log_scripts.verify_redis_monitor_connection_status_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${string}
+    ${result}=  log_scripts.verify_redis_monitor_connection_status_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${event}
     Should Be Equal As Strings    ${result}      True
-
