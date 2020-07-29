@@ -294,7 +294,34 @@ func TestUpdateNodebInfoSuccess(t *testing.T) {
 
 	rNibErr := w.UpdateNodebInfo(nodebInfo)
 	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
 }
+
+func TestUpdateNodebInfoAndPublishSuccess(t *testing.T) {
+	inventoryName := "name"
+	plmnId := "02f829"
+	nbId := "4a952a0a"
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nodebInfo := generateNodebInfo(inventoryName, entities.Node_ENB, plmnId, nbId)
+	data, err := proto.Marshal(nodebInfo)
+	if err != nil {
+		t.Errorf("#rNibWriter_test.TestSaveEnb - Failed to marshal NodeB entity. Error: %v", err)
+	}
+	var e error
+	var setExpected []interface{}
+
+	nodebNameKey := fmt.Sprintf("RAN:%s", inventoryName)
+	nodebIdKey := fmt.Sprintf("ENB:%s:%s", plmnId, nbId)
+	setExpected = append(setExpected, nodebNameKey, data)
+	setExpected = append(setExpected, nodebIdKey, data)
+
+	sdlInstanceMock.On("SetAndPublish",[]string{"RAN_MANIPULATION", inventoryName + "_" + RanUpdatedEvent}, []interface{}{setExpected}).Return(e)
+
+	rNibErr := w.UpdateNodebInfoAndPublish(nodebInfo)
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
 
 func TestUpdateNodebInfoMissingInventoryNameFailure(t *testing.T) {
 	inventoryName := "name"
