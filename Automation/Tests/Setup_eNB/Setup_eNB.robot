@@ -26,9 +26,9 @@ Variables  ../Scripts/variables.py
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/log_scripts.py
 Library     REST        ${url}
-
 
 *** Variables ***
 ${url}  ${e2mgr_address}
@@ -36,31 +36,31 @@ ${url}  ${e2mgr_address}
 *** Test Cases ***
 [Setup]
     Start Redis Monitor
-    Prepare Enviorment  ${False}
+    AND Prepare Enviorment
 
-Add eNB
-    Sleep  2s
-    Add eNb Request
-    Integer  response status  201
+Send eNB setup request via e2adapter
+    Send eNB Setup Request
+
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Connection Status Channel    ${enb_ran_name}    CONNECTED
+    Redis Monitor Logs - Verify NOT Published To Manipulation Channel    ${enb_ran_name}    UPDATED
+
+Get request eNB
+    Sleep    2s
+    Get Request nodeb    ${enb_ran_name}
+    Integer  response status  200
     String   response body ranName    ${enb_ran_name}
-    String   response body connectionStatus    DISCONNECTED
+    String   response body connectionStatus    CONNECTED
     String   response body nodeType     ENB
     String   response body enb enbType    SHORT_MACRO_ENB
-    Missing  response body setupFromNetwork
+    Boolean  response body setupFromNetwork    true
 
-prepare logs for tests
+Prepare Logs For Tests
     Remove log files
     Save logs
 
-Redis Monitor Logs - Verify Publish
-    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${enb_ran_name}    ADDED
-
 [Teardown]
     Stop Redis Monitor
-
-
-
-
 
 
 

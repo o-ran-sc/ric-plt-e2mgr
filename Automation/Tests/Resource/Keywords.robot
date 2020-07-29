@@ -27,11 +27,16 @@ Library     ../Scripts/k8s_helper.py
 Resource   ../Resource/resource.robot
 Library     OperatingSystem
 Library     Process
+Variables  ../Scripts/variables.py
+
+*** Variables ***
+${e2adapter}  ${e2adapter_pod_name}
 
 *** Keywords ***
-Get Request node b gnb
+Get Request nodeb
+    [Arguments]    ${nodeb_name}=${ranName}
     Sleep    1s
-    GET      ${getNodeb}
+    GET      ${getNodeb}/${nodeb_name}
 
 Update Gnb request
     Sleep  1s
@@ -61,7 +66,6 @@ Remove log files
     Remove File  ${EXECDIR}/${gnb_log_filename}
     Remove File  ${EXECDIR}/${e2mgr_log_filename}
     Remove File  ${EXECDIR}/${e2t_log_filename}
-
 
 Save logs
     Sleep   1s
@@ -162,6 +166,16 @@ Restart Routing Manager
     Stop Routing Manager
     Start Routing Manager
 
+Start e2adapter
+     Log to Console  Starting e2adapter
+     Run And Return Rc And Output    ${start_e2adapter}
+     Sleep  5s
+
+Stop e2adapter
+     Log to Console  Stopping e2adapter
+     Run And Return Rc And Output    ${stop_e2adapter}
+     Sleep  5s
+
 Flush And Populate DB
     [Arguments]    ${set_new_timestamp}=${True}
     Log To Console  Flushing and populating DB
@@ -174,6 +188,13 @@ Stop All Pods Except Simulator
     Stop Dbass
     Stop E2
     Stop Routing Manager
+    Stop e2adapter
+
+Send eNB Setup Request
+    Log To Console  Sending eNB setup request form e2adapter
+    ${send_enb_setup}       Evaluate    "kubectl -n ricplt exec -it ${e2adapter} cli send-e2setup-req 10.0.2.15"
+    Sleep    3s
+    Run And Return Rc And Output    ${send_enb_setup}
 
 Start Redis Monitor
     Log To Console  Starting redis monitor log
@@ -190,11 +211,20 @@ Stop Redis Monitor
 Redis Monitor Logs - Verify Publish To Manipulation Channel
     [Arguments]       ${ran_name}    ${event}
     Log To Console  Verify Publish To Manipulation Channel
+    Sleep    3s
     ${result}=  log_scripts.verify_redis_monitor_manipulation_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${event}
     Should Be Equal As Strings    ${result}      True
 
 Redis Monitor Logs - Verify Publish To Connection Status Channel
     [Arguments]       ${ran_name}    ${event}
     Log To Console    Verify Publish To Connection Status Channel
+    Sleep    3s
     ${result}=  log_scripts.verify_redis_monitor_connection_status_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${event}
     Should Be Equal As Strings    ${result}      True
+
+Redis Monitor Logs - Verify NOT Published To Manipulation Channel
+    [Arguments]       ${ran_name}    ${event}
+    Log To Console  Verify NOT Published To Manipulation Channel
+    Sleep    3s
+    ${result}=  log_scripts.verify_redis_monitor_manipulation_message   ${EXECDIR}/${redis_monitor_log_filename}  ${ran_name}    ${event}
+    Should Be Equal As Strings    ${result}      False

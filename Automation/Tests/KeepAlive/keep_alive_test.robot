@@ -34,7 +34,7 @@ ${url}  ${e2mgr_address}
 
 Get request gnb
     Sleep    2s
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
@@ -65,7 +65,7 @@ Prepare logs
 
 Verify RAN is not associated with E2T instance
     Sleep  6m
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
     Missing  response body associatedE2tInstanceAddress

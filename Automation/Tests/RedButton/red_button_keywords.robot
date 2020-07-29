@@ -32,14 +32,14 @@ ${url}  ${e2mgr_address}
 
 *** Keywords ***
 Verify connected and associated
-   Get Request node b gnb
+   Get Request nodeb
    Integer  response status  200
    String   response body ranName   ${ranName}
    String   response body connectionStatus    CONNECTED
    String   response body associatedE2tInstanceAddress  ${e2t_alpha_address}
 
 Verify shutdown for gnb
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranName}
     String   response body connectionStatus    SHUT_DOWN

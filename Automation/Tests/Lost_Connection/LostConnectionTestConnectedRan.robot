@@ -40,7 +40,7 @@ Prepare Redis Monitor Log
     Start Redis Monitor
 
 Setup Ran and verify it's CONNECTED and associated
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
@@ -51,7 +51,7 @@ Stop simulator
 
 Verify connection status is DISCONNECTED and RAN is not associated with E2T instance
     Sleep    30s
-    GET      ${getNodeb}
+    GET      ${getNodeb}/${ranName}
     Integer  response status  200
     String   response body ranName    ${ranname}
     Missing  response body associatedE2tInstanceAddress

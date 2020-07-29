@@ -47,7 +47,7 @@ Redis Monitor Logs - Verify Publish
 
 Get request gnb
     Sleep    2s
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    CONNECTED
@@ -59,7 +59,7 @@ Get request gnb
     Integer  response body gnb ranFunctions 1 ranFunctionRevision  1
     Integer  response body gnb ranFunctions 2 ranFunctionId  3
     Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
-
+    Boolean  response body setupFromNetwork    true
 
 Prepare Logs For Tests
     Remove log files

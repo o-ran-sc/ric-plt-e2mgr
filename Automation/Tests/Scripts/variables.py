@@ -26,3 +26,6 @@ e2mgr_address = "http://" + e2mgr_ip + ":3800"
 
 e2t_alpha_ip = k8s_helper.extract_service_ip("e2term-rmr-alpha")
 e2t_alpha_address = e2t_alpha_ip + ":38000"
+
+e2adapter_pod_name = k8s_helper.extract_pod_name("e2adapter")
+

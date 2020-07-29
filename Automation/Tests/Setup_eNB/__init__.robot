@@ -20,21 +20,5 @@
 #   platform project (RICP).
 #
 
-import subprocess
-
-
-def extract_service_ip(service_name):
-    k8s_command = "kubectl -n ricplt get services | /bin/grep {} | /bin/grep ClusterIP |  awk \'{{print $3}}\'" \
-        .format(service_name)
-
-    service_ip = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)
-
-    return service_ip.strip()
-
-def extract_pod_name(pod_base_name):
-    k8s_command = "kubectl get pods -n ricplt | /bin/grep {} | awk \'{{print $1}}\'" \
-        .format(pod_base_name)
-
-    pod_name = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)
-
-    return pod_name.strip()
+*** Settings ***
+Documentation    Setup eNB

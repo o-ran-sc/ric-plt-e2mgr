@@ -46,7 +46,7 @@ prepare logs for tests
 
 Get request gnb
     Sleep    2s
-    Get Request node b gnb
+    Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
     String   response body connectionStatus    DISCONNECTED

@@ -216,6 +216,8 @@ func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, no
 		return false, errors.New("nodeB entity in incorrect state")
 	}
 
+	nodebInfo.SetupFromNetwork = true
+
 	if nodebInfo.NodeType == entities.Node_ENB {
 		return false, nil
 	}

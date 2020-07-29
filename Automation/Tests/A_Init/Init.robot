@@ -40,9 +40,10 @@ Init Environment And Validate
     Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    4
 
     Start E2
-    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
+    Wait until keyword succeeds  2 min    10 sec    Validate Required Dockers    5
 
-
+    Start e2adapter
+    Wait until keyword succeeds  1 min    10 sec    Validate Required Dockers
 
 
 
