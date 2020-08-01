@@ -32,7 +32,7 @@ def extract_service_ip(service_name):
     return service_ip.strip()
 
 def extract_pod_name(pod_base_name):
-    k8s_command = "kubectl get pods -n ricplt | /bin/grep {} | awk \'{{print $1}}\'" \
+    k8s_command = "kubectl get pods -n ricplt | /bin/grep {} | /bin/grep Running | awk \'{{print $1}}\'" \
         .format(pod_base_name)
 
     pod_name = subprocess.check_output(["/bin/bash", "-c", k8s_command], universal_newlines=True)

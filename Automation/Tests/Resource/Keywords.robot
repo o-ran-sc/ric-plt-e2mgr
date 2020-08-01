@@ -29,9 +29,6 @@ Library     OperatingSystem
 Library     Process
 Variables  ../Scripts/variables.py
 
-*** Variables ***
-${e2adapter}  ${e2adapter_pod_name}
-
 *** Keywords ***
 Get Request nodeb
     [Arguments]    ${nodeb_name}=${ranName}
@@ -176,6 +173,11 @@ Stop e2adapter
      Run And Return Rc And Output    ${stop_e2adapter}
      Sleep  5s
 
+Restart e2adapter
+    Log to Console  Restarting e2adapter
+    Stop e2adapter
+    Start e2adapter
+
 Flush And Populate DB
     [Arguments]    ${set_new_timestamp}=${True}
     Log To Console  Flushing and populating DB
@@ -192,8 +194,10 @@ Stop All Pods Except Simulator
 
 Send eNB Setup Request
     Log To Console  Sending eNB setup request form e2adapter
-    ${send_enb_setup}       Evaluate    "kubectl -n ricplt exec -it ${e2adapter} cli send-e2setup-req 10.0.2.15"
-    Sleep    3s
+    Restart e2adapter
+    Wait until keyword succeeds  2 min    3 sec    Validate Required Dockers
+    ${e2adapter_pod} =    Run And Return Rc And Output   kubectl get pods -n ricplt | /bin/grep e2adapter | /bin/grep Running | awk '{{print $1}}'
+    ${send_enb_setup}    Evaluate    "kubectl -n ricplt exec -it ${e2adapter_pod[1]} cli send-e2setup-req 10.0.2.15"
     Run And Return Rc And Output    ${send_enb_setup}
 
 Start Redis Monitor
