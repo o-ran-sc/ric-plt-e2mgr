@@ -161,6 +161,12 @@ func (h *NodebValidator) IsEnbValid(enb *entities.Enb) error {
 	return nil
 }
 
+func (h *NodebValidator) IsNgEnbType(enbType entities.EnbType) bool {
+	return enbType == entities.EnbType_LONG_MACRO_NG_ENB ||
+		enbType == entities.EnbType_MACRO_NG_ENB ||
+		enbType == entities.EnbType_SHORT_MACRO_NG_ENB
+}
+
 func isServedCellValid(servedCell *entities.ServedCellInfo) error {
 
 	if servedCell.CellId == "" {

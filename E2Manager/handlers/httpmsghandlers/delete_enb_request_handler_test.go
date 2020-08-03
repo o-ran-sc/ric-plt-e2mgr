@@ -113,6 +113,19 @@ func TestHandleDeleteEnbInternalRemoveEnbError(t *testing.T) {
 	writerMock.AssertExpectations(t)
 }
 
+func TestHandleDeleteEnbFromNetworkError(t *testing.T) {
+	handler, readerMock, _ := setupDeleteEnbRequestHandlerTest(t, false)
+
+	ranName := "ran1"
+	nodebInfo  := &entities.NodebInfo{RanName: ranName, NodeType: entities.Node_ENB, SetupFromNetwork: true}
+	readerMock.On("GetNodeb", ranName).Return(nodebInfo, nil)
+	//writerMock.On("RemoveEnb", nodebInfo).Return(nil)
+	result, err := handler.Handle(&models.DeleteEnbRequest{RanName: ranName})
+	assert.NotNil(t, err)
+	assert.Nil(t, result)
+	readerMock.AssertExpectations(t)
+}
+
 func TestHandleDeleteEnbInternalRemoveNbIdentityError(t *testing.T) {
 	handler, readerMock, writerMock := setupDeleteEnbRequestHandlerTest(t, false)
 

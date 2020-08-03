@@ -55,7 +55,7 @@ func (h *AddEnbRequestHandler) Handle(request models.Request) (models.IResponse,
 	err := h.validateRequestBody(addEnbRequest)
 
 	if err != nil {
-		h.logger.Errorf("#AddEnbRequestHandler.Handle - validation failure: %s is a mandatory field and cannot be empty", err)
+		h.logger.Errorf("#AddEnbRequestHandler.Handle - validation failure: %s is a mandatory field and cannot be empty or includes invalid value", err)
 		return nil, e2managererrors.NewRequestValidationError()
 	}
 
@@ -99,6 +99,7 @@ func (h *AddEnbRequestHandler) createNodebInfo(addEnbRequest *models.AddEnbReque
 		Configuration:    &entities.NodebInfo_Enb{Enb: addEnbRequest.Enb},
 		NodeType:         entities.Node_ENB,
 		ConnectionStatus: entities.ConnectionStatus_DISCONNECTED,
+		SetupFromNetwork: false,
 	}
 
 	return &nodebInfo
@@ -132,6 +133,10 @@ func (h *AddEnbRequestHandler) validateRequestBody(addEnbRequest *models.AddEnbR
 
 	if err := h.nodebValidator.IsEnbValid(addEnbRequest.Enb); err != nil {
 		return err
+	}
+
+	if h.nodebValidator.IsNgEnbType(addEnbRequest.Enb.GetEnbType()){
+		return errors.New("enb.enbType")
 	}
 
 	return nil

@@ -67,6 +67,11 @@ func (h *DeleteEnbRequestHandler) Handle(request models.Request) (models.IRespon
 		return nil, e2managererrors.NewRequestValidationError()
 	}
 
+	if nodebInfo.GetSetupFromNetwork() {
+		h.logger.Errorf("#DeleteEnbRequestHandler.Handle - RAN name: %s - can't delete RAN which was created from network.", deleteEnbRequest.RanName)
+		return nil, e2managererrors.NewRequestValidationError()
+	}
+
 	err = h.rNibDataService.RemoveEnb(nodebInfo)
 	if err != nil {
 		h.logger.Errorf("#DeleteEnbRequestHandler.Handle - RAN name: %s - failed to delete nodeb entity in RNIB. Error: %s", deleteEnbRequest.RanName, err)
