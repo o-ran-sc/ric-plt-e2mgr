@@ -23,45 +23,39 @@
 
 *** Settings ***
 Variables  ../Scripts/variables.py
-Suite Setup   Prepare Enviorment  ${True}
 Resource   ../Resource/resource.robot
 Resource   ../Resource/Keywords.robot
 Library     OperatingSystem
+Library     ../Scripts/find_rmr_message.py
 Library     ../Scripts/log_scripts.py
-Library     ../Scripts/k8s_helper.py
 Library     REST        ${url}
-
 
 *** Variables ***
 ${url}  ${e2mgr_address}
 
 *** Test Cases ***
-
-Prepare Redis Monitor Log
+[Setup]
     Start Redis Monitor
+    Prepare Enviorment  ${True}
 
-Update gNB
-    Sleep  2s
-    Update Gnb request
-    Integer  response status  200
-    String   response body ranName    ${ranname}
-    String   response body connectionStatus    CONNECTED
-    String   response body nodeType     GNB
-    String   response body gnb servedNrCells 0 servedNrCellInformation cellId   abcd
-    String   response body gnb servedNrCells 0 nrNeighbourInfos 0 nrCgi  one
-    String   response body gnb servedNrCells 0 servedNrCellInformation servedPlmns 0  whatever
 
-prepare logs for tests
+Restart Simulator
+    Restart simulator
+    wait until keyword succeeds  2 min    10 sec    Validate Required Dockers
+
+Prepare Logs For Tests
     Remove log files
     Save logs
 
-E2M Logs - Verify Update
-    Sleep 2s
-    ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${update_gnb_log_message}
-    Should Be Equal As Strings    ${result}      True
-
 Redis Monitor Logs - Verify Publish
-    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${ranName}    UPDATED
+    Redis Monitor Logs - Verify Publish To Connection Status Channel   ${ranName}    CONNECTED
+    Redis Monitor Logs - Verify NOT Published To Manipulation Channel    ${ranName}    UPDATED
+
 
 [Teardown]
     Stop Redis Monitor
+
+
+
+
+

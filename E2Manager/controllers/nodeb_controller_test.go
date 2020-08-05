@@ -446,6 +446,11 @@ func activateControllerUpdateEnbMocks(context *controllerUpdateEnbTestContext, r
 
 	if context.updateEnbCellsParams != nil {
 		updatedNodebInfo := *context.getNodebInfoResult.nodebInfo
+
+		if context.getNodebInfoResult.nodebInfo.SetupFromNetwork {
+			updateEnbRequest.Enb.EnbType = context.getNodebInfoResult.nodebInfo.GetEnb().EnbType
+		}
+
 		updatedNodebInfo.Configuration = &entities.NodebInfo_Enb{Enb: updateEnbRequest.Enb}
 
 		writerMock.On("UpdateEnb", &updatedNodebInfo, updateEnbRequest.Enb.ServedCells).Return(context.updateEnbCellsParams.err)
@@ -601,7 +606,8 @@ func controllerAddEnbTestExecuter(t *testing.T, context *controllerAddEnbTestCon
 func controllerDeleteEnbTestExecuter(t *testing.T, context *controllerDeleteEnbTestContext, preAddNbIdentity bool) {
 	controller, readerMock, writerMock, nbIdentity := setupDeleteEnbControllerTest(t, preAddNbIdentity)
 	readerMock.On("GetNodeb", RanName).Return(context.getNodebInfoResult.nodebInfo, context.getNodebInfoResult.rnibError)
-	if context.getNodebInfoResult.rnibError == nil && context.getNodebInfoResult.nodebInfo.GetNodeType() == entities.Node_ENB {
+	if context.getNodebInfoResult.rnibError == nil && context.getNodebInfoResult.nodebInfo.GetNodeType() == entities.Node_ENB &&
+		!context.getNodebInfoResult.nodebInfo.SetupFromNetwork {
 		writerMock.On("RemoveEnb", context.getNodebInfoResult.nodebInfo).Return(nil)
 		if preAddNbIdentity {
 			writerMock.On("RemoveNbIdentity", entities.Node_ENB, nbIdentity).Return(nil)
@@ -1157,8 +1163,27 @@ func TestControllerUpdateEnbExistingEmptyCellsSuccess(t *testing.T) {
 	controllerUpdateEnbTestExecuter(t, &context)
 }
 
+func TestControllerUpdateEnbNgEnbFailure(t *testing.T) {
 
-func TestControllerUpdateEnbSuccess(t *testing.T) {
+	requestBody := map[string]interface{}{
+		"enb": map[string]interface{}{
+			"enbType": 5,
+			"servedCells": []interface{}{
+				buildServedCell(""),
+			}},
+	}
+
+	context := controllerUpdateEnbTestContext{
+		getNodebInfoResult:   nil,
+		requestBody:          requestBody,
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbSuccessSetupFromNwFalse(t *testing.T) {
 	oldServedCells := generateServedCells("whatever1", "whatever2")
 	context := controllerUpdateEnbTestContext{
 		removeServedCellsParams: &removeServedCellsParams{
@@ -1174,13 +1199,42 @@ func TestControllerUpdateEnbSuccess(t *testing.T) {
 				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
 				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
 				NodeType:                     entities.Node_ENB,
-				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_ENB}},
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_LONG_MACRO_ENB}},
 			},
 			rnibError: nil,
 		},
 		requestBody:          getUpdateEnbRequest(""),
 		expectedStatusCode:   http.StatusOK,
 		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]},\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\"}",
+	}
+
+	controllerUpdateEnbTestExecuter(t, &context)
+}
+
+func TestControllerUpdateEnbSuccessSetupFromNwTrue(t *testing.T) {
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+	context := controllerUpdateEnbTestContext{
+		removeServedCellsParams: &removeServedCellsParams{
+			err:            nil,
+			servedCellInfo: oldServedCells,
+		},
+		updateEnbCellsParams: &updateEnbCellsParams{
+			err: nil,
+		},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_ENB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_LONG_MACRO_ENB}},
+				SetupFromNetwork:             true,
+			},
+			rnibError: nil,
+		},
+		requestBody:          getUpdateEnbRequest(""),
+		expectedStatusCode:   http.StatusOK,
+		expectedJsonResponse: "{\"ranName\":\"test\",\"connectionStatus\":\"CONNECTED\",\"nodeType\":\"ENB\",\"enb\":{\"enbType\":\"LONG_MACRO_ENB\",\"servedCells\":[{\"pci\":1,\"cellId\":\"whatever\",\"tac\":\"whatever3\",\"broadcastPlmns\":[\"whatever\"],\"choiceEutraMode\":{\"fdd\":{}},\"eutraMode\":\"FDD\"}]},\"associatedE2tInstanceAddress\":\"10.0.2.15:38000\",\"setupFromNetwork\":true}",
 	}
 
 	controllerUpdateEnbTestExecuter(t, &context)
@@ -1340,6 +1394,28 @@ func TestControllerAddEnbMissingRequiredServedCellProps(t *testing.T) {
 	}
 }
 
+func TestControllerAddEnbNgEnbFailure(t *testing.T) {
+
+	requestBody := map[string]interface{}{
+		"ranName":    RanName,
+		"globalNbId": buildGlobalNbId(""),
+		"enb": map[string]interface{}{
+			"enbType": 5,
+			"servedCells": []interface{}{
+				buildServedCell(""),
+			},
+		},
+	}
+
+	context := controllerAddEnbTestContext{
+		requestBody:          requestBody,
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+
+	controllerAddEnbTestExecuter(t, &context)
+}
+
 func TestControllerAddEnbSuccess(t *testing.T) {
 	context := controllerAddEnbTestContext{
 		addEnbParams: &addEnbParams{
@@ -1401,6 +1477,18 @@ func TestControllerDeleteEnbNodebNotEnb(t *testing.T) {
 	}
 
 	controllerDeleteEnbTestExecuter(t, &context, false)
+}
+
+func TestControllerDeleteEnbSetupFromNetworkTrueFailure(t *testing.T) {
+	context := controllerDeleteEnbTestContext{
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{RanName: RanName, NodeType: entities.Node_ENB, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, SetupFromNetwork: true},
+			rnibError: nil,
+		},
+		expectedStatusCode:   http.StatusBadRequest,
+		expectedJsonResponse: ValidationFailureJson,
+	}
+	controllerDeleteEnbTestExecuter(t, &context, true)
 }
 
 func TestControllerDeleteEnbSuccess(t *testing.T) {

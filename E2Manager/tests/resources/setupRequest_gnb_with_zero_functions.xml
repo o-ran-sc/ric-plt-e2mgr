@@ -1,0 +1,42 @@
+<E2AP-PDU>
+    <initiatingMessage>
+        <procedureCode>1</procedureCode>
+        <criticality>
+            <reject/>
+        </criticality>
+        <value>
+            <E2setupRequest>
+                <protocolIEs>
+                    <E2setupRequestIEs>
+                        <id>3</id>
+                        <criticality>
+                            <reject/>
+                        </criticality>
+                        <value>
+                            <GlobalE2node-ID>
+                                <gNB>
+                                    <global-gNB-ID>
+                                        <plmn-id>02 F8 29</plmn-id>
+                                        <gnb-id>
+                                            <gnb-ID>001100000011000000110000</gnb-ID>
+                                        </gnb-id>
+                                    </global-gNB-ID>
+                                </gNB>
+                            </GlobalE2node-ID>
+                        </value>
+                    </E2setupRequestIEs>
+                    <E2setupRequestIEs>
+                        <id>10</id>
+                        <criticality>
+                            <reject/>
+                        </criticality>
+                        <value>
+                            <RANfunctions-List>
+                            </RANfunctions-List>
+                        </value>
+                    </E2setupRequestIEs>
+                </protocolIEs>
+            </E2setupRequest>
+        </value>
+    </initiatingMessage>
+</E2AP-PDU>

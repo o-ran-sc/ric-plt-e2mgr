@@ -21,4 +21,4 @@
 #
 
 *** Settings ***
-Documentation    Setup eNB
+Documentation    E2 Setup

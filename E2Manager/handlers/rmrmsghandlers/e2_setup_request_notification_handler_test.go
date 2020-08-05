@@ -45,6 +45,7 @@ const (
 	gnbNodebRanName                          = "gnb:310-410-b5c67788"
 	enbNodebRanName                          = "enB_macro:P310-410-b5c67788"
 	GnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest_gnb.xml"
+	GnbWithZeroFunctionsSetupRequestXmlPath  = "../../tests/resources/setupRequest_gnb_with_zero_functions.xml"
 	EnGnbSetupRequestXmlPath                 = "../../tests/resources/setupRequest_en-gNB.xml"
 	NgEnbSetupRequestXmlPath                 = "../../tests/resources/setupRequest_ng-eNB.xml"
 	EnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest_enb.xml"
@@ -513,19 +514,24 @@ func getExpectedEnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 
 /* Existing Ran UTs - BEGIN */
 
-func getExpectedNodebForExistingRan(nodeb entities.NodebInfo, payload []byte) *entities.NodebInfo {
+func getExpectedNodebForExistingRan(nodeb *entities.NodebInfo, payload []byte) *entities.NodebInfo {
 	pipInd := bytes.IndexByte(payload, '|')
 	setupRequest := &models.E2SetupRequestMessage{}
 	_ = xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
 
+	nb := *nodeb
+
 	if nodeb.NodeType == entities.Node_ENB {
-		return &nodeb
+		return &nb
 	}
 
 	if ranFuncs := setupRequest.ExtractRanFunctionsList(); ranFuncs != nil {
-		nodeb.GetGnb().RanFunctions = ranFuncs
+		updatedGnb := *nodeb.GetGnb()
+		updatedGnb.RanFunctions = ranFuncs
+		nb.Configuration =&entities.NodebInfo_Gnb{Gnb: &updatedGnb}
 	}
-	return &nodeb
+
+	return &nb
 }
 
 func TestE2SetupRequestNotificationHandler_HandleExistingConnectedEnbSuccess(t *testing.T) {
@@ -545,7 +551,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingConnectedEnbSuccess(t *
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 
 	notificationRequest := &models.NotificationRequest{RanName: enbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlEnb...)}
-	enbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+	enbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 	enbToUpdate.SetupFromNetwork = true
 	writerMock.On("UpdateNodebInfo", enbToUpdate).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", e2tInstanceFullAddress, []string{enbNodebRanName}).Return(nil)
@@ -575,7 +581,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedEnbSuccess(
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 
 	notificationRequest := &models.NotificationRequest{RanName: enbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlEnb...)}
-	enbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+	enbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 
 	enbToUpdate2 := *enbToUpdate
 	enbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
@@ -596,15 +602,8 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedEnbSuccess(
 	rmrMessengerMock.AssertCalled(t, "SendMsg", mock.Anything, true)
 }
 
-func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *testing.T, withFunctions bool) {
-	var xmlGnb []byte
-
-	if withFunctions {
-		xmlGnb = readXmlFile(t, GnbSetupRequestXmlPath)
-
-	} else {
-		xmlGnb = readXmlFile(t, GnbWithoutFunctionsSetupRequestXmlPath)
-	}
+func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *testing.T, withFunctions bool, xmlToRead string) {
+	xmlGnb := readXmlFile(t, xmlToRead)
 	handler, readerMock, writerMock, rmrMessengerMock, e2tInstancesManagerMock, routingManagerClientMock := initMocks(t)
 	readerMock.On("GetGeneralConfiguration").Return(&entities.GeneralConfiguration{EnableRic: true}, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceFullAddress).Return(&entities.E2TInstance{}, nil)
@@ -625,7 +624,7 @@ func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
-	gnbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+	gnbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 	gnbToUpdate.SetupFromNetwork = true
 	writerMock.On("UpdateNodebInfo", gnbToUpdate).Return(nil)
 	if withFunctions {
@@ -661,7 +660,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbRoutingMana
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
-	gnbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+	gnbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
@@ -694,11 +693,15 @@ func TestE2SetupRequestNotificationHandler_HandleExistingGnbInvalidConnectionSta
 }
 
 func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbWithoutFunctionsSuccess(t *testing.T) {
-	testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t, false)
+	testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t, false, GnbWithoutFunctionsSetupRequestXmlPath)
 }
 
 func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbWithFunctionsSuccess(t *testing.T) {
-	testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t, true)
+	testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t, true, GnbSetupRequestXmlPath)
+}
+
+func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbWithZeroFunctionsSuccess(t *testing.T) {
+	testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t, true, GnbWithZeroFunctionsSetupRequestXmlPath)
 }
 
 func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(t *testing.T) {
@@ -718,7 +721,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
-	gnbToUpdate := getExpectedNodebForExistingRan(*nodebInfo, notificationRequest.Payload)
+	gnbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	gnbToUpdate2.SetupFromNetwork = true

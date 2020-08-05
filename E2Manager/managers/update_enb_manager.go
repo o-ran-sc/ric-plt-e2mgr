@@ -82,7 +82,11 @@ func (h *UpdateEnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 
 func (h *UpdateEnbManager) SetNodeb(nodeb *entities.NodebInfo, request models.Request) {
 	updateEnbRequest := request.(*models.UpdateEnbRequest)
-	updateEnbRequest.Enb.EnbType = nodeb.GetEnb().GetEnbType()
+
+	if nodeb.SetupFromNetwork {
+		updateEnbRequest.Enb.EnbType = nodeb.GetEnb().GetEnbType()
+	}
+
 	nodeb.Configuration = &entities.NodebInfo_Enb{Enb: updateEnbRequest.Enb}
 }
 
@@ -108,7 +112,7 @@ func (h *UpdateEnbManager) validateRequestBody(request *models.UpdateEnbRequest)
 		return err
 	}
 
-	if h.nodebValidator.IsNgEnbType(request.Enb.GetEnbType()){
+	if h.nodebValidator.IsNgEnbType(request.Enb.GetEnbType()) {
 		return errors.New("enb.enbType")
 	}
 
