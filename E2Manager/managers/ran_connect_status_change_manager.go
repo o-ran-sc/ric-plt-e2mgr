@@ -76,8 +76,9 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 	}
 
 	// in any case, update RanListManager
-	m.logger.Infof("#RanConnectStatusChangeManager.ChangeStatus - RAN name: %s, updating RanListManager... status: %s", nodebInfo.RanName, nodebInfo.GetConnectionStatus())
-	err := m.ranListManager.UpdateRanState(nodebInfo)
+	connectionStatus := nodebInfo.GetConnectionStatus()
+	m.logger.Infof("#RanConnectStatusChangeManager.ChangeStatus - RAN name: %s, updating RanListManager... status: %s", nodebInfo.RanName, connectionStatus)
+	err := m.ranListManager.UpdateNbIdentityConnectionStatus(nodebInfo.GetNodeType(), nodebInfo.RanName, connectionStatus)
 	if err != nil {
 		m.logger.Errorf("#RanConnectStatusChangeManager.ChangeStatus - RAN name: %s - Failed updating RAN's connection status by RanListManager. Error: %v", nodebInfo.RanName, err)
 		// log and proceed...

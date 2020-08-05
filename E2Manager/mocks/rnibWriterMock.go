@@ -147,3 +147,8 @@ func (rnibWriterMock *RnibWriterMock) AddEnb(nodebInfo *entities.NodebInfo) erro
 	args := rnibWriterMock.Called(nodebInfo)
 	return args.Error(0)
 }
+
+func (rnibWriterMock *RnibWriterMock) UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error {
+	args := rnibWriterMock.Called(nodeType, oldNbIdentities, newNbIdentities)
+	return args.Error(0)
+}
