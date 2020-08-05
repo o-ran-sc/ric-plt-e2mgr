@@ -61,8 +61,8 @@ type RNibWriter interface {
 	AddNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 	AddEnb(nodebInfo *entities.NodebInfo) error
+	UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error
 }
-
 /*
 GetRNibWriter returns reference to RNibWriter
 */
@@ -212,6 +212,31 @@ func (w *rNibWriterInstance) AddEnb(nodebInfo *entities.NodebInfo) error {
 	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
 	if err != nil {
 		return common.NewInternalError(err)
+	}
+
+	return nil
+}
+
+func (w *rNibWriterInstance) UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error {
+
+	nbIdIdentitiesToRemove, err := w.buildNbIdentitiesMembers(oldNbIdentities)
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.RemoveMember(nodeType.String(), nbIdIdentitiesToRemove[:]...)
+	if err != nil {
+		return err
+	}
+
+	nbIdIdentitiesToAdd, err := w.buildNbIdentitiesMembers(newNbIdentities)
+	if err != nil {
+		return err
+	}
+
+	err = w.sdl.AddMember(nodeType.String(), nbIdIdentitiesToAdd[:]...)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -546,6 +571,20 @@ func (w *rNibWriterInstance) UpdateEnb(nodebInfo *entities.NodebInfo, servedCell
 	return nil
 }
 
+func (w *rNibWriterInstance) buildNbIdentitiesMembers(nbIdentities []*entities.NbIdentity) ([]interface{}, error) {
+
+	var nbIdIdentitiesMembers []interface{}
+	for _, nbIdentity := range nbIdentities {
+
+		nbIdData, err := proto.Marshal(nbIdentity)
+		if err != nil {
+			return nil, common.NewInternalError(err)
+		}
+		nbIdIdentitiesMembers = append(nbIdIdentitiesMembers, nbIdData)
+	}
+
+	return nbIdIdentitiesMembers, nil
+}
 /*
 Close the writer
 */

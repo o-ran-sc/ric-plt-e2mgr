@@ -74,7 +74,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 	return logger, handler, readerMock, writerMock, e2tInstancesManagerMock, routingManagerClientMock
 }
 
-func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.Logger, *configuration.Configuration, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
+func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.Logger, *configuration.Configuration, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock, managers.RanListManager) {
 
 	logger := initLog(t)
 	config := configuration.ParseConfiguration()
@@ -94,7 +94,7 @@ func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManager, routingManagerClient)
-	return logger, config, handler, readerMock, writerMock, httpClientMock
+	return logger, config, handler, readerMock, writerMock, httpClientMock, ranListManager
 }
 
 func TestE2TermInitUnmarshalPayloadFailure(t *testing.T) {
@@ -123,7 +123,7 @@ func TestE2TermInitGetE2TInstanceFailure(t *testing.T) {
 }
 
 func TestE2TermInitGetE2TInstanceDbFailure(t *testing.T) {
-	_, _, handler, readerMock, writerMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, _, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var e2tInstance *entities.E2TInstance
 	readerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewInternalError(fmt.Errorf("internal error")))
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
@@ -132,7 +132,7 @@ func TestE2TermInitGetE2TInstanceDbFailure(t *testing.T) {
 }
 
 func TestE2TermInitNewE2TInstance(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var e2tInstance *entities.E2TInstance
 
 	readerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, common.NewResourceNotFoundError("not found"))
@@ -142,7 +142,7 @@ func TestE2TermInitNewE2TInstance(t *testing.T) {
 	url := config.RoutingManager.BaseUrl + clients.AddE2TInstanceApiSuffix
 	httpClientMock.On("Post", url, mock.Anything, mock.Anything).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
 
-	e2tAddresses := []string{}
+	var e2tAddresses []string
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, common.NewResourceNotFoundError(""))
 
 	e2tAddresses = append(e2tAddresses, e2tInstanceAddress)
@@ -157,7 +157,7 @@ func TestE2TermInitNewE2TInstance(t *testing.T) {
 }
 
 func TestE2TermInitNewE2TInstance__RoutingManagerError(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 
 	var e2tInstance *entities.E2TInstance
 
@@ -182,7 +182,14 @@ func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+
+	oldNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
 
 	var rnibErr error
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -190,6 +197,9 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
@@ -217,14 +227,23 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 
+	oldNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
 	var rnibErr error
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
@@ -251,14 +270,23 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
-	_, _, handler, readerMock, writerMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, _, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var rnibErr error
 
+	oldNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
 	var initialNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -271,7 +299,7 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
-	_, _, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, httpClientMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	var rnibErr error
 
 	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
@@ -295,10 +323,18 @@ func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
 
 func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
-
-	var rnibErr error
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 	test2 := "test2"
+	oldNbIdentity1 := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	oldNbIdentity2 := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdentityList := []*entities.NbIdentity{oldNbIdentity1, oldNbIdentity2}
+	readerMock.On("GetListNodebIds").Return(oldNbIdentityList, nil)
+
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
+	var rnibErr error
 
 	//First RAN
 	var firstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -307,6 +343,8 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 
 	var updatedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	writerMock.On("UpdateNodebInfo", updatedFirstRan).Return(rnibErr)
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var updatedDisconnectedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", updatedDisconnectedFirstRan).Return(rnibErr)
@@ -318,6 +356,8 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 
 	var updatedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	writerMock.On("UpdateNodebInfo", updatedSecondRan).Return(rnibErr)
+	newNbIdentity2 := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2}).Return(nil)
 
 	var updatedDisconnectedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", updatedDisconnectedSecondRan).Return(rnibErr)
@@ -342,8 +382,14 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 
+	oldNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
 	var rnibErr error
 	test2 := "test2"
 
@@ -354,6 +400,8 @@ func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
 
 	var updatedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	writerMock.On("UpdateNodebInfo", updatedFirstRan).Return(rnibErr)
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var updatedDisconnectedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", updatedDisconnectedFirstRan).Return(rnibErr)
@@ -381,10 +429,16 @@ func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessTwoRansFirstNotFoundFailure(t *testing.T) {
-	_, config, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 
-	var rnibErr error
 	test2 := "test2"
+	oldNbIdentity := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
+	var rnibErr error
 
 	//First RAN
 	var firstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -400,6 +454,9 @@ func TestE2TermInitHandlerSuccessTwoRansFirstNotFoundFailure(t *testing.T) {
 
 	var updatedDisconnectedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: ""}
 	writerMock.On("UpdateNodebInfo", updatedDisconnectedSecondRan).Return(rnibErr)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedSecondRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -421,7 +478,7 @@ func TestE2TermInitHandlerSuccessTwoRansFirstNotFoundFailure(t *testing.T) {
 }
 
 func TestE2TermInitHandlerSuccessTwoRansFirstRnibInternalErrorFailure(t *testing.T) {
-	_, _, handler, readerMock, writerMock, httpClientMock := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+	_, _, handler, readerMock, writerMock, httpClientMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
 
 	test2 := "test2"
 
@@ -470,6 +527,85 @@ func TestE2TermInitHandlerFailureGetNodebInternalError(t *testing.T) {
 	writerMock.AssertNotCalled(t, "UpdateNodebInfo")
 }
 
+func TestE2TermInitHandlerOneRanNoRanInNbIdentityMap(t *testing.T) {
+	_, config, handler, readerMock, writerMock, httpClientMock, _ := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+
+	var rnibErr error
+	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
+
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+
+	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
+
+	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
+	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+
+	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+	readerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil).Return(e2tInstance, nil)
+	writerMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	url := config.RoutingManager.BaseUrl + clients.DissociateRanE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, mock.Anything, mock.Anything).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
+
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
+
+	handler.Handle(notificationRequest)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 1)
+	writerMock.AssertNumberOfCalls(t, "SaveE2TInstance", 1)
+	httpClientMock.AssertNumberOfCalls(t, "Post", 1)
+}
+
+func TestE2TermInitHandlerOneRanUpdateNbIdentitiesFailure(t *testing.T) {
+	_, config, handler, readerMock, writerMock, httpClientMock, ranListManager := initRanLostConnectionTestWithRealE2tInstanceManager(t)
+
+	oldNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
+	err := ranListManager.InitNbIdentityMap()
+	if err != nil {
+		t.Errorf("Error cannot init identity")
+	}
+
+	var rnibErr error
+	var initialNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
+
+	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(common.NewInternalError(fmt.Errorf("internal error")))
+
+	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
+	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
+
+	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
+	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+
+	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
+	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
+	readerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil).Return(e2tInstance, nil)
+	writerMock.On("SaveE2TInstance", mock.Anything).Return(nil)
+
+	respBody := ioutil.NopCloser(bytes.NewBufferString(""))
+	url := config.RoutingManager.BaseUrl + clients.DissociateRanE2TInstanceApiSuffix
+	httpClientMock.On("Post", url, mock.Anything, mock.Anything).Return(&http.Response{StatusCode: http.StatusCreated, Body: respBody}, nil)
+
+	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
+
+	handler.Handle(notificationRequest)
+
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 1)
+	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfoOnConnectionStatusInversion", 1)
+	writerMock.AssertNumberOfCalls(t, "SaveE2TInstance", 1)
+	httpClientMock.AssertNumberOfCalls(t, "Post", 1)
+}
 // TODO: extract to test_utils
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)

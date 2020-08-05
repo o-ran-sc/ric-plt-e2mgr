@@ -20,6 +20,7 @@
 package managers
 
 import (
+	"e2mgr/e2managererrors"
 	"e2mgr/logger"
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -39,7 +40,6 @@ type RanListManager interface {
 	UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error
 	RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error
 	GetNbIdentityList() []*entities.NbIdentity
-	UpdateRanState(nodebInfo *entities.NodebInfo) error // TODO: replace with UpdateNbIdentityConnectionStatus
 }
 
 func NewRanListManager(logger *logger.Logger, rnibDataService services.RNibDataService) RanListManager {
@@ -48,12 +48,6 @@ func NewRanListManager(logger *logger.Logger, rnibDataService services.RNibDataS
 		rnibDataService: rnibDataService,
 		nbIdentityMap:   make(map[string]*entities.NbIdentity),
 	}
-}
-
-// TODO: replace with UpdateNbIdentityConnectionStatus
-func (m *ranListManagerInstance) UpdateRanState(nodebInfo *entities.NodebInfo) error {
-	m.logger.Infof("#ranListManagerInstance.UpdateRanState - RAN name: %s - Updating state...", nodebInfo.RanName)
-	return nil
 }
 
 func (m *ranListManagerInstance) InitNbIdentityMap() error {
@@ -92,7 +86,30 @@ func (m *ranListManagerInstance) AddNbIdentity(nodeType entities.Node_Type, nbId
 }
 
 func (m *ranListManagerInstance) UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error {
-	//TODO: implement
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	m.logger.Infof("#ranListManagerInstance.UpdateNbIdentityConnectionStatus - RAN name: %s - updating nodeb identity connection status", ranName)
+
+	oldNbIdentity, ok := m.nbIdentityMap[ranName]
+	if !ok {
+		m.logger.Errorf("#ranListManagerInstance.UpdateNbIdentityConnectionStatus - RAN name: %s - nodeb identity not found in nbIdentityMap", ranName)
+		return e2managererrors.NewInternalError()
+	}
+
+	newNbIdentity := &entities.NbIdentity{
+		GlobalNbId:       oldNbIdentity.GlobalNbId,
+		InventoryName:    ranName,
+		ConnectionStatus: connectionStatus,
+	}
+	m.nbIdentityMap[ranName] = newNbIdentity
+
+	err := m.rnibDataService.UpdateNbIdentity(nodeType, oldNbIdentity, newNbIdentity)
+	if err != nil {
+		m.logger.Errorf("#ranListManagerInstance.UpdateNbIdentityConnectionStatus - RAN name: %s - Failed updating nodeb identity in DB. error: %s", ranName, err)
+		return err
+	}
+	m.logger.Infof("#ranListManagerInstance.UpdateNbIdentityConnectionStatus - RAN name: %s - Successfully updated nodeb identity", ranName)
 	return nil
 }
 

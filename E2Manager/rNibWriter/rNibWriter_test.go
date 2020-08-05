@@ -1251,72 +1251,130 @@ func TestAddEnbInventoryNameValidationFailure(t *testing.T) {
 	assert.Equal(t, "#utils.ValidateAndBuildNodeBNameKey - an empty inventory name received", rNibErr.Error())
 }
 
-//Integration tests
-//
-//func TestSaveEnbGnbInteg(t *testing.T){
-//	for i := 0; i<10; i++{
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		nb := entities.NodebInfo{}
-//		nb.NodeType = entities.Node_ENB
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb.Ip = "localhost"
-//		nb.Port = uint32(5656 + i)
-//		enb := entities.Enb{}
-//		cell1 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",111 + i), Pci:uint32(11 + i)}
-//		cell2 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",222 + i), Pci:uint32(22 + i)}
-//		cell3 := &entities.ServedCellInfo{CellId:fmt.Sprintf("%02x",333 + i), Pci:uint32(33 + i)}
-//		enb.ServedCells = []*entities.ServedCellInfo{cell1, cell2, cell3}
-//		nb.Configuration = &entities.NodebInfo_Enb{Enb:&enb}
-//		plmnId := 0x02f828
-//		nbId := 0x4a952a0a
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameEnb%d" ,i), GlobalNbId:&entities.GlobalNbId{RicId:fmt.Sprintf("%02x", plmnId + i), NbId:fmt.Sprintf("%02x", nbId + i)}}
-//		err := w.SaveNodeb(nbIdentity, &nb)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//
-//		nb1 := entities.NodebInfo{}
-//		nb1.NodeType = entities.Node_GNB
-//		nb1.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-//		nb1.Ip = "localhost"
-//		nb1.Port =  uint32(6565 + i)
-//		gnb := entities.Gnb{}
-//		gCell1 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",1111 + i), NrPci:uint32(1 + i)}}
-//		gCell2 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",2222 + i), NrPci:uint32(2 + i)}}
-//		gCell3 := &entities.ServedNRCell{ServedNrCellInformation:&entities.ServedNRCellInformation{CellId:fmt.Sprintf("%02x",3333 + i), NrPci:uint32(3 + i)}}
-//		gnb.ServedNrCells = []*entities.ServedNRCell{gCell1, gCell2, gCell3,}
-//		nb1.Configuration = &entities.NodebInfo_Gnb{Gnb:&gnb}
-//		nbIdentity = &entities.NbIdentity{InventoryName: fmt.Sprintf("nameGnb%d" ,i), GlobalNbId:&entities.GlobalNbId{RicId:fmt.Sprintf("%02x", plmnId - i), NbId:fmt.Sprintf("%02x", nbId - i)}}
-//		err = w.SaveNodeb(nbIdentity, &nb1)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//	}
-//}
-//
-//func TestSaveNbRanNamesInteg(t *testing.T){
-//	for i := 0; i<10; i++{
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		nb := entities.NodebInfo{}
-//		nb.ConnectionStatus = entities.ConnectionStatus_CONNECTING
-//		nb.Ip = "localhost"
-//		nb.Port = uint32(5656 + i)
-//		nbIdentity := &entities.NbIdentity{InventoryName: fmt.Sprintf("nameOnly%d" ,i)}
-//		err := w.SaveNodeb(nbIdentity, &nb)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveEnbInteg - Failed to save NodeB entity. Error: %v", err)
-//		}
-//	}
-//}
-//
-//func TestSaveRanLoadInformationInteg(t *testing.T){
-//		Init("e2Manager", 1)
-//		w := GetRNibWriter()
-//		ranLoadInformation := generateRanLoadInformation()
-//		err := w.SaveRanLoadInformation("ran_integ", ranLoadInformation)
-//		if err != nil{
-//			t.Errorf("#rNibWriter_test.TestSaveRanLoadInformationInteg - Failed to save RanLoadInformation entity. Error: %v", err)
-//		}
-//}
+func TestUpdateNbIdentityOneMemberSuccess(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	proto, nbIdentity := createNbIdentityProto(t, "ran1", "plmnId1", "nbId1", entities.ConnectionStatus_DISCONNECTED)
+	val := []interface{}{proto}
+
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), val).Return(nil)
+
+	protoAdd, nbIdentityAdd := createNbIdentityProto(t, "ran1_add", "plmnId1_add", "nbId1_add", entities.ConnectionStatus_CONNECTED)
+	sdlInstanceMock.On("AddMember", entities.Node_ENB.String(), []interface{}{protoAdd}).Return(nil)
+
+	newNbIdIdentities := []*entities.NbIdentity{nbIdentityAdd}
+	oldNbIdIdentities := []*entities.NbIdentity{nbIdentity}
+
+	rNibErr := w.UpdateNbIdentities(entities.Node_ENB, oldNbIdIdentities, newNbIdIdentities)
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestUpdateNbIdentitySuccess(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	var nbIdIdentitiesProtoToRemove []interface{}
+	protoRan1, _ := createNbIdentityProto(t, "ran1", "plmnId1", "nbId1", entities.ConnectionStatus_DISCONNECTED)
+	protoRan2, _ := createNbIdentityProto(t, "ran2", "plmnId2", "nbId2", entities.ConnectionStatus_DISCONNECTED)
+	nbIdIdentitiesProtoToRemove = append(nbIdIdentitiesProtoToRemove, protoRan1)
+	nbIdIdentitiesProtoToRemove = append(nbIdIdentitiesProtoToRemove, protoRan2)
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), nbIdIdentitiesProtoToRemove).Return(nil)
+
+	var nbIdIdentitiesProtoToAdd []interface{}
+	protoRan1Add, _ := createNbIdentityProto(t, "ran1_add", "plmnId1_add", "nbId1_add", entities.ConnectionStatus_CONNECTED)
+	protoRan2Add, _ := createNbIdentityProto(t, "ran2_add", "plmnId2_add", "nbId2_add", entities.ConnectionStatus_CONNECTED)
+	nbIdIdentitiesProtoToAdd = append(nbIdIdentitiesProtoToAdd, protoRan1Add)
+	nbIdIdentitiesProtoToAdd = append(nbIdIdentitiesProtoToAdd, protoRan2Add)
+	sdlInstanceMock.On("AddMember", entities.Node_ENB.String(), nbIdIdentitiesProtoToAdd).Return(nil)
+
+	var newNbIdIdentities []*entities.NbIdentity
+	firstNewNbIdIdentity := &entities.NbIdentity{InventoryName: "ran1_add", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1_add", NbId: "nbId1_add"}}
+	secondNewNbIdIdentity := &entities.NbIdentity{InventoryName: "ran2_add", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2_add", NbId: "nbId2_add"}}
+	newNbIdIdentities = append(newNbIdIdentities, firstNewNbIdIdentity)
+	newNbIdIdentities = append(newNbIdIdentities, secondNewNbIdIdentity)
+
+	var oldNbIdIdentities []*entities.NbIdentity
+	firstOldNbIdIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	secondOldNbIdIdentity := &entities.NbIdentity{InventoryName: "ran2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdIdentities = append(oldNbIdIdentities, firstOldNbIdIdentity)
+	oldNbIdIdentities = append(oldNbIdIdentities, secondOldNbIdIdentity)
+
+	rNibErr := w.UpdateNbIdentities(entities.Node_ENB, oldNbIdIdentities, newNbIdIdentities)
+	assert.Nil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestUpdateNbIdentityRemoveFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+
+	var nbIdIdentitiesProtoToRemove []interface{}
+	protoRan1, _ := createNbIdentityProto(t, "ran1", "plmnId1", "nbId1", entities.ConnectionStatus_DISCONNECTED)
+	nbIdIdentitiesProtoToRemove = append(nbIdIdentitiesProtoToRemove, protoRan1)
+	protoRan2, _ := createNbIdentityProto(t, "ran2", "plmnId2", "nbId2", entities.ConnectionStatus_DISCONNECTED)
+	nbIdIdentitiesProtoToRemove = append(nbIdIdentitiesProtoToRemove, protoRan2)
+
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), nbIdIdentitiesProtoToRemove).Return(fmt.Errorf("for test"))
+
+	var oldNbIdIdentities []*entities.NbIdentity
+	firstOldNbIdIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	secondOldNbIdIdentity := &entities.NbIdentity{InventoryName: "ran2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdIdentities = append(oldNbIdIdentities, firstOldNbIdIdentity)
+	oldNbIdIdentities = append(oldNbIdIdentities, secondOldNbIdIdentity)
+
+	var newNbIdIdentities []*entities.NbIdentity
+
+	rNibErr := w.UpdateNbIdentities(entities.Node_ENB, oldNbIdIdentities, newNbIdIdentities)
+	assert.NotNil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestUpdateNbIdentityAddFailure(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#TestRemoveNbIdentitySuccess - failed to Marshal NbIdentity")
+	}
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), []interface{}{nbIdData}).Return(fmt.Errorf("for test"))
+
+	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
+	assert.NotNil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestUpdateNbIdentityNoNbIdentityToRemove(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#TestRemoveNbIdentitySuccess - failed to Marshal NbIdentity")
+	}
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), []interface{}{nbIdData}).Return(fmt.Errorf("for test"))
+
+	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
+	assert.NotNil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func TestUpdateNbIdentityNoNbIdentityToAdd(t *testing.T) {
+	w, sdlInstanceMock := initSdlInstanceMock(namespace)
+	nbIdentity := &entities.NbIdentity{InventoryName: "ran1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#TestRemoveNbIdentitySuccess - failed to Marshal NbIdentity")
+	}
+	sdlInstanceMock.On("RemoveMember", entities.Node_ENB.String(), []interface{}{nbIdData}).Return(fmt.Errorf("for test"))
+
+	rNibErr := w.RemoveNbIdentity(entities.Node_ENB, nbIdentity)
+	assert.NotNil(t, rNibErr)
+	sdlInstanceMock.AssertExpectations(t)
+}
+
+func createNbIdentityProto(t *testing.T, ranName string, plmnId string, nbId string, connectionStatus entities.ConnectionStatus) ([]byte, *entities.NbIdentity){
+	nbIdentity := &entities.NbIdentity{InventoryName: ranName, ConnectionStatus: connectionStatus, GlobalNbId: &entities.GlobalNbId{PlmnId: plmnId, NbId: nbId}}
+	nbIdData, err := proto.Marshal(nbIdentity)
+	if err != nil {
+		t.Errorf("#createNbIdentityProto - failed to Marshal NbIdentity")
+	}
+	return nbIdData, nbIdentity
+}

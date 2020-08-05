@@ -107,7 +107,8 @@ func TestGetE2TAddressesFailure(t *testing.T) {
 func TestOneRanGetE2TAddressesEmptyList(t *testing.T) {
 	h, readerMock, writerMock, _, _, ranListManager := setupDeleteAllRequestHandlerTest(t)
 
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	nbIdentityList := []*entities.NbIdentity{oldNbIdentity}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	err := ranListManager.InitNbIdentityMap()
@@ -116,10 +117,13 @@ func TestOneRanGetE2TAddressesEmptyList(t *testing.T) {
 	}
 
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
-	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb1).Return(nil)
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
+	
 	_, err = h.Handle(nil)
 	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
@@ -130,18 +134,23 @@ func TestTwoRansGetE2TAddressesEmptyListOneGetNodebFailure(t *testing.T) {
 	h, readerMock, writerMock, _, _, ranListManager := setupDeleteAllRequestHandlerTest(t)
 
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}, {InventoryName: "RanName_2"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity1 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	oldNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdentityList := []*entities.NbIdentity{oldNbIdentity1, oldNbIdentity2}
+	readerMock.On("GetListNodebIds").Return(oldNbIdentityList, nil)
 
 	_ = ranListManager.InitNbIdentityMap()
 
 	var err error
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, err)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
 	writerMock.On("UpdateNodebInfo", &updatedNb1).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var nb2 *entities.NodebInfo
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, common.NewInternalError(errors.New("error")))
@@ -157,21 +166,29 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 	h, readerMock, writerMock, _, _, ranListManager := setupDeleteAllRequestHandlerTest(t)
 
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}, {InventoryName: "RanName_2"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity1 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	oldNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdentityList := []*entities.NbIdentity{oldNbIdentity1, oldNbIdentity2}
+	readerMock.On("GetListNodebIds").Return(oldNbIdentityList, nil)
 
 	_ = ranListManager.InitNbIdentityMap()
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 	writerMock.On("UpdateNodebInfo", nb2).Return(nil)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(common.NewInternalError(errors.New("error")))
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
+
+	newNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2}).Return(nil)
 
 	_, err := h.Handle(nil)
 
@@ -186,18 +203,23 @@ func TestTwoRansGetE2TAddressesEmptyListOneUpdateNodebInfoFailure(t *testing.T) 
 	h, readerMock, writerMock, _, _, ranListManager := setupDeleteAllRequestHandlerTest(t)
 
 	readerMock.On("GetE2TAddresses").Return([]string{}, nil)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}, {InventoryName: "RanName_2"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity1 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	oldNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdentityList := []*entities.NbIdentity{oldNbIdentity1, oldNbIdentity2}
+	readerMock.On("GetListNodebIds").Return(oldNbIdentityList, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
-	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb1).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
@@ -251,19 +273,22 @@ func TestOneRanShutDown(t *testing.T) {
 	e2tAddresses := []string{}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
-	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", nb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	readerMock.On("GetE2TAddresses").Return([]string{E2TAddress}, nil)
 
@@ -280,23 +305,26 @@ func TestOneRanTryShuttingDownSucceedsClearFails(t *testing.T) {
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
-	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	readerMock.On("GetE2TAddresses").Return([]string{E2TAddress}, nil)
 	readerMock.On("GetE2TInstances", []string{E2TAddress}).Return([]*entities.E2TInstance{}, common.NewInternalError(errors.New("error")))
@@ -312,23 +340,26 @@ func TestOneRanTryShuttingDownUpdateNodebError(t *testing.T) {
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
-	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(common.NewInternalError(errors.New("error")))
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	_, err = h.Handle(nil)
 
@@ -343,22 +374,22 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSendFails(t *testing.T) {
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED, AssociatedE2TInstanceAddress: E2TAddress, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
 	updatedNb1 := *nb1
 	updatedNb1.ConnectionStatus = entities.ConnectionStatus_SHUTTING_DOWN
 	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNb1, "RanName_1_DISCONNECTED").Return(nil)
 
-	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	nodeb1NotAssociated := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", nodeb1NotAssociated).Return(nil)
 
 	readerMock.On("GetE2TAddresses").Return([]string{E2TAddress}, nil)
@@ -367,6 +398,9 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSendFails(t *testing.T) {
 	updatedE2tInstance := e2tInstance
 	updatedE2tInstance.AssociatedRanList = []string{}
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
 	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
@@ -433,18 +467,18 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, AssociatedE2TInstanceAddress: E2TAddress}
+	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, AssociatedE2TInstanceAddress: E2TAddress, NodeType: entities.Node_GNB}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
-	updatedNb1 := *nb1 //&entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, AssociatedE2TInstanceAddress: E2TAddress}
+	updatedNb1 := *nb1
 	writerMock.On("UpdateNodebInfo", &updatedNb1).Return(nil)
 
 	nodeb1NotAssociated := *nb1
@@ -459,11 +493,14 @@ func TestOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	updatedE2tInstance.AssociatedRanList = []string{}
 	writerMock.On("SaveE2TInstance", &updatedE2tInstance).Return(nil)
 
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
+
 	rmrMessage := models.RmrMessage{MsgType: rmrCgo.RIC_SCTP_CLEAR_ALL}
 	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
 
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 	readerMock.On("GetNodeb", "RanName_1").Return(updatedNb1, nil)
 
 	updatedNb2 := *nb1 //&entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN,}
@@ -484,15 +521,16 @@ func testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	e2tAddresses := []string{E2TAddress}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, !partial)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}}
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+
+	oldNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 
 	err := ranListManager.InitNbIdentityMap()
 	if err != nil {
 		t.Errorf("Error cannot init identity")
 	}
 
-	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb1).Return(nil)
 	readerMock.On("GetE2TAddresses").Return([]string{E2TAddress}, nil)
 	e2tInstance := entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{"RanName_1"}}
@@ -505,10 +543,17 @@ func testOneRanTryShuttingDownSucceedsClearSucceedsRmrSucceedsRanStatusIsShuttin
 	mbuf := rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 	rmrMessengerMock.On("SendMsg", mbuf, true).Return(mbuf, nil)
 
-	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
+	readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{oldNbIdentity}, nil)
 	readerMock.On("GetNodeb", "RanName_1").Return(updatedNb1, nil)
-	updatedNb2 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
+	updatedNb2 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb2).Return(nil)
+
+	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
+
+	newNbIdentityShutDown := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentityShutDown}).Return(nil)
+
 	_, err = h.Handle(nil)
 	assert.Nil(t, err)
 	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
@@ -530,7 +575,14 @@ func TestSuccessTwoE2TInstancesSixRans(t *testing.T) {
 	e2tAddresses := []string{E2TAddress, E2TAddress2}
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
 	mockHttpClientDissociateAllRans(httpClientMock, e2tAddresses, true)
-	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1"}, {InventoryName: "RanName_2"}, {InventoryName: "RanName_3"}, {InventoryName: "RanName_4"}, {InventoryName: "RanName_5"}, {InventoryName: "RanName_6"}}
+
+	oldNbIdentity1 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	oldNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	oldNbIdentity3 := &entities.NbIdentity{InventoryName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId3", NbId: "nbId3"}}
+	oldNbIdentity4 := &entities.NbIdentity{InventoryName: "RanName_4", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId4", NbId: "nbId4"}}
+	oldNbIdentity5 := &entities.NbIdentity{InventoryName: "RanName_5", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId5", NbId: "nbId5"}}
+	oldNbIdentity6 := &entities.NbIdentity{InventoryName: "RanName_6", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId6", NbId: "nbId6"}}
+	nbIdentityList := []*entities.NbIdentity{oldNbIdentity1, oldNbIdentity2, oldNbIdentity3, oldNbIdentity4, oldNbIdentity5, oldNbIdentity6}
 	readerMock.On("GetListNodebIds").Return(nbIdentityList, nil)
 
 	err := ranListManager.InitNbIdentityMap()
@@ -538,17 +590,17 @@ func TestSuccessTwoE2TInstancesSixRans(t *testing.T) {
 		t.Errorf("Error cannot init identity")
 	}
 
-	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb1).Return(nil)
-	updatedNb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb2).Return(nil)
-	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb3 := &entities.NodebInfo{RanName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb3).Return(nil)
-	updatedNb4 := &entities.NodebInfo{RanName: "RanName_4", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb4 := &entities.NodebInfo{RanName: "RanName_4", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb4).Return(nil)
-	updatedNb5 := &entities.NodebInfo{RanName: "RanName_5", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb5 := &entities.NodebInfo{RanName: "RanName_5", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb5).Return(nil)
-	updatedNb6 := &entities.NodebInfo{RanName: "RanName_6", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
+	updatedNb6 := &entities.NodebInfo{RanName: "RanName_6", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, NodeType: entities.Node_GNB}
 	writerMock.On("UpdateNodebInfo", updatedNb6).Return(nil)
 
 	readerMock.On("GetE2TAddresses").Return(e2tAddresses, nil)
@@ -592,6 +644,33 @@ func TestSuccessTwoE2TInstancesSixRans(t *testing.T) {
 	updatedNb6AfterTimer := *updatedNb6
 	updatedNb6AfterTimer.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
 	writerMock.On("UpdateNodebInfo", &updatedNb6AfterTimer).Return(nil)
+
+	newNbIdentity1 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity1}).Return(nil)
+	newNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2}).Return(nil)
+	newNbIdentity3 := &entities.NbIdentity{InventoryName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId3", NbId: "nbId3"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity3}, []*entities.NbIdentity{newNbIdentity3}).Return(nil)
+	newNbIdentity4 := &entities.NbIdentity{InventoryName: "RanName_4", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId4", NbId: "nbId4"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity4}, []*entities.NbIdentity{newNbIdentity4}).Return(nil)
+	newNbIdentity5 := &entities.NbIdentity{InventoryName: "RanName_5", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId5", NbId: "nbId5"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity5}, []*entities.NbIdentity{newNbIdentity5}).Return(nil)
+	newNbIdentity6 := &entities.NbIdentity{InventoryName: "RanName_6", ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId6", NbId: "nbId6"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity6}, []*entities.NbIdentity{newNbIdentity6}).Return(nil)
+
+	newNbIdentity1ShutDown := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity1ShutDown}).Return(nil)
+	newNbIdentity2ShutDown := &entities.NbIdentity{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2ShutDown}).Return(nil)
+	newNbIdentity3ShutDown := &entities.NbIdentity{InventoryName: "RanName_3", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId3", NbId: "nbId3"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity3}, []*entities.NbIdentity{newNbIdentity3ShutDown}).Return(nil)
+	newNbIdentity4ShutDown := &entities.NbIdentity{InventoryName: "RanName_4", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId4", NbId: "nbId4"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity4}, []*entities.NbIdentity{newNbIdentity4ShutDown}).Return(nil)
+	newNbIdentity5ShutDown := &entities.NbIdentity{InventoryName: "RanName_5", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId5", NbId: "nbId5"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity5}, []*entities.NbIdentity{newNbIdentity5ShutDown}).Return(nil)
+	newNbIdentity6ShutDown := &entities.NbIdentity{InventoryName: "RanName_6", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId6", NbId: "nbId6"}}
+	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity6}, []*entities.NbIdentity{newNbIdentity6ShutDown}).Return(nil)
+
 	_, err = h.Handle(nil)
 	assert.Nil(t, err)
 	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
