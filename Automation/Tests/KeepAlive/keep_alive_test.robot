@@ -48,10 +48,6 @@ Get request gnb
     Integer  response body gnb ranFunctions 2 ranFunctionRevision  1
 
 
-prepare logs for tests
-    Remove log files
-    Save logs
-
 Verify RAN is associated with E2T instance
    ${result}    e2mdbscripts.verify_ran_is_associated_with_e2t_instance      ${ranname}    ${e2t_alpha_address}
    Should Be True    ${result}
