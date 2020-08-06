@@ -187,7 +187,7 @@ func TestUpdateNodebInfoOnConnectionStatusInversionFailure(t *testing.T) {
 	newNbIdentity := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
-	newNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
+	newNbIdentity2 := &entities.NbIdentity{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
 	writerMock.On("UpdateNbIdentities", updatedNb1.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2}).Return(nil)
 
 	_, err := h.Handle(nil)
