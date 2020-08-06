@@ -187,7 +187,7 @@ func (w *rNibDataService) GetNodeb(ranName string) (*entities.NodebInfo, error) 
 	})
 
 	if err == nil {
-		w.logger.Infof("#RnibDataService.GetNodeb - RAN name: %s, connection status: %s, associated E2T: %s", nodeb.RanName, nodeb.ConnectionStatus, nodeb.AssociatedE2TInstanceAddress)
+		w.logger.Infof("#RnibDataService.GetNodeb - RAN name: %s, connection status: %s, associated E2T: %s, setup from network: %t", nodeb.RanName, nodeb.ConnectionStatus, nodeb.AssociatedE2TInstanceAddress, nodeb.SetupFromNetwork)
 	}
 
 	return nodeb, err

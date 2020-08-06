@@ -52,7 +52,6 @@ func (h *UpdateEnbManager) Validate(request models.Request) error {
 		h.logger.Errorf("#UpdateEnbManager.Validate - validation failure: %s is a mandatory field and cannot be empty", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -112,9 +111,17 @@ func (h *UpdateEnbManager) validateRequestBody(request *models.UpdateEnbRequest)
 		return err
 	}
 
-	if h.nodebValidator.IsNgEnbType(request.Enb.GetEnbType()) {
-		return errors.New("enb.enbType")
-	}
-
 	return nil
 }
+
+func (h *UpdateEnbManager) ValidateNodeb(nodeb *entities.NodebInfo) error{
+
+	enbType := nodeb.GetEnb().GetEnbType()
+
+	if h.nodebValidator.IsNgEnbType(enbType) {
+		h.logger.Errorf("#UpdateEnbManager.ValidateNodeb - validation failure: current enb type is not supported. enb type: %s", enbType)
+		return errors.New("")
+	}
+	return nil
+}
+

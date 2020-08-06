@@ -65,6 +65,11 @@ func (h *UpdateNodebRequestHandler) Handle(request models.Request) (models.IResp
 		return nil, e2managererrors.NewResourceNotFoundError()
 	}
 
+	err = h.updateNodebManager.ValidateNodeb(nodebInfo)
+	if err != nil {
+		return nil, e2managererrors.NewRequestValidationError()
+	}
+
 	err = h.updateNodebManager.RemoveNodebCells(nodebInfo)
 	if err != nil {
 		return nil, err
