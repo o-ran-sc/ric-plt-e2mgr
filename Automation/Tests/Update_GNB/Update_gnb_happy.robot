@@ -56,7 +56,7 @@ prepare logs for tests
     Save logs
 
 E2M Logs - Verify Update
-    Sleep 2s
+    Sleep  2s
     ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${update_gnb_log_message}
     Should Be Equal As Strings    ${result}      True
 
