@@ -1167,14 +1167,25 @@ func TestControllerUpdateEnbNgEnbFailure(t *testing.T) {
 
 	requestBody := map[string]interface{}{
 		"enb": map[string]interface{}{
-			"enbType": 5,
+			"enbType": 3,
 			"servedCells": []interface{}{
 				buildServedCell(""),
 			}},
 	}
 
+	oldServedCells := generateServedCells("whatever1", "whatever2")
+
 	context := controllerUpdateEnbTestContext{
-		getNodebInfoResult:   nil,
+		getNodebInfoResult:  &getNodebInfoResult{
+		nodebInfo: &entities.NodebInfo{
+		RanName:                      RanName,
+		ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+		AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+		NodeType:                     entities.Node_ENB,
+		Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_NG_ENB}},
+	},
+		rnibError: nil,
+	},
 		requestBody:          requestBody,
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,

@@ -20,5 +20,28 @@
 #   platform project (RICP).
 #
 
+
 *** Settings ***
-Documentation    Update_ENB
+Variables  ../Scripts/variables.py
+Resource   ../Resource/resource.robot
+Resource   ../Resource/Keywords.robot
+Library     OperatingSystem
+Library     ../Scripts/log_scripts.py
+Library     REST        ${url}
+
+
+*** Variables ***
+${url}  ${e2mgr_address}
+
+*** Test Cases ***
+[Setup]
+    Prepare Enviorment  ${False}
+
+Add eNB
+    Sleep  2s
+    Add eNb Request    ${add_enb_type_ng_request_body}
+    Integer  response status  400
+
+prepare logs for tests
+    Remove log files
+    Save logs

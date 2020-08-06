@@ -40,16 +40,18 @@ Update Gnb request
     PUT    ${update_gnb_url}   ${update_gnb_body}
 
 Add eNb Request
+    [Arguments]    ${request}=${add_enb_request_body}
     Sleep  1s
-    POST    ${enb_url}   ${add_enb_request_body}
+    POST    ${enb_url}   ${request}
 
 Delete eNb Request
     Sleep  1s
     DELETE    ${enb_url}/${enb_ran_name}
 
 Update eNb Request
+    [Arguments]    ${request}=${update_enb_request_body}
     Sleep  1s
-    PUT    ${enb_url}/${enb_ran_name}   ${update_enb_request_body}
+    PUT    ${enb_url}/${enb_ran_name}   ${request}
 
 Set General Configuration request
     Sleep  1s

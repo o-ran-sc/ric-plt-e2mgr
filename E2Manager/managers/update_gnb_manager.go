@@ -53,6 +53,10 @@ func (h *UpdateGnbManager) Validate(request models.Request) error {
 	return nil
 }
 
+func (h *UpdateGnbManager) ValidateNodeb(nodeb *entities.NodebInfo) error{
+	return nil
+}
+
 func (h *UpdateGnbManager) RemoveNodebCells(nodeb *entities.NodebInfo) error {
 
 	if nodeb.NodeType != entities.Node_GNB {

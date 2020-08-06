@@ -40,47 +40,25 @@ ${url}  ${e2mgr_address}
     Start Redis Monitor
     Prepare Enviorment  ${False}
 
-Add eNB
-    Sleep  2s
-    Add eNb Request
-
-Delete eNb
-    Sleep    2s
-    Delete eNb Request
-    Integer  response status  204
-
-Get eNB
-    Sleep    2s
-    Get Request nodeb    ${enb_ran_name}
-    Integer  response status  404
-
-prepare logs for tests
-    Remove log files
-    Save logs
-
-E2M Logs - Verify Deletion
-    ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${delete_enb_log_message}
-    Should Be Equal As Strings    ${result}      True
-
-Redis Monitor Logs - Verify Publish
-    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${enb_ran_name}    DELETED
-
 Send eNB setup request via e2adapter
     Send eNB Setup Request
 
-Delete eNb
+Update eNb
     Sleep    5s
-    Delete eNb Request
-    Integer  response status  400
-
-Get eNB
-    Sleep    2s
-    Get Request nodeb    ${enb_ran_name}
+    Update eNb Request
     Integer  response status  200
+    String   response body enb enbType    SHORT_MACRO_ENB
 
 prepare logs for tests
     Remove log files
     Save logs
+
+E2M Logs - Verify Update
+    ${result}    log_scripts.verify_log_message   ${EXECDIR}/${e2mgr_log_filename}  ${update_enb_log_message}
+    Should Be Equal As Strings    ${result}      True
+
+Redis Monitor Logs - Verify Publish
+    Redis Monitor Logs - Verify Publish To Manipulation Channel    ${enb_ran_name}    UPDATED
 
 [Teardown]
     Stop Redis Monitor
