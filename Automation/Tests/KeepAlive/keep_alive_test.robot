@@ -60,7 +60,7 @@ Prepare logs
     Save logs
 
 Verify RAN is not associated with E2T instance
-    Sleep  6m
+    Sleep  8m
     Get Request nodeb
     Integer  response status  200
     String   response body ranName    ${ranname}
