@@ -173,7 +173,7 @@ Start e2adapter
 Stop e2adapter
      Log to Console  Stopping e2adapter
      Run And Return Rc And Output    ${stop_e2adapter}
-     Sleep  5s
+     Sleep  90s
 
 Restart e2adapter
     Log to Console  Restarting e2adapter
