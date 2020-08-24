@@ -160,9 +160,7 @@ func generateServedNrCells(cellIds ...string) []*entities.ServedNRCell {
 		servedNrCells = append(servedNrCells, &entities.ServedNRCell{ServedNrCellInformation: &entities.ServedNRCellInformation{
 			CellId: v,
 			ChoiceNrMode: &entities.ServedNRCellInformation_ChoiceNRMode{
-				Fdd: &entities.ServedNRCellInformation_ChoiceNRMode_FddInfo{
-
-				},
+				Fdd: &entities.ServedNRCellInformation_ChoiceNRMode_FddInfo{},
 			},
 			NrMode:      entities.Nr_FDD,
 			NrPci:       5,
@@ -631,8 +629,7 @@ func TestControllerUpdateGnbEmptyServedNrCells(t *testing.T) {
 	context := controllerUpdateGnbTestContext{
 		getNodebInfoResult: nil,
 		requestBody: map[string]interface{}{
-			"servedNrCells": []interface{}{
-			},
+			"servedNrCells": []interface{}{},
 		},
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
@@ -1176,16 +1173,16 @@ func TestControllerUpdateEnbNgEnbFailure(t *testing.T) {
 	oldServedCells := generateServedCells("whatever1", "whatever2")
 
 	context := controllerUpdateEnbTestContext{
-		getNodebInfoResult:  &getNodebInfoResult{
-		nodebInfo: &entities.NodebInfo{
-		RanName:                      RanName,
-		ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
-		AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
-		NodeType:                     entities.Node_ENB,
-		Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_NG_ENB}},
-	},
-		rnibError: nil,
-	},
+		getNodebInfoResult: &getNodebInfoResult{
+			nodebInfo: &entities.NodebInfo{
+				RanName:                      RanName,
+				ConnectionStatus:             entities.ConnectionStatus_CONNECTED,
+				AssociatedE2TInstanceAddress: AssociatedE2TInstanceAddress,
+				NodeType:                     entities.Node_ENB,
+				Configuration:                &entities.NodebInfo_Enb{Enb: &entities.Enb{ServedCells: oldServedCells, EnbType: entities.EnbType_MACRO_NG_ENB}},
+			},
+			rnibError: nil,
+		},
 		requestBody:          requestBody,
 		expectedStatusCode:   http.StatusBadRequest,
 		expectedJsonResponse: ValidationFailureJson,
@@ -1806,6 +1803,10 @@ func TestHandleErrorResponse(t *testing.T) {
 	writer = httptest.NewRecorder()
 	controller.handleErrorResponse(e2managererrors.NewRmrError(), writer)
 	assert.Equal(t, http.StatusInternalServerError, writer.Result().StatusCode)
+
+	writer = httptest.NewRecorder()
+	controller.handleErrorResponse(e2managererrors.NewNoConnectedRanError(), writer)
+	assert.Equal(t, http.StatusNotFound, writer.Result().StatusCode)
 
 	writer = httptest.NewRecorder()
 	controller.handleErrorResponse(e2managererrors.NewResourceNotFoundError(), writer)

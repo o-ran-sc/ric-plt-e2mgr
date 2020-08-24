@@ -93,3 +93,10 @@ func (c *NodebControllerMock) SetGeneralConfiguration(writer http.ResponseWriter
 
 	c.Called()
 }
+
+func (c *NodebControllerMock) HealthCheckRequest(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	c.Called()
+}

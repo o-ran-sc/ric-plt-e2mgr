@@ -43,6 +43,7 @@ const (
 	UpdateEnbRequest               IncomingRequest = "UpdateEnbRequest"
 	AddEnbRequest                  IncomingRequest = "AddEnbRequest"
 	DeleteEnbRequest               IncomingRequest = "DeleteEnbRequest"
+	HealthCheckRequest             IncomingRequest = "HealthCheckRequest"
 )
 
 type IncomingRequestHandlerProvider struct {
@@ -60,7 +61,7 @@ func NewIncomingRequestHandlerProvider(logger *logger.Logger, rmrSender *rmrsend
 	}
 }
 
-func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, nodebValidator *managers.NodebValidator, updateEnbManager managers.IUpdateNodebManager, updateGnbManager managers.IUpdateNodebManager,  ranListManager managers.RanListManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
+func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender, config *configuration.Configuration, rNibDataService services.RNibDataService, e2tInstancesManager managers.IE2TInstancesManager, rmClient clients.IRoutingManagerClient, ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, nodebValidator *managers.NodebValidator, updateEnbManager managers.IUpdateNodebManager, updateGnbManager managers.IUpdateNodebManager, ranListManager managers.RanListManager) map[IncomingRequest]httpmsghandlers.RequestHandler {
 
 	return map[IncomingRequest]httpmsghandlers.RequestHandler{
 		ShutdownRequest:                httpmsghandlers.NewDeleteAllRequestHandler(logger, rmrSender, config, rNibDataService, e2tInstancesManager, rmClient, ranConnectStatusChangeManager, ranListManager),
@@ -73,6 +74,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		UpdateEnbRequest:               httpmsghandlers.NewUpdateNodebRequestHandler(logger, rNibDataService, updateEnbManager),
 		AddEnbRequest:                  httpmsghandlers.NewAddEnbRequestHandler(logger, rNibDataService, nodebValidator, ranListManager),
 		DeleteEnbRequest:               httpmsghandlers.NewDeleteEnbRequestHandler(logger, rNibDataService, ranListManager),
+		HealthCheckRequest:             httpmsghandlers.NewHealthCheckRequestHandler(logger, rNibDataService, ranListManager, rmrSender),
 	}
 }
 
