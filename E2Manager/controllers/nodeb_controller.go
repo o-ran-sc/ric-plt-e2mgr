@@ -53,6 +53,7 @@ type INodebController interface {
 	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 	AddEnb(writer http.ResponseWriter, r *http.Request)
 	DeleteEnb(writer http.ResponseWriter, r *http.Request)
+	HealthCheckRequest(writer http.ResponseWriter, r *http.Request)
 }
 
 type NodebController struct {
@@ -188,6 +189,19 @@ func (c *NodebController) X2Reset(writer http.ResponseWriter, r *http.Request) {
 	}
 	request.RanName = ranName
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.ResetRequest, request, false, http.StatusNoContent)
+}
+
+func (c *NodebController) HealthCheckRequest(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.HealthCheckRequest - request: %v", c.prettifyRequest(r))
+
+	request := models.HealthCheckRequest{}
+
+	if err := c.extractJsonBody(r, &request); err != nil {
+		c.handleErrorResponse(err, writer)
+		return
+	}
+
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.HealthCheckRequest, request, true, http.StatusNoContent)
 }
 
 func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message, writer http.ResponseWriter) bool {
@@ -342,6 +356,10 @@ func (c *NodebController) handleErrorResponse(err error, writer http.ResponseWri
 			e2Error, _ := err.(*e2managererrors.NodebExistsError)
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
 			httpError = http.StatusBadRequest
+		case *e2managererrors.NoConnectedRanError:
+			e2Error, _ := err.(*e2managererrors.NoConnectedRanError)
+			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}
+			httpError = http.StatusNotFound
 		default:
 			e2Error := e2managererrors.NewInternalError()
 			errorResponseDetails = models.ErrorResponse{Code: e2Error.Code, Message: e2Error.Message}

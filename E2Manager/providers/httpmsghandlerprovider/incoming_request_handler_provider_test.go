@@ -93,6 +93,18 @@ func TestSetGeneralConfigurationHandler(t *testing.T) {
 	assert.True(t, ok)
 }
 
+func TestHealthCheckRequest(t *testing.T) {
+	provider := setupTest(t)
+	handler, err := provider.GetHandler(HealthCheckRequest)
+
+	assert.NotNil(t, provider)
+	assert.Nil(t, err)
+
+	_, ok := handler.(*httpmsghandlers.HealthCheckRequestHandler)
+
+	assert.True(t, ok)
+}
+
 func TestGetShutdownHandlerFailure(t *testing.T) {
 	provider := setupTest(t)
 	_, actual := provider.GetHandler("test")
