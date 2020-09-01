@@ -59,3 +59,19 @@ func (m *RanListManagerMock) GetNbIdentityList() []*entities.NbIdentity {
 	args := m.Called()
 	return args.Get(0).([]*entities.NbIdentity)
 }
+
+func (m *RanListManagerMock) UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
+	args := m.Called(oldRRanName)
+	return args.Get(0).(*entities.NbIdentity), args.Get(1).(*entities.NbIdentity)
+}
+
+func (m *RanListManagerMock) UpdateHealthcheckTimeStampReceived(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
+	args := m.Called(oldRRanName)
+	return args.Get(0).(*entities.NbIdentity), args.Get(1).(*entities.NbIdentity)
+}
+
+func (m *RanListManagerMock) UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error{
+	args:= m.Called(nodeType, oldNbIdentities, newNbIdentities)
+	return args.Error(0)
+}
+

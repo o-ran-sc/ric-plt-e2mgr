@@ -25,6 +25,7 @@ import (
 	"e2mgr/services"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"sync"
+	"time"
 )
 
 type ranListManagerInstance struct {
@@ -40,6 +41,9 @@ type RanListManager interface {
 	UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error
 	RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error
 	GetNbIdentityList() []*entities.NbIdentity
+	UpdateHealthcheckTimeStampReceived(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity)
+	UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity)
+	UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error
 }
 
 func NewRanListManager(logger *logger.Logger, rnibDataService services.RNibDataService) RanListManager {
@@ -101,6 +105,8 @@ func (m *ranListManagerInstance) UpdateNbIdentityConnectionStatus(nodeType entit
 		GlobalNbId:       oldNbIdentity.GlobalNbId,
 		InventoryName:    ranName,
 		ConnectionStatus: connectionStatus,
+		HealthCheckTimestampSent: oldNbIdentity.HealthCheckTimestampSent,
+		HealthCheckTimestampReceived: oldNbIdentity.HealthCheckTimestampReceived,
 	}
 	m.nbIdentityMap[ranName] = newNbIdentity
 
@@ -146,4 +152,45 @@ func (m *ranListManagerInstance) GetNbIdentityList() []*entities.NbIdentity {
 	m.logger.Infof("#ranListManagerInstance.GetNbIdentityList - %d identity returned", len(nbIds))
 
 	return nbIds
+}
+
+func (m *ranListManagerInstance) UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
+	currentTimeStamp := time.Now().UnixNano()
+	oldNbIdentity := m.nbIdentityMap[oldRRanName]
+
+	newNbIdentity := &entities.NbIdentity{
+		GlobalNbId:       oldNbIdentity.GlobalNbId,
+		InventoryName:    oldNbIdentity.InventoryName,
+		ConnectionStatus: oldNbIdentity.ConnectionStatus,
+		HealthCheckTimestampSent: currentTimeStamp,
+		HealthCheckTimestampReceived: oldNbIdentity.HealthCheckTimestampReceived,
+	}
+
+	m.nbIdentityMap[oldNbIdentity.InventoryName] = newNbIdentity
+	return oldNbIdentity, newNbIdentity
+}
+
+func (m *ranListManagerInstance) UpdateHealthcheckTimeStampReceived(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
+	currentTimeStamp := time.Now().UnixNano()
+	oldNbIdentity := m.nbIdentityMap[oldRRanName]
+
+	newNbIdentity := &entities.NbIdentity{
+		GlobalNbId:       oldNbIdentity.GlobalNbId,
+		InventoryName:    oldNbIdentity.InventoryName,
+		ConnectionStatus: oldNbIdentity.ConnectionStatus,
+		HealthCheckTimestampSent: oldNbIdentity.HealthCheckTimestampSent,
+		HealthCheckTimestampReceived: currentTimeStamp,
+	}
+
+	m.nbIdentityMap[oldNbIdentity.InventoryName] = newNbIdentity
+	return oldNbIdentity, newNbIdentity
+}
+
+func (m *ranListManagerInstance) UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error {
+	m.mux.Lock()
+	defer m.mux.Unlock()
+
+	err:= m.rnibDataService.UpdateNbIdentities(nodeType, oldNbIdentities, newNbIdentities)
+
+	return err
 }

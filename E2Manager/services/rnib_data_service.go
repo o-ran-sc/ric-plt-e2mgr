@@ -60,6 +60,7 @@ type RNibDataService interface {
 	RemoveNbIdentity(nodeType entities.Node_Type, nbIdentity *entities.NbIdentity) error
 	AddEnb(nodebInfo *entities.NodebInfo) error
 	UpdateNbIdentity(nodeType entities.Node_Type, oldNbIdentities *entities.NbIdentity, newNbIdentities *entities.NbIdentity) error
+	UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error
 }
 
 type rNibDataService struct {
@@ -396,6 +397,15 @@ func (w *rNibDataService) AddEnb(nodebInfo *entities.NodebInfo) error {
 func (w *rNibDataService) UpdateNbIdentity(nodeType entities.Node_Type, oldNbIdentity *entities.NbIdentity, newNbIdentity *entities.NbIdentity) error {
 	err := w.retry("UpdateNbIdentities", func() (err error) {
 		err = w.rnibWriter.UpdateNbIdentities(nodeType, []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity})
+		return
+	})
+
+	return err
+}
+
+func (w *rNibDataService) UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error {
+	err := w.retry("UpdateNbIdentities", func() (err error) {
+		err = w.rnibWriter.UpdateNbIdentities(nodeType, oldNbIdentities, newNbIdentities)
 		return
 	})
 
