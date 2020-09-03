@@ -1,4 +1,5 @@
 # UUID                                                                        	Group Name
 #
+69c743f29c80fca9690553570f2fa92e83af42b2                                      	saml/oran-gerrit-ric-plt-e2mgr-committers
 add1d629e64dce7097223c93ca6e710c1460b5ba                                      	GitHub Replication
 ldap:cn=oran-gerrit-ric-plt-e2mgr-committers,ou=Groups,dc=freestandards,dc=org	ldap/oran-gerrit-ric-plt-e2mgr-committers
