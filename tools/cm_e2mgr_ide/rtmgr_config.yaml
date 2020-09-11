@@ -124,6 +124,7 @@ data:
           "MC_REPORT=30010",
           "DCAPTERM_RTPM_RMR_MSGTYPE=33001",
           "DCAPTERM_GEO_RMR_MSGTYPE=33002",
+          "RIC_SERVICE_QUERY=12060",
           ]
        "PlatformRoutes": [
          { 'messagetype': 'RIC_SUB_REQ', 'senderendpoint': 'SUBMAN', 'subscriptionid': -1, 'endpoint': '', 'meid': '%meid'},
