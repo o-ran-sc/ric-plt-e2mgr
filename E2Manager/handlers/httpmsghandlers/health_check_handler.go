@@ -23,13 +23,22 @@ import (
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"encoding/xml"
+	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"strings"
+	"unsafe"
+
 	//        "github.com/pkg/errors"
 )
 
+var(
+	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "protocolIEs"}
+)
 type HealthCheckRequestHandler struct {
 	logger          *logger.Logger
 	rNibDataService services.RNibDataService
@@ -50,8 +59,11 @@ func (h *HealthCheckRequestHandler) Handle(request models.Request) (models.IResp
 	ranNameList := h.getRanNameList(request)
 	isAtleastOneRanConnected := false
 
+	nodetypeToNbIdentityMapOld := make(map[entities.Node_Type][]*entities.NbIdentity)
+	nodetypeToNbIdentityMapNew := make(map[entities.Node_Type][]*entities.NbIdentity)
+
 	for _, ranName := range ranNameList {
-		nodebInfo, err := h.rNibDataService.GetNodeb(ranName) //This method is needed for getting RAN functions with later commits
+		nodebInfo, err := h.rNibDataService.GetNodeb(ranName)
 		if err != nil {
 			_, ok := err.(*common.ResourceNotFoundError)
 			if !ok {
@@ -60,16 +72,61 @@ func (h *HealthCheckRequestHandler) Handle(request models.Request) (models.IResp
 			}
 			continue
 		}
+
 		if nodebInfo.ConnectionStatus == entities.ConnectionStatus_CONNECTED {
 			isAtleastOneRanConnected = true
 
+			err := h.sendRICServiceQuery(nodebInfo)
+			if err != nil {
+				return nil,err
+			}
+
+			oldnbIdentity, newnbIdentity := h.ranListManager.UpdateHealthcheckTimeStampSent(ranName)
+			nodetypeToNbIdentityMapOld[nodebInfo.NodeType] = append(nodetypeToNbIdentityMapOld[nodebInfo.NodeType], oldnbIdentity)
+			nodetypeToNbIdentityMapNew[nodebInfo.NodeType] = append(nodetypeToNbIdentityMapNew[nodebInfo.NodeType], newnbIdentity)
 		}
 	}
+
+	for k, _ := range nodetypeToNbIdentityMapOld {
+		err := h.ranListManager.UpdateNbIdentities(k, nodetypeToNbIdentityMapOld[k], nodetypeToNbIdentityMapNew[k])
+		if err != nil {
+			return nil,err
+		}
+	}
+
 	if isAtleastOneRanConnected == false {
 		return nil, e2managererrors.NewNoConnectedRanError()
 	}
 
+	h.logger.Infof("#HealthcheckRequest.Handle - HealthcheckTimeStampSent Update completed to RedisDB")
+
 	return nil, nil
+}
+
+func (h *HealthCheckRequestHandler) sendRICServiceQuery(nodebInfo *entities.NodebInfo) error {
+
+	serviceQuery := models.NewRicServiceQueryMessage(nodebInfo.GetGnb().RanFunctions)
+	payLoad, err := xml.Marshal(serviceQuery.E2APPDU)
+	if err != nil {
+		h.logger.Errorf("#HealthCHeckRequest.Handle- RAN name: %s - Error marshalling RIC_SERVICE_QUERY. Payload: %s", nodebInfo.RanName, payLoad)
+		//return nil, e2managererrors.NewInternalError()
+	}
+	payLoad = replaceEmptyTagsWithSelfClosing(payLoad)
+
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	msg := models.NewRmrMessage(rmrCgo.RIC_SERVICE_QUERY, nodebInfo.RanName, payLoad, xAction, msgSrc)
+
+	err = h.rmrsender.Send(msg)
+
+	if err != nil {
+		h.logger.Errorf("#HealthCHeckRequest.Handle - failed to send RIC_SERVICE_QUERY message to RMR for %s. Error: %s", nodebInfo.RanName, err)
+		//return nil, e2managererrors.NewRmrError()
+	} else {
+		h.logger.Infof("#HealthCHeckRequest.Handle - RAN name : %s - Successfully built and sent RIC_SERVICE_QUERY. Message: %x", nodebInfo.RanName, msg)
+	}
+
+	return nil
 }
 
 func (h *HealthCheckRequestHandler) getRanNameList(request models.Request) []string {
@@ -77,13 +134,31 @@ func (h *HealthCheckRequestHandler) getRanNameList(request models.Request) []str
 	if request != nil && len(healthCheckRequest.RanList) != 0 {
 		return healthCheckRequest.RanList
 	}
-	nodeIds := h.ranListManager.GetNbIdentityList()
 
+	h.logger.Infof("#HealthcheckRequest.getRanNameList - Empty request sent, fetching all connected NbIdentitylist")
+
+	nodeIds := h.ranListManager.GetNbIdentityList()
 	var ranNameList []string
+
 	for _, nbIdentity := range nodeIds {
 		if nbIdentity.ConnectionStatus == entities.ConnectionStatus_CONNECTED {
 			ranNameList = append(ranNameList, nbIdentity.InventoryName)
 		}
 	}
 	return ranNameList
+}
+
+func replaceEmptyTagsWithSelfClosing(responsePayload []byte) []byte {
+
+	emptyTagVsSelfClosingTagPairs := make([]string, len(emptyTagsToReplaceToSelfClosingTags)*2)
+
+	j := 0
+
+	for i := 0; i < len(emptyTagsToReplaceToSelfClosingTags); i++ {
+		emptyTagVsSelfClosingTagPairs[j] = fmt.Sprintf("<%[1]s></%[1]s>", emptyTagsToReplaceToSelfClosingTags[i])
+		emptyTagVsSelfClosingTagPairs[j+1] = fmt.Sprintf("<%s/>", emptyTagsToReplaceToSelfClosingTags[i])
+		j += 2
+	}
+	responseString := strings.NewReplacer(emptyTagVsSelfClosingTagPairs...).Replace(string(responsePayload))
+	return []byte(responseString)
 }
