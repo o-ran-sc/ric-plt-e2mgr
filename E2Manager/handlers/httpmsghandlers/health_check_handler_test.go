@@ -19,18 +19,32 @@
 package httpmsghandlers
 
 import (
+	"bytes"
 	"e2mgr/configuration"
 	"e2mgr/e2managererrors"
 	"e2mgr/mocks"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"encoding/xml"
+	"errors"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"testing"
+	"unsafe"
 )
 
-func setupHealthCheckHandlerTest(t *testing.T) (*HealthCheckRequestHandler, services.RNibDataService, *mocks.RnibReaderMock, *mocks.RanListManagerMock) {
+const (
+	e2tInstanceFullAddress                   = "10.0.2.15:9999"
+	e2SetupMsgPrefix                         = e2tInstanceFullAddress + "|"
+	GnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest_gnb.xml"
+)
+
+func setupHealthCheckHandlerTest(t *testing.T) (*HealthCheckRequestHandler, services.RNibDataService, *mocks.RnibReaderMock, *mocks.RanListManagerMock, *mocks.RmrMessengerMock) {
 	logger := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 
@@ -44,16 +58,23 @@ func setupHealthCheckHandlerTest(t *testing.T) (*HealthCheckRequestHandler, serv
 	rmrSender := getRmrSender(rmrMessengerMock, logger)
 	handler := NewHealthCheckRequestHandler(logger, rnibDataService, ranListManagerMock, rmrSender)
 
-	return handler, rnibDataService, readerMock, ranListManagerMock
+	return handler, rnibDataService, readerMock, ranListManagerMock, rmrMessengerMock
 }
 
 func TestHealthCheckRequestHandlerArguementHasRanNameSuccess(t *testing.T) {
-	handler, _, readerMock, _ := setupHealthCheckHandlerTest(t)
-
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	handler, _, readerMock, ranListManagerMock, rmrMessengerMock := setupHealthCheckHandlerTest(t)
 	ranNames := []string{"RanName_1"}
 
-	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
+	nb1:= createNbIdentity(t,"RanName_1", entities.ConnectionStatus_CONNECTED)
+	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
+	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
+
+	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
+
+	mbuf:= createRMRMbuf(t, nb1)
+	rmrMessengerMock.On("SendMsg",mbuf,true).Return(mbuf,nil)
+	ranListManagerMock.On("UpdateHealthcheckTimeStampSent",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
+	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
 
 	_, err := handler.Handle(models.HealthCheckRequest{ranNames})
 
@@ -62,15 +83,23 @@ func TestHealthCheckRequestHandlerArguementHasRanNameSuccess(t *testing.T) {
 }
 
 func TestHealthCheckRequestHandlerArguementHasNoRanNameSuccess(t *testing.T) {
-	handler, _, readerMock, ranListManagerMock := setupHealthCheckHandlerTest(t)
+	handler, _, readerMock, ranListManagerMock, rmrMessengerMock := setupHealthCheckHandlerTest(t)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED},
 		{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}}
 
 	ranListManagerMock.On("GetNbIdentityList").Return(nbIdentityList)
 
-	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_CONNECTED}
-	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
+	nb1:= createNbIdentity(t,"RanName_1", entities.ConnectionStatus_CONNECTED)
+	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
+	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
+
+	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
+
+	mbuf:= createRMRMbuf(t, nb1)
+	rmrMessengerMock.On("SendMsg",mbuf,true).Return(mbuf,nil)
+	ranListManagerMock.On("UpdateHealthcheckTimeStampSent",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
+	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
 
 	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
@@ -82,7 +111,7 @@ func TestHealthCheckRequestHandlerArguementHasNoRanNameSuccess(t *testing.T) {
 }
 
 func TestHealthCheckRequestHandlerArguementHasNoRanConnectedFailure(t *testing.T) {
-	handler, _, readerMock, ranListManagerMock := setupHealthCheckHandlerTest(t)
+	handler, _, readerMock, ranListManagerMock, rmrMessengerMock := setupHealthCheckHandlerTest(t)
 
 	nbIdentityList := []*entities.NbIdentity{{InventoryName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED},
 		{InventoryName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}}
@@ -91,23 +120,96 @@ func TestHealthCheckRequestHandlerArguementHasNoRanConnectedFailure(t *testing.T
 	nb1 := &entities.NodebInfo{RanName: "RanName_1", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", "RanName_1").Return(nb1, nil)
 
-	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
+	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 
 	_, err := handler.Handle(models.HealthCheckRequest{[]string{}})
 
+	rmrMessengerMock.AssertNotCalled(t, "SendMsg", mock.Anything, mock.Anything)
+	ranListManagerMock.AssertNotCalled(t,"UpdateHealthcheckTimeStampSent",mock.Anything)
+	ranListManagerMock.AssertNotCalled(t,"UpdateNbIdentities",mock.Anything, mock.Anything, mock.Anything)
 	assert.IsType(t, &e2managererrors.NoConnectedRanError{}, err)
 
 }
 
 func TestHealthCheckRequestHandlerArguementHasRanNameDBErrorFailure(t *testing.T) {
-	handler, _, readerMock, _ := setupHealthCheckHandlerTest(t)
+	handler, _, readerMock, ranListManagerMock, rmrMessengerMock := setupHealthCheckHandlerTest(t)
 
 	ranNames := []string{"RanName_1"}
 	readerMock.On("GetNodeb", "RanName_1").Return(&entities.NodebInfo{}, errors.New("error"))
 
 	_, err := handler.Handle(models.HealthCheckRequest{ranNames})
 
+	rmrMessengerMock.AssertNotCalled(t, "SendMsg", mock.Anything, mock.Anything)
+	ranListManagerMock.AssertNotCalled(t,"UpdateHealthcheckTimeStampSent",mock.Anything)
+	ranListManagerMock.AssertNotCalled(t,"UpdateNbIdentities",mock.Anything, mock.Anything, mock.Anything)
 	assert.IsType(t, &e2managererrors.RnibDbError{}, err)
 	readerMock.AssertExpectations(t)
+}
+
+func createRMRMbuf(t *testing.T, nodebInfo *entities.NodebInfo) *rmrCgo.MBuf{
+	serviceQuery := models.NewRicServiceQueryMessage(nodebInfo.GetGnb().RanFunctions)
+	payLoad, err := xml.Marshal(&serviceQuery.E2APPDU)
+	payLoad = normalizeXml(payLoad)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+
+	rmrMessage := models.NewRmrMessage(rmrCgo.RIC_SERVICE_QUERY, nodebInfo.RanName, payLoad, xAction, msgSrc)
+	return rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
+}
+
+func createNbIdentity(t *testing.T, RanName string,  connectionStatus entities.ConnectionStatus) *entities.NodebInfo {
+	xmlgnb := readXmlFile(t, GnbSetupRequestXmlPath)
+	payload := append([]byte(e2SetupMsgPrefix), xmlgnb...)
+	pipInd := bytes.IndexByte(payload, '|')
+	setupRequest := &models.E2SetupRequestMessage{}
+	err := xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nodeb := &entities.NodebInfo{
+		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
+		RanName:                      RanName,
+		SetupFromNetwork:             true,
+		NodeType:                     entities.Node_GNB,
+		ConnectionStatus: 			  connectionStatus,
+		Configuration: &entities.NodebInfo_Gnb{
+			Gnb: &entities.Gnb{
+				GnbType:      entities.GnbType_GNB,
+				RanFunctions: setupRequest.ExtractRanFunctionsList(),
+			},
+		},
+		GlobalNbId: &entities.GlobalNbId{
+			PlmnId: setupRequest.GetPlmnId(),
+			NbId:   setupRequest.GetNbId(),
+		},
+	}
+	return nodeb
+}
+
+func normalizeXml(payload []byte) []byte {
+	xmlStr := string(payload)
+	normalized := strings.NewReplacer("&lt;", "<", "&gt;", ">",
+		"<reject></reject>","<reject/>","<ignore></ignore>","<ignore/>",
+		"<protocolIEs></protocolIEs>","<protocolIEs/>").Replace(xmlStr)
+	return []byte(normalized)
+}
+
+func readXmlFile(t *testing.T, xmlPath string) []byte {
+	path, err := filepath.Abs(xmlPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	xmlAsBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return xmlAsBytes
 }

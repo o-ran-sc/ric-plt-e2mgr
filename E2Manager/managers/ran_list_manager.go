@@ -190,7 +190,13 @@ func (m *ranListManagerInstance) UpdateNbIdentities(nodeType entities.Node_Type,
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	err:= m.rnibDataService.UpdateNbIdentities(nodeType, oldNbIdentities, newNbIdentities)
+	err := m.rnibDataService.UpdateNbIdentities(nodeType, oldNbIdentities, newNbIdentities)
+
+	if err != nil {
+		m.logger.Errorf("#ranListManagerInstance.UpdateNbIdentities not completed for %d nbIdentities of nodetype - %s", len(newNbIdentities), nodeType.String())
+	} else{
+		m.logger.Infof("#ranListManagerInstance.UpdateNbIdentities completed successfully for %d nbIdentities of nodetype - %s", len(newNbIdentities), nodeType.String())
+	}
 
 	return err
 }
