@@ -192,6 +192,43 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /nodeb/health:
+    put:
+      tags:
+        - nodeb
+      summary: E2 Manager is requested to Check connectivity with RANs (List) or all
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ranList:
+                  type: array
+                  items:
+                    type: string
+        required: false
+      responses:
+        '202':
+          description: 'Request accepted'
+        '404':
+          description: RAN not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '406':
+          description: No RAN in Connected State
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 
+        '500':
+          description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse' 
   /nodeb/shutdown:
     put:
       tags:
@@ -229,6 +266,37 @@ paths:
                   $ref: '#/components/schemas/NodebIdentity'
         '500':
           description: Internal Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/nodeb/states/{ranName}':
+    get:
+      summary: E2 Manager is requested to get specific RAN Health check
+      tags:
+        - nodeb
+      parameters:
+        - name: ranName
+          in: path
+          required: true
+          description: Name of RAN to get Health check
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodebIdentity'
+        '400':
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error
           content:
             application/problem+json:
               schema:
@@ -319,6 +387,10 @@ components:
           type: boolean
       additionalProperties: false
     NodebIdentity:
+      required:
+          - globalNbId
+          - inventoryName
+          - connectionStatus
       properties:
         globalNbId:
           properties:
@@ -331,6 +403,10 @@ components:
           type: string
         connectionStatus:
           type: string
+        healthCheckTimestampSent:
+          type: integer
+        healthCheckTimestampReceived:
+          type: integer
       type: object
     ErrorResponse:
       type: object
