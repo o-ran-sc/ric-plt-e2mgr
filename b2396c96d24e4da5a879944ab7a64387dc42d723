@@ -22,6 +22,52 @@
       "revId": "b2396c96d24e4da5a879944ab7a64387dc42d723",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34a8e31a_16b52835",
+        "filename": "Swagger/E2Manager_API.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2020-09-25T14:21:02Z",
+      "side": 1,
+      "message": "\"E2 manager is requested to report the health status of the connection to the E2 node\"",
+      "range": {
+        "startLine": 275,
+        "startChar": 15,
+        "endLine": 275,
+        "endChar": 71
+      },
+      "revId": "b2396c96d24e4da5a879944ab7a64387dc42d723",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "777ddfae_3c9a0358",
+        "filename": "Swagger/E2Manager_API.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2020-09-25T14:21:02Z",
+      "side": 1,
+      "message": "this does not break any other usage of NodebIdentity?",
+      "range": {
+        "startLine": 390,
+        "startChar": 12,
+        "endLine": 393,
+        "endChar": 21
+      },
+      "revId": "b2396c96d24e4da5a879944ab7a64387dc42d723",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
     }
   ]
 }
