@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fbf8690_8118919f",
+        "filename": "Swagger/E2Manager_API.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2020-09-25T14:10:34Z",
+      "side": 1,
+      "message": "E2 manager is requested to check connectivity with all E2 nodes or a list of E2 nodes",
+      "range": {
+        "startLine": 199,
+        "startChar": 42,
+        "endLine": 199,
+        "endChar": 47
+      },
+      "revId": "b2396c96d24e4da5a879944ab7a64387dc42d723",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
