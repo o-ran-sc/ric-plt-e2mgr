@@ -29,6 +29,7 @@ import (
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"e2mgr/utils"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -241,7 +242,7 @@ func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName s
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
 	}
 
-	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
+	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload,emptyTagsToReplaceToSelfClosingTags)
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - payload: %s", responsePayload)
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_FAILURE, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
@@ -266,7 +267,7 @@ func (h *E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName str
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
 	}
 
-	responsePayload = replaceEmptyTagsWithSelfClosing(responsePayload)
+	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload,emptyTagsToReplaceToSelfClosingTags)
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - payload: %s", responsePayload)
 
@@ -292,21 +293,6 @@ func buildPlmnId(mmc string, mnc string) string {
 	return b.String()
 }
 
-func replaceEmptyTagsWithSelfClosing(responsePayload []byte) []byte {
-
-	emptyTagVsSelfClosingTagPairs := make([]string, len(emptyTagsToReplaceToSelfClosingTags)*2)
-
-	j := 0
-
-	for i := 0; i < len(emptyTagsToReplaceToSelfClosingTags); i++ {
-		emptyTagVsSelfClosingTagPairs[j] = fmt.Sprintf("<%[1]s></%[1]s>", emptyTagsToReplaceToSelfClosingTags[i])
-		emptyTagVsSelfClosingTagPairs[j+1] = fmt.Sprintf("<%s/>", emptyTagsToReplaceToSelfClosingTags[i])
-		j += 2
-	}
-	responseString := strings.NewReplacer(emptyTagVsSelfClosingTagPairs...).Replace(string(responsePayload))
-	return []byte(responseString)
-}
-
 func convertTo20BitString(ricNearRtId string) (string, error) {
 	r, err := strconv.ParseUint(ricNearRtId, 16, 32)
 	if err != nil {
@@ -330,18 +316,12 @@ func (h *E2SetupRequestNotificationHandler) parseSetupRequest(payload []byte) (*
 	h.logger.Infof("#E2SetupRequestNotificationHandler.parseSetupRequest - payload: %s", payload[pipInd+1:])
 
 	setupRequest := &models.E2SetupRequestMessage{}
-	err := xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
+	err := xml.Unmarshal(utils.NormalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
 	if err != nil {
 		return nil, "", errors.New(fmt.Sprintf("#E2SetupRequestNotificationHandler.parseSetupRequest - Error unmarshalling E2 Setup Request payload: %x", payload))
 	}
 
 	return setupRequest, e2tIpAddress, nil
-}
-
-func normalizeXml(payload []byte) []byte {
-	xmlStr := string(payload)
-	normalized := strings.NewReplacer("&lt;", "<", "&gt;", ">").Replace(xmlStr)
-	return []byte(normalized)
 }
 
 func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAddress string, request *models.E2SetupRequestMessage) (*entities.NodebInfo, error) {

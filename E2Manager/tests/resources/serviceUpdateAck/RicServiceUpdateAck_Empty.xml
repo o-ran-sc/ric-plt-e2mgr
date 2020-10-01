@@ -1,0 +1,12 @@
+<E2AP-PDU>
+    <successfulOutcome>
+        <procedureCode>7</procedureCode>
+        <criticality><reject/></criticality>
+        <value>
+            <RICserviceUpdateAcknowledge>
+                <protocolIEs>
+                </protocolIEs>
+            </RICserviceUpdateAcknowledge>
+        </value>
+    </successfulOutcome>
+</E2AP-PDU>
