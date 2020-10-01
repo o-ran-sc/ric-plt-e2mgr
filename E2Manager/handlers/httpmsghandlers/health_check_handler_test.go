@@ -26,13 +26,12 @@ import (
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/utils"
 	"encoding/xml"
 	"errors"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"testing"
 	"unsafe"
@@ -41,7 +40,7 @@ import (
 const (
 	e2tInstanceFullAddress                   = "10.0.2.15:9999"
 	e2SetupMsgPrefix                         = e2tInstanceFullAddress + "|"
-	GnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest_gnb.xml"
+	GnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest/setupRequest_gnb.xml"
 )
 
 func setupHealthCheckHandlerTest(t *testing.T) (*HealthCheckRequestHandler, services.RNibDataService, *mocks.RnibReaderMock, *mocks.RanListManagerMock, *mocks.RmrMessengerMock) {
@@ -150,7 +149,9 @@ func TestHealthCheckRequestHandlerArguementHasRanNameDBErrorFailure(t *testing.T
 func createRMRMbuf(t *testing.T, nodebInfo *entities.NodebInfo) *rmrCgo.MBuf{
 	serviceQuery := models.NewRicServiceQueryMessage(nodebInfo.GetGnb().RanFunctions)
 	payLoad, err := xml.Marshal(&serviceQuery.E2APPDU)
-	payLoad = normalizeXml(payLoad)
+	payLoad = utils.NormalizeXml(payLoad)
+	tagsToReplace := []string{"reject","ignore","protocolIEs"}
+	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad, tagsToReplace)
 
 	if err != nil {
 		t.Fatal(err)
@@ -164,11 +165,11 @@ func createRMRMbuf(t *testing.T, nodebInfo *entities.NodebInfo) *rmrCgo.MBuf{
 }
 
 func createNbIdentity(t *testing.T, RanName string,  connectionStatus entities.ConnectionStatus) *entities.NodebInfo {
-	xmlgnb := readXmlFile(t, GnbSetupRequestXmlPath)
+	xmlgnb := utils.ReadXmlFile(t, GnbSetupRequestXmlPath)
 	payload := append([]byte(e2SetupMsgPrefix), xmlgnb...)
 	pipInd := bytes.IndexByte(payload, '|')
 	setupRequest := &models.E2SetupRequestMessage{}
-	err := xml.Unmarshal(normalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
+	err := xml.Unmarshal(utils.NormalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -199,17 +200,4 @@ func normalizeXml(payload []byte) []byte {
 		"<reject></reject>","<reject/>","<ignore></ignore>","<ignore/>",
 		"<protocolIEs></protocolIEs>","<protocolIEs/>").Replace(xmlStr)
 	return []byte(normalized)
-}
-
-func readXmlFile(t *testing.T, xmlPath string) []byte {
-	path, err := filepath.Abs(xmlPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	xmlAsBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return xmlAsBytes
 }

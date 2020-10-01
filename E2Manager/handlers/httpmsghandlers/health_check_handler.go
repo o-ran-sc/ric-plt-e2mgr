@@ -26,16 +26,15 @@ import (
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"e2mgr/utils"
 	"encoding/xml"
-	"fmt"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	"strings"
 	"unsafe"
 )
 
 var(
-	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "protocolIEs"}
+	healthCheckEmptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "protocolIEs", "procedureCode"}
 )
 
 type HealthCheckRequestHandler struct {
@@ -111,7 +110,7 @@ func (h *HealthCheckRequestHandler) sendRICServiceQuery(nodebInfo *entities.Node
 		//return nil, e2managererrors.NewInternalError()
 	}
 
-	payLoad = replaceEmptyTagsWithSelfClosing(payLoad)
+	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad,healthCheckEmptyTagsToReplaceToSelfClosingTags)
 
 	var xAction []byte
 	var msgSrc unsafe.Pointer
@@ -147,20 +146,4 @@ func (h *HealthCheckRequestHandler) getRanNameList(request models.Request) []str
 	}
 
 	return ranNameList
-}
-
-func replaceEmptyTagsWithSelfClosing(responsePayload []byte) []byte {
-
-	emptyTagVsSelfClosingTagPairs := make([]string, len(emptyTagsToReplaceToSelfClosingTags)*2)
-
-	j := 0
-
-	for i := 0; i < len(emptyTagsToReplaceToSelfClosingTags); i++ {
-		emptyTagVsSelfClosingTagPairs[j] = fmt.Sprintf("<%[1]s></%[1]s>", emptyTagsToReplaceToSelfClosingTags[i])
-		emptyTagVsSelfClosingTagPairs[j+1] = fmt.Sprintf("<%s/>", emptyTagsToReplaceToSelfClosingTags[i])
-		j += 2
-	}
-
-	responseString := strings.NewReplacer(emptyTagVsSelfClosingTagPairs...).Replace(string(responsePayload))
-	return []byte(responseString)
 }

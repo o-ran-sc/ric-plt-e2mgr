@@ -1,6 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
+// Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,6 +97,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.E2_TERM_KEEP_ALIVE_RESP, rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)},
 		{rmrCgo.RIC_X2_RESET_RESP, rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger))},
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
+		{rmrCgo.RIC_SERVICE_UPDATE, rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager)},
 	}
 
 	for _, tc := range testCases {
