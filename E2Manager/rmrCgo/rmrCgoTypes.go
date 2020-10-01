@@ -1,6 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
+// Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +82,9 @@ const (
 	RIC_E2_SETUP_RESP                    = C.RIC_E2_SETUP_RESP
 	RIC_E2_SETUP_FAILURE                 = C.RIC_E2_SETUP_FAILURE
 	RIC_SERVICE_QUERY                    = C.RIC_SERVICE_QUERY
+	RIC_SERVICE_UPDATE                   = C.RIC_SERVICE_UPDATE
+	RIC_SERVICE_UPDATE_ACK               = C.RIC_SERVICE_UPDATE_ACK
+	RIC_SERVICE_UPDATE_FAILURE           = C.RIC_SERVICE_UPDATE_FAILURE
 )
 
 const (
