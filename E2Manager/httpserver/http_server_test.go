@@ -38,6 +38,7 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	nodebControllerMock.On("Shutdown").Return(nil)
 	nodebControllerMock.On("GetNodeb").Return(nil)
 	nodebControllerMock.On("GetNodebIdList").Return(nil)
+	nodebControllerMock.On("GetNodebId").Return(nil)
 	nodebControllerMock.On("SetGeneralConfiguration").Return(nil)
 	nodebControllerMock.On("DeleteEnb").Return(nil)
 	nodebControllerMock.On("AddEnb").Return(nil)
@@ -53,7 +54,7 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	return router, rootControllerMock, nodebControllerMock, e2tControllerMock
 }
 
-func TestRouteGetNodebIds(t *testing.T) {
+func TestRouteGetNodebIdList(t *testing.T) {
 	router, _, nodebControllerMock, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/states", nil)
@@ -64,6 +65,20 @@ func TestRouteGetNodebIds(t *testing.T) {
 	router.ServeHTTP(rr, req)
 
 	nodebControllerMock.AssertNumberOfCalls(t, "GetNodebIdList", 1)
+}
+
+func TestRouteGetNodebId(t *testing.T) {
+	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+
+	req, err := http.NewRequest("GET", "/v1/nodeb/states/ran1", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "handler returned wrong status code")
+	nodebControllerMock.AssertNumberOfCalls(t, "GetNodebId", 1)
 }
 
 func TestRouteGetNodebRanName(t *testing.T) {
@@ -117,6 +132,7 @@ func TestHealthCheckRequest(t *testing.T) {
 	rr := httptest.NewRecorder()
 	router.ServeHTTP(rr, req)
 
+	assert.Equal(t, http.StatusAccepted, rr.Code, "handler returned wrong status code")
 	nodebControllerMock.AssertNumberOfCalls(t, "HealthCheckRequest", 1)
 }
 
