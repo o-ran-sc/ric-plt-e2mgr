@@ -38,6 +38,7 @@ const (
 	ResetRequest                   IncomingRequest = "Reset"
 	GetNodebRequest                IncomingRequest = "GetNodebRequest"
 	GetNodebIdListRequest          IncomingRequest = "GetNodebIdListRequest"
+	GetNodebIdRequest          	   IncomingRequest = "GetNodebIdRequest"
 	GetE2TInstancesRequest         IncomingRequest = "GetE2TInstancesRequest"
 	UpdateGnbRequest               IncomingRequest = "UpdateGnbRequest"
 	UpdateEnbRequest               IncomingRequest = "UpdateEnbRequest"
@@ -69,6 +70,7 @@ func initRequestHandlerMap(logger *logger.Logger, rmrSender *rmrsender.RmrSender
 		SetGeneralConfigurationRequest: httpmsghandlers.NewSetGeneralConfigurationHandler(logger, rNibDataService),
 		GetNodebRequest:                httpmsghandlers.NewGetNodebRequestHandler(logger, rNibDataService),
 		GetNodebIdListRequest:          httpmsghandlers.NewGetNodebIdListRequestHandler(logger, rNibDataService, ranListManager),
+		GetNodebIdRequest:          	httpmsghandlers.NewGetNodebIdRequestHandler(logger, ranListManager),
 		GetE2TInstancesRequest:         httpmsghandlers.NewGetE2TInstancesRequestHandler(logger, e2tInstancesManager),
 		UpdateGnbRequest:               httpmsghandlers.NewUpdateNodebRequestHandler(logger, rNibDataService, updateGnbManager),
 		UpdateEnbRequest:               httpmsghandlers.NewUpdateNodebRequestHandler(logger, rNibDataService, updateEnbManager),
