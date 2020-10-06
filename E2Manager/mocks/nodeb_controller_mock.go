@@ -46,6 +46,17 @@ func (c *NodebControllerMock) GetNodebIdList(writer http.ResponseWriter, r *http
 	c.Called()
 }
 
+func (c *NodebControllerMock) GetNodebId(writer http.ResponseWriter, r *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	vars := mux.Vars(r)
+	ranName := vars["ranName"]
+
+	writer.Write([]byte(ranName))
+	c.Called()
+}
+
 func (c *NodebControllerMock) Shutdown(writer http.ResponseWriter, r *http.Request) {
 	c.Called()
 }
@@ -97,7 +108,7 @@ func (c *NodebControllerMock) SetGeneralConfiguration(writer http.ResponseWriter
 
 func (c *NodebControllerMock) HealthCheckRequest(writer http.ResponseWriter, r *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
+	writer.WriteHeader(http.StatusAccepted)
 
 	c.Called()
 }

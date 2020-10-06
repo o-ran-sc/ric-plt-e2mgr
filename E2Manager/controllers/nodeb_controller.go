@@ -51,6 +51,7 @@ type INodebController interface {
 	UpdateGnb(writer http.ResponseWriter, r *http.Request)
 	UpdateEnb(writer http.ResponseWriter, r *http.Request)
 	GetNodebIdList(writer http.ResponseWriter, r *http.Request)
+	GetNodebId(writer http.ResponseWriter, r *http.Request)
 	SetGeneralConfiguration(writer http.ResponseWriter, r *http.Request)
 	AddEnb(writer http.ResponseWriter, r *http.Request)
 	DeleteEnb(writer http.ResponseWriter, r *http.Request)
@@ -73,6 +74,15 @@ func (c *NodebController) GetNodebIdList(writer http.ResponseWriter, r *http.Req
 	c.logger.Infof("[Client -> E2 Manager] #NodebController.GetNodebIdList - request: %v", c.prettifyRequest(r))
 
 	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebIdListRequest, nil, false, http.StatusOK)
+}
+
+func (c *NodebController) GetNodebId(writer http.ResponseWriter, r *http.Request) {
+	c.logger.Infof("[Client -> E2 Manager] #NodebController.GetNodebId - request: %v", c.prettifyRequest(r))
+	vars := mux.Vars(r)
+	ranName := vars["ranName"]
+	request := models.GetNodebIdRequest{RanName: ranName}
+
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.GetNodebIdRequest, request, false, http.StatusOK)
 }
 
 func (c *NodebController) GetNodeb(writer http.ResponseWriter, r *http.Request) {
@@ -202,7 +212,7 @@ func (c *NodebController) HealthCheckRequest(writer http.ResponseWriter, r *http
 		return
 	}
 
-	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.HealthCheckRequest, request, true, http.StatusNoContent)
+	c.handleRequest(writer, &r.Header, httpmsghandlerprovider.HealthCheckRequest, request, true, http.StatusAccepted)
 }
 
 func (c *NodebController) extractRequestBodyToProto(r *http.Request, pb proto.Message, writer http.ResponseWriter) bool {

@@ -75,8 +75,9 @@ func TestHealthCheckRequestHandlerArguementHasRanNameSuccess(t *testing.T) {
 	ranListManagerMock.On("UpdateHealthcheckTimeStampSent",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
 	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
 
-	_, err := handler.Handle(models.HealthCheckRequest{ranNames})
+	resp, err := handler.Handle(models.HealthCheckRequest{ranNames})
 
+	assert.IsType(t, &models.HealthCheckSuccessResponse{}, resp)
 	assert.Nil(t, err)
 	readerMock.AssertExpectations(t)
 }
@@ -103,9 +104,10 @@ func TestHealthCheckRequestHandlerArguementHasNoRanNameSuccess(t *testing.T) {
 	nb2 := &entities.NodebInfo{RanName: "RanName_2", ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	readerMock.On("GetNodeb", "RanName_2").Return(nb2, nil)
 
-	_, err := handler.Handle(models.HealthCheckRequest{[]string{}})
+	resp, err := handler.Handle(models.HealthCheckRequest{[]string{}})
 
 	assert.Nil(t, err)
+	assert.IsType(t, &models.HealthCheckSuccessResponse{}, resp)
 
 }
 

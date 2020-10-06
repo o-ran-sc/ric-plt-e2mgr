@@ -47,6 +47,7 @@ func initializeRoutes(router *mux.Router, rootController controllers.IRootContro
 
 	rr := r.PathPrefix("/nodeb").Subrouter()
 	rr.HandleFunc("/states", nodebController.GetNodebIdList).Methods(http.MethodGet)
+	rr.HandleFunc("/states/{ranName}", nodebController.GetNodebId).Methods(http.MethodGet)
 	rr.HandleFunc("/{ranName}", nodebController.GetNodeb).Methods(http.MethodGet)
 	rr.HandleFunc("/enb", nodebController.AddEnb).Methods(http.MethodPost)
 	rr.HandleFunc("/enb/{ranName}", nodebController.DeleteEnb).Methods(http.MethodDelete)

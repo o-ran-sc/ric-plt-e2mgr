@@ -34,6 +34,7 @@ import (
 )
 
 var(
+	healthCheckSuccessResponse          = "Request Accepted"
 	healthCheckEmptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "protocolIEs", "procedureCode"}
 )
 
@@ -98,7 +99,7 @@ func (h *HealthCheckRequestHandler) Handle(request models.Request) (models.IResp
 
 	h.logger.Infof("#HealthcheckRequest.Handle - HealthcheckTimeStampSent Update completed to RedisDB")
 
-	return nil, nil
+	return models.NewHealthCheckSuccessResponse(healthCheckSuccessResponse), nil
 }
 
 func (h *HealthCheckRequestHandler) sendRICServiceQuery(nodebInfo *entities.NodebInfo) error {
