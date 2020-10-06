@@ -41,6 +41,7 @@ type RanListManager interface {
 	UpdateNbIdentityConnectionStatus(nodeType entities.Node_Type, ranName string, connectionStatus entities.ConnectionStatus) error
 	RemoveNbIdentity(nodeType entities.Node_Type, ranName string) error
 	GetNbIdentityList() []*entities.NbIdentity
+	GetNbIdentity(ranName string) (*entities.NbIdentity, error)
 	UpdateHealthcheckTimeStampReceived(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity)
 	UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity)
 	UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error
@@ -152,6 +153,18 @@ func (m *ranListManagerInstance) GetNbIdentityList() []*entities.NbIdentity {
 	m.logger.Infof("#ranListManagerInstance.GetNbIdentityList - %d identity returned", len(nbIds))
 
 	return nbIds
+}
+
+func (m *ranListManagerInstance) GetNbIdentity(ranName string) (*entities.NbIdentity, error) {
+	nbIdentity, ok := m.nbIdentityMap[ranName]
+	if !ok {
+		m.logger.Infof("#ranListManagerInstance.GetNbIdentity - RAN name: %s - nodeb identity not found", ranName)
+		return nil , e2managererrors.NewResourceNotFoundError()
+	}
+
+	m.logger.Infof("#ranListManagerInstance.GetNbIdentity - RAN name: %s - nodeb identity returned", ranName)
+
+	return nbIdentity, nil
 }
 
 func (m *ranListManagerInstance) UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
