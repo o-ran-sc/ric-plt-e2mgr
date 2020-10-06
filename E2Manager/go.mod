@@ -1,5 +1,7 @@
 module e2mgr
 
+go 1.14
+
 require (
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.48
 	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.48
@@ -22,3 +24,5 @@ require (
 )
 
 replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.5.2
+
+replace github.com/go-redis/redis => github.com/go-redis/redis v6.15.2+incompatible

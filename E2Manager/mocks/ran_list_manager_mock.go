@@ -60,6 +60,11 @@ func (m *RanListManagerMock) GetNbIdentityList() []*entities.NbIdentity {
 	return args.Get(0).([]*entities.NbIdentity)
 }
 
+func (m *RanListManagerMock) GetNbIdentity(ranName string) (*entities.NbIdentity, error) {
+	args := m.Called(ranName)
+	return args.Get(0).(*entities.NbIdentity), args.Error(1)
+}
+
 func (m *RanListManagerMock) UpdateHealthcheckTimeStampSent(oldRRanName string) (*entities.NbIdentity, *entities.NbIdentity){
 	args := m.Called(oldRRanName)
 	return args.Get(0).(*entities.NbIdentity), args.Get(1).(*entities.NbIdentity)
