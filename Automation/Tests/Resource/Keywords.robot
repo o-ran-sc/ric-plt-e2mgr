@@ -35,6 +35,13 @@ Get Request nodeb
     Sleep    1s
     GET      ${getNodeb}/${nodeb_name}
 
+Get request nodeb health
+    [Arguments]    ${request_body}=${list_nodeb_body}
+    Sleep    1s
+    LOG      health check url ${nodeb_health_url}
+    LOG      health check body ${request_body}
+    PUT      ${nodeb_health_url}    ${request_body}
+
 Update Gnb request
     Sleep  1s
     PUT    ${update_gnb_url}   ${update_gnb_body}
