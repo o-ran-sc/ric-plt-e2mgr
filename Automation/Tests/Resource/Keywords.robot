@@ -44,6 +44,11 @@ Add eNb Request
     Sleep  1s
     POST    ${enb_url}   ${request}
 
+Get NodeB state requsest
+    [Arguments]     ${request}=${nodeb_state_ur
+    Sleep  1s
+    GET    ${request}
+
 Delete eNb Request
     Sleep  1s
     DELETE    ${enb_url}/${enb_ran_name}
