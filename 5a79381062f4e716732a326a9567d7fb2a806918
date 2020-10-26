@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a68a0cdf_d4065f3f",
+        "filename": "Swagger/E2Manager_API.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000102
+      },
+      "writtenOn": "2020-10-26T07:08:54Z",
+      "side": 1,
+      "message": "This should only reflect HTTP status codes and not internal error codes.\nThat is, 500, 400, 202, 204, 200, 404.\nInternal error codes such has 406 are not specified in the Swagger, they just explain which error occurred. For example, 402, which is an internal code for validation error, won\u0027t be reflected in the swagger, just 400 will be (which is BAD REQUEST http status code).",
+      "revId": "5a79381062f4e716732a326a9567d7fb2a806918",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
