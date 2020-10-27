@@ -16,6 +16,24 @@
       "revId": "5a79381062f4e716732a326a9567d7fb2a806918",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80db66dc_dbfad66d",
+        "filename": "Swagger/E2Manager_API.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-10-27T07:18:24Z",
+      "side": 1,
+      "message": "Removed 404 as HTTP code.\nthanks for comment.",
+      "parentUuid": "a68a0cdf_d4065f3f",
+      "revId": "5a79381062f4e716732a326a9567d7fb2a806918",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": false
     }
   ]
 }
