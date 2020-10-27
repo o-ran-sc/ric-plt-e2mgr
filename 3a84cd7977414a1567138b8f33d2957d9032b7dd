@@ -16,6 +16,24 @@
       "revId": "3a84cd7977414a1567138b8f33d2957d9032b7dd",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd9a8fbd_71d83075",
+        "filename": "Automation/Tests/Get_NodeB_State/Get_NodeB_State.robot",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-10-27T03:59:25Z",
+      "side": 1,
+      "message": "Thank you for the comment.\nYes, it should be removed.",
+      "parentUuid": "31f60430_ff65c0ed",
+      "revId": "3a84cd7977414a1567138b8f33d2957d9032b7dd",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": false
     }
   ]
 }
