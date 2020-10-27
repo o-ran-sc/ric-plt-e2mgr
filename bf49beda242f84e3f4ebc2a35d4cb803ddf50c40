@@ -33,6 +33,24 @@
       "revId": "bf49beda242f84e3f4ebc2a35d4cb803ddf50c40",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24f2ef9a_75b389ee",
+        "filename": "Automation/Tests/GetNodeB_Health/GetNodeB-GNB_test.robot",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2020-10-27T07:34:19Z",
+      "side": 1,
+      "message": "Yes, it is not required.",
+      "parentUuid": "d6291950_a450027f",
+      "revId": "bf49beda242f84e3f4ebc2a35d4cb803ddf50c40",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": false
     }
   ]
 }
