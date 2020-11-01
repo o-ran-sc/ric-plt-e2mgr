@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6dfeece_00708338",
+        "filename": "Automation/Tests/GetNodeB_Health/GetNodeB_unhappy.robot",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000102
+      },
+      "writtenOn": "2020-11-01T08:05:07Z",
+      "side": 1,
+      "message": "That\u0027s fine, but what I meant here was - have a file for happy scenario in which you have data returned (and / or an empty list case) AND have a file for unhappy scenario.",
+      "revId": "9f9a53731542ca2bbce271ad1570e2df9756db2b",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53",
+      "unresolved": true
+    }
+  ]
+}
