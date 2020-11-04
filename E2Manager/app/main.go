@@ -41,6 +41,29 @@ import (
 	"strconv"
 )
 
+const (
+	GeneralKey             = "GENERAL"
+	GeneralKeyDefaultValue = "{\"enableRic\":true}"
+)
+
+func initKeys(logger *logger.Logger, sdl *sdlgo.SdlInstance) error {
+	ok, err := sdl.SetIfNotExists(GeneralKey, GeneralKeyDefaultValue)
+
+	if err != nil {
+		logger.Errorf("#app.main - Failed setting GENERAL key")
+		return err
+	}
+
+	if ok {
+		logger.Infof("#app.main - Successfully set GENERAL key")
+	} else {
+		logger.Infof("#app.main - GENERAL key exists, no need to set")
+	}
+
+	return nil
+
+}
+
 func main() {
 	config := configuration.ParseConfiguration()
 	logLevel, _ := logger.LogLevelTokenToLevel(config.Logging.LogLevel)
@@ -52,6 +75,12 @@ func main() {
 	logger.Infof("#app.main - Configuration %s", config)
 	db := sdlgo.NewDatabase()
 	sdl := sdlgo.NewSdlInstance("e2Manager", db)
+	err = initKeys(logger, sdl)
+
+	if err != nil {
+		os.Exit(1)
+	}
+
 	defer sdl.Close()
 	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter(sdl, config.RnibWriter))
 
