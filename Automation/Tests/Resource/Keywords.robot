@@ -1,6 +1,7 @@
 ##############################################################################
 #
 #   Copyright (c) 2019 AT&T Intellectual Property.
+#   Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -34,6 +35,13 @@ Get Request nodeb
     [Arguments]    ${nodeb_name}=${ranName}
     Sleep    1s
     GET      ${getNodeb}/${nodeb_name}
+
+Get request nodeb health
+    [Arguments]    ${request_body}=${list_nodeb_body}
+    Sleep    1s
+    LOG      health check url ${nodeb_health_url}
+    LOG      health check body ${request_body}
+    PUT      ${nodeb_health_url}    ${request_body}
 
 Update Gnb request
     Sleep  1s

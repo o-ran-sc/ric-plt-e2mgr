@@ -1,6 +1,7 @@
 ##############################################################################
 #
 #   Copyright (c) 2019 AT&T Intellectual Property.
+#   Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,6 +31,8 @@ Documentation    Resource file
 ${ranName}  gnb_208_092_303030
 ${enb_ran_name}    enB_shortmacro_208__555540
 ${getNodeb}  /v1/nodeb
+${nodeb_health_url}   /v1/nodeb/health
+${empty_list_nodeb_body}   {}
 ${set_general_configuration}   /v1/nodeb/parameters
 ${set_general_configuration_body}   {"enableRic":false}
 ${update_gnb_url}   /v1/nodeb/gnb/${ranName}
