@@ -119,7 +119,9 @@ func (c *RoutingManagerClient) sendMessage(method string, url string, data inter
 		return e2managererrors.NewRoutingManagerError()
 	}
 
-	defer resp.Body.Close()
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
 
 	if resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusMultipleChoices {
 		c.logger.Infof("[Routing Manager -> E2 Manager] #RoutingManagerClient.sendMessage - success. http status code: %d", resp.StatusCode)
