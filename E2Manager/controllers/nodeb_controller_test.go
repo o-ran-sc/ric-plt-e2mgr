@@ -1761,6 +1761,21 @@ func TestX2ResetHandleSuccessfulRequestedDefault(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
 }
 
+func TestX2ResetHandleFailureBodyReadError(t *testing.T) {
+	controller, _, _, _, _, _ := setupControllerTest(t)
+
+	ranName := "test1"
+	writer := httptest.NewRecorder()
+
+	// Fake reader to return reading error.
+	req, _ := http.NewRequest("PUT", "https://localhost:3800/nodeb-reset", errReader(0))
+	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
+
+	controller.X2Reset(writer, req)
+	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
+
+}
+
 func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 	controller, _, _, _, _, _ := setupControllerTest(t)
 
@@ -1777,6 +1792,34 @@ func TestX2ResetHandleFailureInvalidBody(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, writer.Result().StatusCode)
 
 }
+
+/*
+func TestControllerHealthCheckRequestSuccess(t *testing.T) {
+	controller, readerMock, _, rmrMessengerMock, _, _ := setupControllerTest(t)
+
+	ranName := "test1"
+	// o&m intervention
+	payload := []byte{0x00, 0x07, 0x00, 0x08, 0x00, 0x00, 0x01, 0x00, 0x05, 0x40, 0x01, 0x64}
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	msg := rmrCgo.NewMBuf(rmrCgo.RIC_X2_RESET, len(payload), ranName, &payload, &xAction, msgSrc)
+	rmrMessengerMock.On("SendMsg", msg, true).Return(msg, nil)
+
+	writer := httptest.NewRecorder()
+
+	var nodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED}
+	readerMock.On("GetNodeb", ranName).Return(nodeb, nil)
+
+	data4Req := map[string]interface{}{"ranList": []string{"abcd"}}
+    b := new(bytes.Buffer)
+    _ = json.NewEncoder(b).Encode(data4Req)
+	req, _ := http.NewRequest("PUT", "https://localhost:3800/v1/nodeb/health", b)
+	req = mux.SetURLVars(req, map[string]string{"ranName": ranName})
+
+	controller.HealthCheckRequest(writer, req)
+	assert.Equal(t, http.StatusNoContent, writer.Result().StatusCode)
+}
+*/
 
 func TestHandleErrorResponse(t *testing.T) {
 	controller, _, _, _, _, _ := setupControllerTest(t)
@@ -1822,4 +1865,10 @@ func getRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) 
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrMessengerMock.On("Init", tests.GetPort(), tests.MaxMsgSize, tests.Flags, log).Return(&rmrMessenger)
 	return rmrsender.NewRmrSender(log, rmrMessenger)
+}
+
+type errReader int
+
+func (errReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("test error")
 }
