@@ -17,7 +17,6 @@
 //  This source code is part of the near-RT RIC (RAN Intelligent Controller)
 //  platform project (RICP).
 
-
 package rmrsender
 
 import (
@@ -63,7 +62,7 @@ func TestRmrSenderSendSuccess(t *testing.T) {
 	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)
 	assert.Nil(t, err)
-	rmrMessengerMock.AssertCalled(t, "SendMsg",mbuf, true)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
 
 }
 
@@ -80,7 +79,76 @@ func TestRmrSenderSendFailure(t *testing.T) {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
 	rmrSender := NewRmrSender(logger, rmrMessenger)
 	err := rmrSender.Send(rmrMsg)
-	rmrMessengerMock.AssertCalled(t, "SendMsg",mbuf, true)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, true)
+	assert.NotNil(t, err)
+}
+
+func TestRmrSenderSendWithoutLogsSuccess(t *testing.T) {
+	logger, rmrMessengerMock := initRmrSenderTest(t)
+
+	ranName := "test"
+	payload := []byte("some payload")
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
+	rmrMessengerMock.On("SendMsg", mbuf, false).Return(&rmrCgo.MBuf{}, nil)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
+	err := rmrSender.SendWithoutLogs(rmrMsg)
+	assert.Nil(t, err)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, false)
+
+}
+
+func TestRmrSenderSendWithoutLogsFailure(t *testing.T) {
+	logger, rmrMessengerMock := initRmrSenderTest(t)
+
+	ranName := "test"
+	payload := []byte("some payload")
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
+	rmrMessengerMock.On("SendMsg", mbuf, false).Return(mbuf, fmt.Errorf("rmr send failure"))
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
+	err := rmrSender.SendWithoutLogs(rmrMsg)
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mbuf, false)
+	assert.NotNil(t, err)
+}
+
+func TestRmrSenderWhSendSuccess(t *testing.T) {
+	logger, rmrMessengerMock := initRmrSenderTest(t)
+
+	ranName := "test"
+	payload := []byte("some payload")
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
+	rmrMessengerMock.On("WhSendMsg", mbuf, true).Return(&rmrCgo.MBuf{}, nil)
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
+	err := rmrSender.WhSend(rmrMsg)
+	assert.Nil(t, err)
+	rmrMessengerMock.AssertCalled(t, "WhSendMsg", mbuf, true)
+}
+
+func TestRmrSenderWhSendFailure(t *testing.T) {
+	logger, rmrMessengerMock := initRmrSenderTest(t)
+
+	ranName := "test"
+	payload := []byte("some payload")
+	var xAction []byte
+	var msgSrc unsafe.Pointer
+	mbuf := rmrCgo.NewMBuf(123, len(payload), ranName, &payload, &xAction, msgSrc)
+	rmrMessengerMock.On("WhSendMsg", mbuf, true).Return(mbuf, fmt.Errorf("rmr send failure"))
+	rmrMsg := models.NewRmrMessage(123, ranName, payload, xAction, nil)
+	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)
+	rmrSender := NewRmrSender(logger, rmrMessenger)
+	err := rmrSender.WhSend(rmrMsg)
+	rmrMessengerMock.AssertCalled(t, "WhSendMsg", mbuf, true)
 	assert.NotNil(t, err)
 }
 
