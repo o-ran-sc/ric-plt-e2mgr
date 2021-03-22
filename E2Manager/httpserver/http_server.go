@@ -28,10 +28,10 @@ import (
 	"net/http"
 )
 
-func Run(log *logger.Logger, port int, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) error {
+func Run(log *logger.Logger, port int, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController, symptomdataController controllers.ISymptomdataController) error {
 
 	router := mux.NewRouter()
-	initializeRoutes(router, rootController, nodebController, e2tController)
+	initializeRoutes(router, rootController, nodebController, e2tController, symptomdataController)
 
 	addr := fmt.Sprintf(":%d", port)
 
@@ -41,7 +41,7 @@ func Run(log *logger.Logger, port int, rootController controllers.IRootControlle
 	return err
 }
 
-func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController) {
+func initializeRoutes(router *mux.Router, rootController controllers.IRootController, nodebController controllers.INodebController, e2tController controllers.IE2TController, symptomdataController controllers.ISymptomdataController) {
 	r := router.PathPrefix("/v1").Subrouter()
 	r.HandleFunc("/health", rootController.HandleHealthCheckRequest).Methods(http.MethodGet)
 
@@ -58,4 +58,6 @@ func initializeRoutes(router *mux.Router, rootController controllers.IRootContro
 	rr.HandleFunc("/health", nodebController.HealthCheckRequest).Methods(http.MethodPut)
 	rrr := r.PathPrefix("/e2t").Subrouter()
 	rrr.HandleFunc("/list", e2tController.GetE2TInstances).Methods(http.MethodGet)
+
+	r.HandleFunc("/symptomdata", symptomdataController.GetSymptomData).Methods(http.MethodGet)
 }

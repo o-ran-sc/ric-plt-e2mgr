@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.NodebControllerMock, *mocks.E2TControllerMock) {
+func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.NodebControllerMock, *mocks.E2TControllerMock, *mocks.SymptomdataControllerMock) {
 	rootControllerMock := &mocks.RootControllerMock{}
 	rootControllerMock.On("HandleHealthCheckRequest").Return(nil)
 
@@ -47,16 +47,18 @@ func setupRouterAndMocks() (*mux.Router, *mocks.RootControllerMock, *mocks.Nodeb
 	nodebControllerMock.On("HealthCheckRequest").Return(nil)
 
 	e2tControllerMock := &mocks.E2TControllerMock{}
-
 	e2tControllerMock.On("GetE2TInstances").Return(nil)
 
+	symptomdataControllerMock := &mocks.SymptomdataControllerMock{}
+	symptomdataControllerMock.On("GetSymptomData").Return(nil)
+
 	router := mux.NewRouter()
-	initializeRoutes(router, rootControllerMock, nodebControllerMock, e2tControllerMock)
-	return router, rootControllerMock, nodebControllerMock, e2tControllerMock
+	initializeRoutes(router, rootControllerMock, nodebControllerMock, e2tControllerMock, symptomdataControllerMock)
+	return router, rootControllerMock, nodebControllerMock, e2tControllerMock, symptomdataControllerMock
 }
 
 func TestRouteGetNodebIdList(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/states", nil)
 	if err != nil {
@@ -69,7 +71,7 @@ func TestRouteGetNodebIdList(t *testing.T) {
 }
 
 func TestRouteGetNodebId(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/states/ran1", nil)
 	if err != nil {
@@ -83,7 +85,7 @@ func TestRouteGetNodebId(t *testing.T) {
 }
 
 func TestRouteGetNodebRanName(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/nodeb/ran1", nil)
 	if err != nil {
@@ -98,7 +100,7 @@ func TestRouteGetNodebRanName(t *testing.T) {
 }
 
 func TestRouteGetHealth(t *testing.T) {
-	router, rootControllerMock, _, _ := setupRouterAndMocks()
+	router, rootControllerMock, _, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/health", nil)
 	if err != nil {
@@ -111,7 +113,7 @@ func TestRouteGetHealth(t *testing.T) {
 }
 
 func TestRoutePutNodebShutdown(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/shutdown", nil)
 	if err != nil {
@@ -124,7 +126,7 @@ func TestRoutePutNodebShutdown(t *testing.T) {
 }
 
 func TestHealthCheckRequest(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/health", nil)
 	if err != nil {
@@ -138,7 +140,7 @@ func TestHealthCheckRequest(t *testing.T) {
 }
 
 func TestRoutePutNodebSetGeneralConfiguration(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/parameters", nil)
 	if err != nil {
@@ -151,7 +153,7 @@ func TestRoutePutNodebSetGeneralConfiguration(t *testing.T) {
 }
 
 func TestRoutePutUpdateEnb(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("PUT", "/v1/nodeb/enb/ran1", nil)
 	if err != nil {
@@ -164,7 +166,7 @@ func TestRoutePutUpdateEnb(t *testing.T) {
 }
 
 func TestRouteNotFound(t *testing.T) {
-	router, _, _, _ := setupRouterAndMocks()
+	router, _, _, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("GET", "/v1/no/such/route", nil)
 	if err != nil {
@@ -178,14 +180,14 @@ func TestRouteNotFound(t *testing.T) {
 
 func TestRunError(t *testing.T) {
 	log := initLog(t)
-	err := Run(log, 1234567, &mocks.RootControllerMock{}, &mocks.NodebControllerMock{}, &mocks.E2TControllerMock{})
+	err := Run(log, 1234567, &mocks.RootControllerMock{}, &mocks.NodebControllerMock{}, &mocks.E2TControllerMock{}, &mocks.SymptomdataControllerMock{})
 	assert.NotNil(t, err)
 }
 
 func TestRun(t *testing.T) {
 	log := initLog(t)
-	_, rootControllerMock, nodebControllerMock, e2tControllerMock := setupRouterAndMocks()
-	go Run(log, 11223, rootControllerMock, nodebControllerMock, e2tControllerMock)
+	_, rootControllerMock, nodebControllerMock, e2tControllerMock, symptomdataControllerMock := setupRouterAndMocks()
+	go Run(log, 11223, rootControllerMock, nodebControllerMock, e2tControllerMock, symptomdataControllerMock)
 
 	time.Sleep(time.Millisecond * 100)
 	resp, err := http.Get("http://localhost:11223/v1/health")
@@ -196,7 +198,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRouteAddEnb(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("POST", "/v1/nodeb/enb", nil)
 	if err != nil {
@@ -210,7 +212,7 @@ func TestRouteAddEnb(t *testing.T) {
 }
 
 func TestRouteDeleteEnb(t *testing.T) {
-	router, _, nodebControllerMock, _ := setupRouterAndMocks()
+	router, _, nodebControllerMock, _, _ := setupRouterAndMocks()
 
 	req, err := http.NewRequest("DELETE", "/v1/nodeb/enb/ran1", nil)
 	if err != nil {

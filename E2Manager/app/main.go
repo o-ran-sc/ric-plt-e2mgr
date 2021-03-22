@@ -123,5 +123,6 @@ func main() {
 	rootController := controllers.NewRootController(rnibDataService)
 	nodebController := controllers.NewNodebController(logger, httpMsgHandlerProvider)
 	e2tController := controllers.NewE2TController(logger, httpMsgHandlerProvider)
-	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController, e2tController)
+	symptomController := controllers.NewSymptomdataController(logger, httpMsgHandlerProvider, rnibDataService, ranListManager)
+	_ = httpserver.Run(logger, config.Http.Port, rootController, nodebController, e2tController, symptomController)
 }
