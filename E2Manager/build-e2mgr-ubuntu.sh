@@ -31,11 +31,11 @@ set -eux
 echo "--> e2mgr-build-ubuntu.sh"
 
 # Install RMR from deb packages at packagecloud.io
-rmr=rmr_4.5.2_amd64.deb
+rmr=rmr_4.7.4_amd64.deb
 wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/$rmr/download.deb
 sudo dpkg -i $rmr
 rm $rmr
-rmrdev=rmr-dev_4.5.2_amd64.deb
+rmrdev=rmr-dev_4.7.4_amd64.deb
 wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/$rmrdev/download.deb
 sudo dpkg -i $rmrdev
 rm $rmrdev
