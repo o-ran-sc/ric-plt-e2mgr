@@ -60,3 +60,51 @@ func TestRanListManagerInstance_InitNbIdentityMapFailure(t *testing.T) {
 	err := ranListManager.InitNbIdentityMap()
 	assert.NotNil(t, err)
 }
+
+func TestRanListManagerInstance_AddNbIdentitySuccess(t *testing.T) {
+        _,writerMock, ranListManager := initRanListManagerTest(t)
+        //readerMock.On("GetListNodebIds").Return([]*entities.NbIdentity{{InventoryName: RanName, GlobalNbId: &entities.GlobalNbId{NbId: "asd", PlmnId: "efg"}, ConnectionStatus: entities.ConnectionStatus_CONNECTED}}, nil)
+        nbIdentity :=  &entities.NbIdentity{}
+        writerMock.On("AddNbIdentity", entities.Node_ENB, nbIdentity).Return(nil)
+        nodetype := entities.Node_ENB
+        err := ranListManager.AddNbIdentity(nodetype,nbIdentity)
+        assert.Nil(t, err)
+}
+
+
+func TestRanListManagerInstance_RemoveNbIdentitySuccess(t *testing.T) {
+        _,writerMock, ranListManager := initRanListManagerTest(t)
+        ranName := "ran1"
+        writerMock.On("RemoveNbIdentity", entities.Node_ENB,"ran1" ).Return(nil)
+        nodetype := entities.Node_ENB
+        err := ranListManager.RemoveNbIdentity(nodetype,ranName)
+        assert.Nil(t, err)
+}
+
+func TestRanListManagerInstance_GetNbIdentity(t *testing.T) {
+       _,writerMock,ranListManager := initRanListManagerTest(t)
+       ranName := "ran1"
+       nbIdentity := &entities.NbIdentity{}
+       writerMock.On("GetNbIdentity", entities.Node_ENB, nbIdentity).Return(nil)
+       err,nb := ranListManager.GetNbIdentity(ranName)
+       assert.NotNil(t, nb)
+       assert.Nil(t,err)
+}
+
+func TestRanListManagerInstance_GetNbIdentityList(t *testing.T) {
+       _,writerMock,ranListManager := initRanListManagerTest(t)
+       writerMock.On("GetNbIdentityList").Return(nil)
+       Ids := ranListManager.GetNbIdentityList()
+       assert.NotNil(t, Ids)
+}
+
+
+func TestRanListManagerInstance_UpdateNbIdentities(t *testing.T) {
+        _,writerMock,ranListManager := initRanListManagerTest(t)
+        nodeType := entities.Node_ENB
+        oldNbIdentities := []*entities.NbIdentity{}
+        newNbIdentities := []*entities.NbIdentity{}
+        writerMock.On("UpdateNbIdentities",entities.Node_ENB,oldNbIdentities,newNbIdentities).Return(nil)
+        res := ranListManager.UpdateNbIdentities(nodeType, oldNbIdentities, newNbIdentities)
+        assert.Nil(t, res)
+}

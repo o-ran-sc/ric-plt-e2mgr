@@ -136,3 +136,21 @@ func initLog(t *testing.T) *logger.Logger {
 	}
 	return log
 }
+
+func TestString(t *testing.T){
+      var msgSrc unsafe.Pointer
+      msg := rmrCgo.NewMBuf(tests.MessageType, len(tests.DummyPayload), "RanName", &tests.DummyPayload, &tests.DummyXAction, msgSrc)
+      ret := msg.String()
+      assert.NotNil(t,ret)
+}
+
+
+func TestGetMsgSrc(t *testing.T){
+      var msgSrc unsafe.Pointer
+      msg := rmrCgo.NewMBuf(tests.MessageType, len(tests.DummyPayload), "RanName", &tests.DummyPayload, &tests.DummyXAction, msgSrc)
+      ret := msg.GetMsgSrc()
+      assert.NotNil(t,ret)
+}
+
+
+
