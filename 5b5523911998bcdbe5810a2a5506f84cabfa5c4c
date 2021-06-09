@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4d0b8526_c7905716",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000113
+      },
+      "writtenOn": "2021-06-09T16:39:29Z",
+      "side": 1,
+      "message": "This patch should not have been approved and merged. The vote for these committer changes were not approved via the list or a TOC vote.\n\nhttps://lists.o-ran-sc.org/g/toc/message/435\n\nPlease update this patch with the necessary approvals and remerge.",
+      "revId": "5b5523911998bcdbe5810a2a5506f84cabfa5c4c",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
