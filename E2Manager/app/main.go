@@ -35,19 +35,17 @@ import (
 	"e2mgr/services/rmrreceiver"
 	"e2mgr/services/rmrsender"
 	"fmt"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
 	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
 	"os"
 	"strconv"
 )
 
-const (
-	GeneralKey             = "GENERAL"
-	GeneralKeyDefaultValue = "{\"enableRic\":true}"
-)
+const GeneralKeyDefaultValue = "{\"enableRic\":true}"
 
-func initKeys(logger *logger.Logger, sdl *sdlgo.SdlInstance) error {
-	ok, err := sdl.SetIfNotExists(GeneralKey, GeneralKeyDefaultValue)
+func initKeys(logger *logger.Logger, sdl *sdlgo.SyncStorage) error {
+	ok, err := sdl.SetIfNotExists(common.GetRNibNamespace(), common.BuildGeneralConfigurationKey(), GeneralKeyDefaultValue)
 
 	if err != nil {
 		logger.Errorf("#app.main - Failed setting GENERAL key")
@@ -73,8 +71,7 @@ func main() {
 		os.Exit(1)
 	}
 	logger.Infof("#app.main - Configuration %s", config)
-	db := sdlgo.NewDatabase()
-	sdl := sdlgo.NewSdlInstance("e2Manager", db)
+	sdl := sdlgo.NewSyncStorage()
 	err = initKeys(logger, sdl)
 
 	if err != nil {
@@ -82,7 +79,7 @@ func main() {
 	}
 
 	defer sdl.Close()
-	rnibDataService := services.NewRnibDataService(logger, config, reader.GetRNibReader(sdl), rNibWriter.GetRNibWriter(sdl, config.RnibWriter))
+	rnibDataService := services.NewRnibDataService(logger, config, reader.GetNewRNibReader(sdl), rNibWriter.GetRNibWriter(sdl, config.RnibWriter))
 
 	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 

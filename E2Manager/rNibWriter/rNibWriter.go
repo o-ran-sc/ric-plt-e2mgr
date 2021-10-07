@@ -36,8 +36,9 @@ const (
 )
 
 type rNibWriterInstance struct {
-	sdl              common.ISdlInstance
+	sdl              common.ISdlSyncStorage
 	rnibWriterConfig configuration.RnibWriterConfig
+	ns               string
 }
 
 /*
@@ -63,12 +64,17 @@ type RNibWriter interface {
 	AddEnb(nodebInfo *entities.NodebInfo) error
 	UpdateNbIdentities(nodeType entities.Node_Type, oldNbIdentities []*entities.NbIdentity, newNbIdentities []*entities.NbIdentity) error
 }
+
 /*
 GetRNibWriter returns reference to RNibWriter
 */
 
-func GetRNibWriter(sdl common.ISdlInstance, rnibWriterConfig configuration.RnibWriterConfig) RNibWriter {
-	return &rNibWriterInstance{sdl: sdl, rnibWriterConfig: rnibWriterConfig}
+func GetRNibWriter(sdl common.ISdlSyncStorage, rnibWriterConfig configuration.RnibWriterConfig) RNibWriter {
+	return &rNibWriterInstance{
+		sdl:              sdl,
+		rnibWriterConfig: rnibWriterConfig,
+		ns:               common.GetRNibNamespace(),
+	}
 }
 
 func getChannelsAndEventsPair(channel string, ranName string, event string) []string {
@@ -82,7 +88,7 @@ func (w *rNibWriterInstance) AddNbIdentity(nodeType entities.Node_Type, nbIdenti
 		return common.NewInternalError(err)
 	}
 
-	err = w.sdl.AddMember(nodeType.String(), nbIdData)
+	err = w.sdl.AddMember(w.ns, nodeType.String(), nbIdData)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -93,7 +99,7 @@ func (w *rNibWriterInstance) AddNbIdentity(nodeType entities.Node_Type, nbIdenti
 func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrCells []*entities.ServedNRCell) error {
 	cellKeysToRemove := buildServedNRCellKeysToRemove(inventoryName, servedNrCells)
 
-	err := w.sdl.Remove(cellKeysToRemove)
+	err := w.sdl.Remove(w.ns, cellKeysToRemove)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -105,7 +111,7 @@ func (w *rNibWriterInstance) RemoveServedNrCells(inventoryName string, servedNrC
 func (w *rNibWriterInstance) RemoveServedCells(inventoryName string, servedCells []*entities.ServedCellInfo) error {
 	cellKeysToRemove := buildServedCellInfoKeysToRemove(inventoryName, servedCells)
 
-	err := w.sdl.Remove(cellKeysToRemove)
+	err := w.sdl.Remove(w.ns, cellKeysToRemove)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -168,7 +174,7 @@ func (w *rNibWriterInstance) SaveNodeb(nodebInfo *entities.NodebInfo) error {
 		}
 	}
 
-	err = w.sdl.Set(pairs)
+	err = w.sdl.Set(w.ns, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -209,7 +215,7 @@ func (w *rNibWriterInstance) AddEnb(nodebInfo *entities.NodebInfo) error {
 	}
 
 	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanAddedEvent)
-	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
+	err = w.sdl.SetAndPublish(w.ns, channelsAndEvents, pairs)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -224,7 +230,7 @@ func (w *rNibWriterInstance) UpdateNbIdentities(nodeType entities.Node_Type, old
 		return err
 	}
 
-	err = w.sdl.RemoveMember(nodeType.String(), nbIdIdentitiesToRemove[:]...)
+	err = w.sdl.RemoveMember(w.ns, nodeType.String(), nbIdIdentitiesToRemove[:]...)
 	if err != nil {
 		return err
 	}
@@ -234,7 +240,7 @@ func (w *rNibWriterInstance) UpdateNbIdentities(nodeType entities.Node_Type, old
 		return err
 	}
 
-	err = w.sdl.AddMember(nodeType.String(), nbIdIdentitiesToAdd[:]...)
+	err = w.sdl.AddMember(w.ns, nodeType.String(), nbIdIdentitiesToAdd[:]...)
 	if err != nil {
 		return err
 	}
@@ -257,7 +263,7 @@ func (w *rNibWriterInstance) UpdateGnbCells(nodebInfo *entities.NodebInfo, serve
 	}
 
 	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
-	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
+	err = w.sdl.SetAndPublish(w.ns, channelsAndEvents, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -359,7 +365,7 @@ func (w *rNibWriterInstance) RemoveNbIdentity(nodeType entities.Node_Type, nbIde
 	if err != nil {
 		return common.NewInternalError(err)
 	}
-	err = w.sdl.RemoveMember(nodeType.String(), nbIdData)
+	err = w.sdl.RemoveMember(w.ns, nodeType.String(), nbIdData)
 	if err != nil {
 		return common.NewInternalError(err)
 	}
@@ -376,9 +382,9 @@ func (w *rNibWriterInstance) updateNodebInfo(nodebInfo *entities.NodebInfo, publ
 
 	if publish {
 		channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
-		err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
+		err = w.sdl.SetAndPublish(w.ns, channelsAndEvents, pairs)
 	} else {
-		err = w.sdl.Set(pairs)
+		err = w.sdl.Set(w.ns, pairs)
 	}
 
 	if err != nil {
@@ -402,7 +408,6 @@ func (w *rNibWriterInstance) UpdateNodebInfoAndPublish(nodebInfo *entities.Nodeb
 	return w.updateNodebInfo(nodebInfo, true)
 }
 
-
 /*
 SaveRanLoadInformation stores ran load information for the provided ran
 */
@@ -423,7 +428,7 @@ func (w *rNibWriterInstance) SaveRanLoadInformation(inventoryName string, ranLoa
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
 
-	err = w.sdl.Set(pairs)
+	err = w.sdl.Set(w.ns, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -449,7 +454,7 @@ func (w *rNibWriterInstance) SaveE2TInstance(e2tInstance *entities.E2TInstance) 
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
 
-	err = w.sdl.Set(pairs)
+	err = w.sdl.Set(w.ns, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -469,7 +474,7 @@ func (w *rNibWriterInstance) SaveE2TAddresses(addresses []string) error {
 	var pairs []interface{}
 	pairs = append(pairs, E2TAddressesKey, data)
 
-	err = w.sdl.Set(pairs)
+	err = w.sdl.Set(w.ns, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -483,7 +488,7 @@ func (w *rNibWriterInstance) RemoveE2TInstance(address string) error {
 	if rNibErr != nil {
 		return rNibErr
 	}
-	err := w.sdl.Remove([]string{key})
+	err := w.sdl.Remove(w.ns, []string{key})
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -502,7 +507,7 @@ func (w *rNibWriterInstance) SaveWithKeyAndMarshal(key string, entity interface{
 	var pairs []interface{}
 	pairs = append(pairs, key, data)
 
-	err = w.sdl.Set(pairs)
+	err = w.sdl.Set(w.ns, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -522,7 +527,7 @@ func (w *rNibWriterInstance) UpdateNodebInfoOnConnectionStatusInversion(nodebInf
 		return err
 	}
 
-	err = w.sdl.SetAndPublish([]string{w.rnibWriterConfig.StateChangeMessageChannel, event}, pairs)
+	err = w.sdl.SetAndPublish(w.ns, []string{w.rnibWriterConfig.StateChangeMessageChannel, event}, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -538,7 +543,7 @@ func (w *rNibWriterInstance) RemoveEnb(nodebInfo *entities.NodebInfo) error {
 	}
 
 	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanDeletedEvent)
-	err = w.sdl.RemoveAndPublish(channelsAndEvents, keysToRemove)
+	err = w.sdl.RemoveAndPublish(w.ns, channelsAndEvents, keysToRemove)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -562,7 +567,7 @@ func (w *rNibWriterInstance) UpdateEnb(nodebInfo *entities.NodebInfo, servedCell
 	}
 
 	channelsAndEvents := getChannelsAndEventsPair(w.rnibWriterConfig.RanManipulationMessageChannel, nodebInfo.RanName, RanUpdatedEvent)
-	err = w.sdl.SetAndPublish(channelsAndEvents, pairs)
+	err = w.sdl.SetAndPublish(w.ns, channelsAndEvents, pairs)
 
 	if err != nil {
 		return common.NewInternalError(err)
@@ -585,6 +590,7 @@ func (w *rNibWriterInstance) buildNbIdentitiesMembers(nbIdentities []*entities.N
 
 	return nbIdIdentitiesMembers, nil
 }
+
 /*
 Close the writer
 */
