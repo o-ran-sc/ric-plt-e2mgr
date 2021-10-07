@@ -1,10 +1,10 @@
 module e2mgr
 
 require (
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.0.48
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.0.48
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.0.48
-	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.7.0
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.1
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.1
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.2.1
+	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.8.0
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/mux v1.7.0
 	github.com/kr/pretty v0.2.0 // indirect
@@ -26,4 +26,6 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.7.0
+replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdlgo.git v0.8.0
+
+go 1.13

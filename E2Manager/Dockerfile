@@ -27,6 +27,13 @@ COPY . .
 
 # Install dependencies, compile and test the module
 RUN apt-get update && apt-get install -y sudo
+
+# Update CA certificates
+RUN apt update && apt install --reinstall -y \
+  ca-certificates \
+  && \
+  update-ca-certificates
+
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
