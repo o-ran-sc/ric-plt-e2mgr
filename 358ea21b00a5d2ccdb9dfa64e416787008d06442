@@ -16,6 +16,24 @@
       "message": "Kind reminder about the open review and if changes are looking okay please also merge who has access rights to do so.",
       "revId": "358ea21b00a5d2ccdb9dfa64e416787008d06442",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b7c20b32_9f19428f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2021-10-11T10:32:03Z",
+      "side": 1,
+      "message": "thank you for the reminder. It is merged now.",
+      "parentUuid": "4a3dd90f_ecbba371",
+      "revId": "358ea21b00a5d2ccdb9dfa64e416787008d06442",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
