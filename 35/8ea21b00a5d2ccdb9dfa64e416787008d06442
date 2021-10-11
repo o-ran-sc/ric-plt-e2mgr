@@ -1,0 +1,8 @@
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Code-Review+1: Anssi Mannila <anssi.mannila@nokia.com>
+Code-Review+2: subhash kumar singh <subh.singh@samsung.com>
+Submitted-by: subhash kumar singh <subh.singh@samsung.com>
+Submitted-at: Mon, 11 Oct 2021 10:18:44 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/e2mgr/+/6832
+Project: ric-plt/e2mgr
+Branch: refs/heads/master
