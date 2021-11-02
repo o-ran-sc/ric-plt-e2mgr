@@ -1,0 +1,32 @@
+FROM bldr-ubuntu18-c-go:1.9.0 as ubuntu
+
+WORKDIR /opt/E2Manager
+COPY . .
+
+# Install dependencies, compile and test the module
+RUN apt-get update && apt-get install -y sudo
+RUN bash build-e2mgr-ubuntu-arm64.sh
+
+# Build deployable container
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get install -y \
+  net-tools \
+  iputils-ping \
+  curl \
+  tcpdump
+
+COPY --from=ubuntu /opt/E2Manager/router.txt /opt/E2Manager/router.txt
+COPY --from=ubuntu /opt/E2Manager/main /opt/E2Manager/main
+COPY --from=ubuntu /opt/E2Manager/resources/configuration.yaml /opt/E2Manager/resources/configuration.yaml
+COPY --from=ubuntu /opt/E2Manager/resources/rmr.verbose /tmp/rmr.verbose
+COPY --from=ubuntu /usr/local/lib/librmr_si.so.4 /usr/local/lib/librmr_si.so.4
+
+WORKDIR /opt/E2Manager
+ENV LD_LIBRARY_PATH=/usr/local/lib \
+    port=3800
+ENV RMR_SEED_RT=router.txt
+ENV RMR_VCTL_FILE=/tmp/rmr.verbose
+EXPOSE 3800
+CMD ["sh", "-c", "./main  -port=$port"]
+
