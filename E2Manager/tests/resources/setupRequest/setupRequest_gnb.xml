@@ -44,6 +44,7 @@
                                                 790280674E422D5832000020312E332E362E312E342E312E32383435382E39392E302E32312E332E332E312E320B80674E42205832204E6574776F726B20496E74657266616365010000010108004D6573736167652054797065206F6E6C7901010001010780436F6D706C657465206D6573736167650101000001058041646454696D657374616D7020010101010001010780436F6D706C657465206D6573736167650101000001058041646454696D657374616D70200101010101010001010780436F6D706C657465206D657373616765010101010101
                                             </ranFunctionDefinition>
                                             <ranFunctionRevision>1</ranFunctionRevision>
+                                            <ranFunctionOID>OID123</ranFunctionOID>
                                         </RANfunction-Item>
                                     </value>
                                 </ProtocolIE-SingleContainer>
@@ -59,6 +60,7 @@
                                                 680300674E422D4E5254000020312E332E362E312E342E312E32383435382E39392E302E32312E332E332E332E330D80674E42204E65696768626F75722052656C6174696F6E205461626C6500010105804E6F74696669636174696F6E01010001010680436F6D706C657465207461626C650101000001058041646454696D657374616D70200101010100010107804E5254206D6F64696669636174696F6E010101010100
                                             </ranFunctionDefinition>
                                             <ranFunctionRevision>1</ranFunctionRevision>
+                                            <ranFunctionOID>OID134</ranFunctionOID>
                                         </RANfunction-Item>
                                     </value>
                                 </ProtocolIE-SingleContainer>
@@ -74,6 +76,7 @@
                                                 450280674E422D5832000020312E332E362E312E342E312E32383435382E39392E302E32312E332E332E312E320B80674E42205832204E6574776F726B20496E74657266616365010100010108004D6573736167652054797065206F6E6C79010100010108004D6573736167652041646D697373696F6E01020400010180514349310002018041525031000301805350494400040300552D5445494431400A05004C6F61645F6F666673657400
                                             </ranFunctionDefinition>
                                             <ranFunctionRevision>1</ranFunctionRevision>
+                                            <ranFunctionOID>OID234</ranFunctionOID>
                                         </RANfunction-Item>
                                     </value>
                                 </ProtocolIE-SingleContainer>
