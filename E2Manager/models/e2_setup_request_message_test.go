@@ -28,10 +28,11 @@ import (
 )
 
 const (
-	e2SetupReqGnbSetupRequestXmlPath   = "../tests/resources/setupRequest/setupRequest_gnb.xml"
-	e2SetupReqEnGnbSetupRequestXmlPath = "../tests/resources/setupRequest/setupRequest_en-gNB.xml"
-	e2SetupReqEnbSetupRequestXmlPath   = "../tests/resources/setupRequest/setupRequest_enb.xml"
-	e2SetupReqNgEnbSetupRequestXmlPath = "../tests/resources/setupRequest/setupRequest_ng-eNB.xml"
+	e2SetupReqGnbSetupRequestXmlPath        = "../tests/resources/setupRequest/setupRequest_gnb.xml"
+	e2SetupReqEnGnbSetupRequestXmlPath      = "../tests/resources/setupRequest/setupRequest_en-gNB.xml"
+	e2SetupReqEnbSetupRequestXmlPath        = "../tests/resources/setupRequest/setupRequest_enb.xml"
+	e2SetupReqNgEnbSetupRequestXmlPath      = "../tests/resources/setupRequest/setupRequest_ng-eNB.xml"
+	e2SetupReqGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb.xml"
 )
 
 func getTestE2SetupRequest(t *testing.T, reqXmlPath string) *models.E2SetupRequestMessage {
@@ -52,6 +53,24 @@ func TestExtractRanFunctionsListFromGnbRequestSuccess(t *testing.T) {
 	assert.Equal(t, uint32(1), ranFuncList[0].RanFunctionRevision)
 	assert.Equal(t, uint32(1), ranFuncList[1].RanFunctionRevision)
 	assert.Equal(t, uint32(1), ranFuncList[2].RanFunctionRevision)
+}
+
+func TestExtractRanFunctionsListFromGnbRequestwithOidSuccess(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqGnbSetupRequestWithOIDXmlPath)
+
+	ranFuncList := setupRequest.ExtractRanFunctionsList()
+
+	assert.Equal(t, uint32(1), ranFuncList[0].RanFunctionId)
+	assert.Equal(t, uint32(2), ranFuncList[1].RanFunctionId)
+	assert.Equal(t, uint32(3), ranFuncList[2].RanFunctionId)
+
+	assert.Equal(t, uint32(1), ranFuncList[0].RanFunctionRevision)
+	assert.Equal(t, uint32(1), ranFuncList[1].RanFunctionRevision)
+	assert.Equal(t, uint32(1), ranFuncList[2].RanFunctionRevision)
+
+	assert.Equal(t, "OID123", ranFuncList[0].RanFunctionOid)
+	assert.Equal(t, "OID124", ranFuncList[1].RanFunctionOid)
+	assert.Equal(t, "OID125", ranFuncList[2].RanFunctionOid)
 }
 
 func TestGetPlmnIdFromGnbRequestSuccess(t *testing.T) {
