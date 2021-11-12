@@ -1,9 +1,9 @@
 module e2mgr
 
 require (
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.1
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.1
-	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.2.1
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common v1.2.3
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities v1.2.3
+	gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader v1.2.3
 	gerrit.o-ran-sc.org/r/ric-plt/sdlgo v0.8.0
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/mux v1.7.0

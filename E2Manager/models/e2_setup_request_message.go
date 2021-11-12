@@ -21,8 +21,9 @@ package models
 
 import (
 	"encoding/xml"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"strings"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type Gnb struct {
@@ -135,6 +136,7 @@ type RanFunctionItem struct {
 	RanFunctionID         uint32 `xml:"ranFunctionID"`
 	RanFunctionDefinition string `xml:"ranFunctionDefinition"`
 	RanFunctionRevision   uint32 `xml:"ranFunctionRevision"`
+	RanFunctionOID        string `xml:"ranFunctionOID"`
 }
 
 type RANfunctionsList struct {
@@ -169,6 +171,7 @@ func (m *E2SetupRequestMessage) ExtractRanFunctionsList() []*entities.RanFunctio
 			RanFunctionId:         ranFunctionItem.RanFunctionID,
 			RanFunctionDefinition: ranFunctionItem.RanFunctionDefinition,
 			RanFunctionRevision:   ranFunctionItem.RanFunctionRevision,
+			RanFunctionOid:        ranFunctionItem.RanFunctionOID,
 		}
 	}
 	return funcs
