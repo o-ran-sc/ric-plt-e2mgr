@@ -20,7 +20,7 @@
 #   platform project (RICP).
 #
 
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu18-c-go:1.9.0 as ubuntu
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as ubuntu
 
 WORKDIR /opt/E2Manager
 COPY . .
@@ -37,7 +37,7 @@ RUN apt update && apt install --reinstall -y \
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN apt-get update && apt-get install -y \
   net-tools \
