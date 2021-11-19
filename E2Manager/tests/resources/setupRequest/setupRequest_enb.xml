@@ -42,6 +42,7 @@
                                             <ranFunctionID>1</ranFunctionID>
                                             <ranFunctionDefinition>334455</ranFunctionDefinition>
                                             <ranFunctionRevision>0</ranFunctionRevision>
+                                            <ranFunctionOID>OID123</ranFunctionOID>
                                         </RANfunction-Item>
                                     </value>
                                 </ProtocolIE-SingleContainer>
@@ -55,6 +56,7 @@
                                             <ranFunctionID>7</ranFunctionID>
                                             <ranFunctionDefinition>334455</ranFunctionDefinition>
                                             <ranFunctionRevision>0</ranFunctionRevision>
+                                            <ranFunctionOID>OID134</ranFunctionOID>
                                         </RANfunction-Item>
                                     </value>
                                 </ProtocolIE-SingleContainer>
