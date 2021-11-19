@@ -67,6 +67,24 @@
       "message": "Could you remove this OID here as the next xml contains OID with same sample.\nSo test case will capture two scenario :\n1. Without OID  (E2AP v1.0)\n2. With OID     (E2AP v1.1)",
       "revId": "cbd394c3b719951e7c878aeabd9bf2004f6aa893",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "92bd23e8_2985fe2b",
+        "filename": "E2Manager/tests/resources/setupRequest/setupRequest_gnb.xml",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2021-11-19T08:28:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f832257c_4cebd561",
+      "revId": "cbd394c3b719951e7c878aeabd9bf2004f6aa893",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
