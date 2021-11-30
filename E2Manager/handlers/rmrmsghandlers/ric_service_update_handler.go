@@ -20,15 +20,16 @@ package rmrmsghandlers
 
 import (
 	"bytes"
-	"e2mgr/utils"
 	"e2mgr/logger"
 	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"e2mgr/utils"
 	"encoding/xml"
 	"fmt"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
@@ -42,26 +43,27 @@ const (
 )
 
 type functionDetails struct {
-	functionChange       int
-	functionId           uint32
-	functionDefinition   string
-	functionRevision     uint32
+	functionChange     int
+	functionId         uint32
+	functionDefinition string
+	functionRevision   uint32
+	functionOID        string
 }
 
 type RicServiceUpdateHandler struct {
-	logger                *logger.Logger
-    rmrSender             *rmrsender.RmrSender
-	rNibDataService       services.RNibDataService
-	ranListManager        managers.RanListManager
+	logger          *logger.Logger
+	rmrSender       *rmrsender.RmrSender
+	rNibDataService services.RNibDataService
+	ranListManager  managers.RanListManager
 }
 
 func NewRicServiceUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranListManager managers.RanListManager) *RicServiceUpdateHandler {
-	return &RicServiceUpdateHandler {
-                logger:                logger,
-                rmrSender:             rmrSender,
-                rNibDataService:       rNibDataService,
-				ranListManager:  	   ranListManager,
-        }
+	return &RicServiceUpdateHandler{
+		logger:          logger,
+		rmrSender:       rmrSender,
+		rNibDataService: rNibDataService,
+		ranListManager:  ranListManager,
+	}
 }
 
 func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
@@ -69,14 +71,14 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 	h.logger.Infof("#RicServiceUpdateHandler.Handle - RAN name: %s - received RIC_SERVICE_UPDATE. Payload: %s", ranName, request.Payload)
 
 	nodebInfo, err := h.rNibDataService.GetNodeb(ranName)
-	 if err != nil {
-		 _, ok := err.(*common.ResourceNotFoundError)
+	if err != nil {
+		_, ok := err.(*common.ResourceNotFoundError)
 		if !ok {
 			h.logger.Errorf("#RicServiceUpdateHandler.Handle - failed to get nodeB entity for ran name: %v due to RNIB Error: %s", ranName, err)
-		} else{
-			 h.logger.Errorf("#RicServiceUpdateHandler.Handle - nobeB entity of RanName:%s absent in RNIB. Error: %s", ranName, err)
-		 }
-		 return
+		} else {
+			h.logger.Errorf("#RicServiceUpdateHandler.Handle - nobeB entity of RanName:%s absent in RNIB. Error: %s", ranName, err)
+		}
+		return
 	}
 
 	ricServiceUpdate, err := h.parseSetupRequest(request.Payload)
@@ -119,15 +121,15 @@ func (h *RicServiceUpdateHandler) sendUpdateAck(updateAck models.RicServiceUpdat
 	}
 
 	toReplaceTags := []string{"reject", "ignore", "procedureCode", "id", "RANfunctionID-Item", "RANfunctionsID-List"}
-	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad,toReplaceTags)
+	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad, toReplaceTags)
 
-	h.logger.Infof("#RicServiceUpdate.sendUpdateAck - Sending RIC_SERVICE_UPDATE_ACK to RAN name: %s with payload %s",nodebInfo.RanName, payLoad)
+	h.logger.Infof("#RicServiceUpdate.sendUpdateAck - Sending RIC_SERVICE_UPDATE_ACK to RAN name: %s with payload %s", nodebInfo.RanName, payLoad)
 	msg := models.NewRmrMessage(rmrCgo.RIC_SERVICE_UPDATE_ACK, nodebInfo.RanName, payLoad, request.TransactionId, request.GetMsgSrc())
 	err = h.rmrSender.Send(msg)
 	return err
 }
 
-func (h *RicServiceUpdateHandler) updateFunctions(RICServiceUpdateIEs []models.RICServiceUpdateIEs,nodebInfo *entities.NodebInfo) []models.RicServiceAckRANFunctionIDItem {
+func (h *RicServiceUpdateHandler) updateFunctions(RICServiceUpdateIEs []models.RICServiceUpdateIEs, nodebInfo *entities.NodebInfo) []models.RicServiceAckRANFunctionIDItem {
 	ranFunctions := nodebInfo.GetGnb().RanFunctions
 	RanFIdtoIdxMap := make(map[uint32]int)
 	var acceptedFunctionIds []models.RicServiceAckRANFunctionIDItem
@@ -144,14 +146,14 @@ func (h *RicServiceUpdateHandler) updateFunctions(RICServiceUpdateIEs []models.R
 		}
 
 		for _, functionDetail := range functionDetails {
-			functionChange, functionId, functionDefinition, functionRevision := functionDetail.functionChange,
-			functionDetail.functionId, functionDetail.functionDefinition, functionDetail.functionRevision
+			functionChange, functionId, functionDefinition, functionRevision, functionOID := functionDetail.functionChange,
+				functionDetail.functionId, functionDetail.functionDefinition, functionDetail.functionRevision, functionDetail.functionOID
 			ranFIndex, ok := RanFIdtoIdxMap[functionId]
 			if !ok {
 				switch functionChange {
-				case RAN_FUNCTIONS_ADDED,RAN_FUNCTIONS_MODIFIED :
-					ranFunctions = append(ranFunctions, &entities.RanFunction{RanFunctionId:functionId,
-						RanFunctionDefinition:functionDefinition, RanFunctionRevision:functionRevision})
+				case RAN_FUNCTIONS_ADDED, RAN_FUNCTIONS_MODIFIED:
+					ranFunctions = append(ranFunctions, &entities.RanFunction{RanFunctionId: functionId,
+						RanFunctionDefinition: functionDefinition, RanFunctionRevision: functionRevision, RanFunctionOid: functionOID})
 				case RAN_FUNCTIONS_DELETED:
 					//Do nothing
 				}
@@ -164,7 +166,7 @@ func (h *RicServiceUpdateHandler) updateFunctions(RICServiceUpdateIEs []models.R
 					functionsToBeDeleted[ranFIndex] = true
 				}
 			}
-			serviceupdateAckFunctionId := models.RicServiceAckRANFunctionIDItem{RanFunctionID:functionId, RanFunctionRevision:functionRevision}
+			serviceupdateAckFunctionId := models.RicServiceAckRANFunctionIDItem{RanFunctionID: functionId, RanFunctionRevision: functionRevision}
 			acceptedFunctionIds = append(acceptedFunctionIds, serviceupdateAckFunctionId)
 		}
 	}
@@ -187,36 +189,36 @@ func (h *RicServiceUpdateHandler) remove(ranFunctions []*entities.RanFunction, f
 	return finalranFunctions
 }
 
-func (h *RicServiceUpdateHandler) getFunctionDetails(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails , error) {
+func (h *RicServiceUpdateHandler) getFunctionDetails(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails, error) {
 	functionChange := ricServiceUpdateIE.ID
-	switch functionChange{
-		case RAN_FUNCTIONS_ADDED, RAN_FUNCTIONS_MODIFIED:
-			return h.getFunctionsAddedModifiedHandler(ricServiceUpdateIE)
-		case RAN_FUNCTIONS_DELETED:
-			return h.getFunctionsDeleteHandler(ricServiceUpdateIE)
-		default:
-			return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - Unknown change type %v", functionChange))
+	switch functionChange {
+	case RAN_FUNCTIONS_ADDED, RAN_FUNCTIONS_MODIFIED:
+		return h.getFunctionsAddedModifiedHandler(ricServiceUpdateIE)
+	case RAN_FUNCTIONS_DELETED:
+		return h.getFunctionsDeleteHandler(ricServiceUpdateIE)
+	default:
+		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - Unknown change type %v", functionChange))
 	}
 	return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - Internal Error"))
 }
 
-func (h *RicServiceUpdateHandler) getFunctionsAddedModifiedHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails , error){
+func (h *RicServiceUpdateHandler) getFunctionsAddedModifiedHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails, error) {
 	functionChange := ricServiceUpdateIE.ID
 	ranFunctionsIEList := ricServiceUpdateIE.Value.RANfunctionsList.RANfunctionsItemProtocolIESingleContainer
-	if len(ranFunctionsIEList) ==0 {
+	if len(ranFunctionsIEList) == 0 {
 		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - function change type is %v but Functions list is empty", functionChange))
 	}
 
 	functionDetailsList := make([]functionDetails, len(ranFunctionsIEList))
 	for index, ranFunctionIE := range ranFunctionsIEList {
 		ranFunction := ranFunctionIE.Value.RANfunctionItem
-		functionDetailsList[index] = functionDetails{functionChange:functionChange, functionId:ranFunction.RanFunctionID,
-			functionDefinition:ranFunction.RanFunctionDefinition, functionRevision:ranFunction.RanFunctionRevision}
+		functionDetailsList[index] = functionDetails{functionChange: functionChange, functionId: ranFunction.RanFunctionID,
+			functionDefinition: ranFunction.RanFunctionDefinition, functionRevision: ranFunction.RanFunctionRevision, functionOID: ranFunction.RanFunctionOID}
 	}
 	return functionDetailsList, nil
 }
 
-func (h *RicServiceUpdateHandler) getFunctionsDeleteHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails , error){
+func (h *RicServiceUpdateHandler) getFunctionsDeleteHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails, error) {
 	functionChange := ricServiceUpdateIE.ID
 	ranFunctionIdIEsList := ricServiceUpdateIE.Value.RANfunctionsIDList.RANfunctionsItemIDProtocolIESingleContainer
 	if len(ranFunctionIdIEsList) == 0 {
@@ -226,22 +228,22 @@ func (h *RicServiceUpdateHandler) getFunctionsDeleteHandler(ricServiceUpdateIE m
 	functionDetailsList := make([]functionDetails, len(ranFunctionIdIEsList))
 	for index, ranFunctionIdIE := range ranFunctionIdIEsList {
 		ranFunctionId := ranFunctionIdIE.Value.RANfunctionIDItem
-		functionDetailsList[index] = functionDetails{functionChange:functionChange, functionId:ranFunctionId.RanFunctionID,
-			functionDefinition:"", functionRevision:ranFunctionId.RanFunctionRevision}
+		functionDetailsList[index] = functionDetails{functionChange: functionChange, functionId: ranFunctionId.RanFunctionID,
+			functionDefinition: "", functionRevision: ranFunctionId.RanFunctionRevision}
 	}
 	return functionDetailsList, nil
 }
 
 func (h *RicServiceUpdateHandler) parseSetupRequest(payload []byte) (*models.RICServiceUpdateMessage, error) {
-        pipInd := bytes.IndexByte(payload, '|')
-        if pipInd < 0 {
-                return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdateHandler.parseSetupRequest - Error parsing RIC SERVICE UPDATE failed extract Payload: no | separator found"))
-        }
+	pipInd := bytes.IndexByte(payload, '|')
+	if pipInd < 0 {
+		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdateHandler.parseSetupRequest - Error parsing RIC SERVICE UPDATE failed extract Payload: no | separator found"))
+	}
 
-        ricServiceUpdate := &models.RICServiceUpdateMessage{}
-        err := xml.Unmarshal(utils.NormalizeXml(payload[pipInd+1:]), &ricServiceUpdate.E2APPDU)
-        if err != nil {
-                return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdateHandler.parseSetupRequest - Error unmarshalling RIC SERVICE UPDATE payload: %x", payload))
-        }
-        return ricServiceUpdate, nil
+	ricServiceUpdate := &models.RICServiceUpdateMessage{}
+	err := xml.Unmarshal(utils.NormalizeXml(payload[pipInd+1:]), &ricServiceUpdate.E2APPDU)
+	if err != nil {
+		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdateHandler.parseSetupRequest - Error unmarshalling RIC SERVICE UPDATE payload: %x", payload))
+	}
+	return ricServiceUpdate, nil
 }

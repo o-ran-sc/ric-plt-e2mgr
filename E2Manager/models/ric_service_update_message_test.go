@@ -23,8 +23,9 @@ import (
 	"e2mgr/models"
 	"e2mgr/utils"
 	"encoding/xml"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func getTestRicServiceUpdate(t *testing.T, xmlPath string) *models.RICServiceUpdateMessage {
@@ -46,4 +47,14 @@ func TestRicServiceUpdateMessageSuccess(t *testing.T) {
 func TestRicServiceUpdateMessageNoRanFunctions(t *testing.T) {
 	serviceUpdate := getTestRicServiceUpdate(t, "../tests/resources/serviceUpdate/RicServiceUpdate_Empty.xml")
 	assert.Nil(t, serviceUpdate.E2APPDU.ExtractRanFunctionsList())
+}
+
+func TestRicServiceUpdateMessageWithOID(t *testing.T) {
+	serviceUpdate := getTestRicServiceUpdate(t, "../tests/resources/serviceUpdate/RicServiceUpdate_AddedFunction_With_OID.xml")
+
+	ranFunctions := serviceUpdate.E2APPDU.ExtractRanFunctionsList()
+
+	assert.Equal(t, uint32(20), ranFunctions[0].RanFunctionId)
+	assert.Equal(t, uint32(2), ranFunctions[0].RanFunctionRevision)
+	assert.Equal(t, "OID20", ranFunctions[0].RanFunctionOid)
 }
