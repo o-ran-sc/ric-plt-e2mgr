@@ -173,8 +173,11 @@ func TestE2TermInitNewE2TInstance__RoutingManagerError(t *testing.T) {
 }
 
 func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
-	_, handler, _, _, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
+	_, handler, _, _, e2tInstancesManagerMock, routingManagerClientMock := initRanLostConnectionTest(t)
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
+        var rtmgrErr error
+	e2tInstancesManagerMock.On("ResetKeepAliveTimestamp", e2tInstanceAddress).Return(nil)
+	routingManagerClientMock.On("AddE2TInstance", e2tInstanceAddress).Return(rtmgrErr, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 	handler.Handle(notificationRequest)
@@ -501,9 +504,12 @@ func TestE2TermInitHandlerSuccessTwoRansFirstRnibInternalErrorFailure(t *testing
 }
 
 func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
-	_, handler, _, writerMock, e2tInstancesManagerMock, _ := initRanLostConnectionTest(t)
+	_, handler, _, writerMock, e2tInstancesManagerMock, routingManagerClientMock := initRanLostConnectionTest(t)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
+        var rtmgrErr error
+	e2tInstancesManagerMock.On("ResetKeepAliveTimestamp", e2tInstanceAddress).Return(nil)
+	routingManagerClientMock.On("AddE2TInstance", e2tInstanceAddress).Return(rtmgrErr, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
 	notificationRequest := &models.NotificationRequest{RanName: RanName, Payload: []byte(e2tInitPayload)}
 

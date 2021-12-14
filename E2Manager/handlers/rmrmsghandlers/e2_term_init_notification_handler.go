@@ -79,7 +79,7 @@ func (h E2TermInitNotificationHandler) Handle(request *models.NotificationReques
 
 	if len(e2tInstance.AssociatedRanList) == 0 {
 		h.logger.Infof("#E2TermInitNotificationHandler.Handle - E2T Address: %s - E2T instance has no associated RANs", e2tInstance.Address)
-                //h.UpdateExistingE2TInstanceToRtmgr(e2tAddress)
+                h.UpdateExistingE2TInstanceToRtmgr(e2tAddress)
 		return
 	}
 
@@ -126,6 +126,7 @@ func (h E2TermInitNotificationHandler) HandleNewE2TInstance(e2tAddress string, p
 
 func (h E2TermInitNotificationHandler) UpdateExistingE2TInstanceToRtmgr(e2tAddress string) {
 
+                _ = h.e2tInstancesManager.ResetKeepAliveTimestamp(e2tAddress)
     for i := 1; i < 4; i++ {
 
         err := h.routingManagerClient.AddE2TInstance(e2tAddress)
@@ -135,7 +136,6 @@ func (h E2TermInitNotificationHandler) UpdateExistingE2TInstanceToRtmgr(e2tAddre
             } else {
 
                 h.logger.Errorf("#E2TermInitNotificationHandler.UpdateExistingE2TInstanceToRtmgr - e2t address count - %d : %s - routing manager failure", i, e2tAddress)
-                _ = h.e2tInstancesManager.ResetKeepAliveTimestamp(e2tAddress)
             }
 
         }
