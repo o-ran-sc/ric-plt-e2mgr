@@ -1,7 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
-// Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
+// Copyright (c) 2022 Samsung Electronics Co., Ltd. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,11 +32,12 @@ import (
 	"e2mgr/utils"
 	"encoding/xml"
 	"errors"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 const (
@@ -50,9 +51,9 @@ const (
 	NgEnbSetupRequestXmlPath                 = "../../tests/resources/setupRequest/setupRequest_ng-eNB.xml"
 	EnbSetupRequestXmlPath                   = "../../tests/resources/setupRequest/setupRequest_enb.xml"
 	GnbWithoutFunctionsSetupRequestXmlPath   = "../../tests/resources/setupRequest/setupRequest_gnb_without_functions.xml"
-	E2SetupFailureResponseWithMiscCause      = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><misc><om-intervention/></misc></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
-	E2SetupFailureResponseWithTransportCause = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><transport><transport-resource-unavailable/></transport></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
-	E2SetupFailureResponseWithRicCause       = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><ricRequest><request-id-unknown/></ricRequest></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
+	E2SetupFailureResponseWithMiscCause      = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>49</id><criticality><ignore/></criticality><value><TransactionID>1</TransactionID></value></E2setupFailureIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><misc><om-intervention/></misc></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
+	E2SetupFailureResponseWithTransportCause = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>49</id><criticality><ignore/></criticality><value><TransactionID>1</TransactionID></value></E2setupFailureIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><transport><transport-resource-unavailable/></transport></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
+	E2SetupFailureResponseWithRicCause       = "<E2AP-PDU><unsuccessfulOutcome><procedureCode>1</procedureCode><criticality><reject/></criticality><value><E2setupFailure><protocolIEs><E2setupFailureIEs><id>49</id><criticality><ignore/></criticality><value><TransactionID>1</TransactionID></value></E2setupFailureIEs><E2setupFailureIEs><id>1</id><criticality><ignore/></criticality><value><Cause><ricRequest><request-id-unknown/></ricRequest></Cause></value></E2setupFailureIEs><E2setupFailureIEs><id>31</id><criticality><ignore/></criticality><value><TimeToWait><v60s/></TimeToWait></value></E2setupFailureIEs></protocolIEs></E2setupFailure></value></unsuccessfulOutcome></E2AP-PDU>"
 	StateChangeMessageChannel                = "RAN_CONNECTION_STATUS_CHANGE"
 )
 
@@ -468,6 +469,7 @@ func getExpectedGnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 			Gnb: &entities.Gnb{
 				GnbType:      entities.GnbType_GNB,
 				RanFunctions: setupRequest.ExtractRanFunctionsList(),
+				NodeConfigs:  setupRequest.ExtractE2NodeConfigList(),
 			},
 		},
 		GlobalNbId: &entities.GlobalNbId{
@@ -491,7 +493,8 @@ func getExpectedEnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 		NodeType:                     entities.Node_ENB,
 		Configuration: &entities.NodebInfo_Enb{
 			Enb: &entities.Enb{
-				EnbType: entities.EnbType_MACRO_ENB,
+				EnbType:     entities.EnbType_MACRO_ENB,
+				NodeConfigs: setupRequest.ExtractE2NodeConfigList(),
 			},
 		},
 		GlobalNbId: &entities.GlobalNbId{
@@ -515,13 +518,26 @@ func getExpectedNodebForExistingRan(nodeb *entities.NodebInfo, payload []byte) *
 	nb := *nodeb
 
 	if nodeb.NodeType == entities.Node_ENB {
+		if e2NodeConfig := setupRequest.ExtractE2NodeConfigList(); e2NodeConfig != nil {
+			updatedEnb := *nodeb.GetEnb()
+			updatedEnb.NodeConfigs = e2NodeConfig
+			nb.Configuration = &entities.NodebInfo_Enb{Enb: &updatedEnb}
+		}
+
 		return &nb
 	}
 
 	if ranFuncs := setupRequest.ExtractRanFunctionsList(); ranFuncs != nil {
 		updatedGnb := *nodeb.GetGnb()
 		updatedGnb.RanFunctions = ranFuncs
-		nb.Configuration =&entities.NodebInfo_Gnb{Gnb: &updatedGnb}
+		nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &updatedGnb}
+	}
+
+	if e2NodeConfig := setupRequest.ExtractE2NodeConfigList(); e2NodeConfig != nil {
+		updatedGnb := *nodeb.GetGnb()
+		updatedGnb.RanFunctions = nb.GetGnb().RanFunctions
+		updatedGnb.NodeConfigs = e2NodeConfig
+		nb.Configuration = &entities.NodebInfo_Gnb{Gnb: &updatedGnb}
 	}
 
 	return &nb
@@ -687,6 +703,16 @@ func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbRoutingMana
 
 	gnb := nodebInfo.GetGnb()
 	gnb.RanFunctions = []*entities.RanFunction{{RanFunctionId: 2, RanFunctionRevision: 2}}
+	gnb.NodeConfigs = []*entities.E2NodeComponentConfig{{
+		E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeNG{
+			E2NodeComponentInterfaceTypeNG: &entities.E2NodeComponentInterfaceNG{
+				AmfName: "nginterf",
+			},
+		},
+		E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_ng,
+		E2NodeComponentRequestPart:   []byte("72 65 73 70 61 72 74"),
+		E2NodeComponentResponsePart:  []byte("72 65 73 70 61 72 74"),
+	}}
 
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))

@@ -1,6 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
+// Copyright (c) 2022 Samsung Electronics Co., Ltd. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,8 +105,10 @@ type E2SetupRequest struct {
 			} `xml:"criticality"`
 			Value struct {
 				Text             string           `xml:",chardata"`
+				TransactionID    string           `xml:"TransactionID"`
 				GlobalE2nodeID   GlobalE2NodeId   `xml:"GlobalE2node-ID"`
 				RANfunctionsList RANfunctionsList `xml:"RANfunctions-List"`
+				E2NodeConfigList E2NodeConfigList `xml:"E2nodeComponentConfigAddition-List"`
 			} `xml:"value"`
 		} `xml:"E2setupRequestIEs"`
 	} `xml:"protocolIEs"`
@@ -155,14 +158,157 @@ type RANfunctionsList struct {
 	} `xml:"ProtocolIE-SingleContainer"`
 }
 
+type E2NodeConfigList struct {
+	Text                      string `xml:",chardata"`
+	ProtocolIESingleContainer []struct {
+		Text        string `xml:",chardata"`
+		ID          string `xml:"id"`
+		Criticality struct {
+			Text   string `xml:",chardata"`
+			Reject string `xml:"reject"`
+		} `xml:"criticality"`
+		Value struct {
+			Text                     string                   `xml:",chardata"`
+			E2nodeConfigAdditionItem E2NodeConfigAdditionItem `xml:"E2nodeComponentConfigAddition-Item"`
+		} `xml:"value"`
+	} `xml:"ProtocolIE-SingleContainer"`
+}
+
+type E2NodeComponentType struct {
+	Text string    `xml:",chardata"`
+	NG   *struct{} `xml:"ng"`
+	XN   *struct{} `xml:"xn"`
+	E1   *struct{} `xml:"e1"`
+	F1   *struct{} `xml:"f1"`
+	W1   *struct{} `xml:"w1"`
+	S1   *struct{} `xml:"s1"`
+	X2   *struct{} `xml:"x2"`
+}
+
+type E2NodeConfigAdditionItem struct {
+	Text                string              `xml:",chardata"`
+	E2nodeComponentType E2NodeComponentType `xml:"e2nodeComponentInterfaceType"`
+	E2nodeComponentID   E2NodeComponentId   `xml:"e2nodeComponentID"`
+	E2nodeConfiguration E2NodeConfigValue   `xml:"e2nodeComponentConfiguration"`
+}
+
+type E2NodeConfigValue struct {
+	Text               string `xml:",chardata"`
+	E2NodeRequestPart  []byte `xml:"e2nodeComponentRequestPart"`
+	E2NodeResponsePart []byte `xml:"e2nodeComponentResponsePart"`
+}
+
+type E2NodeComponentId struct {
+	Text           string `xml:",chardata"`
+	E2NodeIFTypeNG E2NodeIFTypeNG
+	E2NodeIFTypeXN E2NodeIFTypeXN
+	E2NodeIFTypeE1 E2NodeIFTypeE1
+	E2NodeIFTypeF1 E2NodeIFTypeF1
+	E2NodeIFTypeW1 E2NodeIFTypeW1
+	E2NodeIFTypeS1 E2NodeIFTypeS1
+	E2NodeIFTypeX2 E2NodeIFTypeX2
+}
+
+type E2NodeIFTypeNG struct {
+	XMLName xml.Name `xml:"e2nodeComponentInterfaceTypeNG"`
+	Text    string   `xml:",chardata"`
+	AMFName string   `xml:"amf-name"`
+}
+
+type E2NodeIFTypeXN struct {
+	XMLName       xml.Name `xml:"e2nodeComponentInterfaceTypeXn"`
+	Text          string   `xml:",chardata"`
+	GlobalNgENBID struct {
+		Text string `xml:",chardata"`
+		GNB  struct {
+			Text   string `xml:",chardata"`
+			PLMNID string `xml:"plmn-id"`
+			GnbID  struct {
+				Text  string `xml:",chardata"`
+				GnbID string `xml:"gnb-ID"`
+			} `xml:"gnb-id"`
+		} `xml:"gNB"`
+		NGENB struct {
+			Text   string `xml:",chardata"`
+			PLMNID string `xml:"plmn-id"`
+			GnbID  struct {
+				Text            string `xml:",chardata"`
+				ENBIDMacro      string `xml:"enb-ID-macro"`
+				ENBIDShortMacro string `xml:"enb-ID-shortmacro"`
+				ENBIDLongMacro  string `xml:"enb-ID-longmacro"`
+			} `xml:"gnb-id"`
+		} `xml:"ng-eNB"`
+	} `xml:"global-NG-RAN-Node-ID"`
+}
+
+type E2NodeIFTypeE1 struct {
+	XMLName   xml.Name `xml:"e2nodeComponentInterfaceTypeE1"`
+	Text      string   `xml:",chardata"`
+	GNBCUCPID int64    `xml:"gNB-CU-CP-ID"`
+}
+
+type E2NodeIFTypeF1 struct {
+	XMLName xml.Name `xml:"e2nodeComponentInterfaceTypeF1"`
+	Text    string   `xml:",chardata"`
+	GNBDUID int64    `xml:"gNB-DU-ID"`
+}
+
+type E2NodeIFTypeW1 struct {
+	XMLName   xml.Name `xml:"e2nodeComponentInterfaceTypeW1"`
+	Text      string   `xml:",chardata"`
+	NGENBDUID int64    `xml:"ng-eNB-DU-ID"`
+}
+
+type E2NodeIFTypeS1 struct {
+	XMLName xml.Name `xml:"e2nodeComponentInterfaceTypeS1"`
+	Text    string   `xml:",chardata"`
+	MMENAME string   `xml:"mme-name"`
+}
+
+type E2NodeIFTypeX2 struct {
+	XMLName     xml.Name `xml:"e2nodeComponentInterfaceTypeX2"`
+	Text        string   `xml:",chardata"`
+	GlobalENBID struct {
+		Text         string `xml:",chardata"`
+		PLMNIdentity string `xml:"pLMN-Identity"`
+		ENBID        struct {
+			Text            string `xml:",chardata"`
+			MacroENBID      string `xml:"macro-eNB-ID"`
+			HomeENBID       string `xml:"home-eNB-ID"`
+			ShortMacroENBID string `xml:"short-Macro-eNB-ID"`
+			LongMacroENBID  string `xml:"long-Macro-eNB-ID"`
+		} `xml:"eNB-ID"`
+	} `xml:"global-eNB-ID"`
+	GlobalEnGNBID struct {
+		Text         string `xml:",chardata"`
+		PLMNIdentity string `xml:"pLMN-Identity"`
+		GNBID        struct {
+			Text  string `xml:",chardata"`
+			GNBID string `xml:"gNB-ID"`
+		} `xml:"gNB-ID"`
+	} `xml:"global-en-gNB-ID"`
+}
+
 func (m *E2SetupRequestMessage) ExtractRanFunctionsList() []*entities.RanFunction {
 	// TODO: verify e2SetupRequestIEs structure with Adi
 	e2SetupRequestIes := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
-	if len(e2SetupRequestIes) < 2 {
+
+	var ranFuntionsList RANfunctionsList
+	var isPopulated bool
+
+	for _, v := range e2SetupRequestIes {
+		if v.ID == ranFunctionsAddedID {
+			ranFuntionsList = v.Value.RANfunctionsList
+			isPopulated = true
+			break
+		}
+	}
+
+	if !isPopulated {
 		return nil
 	}
 
-	ranFunctionsListContainer := e2SetupRequestIes[1].Value.RANfunctionsList.ProtocolIESingleContainer
+	ranFunctionsListContainer := ranFuntionsList.ProtocolIESingleContainer
 	funcs := make([]*entities.RanFunction, len(ranFunctionsListContainer))
 	for i := 0; i < len(funcs); i++ {
 		ranFunctionItem := ranFunctionsListContainer[i].Value.RANfunctionItem
@@ -177,8 +323,143 @@ func (m *E2SetupRequestMessage) ExtractRanFunctionsList() []*entities.RanFunctio
 	return funcs
 }
 
+func (m *E2SetupRequestMessage) ExtractE2NodeConfigList() []*entities.E2NodeComponentConfig {
+	e2SetupRequestIes := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+	numOfIes := len(e2SetupRequestIes)
+	var e2NodeConfigListContainer E2NodeConfigList
+	var isPopulated bool
+
+	for ieCount := 0; ieCount < numOfIes; ieCount++ {
+
+		if e2SetupRequestIes[ieCount].ID == e2nodeConfigAdditionID {
+			e2NodeConfigListContainer = e2SetupRequestIes[ieCount].Value.E2NodeConfigList
+			isPopulated = true
+			break
+		}
+	}
+
+	if !isPopulated {
+		return nil
+	}
+
+	e2nodeComponentConfigs := make([]*entities.E2NodeComponentConfig, len(e2NodeConfigListContainer.ProtocolIESingleContainer))
+	for i := 0; i < len(e2nodeComponentConfigs); i++ {
+		e2NodeConfigItem := e2NodeConfigListContainer.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem
+
+		if e2NodeConfigItem.E2nodeComponentType.NG != nil {
+			e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_ng,
+				E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeNG{
+					E2NodeComponentInterfaceTypeNG: &entities.E2NodeComponentInterfaceNG{
+						AmfName: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeNG.AMFName,
+					},
+				},
+			}
+		} else if e2NodeConfigItem.E2nodeComponentType.E1 != nil {
+			e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_e1,
+				E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeE1{
+					E2NodeComponentInterfaceTypeE1: &entities.E2NodeComponentInterfaceE1{
+						GNBCuCpId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeE1.GNBCUCPID,
+					},
+				},
+			}
+		} else if e2NodeConfigItem.E2nodeComponentType.F1 != nil {
+			e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_f1,
+				E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeF1{
+					E2NodeComponentInterfaceTypeF1: &entities.E2NodeComponentInterfaceF1{
+						GNBDuId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeF1.GNBDUID,
+					},
+				},
+			}
+		} else if e2NodeConfigItem.E2nodeComponentType.W1 != nil {
+			e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_w1,
+				E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeW1{
+					E2NodeComponentInterfaceTypeW1: &entities.E2NodeComponentInterfaceW1{
+						NgenbDuId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeW1.NGENBDUID,
+					},
+				},
+			}
+		} else if e2NodeConfigItem.E2nodeComponentType.S1 != nil {
+			e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_s1,
+				E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeS1{
+					E2NodeComponentInterfaceTypeS1: &entities.E2NodeComponentInterfaceS1{
+						MmeName: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeS1.MMENAME,
+					},
+				},
+			}
+		}
+		/*else if e2NodeConfigItem.E2nodeComponentType.XN != nil {
+			funcs[i] = &entities.E2NodeComponentConfig{
+				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
+				E2NodeComponentRequestPart: e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+				E2NodeComponentID:		&entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeNG{
+					E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
+						GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalNgenbId{
+							GlobalNgenbId:&entities.GlobalNGENBID{
+								PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID,
+								EnbId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.GnbID.GnbID,
+							},
+						},
+						GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalGnbId{
+							GlobalGnbId:&entities.GlobalGNBID{
+								PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID,
+								EnbId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.GnbID.GnbID,
+							},
+						},
+					},
+				},
+			}
+			ifXn.GlobalNgENBID.NGENB.PLMNID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID
+			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDMacro
+			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro
+			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro
+
+		}*/
+		/*else if e2NodeConfigItem.E2nodeComponentType.X2 != nil {
+			ifX2 := E2NodeIFTypeX2 {}
+			ifX2.GlobalENBID.PLMNIdentity = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity
+			ifX2.GlobalENBID.ENBID.MacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroENBID
+			ifX2.GlobalENBID.ENBID.HomeENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeENBID
+			ifX2.GlobalENBID.ENBID.ShortMacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroENBID
+			ifX2.GlobalENBID.ENBID.LongMacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroENBID
+
+			ifX2.GlobalEnGNBID.PLMNIdentity = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.PLMNIdentity
+			ifX2.GlobalEnGNBID.GNBID.GNBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.GNBID.GNBID
+		}*/
+	}
+	return e2nodeComponentConfigs
+}
+
 func (m *E2SetupRequestMessage) getGlobalE2NodeId() GlobalE2NodeId {
-	return m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[0].Value.GlobalE2nodeID
+
+	// TODO: Handle error case if GlobalE2NodeId not available
+	e2SetupRequestIes := m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs
+	numOfIes := len(e2SetupRequestIes)
+	index := 1
+
+	for ieCount := 0; ieCount < numOfIes; ieCount++ {
+		if e2SetupRequestIes[ieCount].ID == globalE2nodeID {
+			index = ieCount
+			break
+		}
+	}
+
+	return m.E2APPDU.InitiatingMessage.Value.E2setupRequest.ProtocolIEs.E2setupRequestIEs[index].Value.GlobalE2nodeID
 }
 
 func (m *E2SetupRequestMessage) GetPlmnId() string {
