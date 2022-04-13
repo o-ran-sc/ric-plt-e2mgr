@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cb0fa4b5_75295ec2",
+        "filename": "E2Manager/models/e2_setup_request_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-13T11:01:11Z",
+      "side": 1,
+      "message": "As RANfunctionList is mandatory IE in ASN.1, I assume missing of this mandatory IE would be detected as ASN.1 decoding itself. Will this case occur and isPopulated flag is really needed? \n\n\t{ ID id-E2nodeComponentConfigAddition\tCRITICALITY reject\tTYPE E2nodeComponentConfigAddition-List\tPRESENCE mandatory\t},",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f3c02a99_dea1ee0d",
+        "filename": "E2Manager/models/e2_setup_request_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-13T11:01:11Z",
+      "side": 1,
+      "message": "As E2NodeConfig is mandatory IE in ASN.1, I assume missing of this mandatory IE would be detected as ASN.1 decoding itself. Will this case occur and isPopulated flag is really needed? \n\t{ ID id-E2nodeComponentConfigAddition\tCRITICALITY reject\tTYPE E2nodeComponentConfigAddition-List\tPRESENCE mandatory\t},",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aafea514_c94b2229",
+        "filename": "E2Manager/models/e2_setup_response_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-13T11:01:11Z",
+      "side": 1,
+      "message": "Can this be shared for test files also than hardcoding in the test.go file?",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "65ac25f7_096f0a72",
+        "filename": "E2Manager/models/e2_setup_response_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-13T11:01:11Z",
+      "side": 1,
+      "message": "Other than NG, other interfaces not covered with UT?",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "72289035_fbe29a32",
+        "filename": "E2Manager/models/e2_setup_response_message_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-13T11:01:11Z",
+      "side": 1,
+      "message": "the constants used in the E2SetupResponse, could be reused commonly between source file and test file?",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
