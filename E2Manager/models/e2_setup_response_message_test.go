@@ -1,6 +1,7 @@
 //
 // Copyright 2020 AT&T Intellectual Property
 // Copyright 2020 Nokia
+// Copyright (c) 2022 Samsung Electronics Co., Ltd. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +24,9 @@ import (
 	"e2mgr/models"
 	"e2mgr/utils"
 	"encoding/xml"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -47,10 +49,10 @@ func TestNewE2SetupSuccessResponseMessageSuccess(t *testing.T) {
 
 	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
 	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
-	assert.Equal(t, "4", respIEs[0].ID)
-	assert.Equal(t, plmn, respIEs[0].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
-	assert.Equal(t, ricNearRtId, respIEs[0].Value.(models.GlobalRICID).GlobalRICID.RicID)
-	assert.Equal(t, "9", respIEs[1].ID)
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
 }
 
 func TestNewE2SetupSuccessResponseMessageWithoutRanFunctionsSuccess(t *testing.T) {
@@ -60,18 +62,19 @@ func TestNewE2SetupSuccessResponseMessageWithoutRanFunctionsSuccess(t *testing.T
 
 	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
 	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
-	assert.Equal(t, "4", respIEs[0].ID)
-	assert.Equal(t, plmn, respIEs[0].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
-	assert.Equal(t, ricNearRtId, respIEs[0].Value.(models.GlobalRICID).GlobalRICID.RicID)
-	assert.Equal(t, 1, len(respIEs))
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, 3, len(respIEs))
 }
 
 func TestNewE2SetupFailureResponseMessageSuccess(t *testing.T) {
 	waitTime := models.TimeToWaitEnum.V60s
 	cause := models.Cause{Misc: &models.CauseMisc{OmIntervention: &struct{}{}}}
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestXmlPath)
 
-	resp := models.NewE2SetupFailureResponseMessage(waitTime, cause)
+	resp := models.NewE2SetupFailureResponseMessage(waitTime, cause, setupRequest)
 	respIEs := resp.E2APPDU.Outcome.(models.UnsuccessfulOutcome).Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs
-	assert.Equal(t, "1", respIEs[0].ID)
-	assert.Equal(t, cause, respIEs[0].Value.Value.(models.Cause))
+	assert.Equal(t, models.CauseID, respIEs[1].ID)
+	assert.Equal(t, cause, respIEs[1].Value.Value.(models.Cause))
 }

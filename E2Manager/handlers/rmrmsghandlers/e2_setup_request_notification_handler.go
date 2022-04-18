@@ -34,15 +34,16 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"strconv"
 	"strings"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 var (
 	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention", "request-id-unknown",
-		"v60s", "v20s", "v10s", "v5s", "v2s", "v1s"}
+		"v60s", "v20s", "v10s", "v5s", "v2s", "v1s", "ng", "xn", "e1", "f1", "w1", "s1", "x2", "success", "failure"}
 	gnbTypesMap = map[string]entities.GnbType{
 		"gnb":    entities.GnbType_GNB,
 		"en_gnb": entities.GnbType_EN_GNB,
@@ -93,14 +94,6 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		return
 	}
 
-	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - got general configuration from rnib - enableRic: %t", generalConfiguration.EnableRic)
-
-	if !generalConfiguration.EnableRic {
-		cause := models.Cause{Misc: &models.CauseMisc{OmIntervention: &struct{}{}}}
-		h.handleUnsuccessfulResponse(ranName, request, cause)
-		return
-	}
-
 	setupRequest, e2tIpAddress, err := h.parseSetupRequest(request.Payload)
 	if err != nil {
 		h.logger.Errorf(err.Error())
@@ -109,6 +102,14 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - E2T Address: %s - handling E2_SETUP_REQUEST", e2tIpAddress)
 	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - E2_SETUP_REQUEST has been parsed successfully %+v", setupRequest)
+
+	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - got general configuration from rnib - enableRic: %t", generalConfiguration.EnableRic)
+
+	if !generalConfiguration.EnableRic {
+		cause := models.Cause{Misc: &models.CauseMisc{OmIntervention: &struct{}{}}}
+		h.handleUnsuccessfulResponse(ranName, request, cause, setupRequest)
+		return
+	}
 
 	_, err = h.e2tInstancesManager.GetE2TInstance(e2tIpAddress)
 
@@ -131,7 +132,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		if nodebInfo, err = h.handleNewRan(ranName, e2tIpAddress, setupRequest); err != nil {
 			if _, ok := err.(*e2managererrors.UnknownSetupRequestRanNameError); ok {
 				cause := models.Cause{RicRequest: &models.CauseRic{RequestIdUnknown: &struct{}{}}}
-				h.handleUnsuccessfulResponse(ranName, request, cause)
+				h.handleUnsuccessfulResponse(ranName, request, cause, setupRequest)
 			}
 			return
 		}
@@ -157,7 +158,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 			}
 
 			cause := models.Cause{Transport: &models.CauseTransport{TransportResourceUnavailable: &struct{}{}}}
-			h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause)
+			h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause, setupRequest)
 		}
 		return
 	}
@@ -220,9 +221,24 @@ func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, no
 
 	nodebInfo.SetupFromNetwork = true
 
+	e2NodeConfig := setupRequest.ExtractE2NodeConfigList()
+	if e2NodeConfig == nil {
+		return false, errors.New("Empty E2nodeComponentConfigAddition-List")
+	}
+
 	if nodebInfo.NodeType == entities.Node_ENB {
+		if len(e2NodeConfig) == 0 && len(nodebInfo.GetEnb().GetNodeConfigs()) == 0 {
+			return false, errors.New("Empty E2nodeComponentConfigAddition-List")
+		}
+		nodebInfo.GetEnb().NodeConfigs = e2NodeConfig
+
 		return false, nil
 	}
+
+	if len(e2NodeConfig) == 0 && len(nodebInfo.GetGnb().GetNodeConfigs()) == 0 {
+		return false, errors.New("Empty E2nodeComponentConfigAddition-List")
+	}
+	nodebInfo.GetGnb().NodeConfigs = e2NodeConfig
 
 	setupMessageRanFuncs := setupRequest.ExtractRanFunctionsList()
 
@@ -234,8 +250,8 @@ func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, no
 	return true, nil
 }
 
-func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName string, req *models.NotificationRequest, cause models.Cause) {
-	failureResponse := models.NewE2SetupFailureResponseMessage(models.TimeToWaitEnum.V60s, cause)
+func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName string, req *models.NotificationRequest, cause models.Cause, setupRequest *models.E2SetupRequestMessage) {
+	failureResponse := models.NewE2SetupFailureResponseMessage(models.TimeToWaitEnum.V60s, cause, setupRequest)
 	h.logger.Debugf("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - E2_SETUP_RESPONSE has been built successfully %+v", failureResponse)
 
 	responsePayload, err := xml.Marshal(&failureResponse.E2APPDU)
@@ -243,7 +259,7 @@ func (h *E2SetupRequestNotificationHandler) handleUnsuccessfulResponse(ranName s
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
 	}
 
-	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload,emptyTagsToReplaceToSelfClosingTags)
+	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload, emptyTagsToReplaceToSelfClosingTags)
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleUnsuccessfulResponse - payload: %s", responsePayload)
 	msg := models.NewRmrMessage(rmrCgo.RIC_E2_SETUP_FAILURE, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
@@ -268,7 +284,7 @@ func (h *E2SetupRequestNotificationHandler) handleSuccessfulResponse(ranName str
 		h.logger.Warnf("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_SETUP_RESP. Payload: %s", ranName, responsePayload)
 	}
 
-	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload,emptyTagsToReplaceToSelfClosingTags)
+	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload, emptyTagsToReplaceToSelfClosingTags)
 
 	h.logger.Infof("#E2SetupRequestNotificationHandler.handleSuccessfulResponse - payload: %s", responsePayload)
 
@@ -337,9 +353,24 @@ func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAd
 		return nil, err
 	}
 
+	e2NodeConfig := request.ExtractE2NodeConfigList()
+	if e2NodeConfig == nil {
+		return nil, errors.New("Empty E2nodeComponentConfigAddition-List")
+	}
+
 	if nodebInfo.NodeType == entities.Node_ENB {
+		if len(e2NodeConfig) == 0 && len(nodebInfo.GetEnb().GetNodeConfigs()) == 0 {
+			return nil, errors.New("Empty E2nodeComponentConfigAddition-List")
+		}
+		nodebInfo.GetEnb().NodeConfigs = e2NodeConfig
+
 		return nodebInfo, nil
 	}
+
+	if len(e2NodeConfig) == 0 && len(nodebInfo.GetGnb().GetNodeConfigs()) == 0 {
+		return nil, errors.New("Empty E2nodeComponentConfigAddition-List")
+	}
+	nodebInfo.GetGnb().NodeConfigs = e2NodeConfig
 
 	ranFuncs := request.ExtractRanFunctionsList()
 
