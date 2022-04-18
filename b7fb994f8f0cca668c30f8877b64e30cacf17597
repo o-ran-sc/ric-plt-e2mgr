@@ -36,6 +36,24 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "81743d1f_3fd33259",
+        "filename": "E2Manager/models/e2_setup_request_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-18T12:12:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "636a4664_92b33889",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f3c02a99_dea1ee0d",
@@ -67,6 +85,24 @@
       "side": 1,
       "message": "I agree, but I kept it as additional check.\nPlease let me know your suggestion.",
       "parentUuid": "f3c02a99_dea1ee0d",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "97cef515_f8d5a641",
+        "filename": "E2Manager/models/e2_setup_request_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-18T12:12:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e628128e_22daa4b9",
       "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
@@ -137,6 +173,24 @@
       "side": 1,
       "message": "Yes Arun, I will add the test cases in subsequent commits.\nI need to create the XML to cover all the test cases.",
       "parentUuid": "65ac25f7_096f0a72",
+      "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "50e08077_e188fd42",
+        "filename": "E2Manager/models/e2_setup_response_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-04-18T12:12:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad5f0df9_e43c5105",
       "revId": "b7fb994f8f0cca668c30f8877b64e30cacf17597",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
