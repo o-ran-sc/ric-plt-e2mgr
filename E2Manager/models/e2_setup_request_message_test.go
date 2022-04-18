@@ -23,8 +23,9 @@ import (
 	"e2mgr/models"
 	"e2mgr/utils"
 	"encoding/xml"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -71,6 +72,17 @@ func TestExtractRanFunctionsListFromGnbRequestwithOidSuccess(t *testing.T) {
 	assert.Equal(t, "OID123", ranFuncList[0].RanFunctionOid)
 	assert.Equal(t, "OID124", ranFuncList[1].RanFunctionOid)
 	assert.Equal(t, "OID125", ranFuncList[2].RanFunctionOid)
+}
+
+func TestExtractE2nodeConfigSuccess(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 2, len(e2nodeConfigs))
+
+	assert.Equal(t, "nginterf1", e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeNG().GetAmfName())
+	assert.Equal(t, "nginterf2", e2nodeConfigs[1].GetE2NodeComponentInterfaceTypeNG().GetAmfName())
+
 }
 
 func TestGetPlmnIdFromGnbRequestSuccess(t *testing.T) {
