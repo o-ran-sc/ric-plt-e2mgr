@@ -23,6 +23,7 @@ const (
 	ProtocolIE_ID_id_RANfunctionsAccepted          = "9"
 	ProtocolIE_ID_id_TransactionID                 = "49"
 	ProtocolIE_ID_id_E2nodeComponentConfigAddition = "50"
+	ProtocolIE_ID_id_E2nodeComponentConfigRemoval  = "54"
 )
 
 const (
