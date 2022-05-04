@@ -19,12 +19,14 @@
 package models
 
 const (
-	ProtocolIE_ID_id_RANfunctionID_Item   = "6"
-	ProtocolIE_ID_id_RANfunctionsAccepted = "9"
-	ProtocolIE_ID_id_TransactionID        = "49"
+	ProtocolIE_ID_id_RANfunctionID_Item            = "6"
+	ProtocolIE_ID_id_RANfunctionsAccepted          = "9"
+	ProtocolIE_ID_id_TransactionID                 = "49"
+	ProtocolIE_ID_id_E2nodeComponentConfigAddition = "50"
 )
 
 const (
 	SuccessfulOutcome_value_PR_RICserviceUpdateAcknowledge = "3"
 	InitiatingMessage_value_PR_RICserviceQuery             = "10"
+	ProcedureCode_id_E2nodeConfigurationUpdate             = "10"
 )
