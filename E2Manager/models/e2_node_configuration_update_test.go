@@ -98,3 +98,15 @@ func TestExtractUpdateConfigList(t *testing.T) {
 
 	assert.Equal(t, 0, len(updateList2), "Update List is not matching")
 }
+
+func TestExtractDeleteConfigList(t *testing.T) {
+	configurationRemoval1 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
+	removalList1 := configurationRemoval1.ExtractConfigDeletionList()
+
+	assert.Equal(t, 5, len(removalList1), "Removal List is not matching")
+
+	configurationRemoval2 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
+	removalList2 := configurationRemoval2.ExtractConfigDeletionList()
+
+	assert.Equal(t, 0, len(removalList2), "Removal List is not matching")
+}
