@@ -86,3 +86,15 @@ func TestExtractAdditionConfigList(t *testing.T) {
 
 	assert.Equal(t, 1, len(additionList2), "Addtion List is not matching")
 }
+
+func TestExtractUpdateConfigList(t *testing.T) {
+	configurationUpdate1 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
+	updateList1 := configurationUpdate1.ExtractConfigUpdateList()
+
+	assert.Equal(t, 5, len(updateList1), "Update List is not matching")
+
+	configurationUpdate2 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
+	updateList2 := configurationUpdate2.ExtractConfigUpdateList()
+
+	assert.Equal(t, 0, len(updateList2), "Update List is not matching")
+}
