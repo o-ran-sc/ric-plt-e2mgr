@@ -74,3 +74,15 @@ func TestParseE2NodeConfigurationUpdateSuccess(t *testing.T) {
 	assert.Equal(t, true, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.E1 == nil)
 	assert.Equal(t, true, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.E1 == nil)
 }
+
+func TestExtractAdditionConfigList(t *testing.T) {
+	configurationUpdate1 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
+	additionList := configurationUpdate1.ExtractConfigAdditionList()
+
+	assert.Equal(t, 5, len(additionList), "Addtion List is not matching")
+
+	configurationUpdate2 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
+	additionList2 := configurationUpdate2.ExtractConfigAdditionList()
+
+	assert.Equal(t, 1, len(additionList2), "Addtion List is not matching")
+}
