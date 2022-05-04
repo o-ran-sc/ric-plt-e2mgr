@@ -410,3 +410,102 @@ func (m *E2nodeConfigurationUpdateMessage) ExtractConfigUpdateList() []entities.
 	}
 	return result
 }
+
+func (m *E2nodeConfigurationUpdateMessage) ExtractConfigDeletionList() []entities.E2NodeComponentConfig {
+	var result []entities.E2NodeComponentConfig
+	e2nodeConfigUpdateIEs := m.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs
+
+	var deletionList *E2nodeComponentConfigRemovalList
+	for _, v := range e2nodeConfigUpdateIEs {
+		if v.ID == ProtocolIE_ID_id_E2nodeComponentConfigRemoval {
+			deletionList = &(v.Value.E2nodeComponentConfigRemovalList)
+			break
+		}
+	}
+
+	// need not to check for empty addtionList
+	// as list defined as SIZE(1..maxofE2nodeComponents)
+	if deletionList != nil {
+		for _, val := range deletionList.ProtocolIESingleContainer {
+			componentItem := val.Value.E2nodeComponentConfigRemovalItem
+
+			if componentItem.E2nodeComponentInterfaceType.Ng != nil { // NG Interface
+				result = append(result, entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_ng,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeNG{
+						E2NodeComponentInterfaceTypeNG: &entities.E2NodeComponentInterfaceNG{
+							AmfName: componentItem.E2nodeComponentID.E2nodeComponentInterfaceTypeNG.AmfName,
+						},
+					},
+				})
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.Xn != nil { // xn inetrface
+				// TODO - Not Supported Yet
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.E1 != nil { // e1 interface
+				gnbCuCpId, err := strconv.ParseInt(componentItem.E2nodeComponentID.E2nodeComponentInterfaceTypeE1.GNBCUCPID, 10, 64)
+				if err != nil {
+					continue
+				}
+
+				result = append(result, entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_e1,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeE1{
+						E2NodeComponentInterfaceTypeE1: &entities.E2NodeComponentInterfaceE1{
+							GNBCuCpId: gnbCuCpId,
+						},
+					},
+				})
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.F1 != nil { // f1 interface
+				gnbDuId, err := strconv.ParseInt(componentItem.E2nodeComponentID.E2nodeComponentInterfaceTypeF1.GNBDUID, 10, 64)
+				if err != nil {
+					continue
+				}
+				result = append(result, entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_f1,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeF1{
+						E2NodeComponentInterfaceTypeF1: &entities.E2NodeComponentInterfaceF1{
+							GNBDuId: gnbDuId,
+						},
+					},
+				})
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.W1 != nil { // w1 interface
+				ngenbDuId, err := strconv.ParseInt(componentItem.E2nodeComponentID.E2nodeComponentInterfaceTypeW1.NgENBDUID, 10, 64)
+				if err != nil {
+					continue
+				}
+
+				result = append(result, entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_w1,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeW1{
+						E2NodeComponentInterfaceTypeW1: &entities.E2NodeComponentInterfaceW1{
+							NgenbDuId: ngenbDuId,
+						},
+					},
+				})
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.S1 != nil { // s1 interface
+				result = append(result, entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_s1,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeS1{
+						E2NodeComponentInterfaceTypeS1: &entities.E2NodeComponentInterfaceS1{
+							MmeName: componentItem.E2nodeComponentID.E2nodeComponentInterfaceTypeS1.MmeName,
+						},
+					},
+				})
+			}
+
+			if componentItem.E2nodeComponentInterfaceType.X2 != nil { // x2 interface
+				// TODO - Not Supported Yet
+			}
+		}
+	}
+	return result
+}
