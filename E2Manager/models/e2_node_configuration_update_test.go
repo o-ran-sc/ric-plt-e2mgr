@@ -43,7 +43,7 @@ func getTestE2NodeConfigurationUpdateMessage(t *testing.T, reqXmlPath string) *m
 func TestParseE2NodeConfigurationUpdateSuccessAdditionOnly(t *testing.T) {
 	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
 	assert.NotEqual(t, nil, configurationUpdate, "xml is not parsed correctly")
-	assert.Equal(t, "6", configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
+	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
 	assert.Equal(t, 1, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
 	assert.Equal(t, 1, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
 	assert.Equal(t, false, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
@@ -54,7 +54,7 @@ func TestParseE2NodeConfigurationUpdateSuccessAdditionOnly(t *testing.T) {
 func TestParseE2NodeConfigurationUpdateSuccess(t *testing.T) {
 	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
 	assert.NotEqual(t, nil, configurationUpdate, "xml is not parsed correctly")
-	assert.Equal(t, "6", configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
+	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
 	assert.Equal(t, 3, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
 
 	assert.Equal(t, 7, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
@@ -73,4 +73,16 @@ func TestParseE2NodeConfigurationUpdateSuccess(t *testing.T) {
 	assert.Equal(t, false, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.Ng == nil)
 	assert.Equal(t, true, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.E1 == nil)
 	assert.Equal(t, true, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.E1 == nil)
+}
+
+func TestExtractAdditionConfigList(t *testing.T) {
+	configurationUpdate1 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
+	additionList := configurationUpdate1.ExtractConfigAdditionList()
+
+	assert.Equal(t, 5, len(additionList), "Addtion List is not matching")
+
+	configurationUpdate2 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
+	additionList2 := configurationUpdate2.ExtractConfigAdditionList()
+
+	assert.Equal(t, 1, len(additionList2), "Addtion List is not matching")
 }

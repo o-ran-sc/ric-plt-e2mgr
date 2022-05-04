@@ -1,6 +1,6 @@
 <E2AP-PDU>
     <initiatingMessage>
-        <procedureCode>6</procedureCode>
+        <procedureCode>10</procedureCode>
         <criticality><reject/></criticality>
         <value>
             <E2nodeConfigurationUpdate>
