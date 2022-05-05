@@ -6,6 +6,13 @@
             <E2nodeConfigurationUpdate>
                 <protocolIEs>
                     <E2nodeConfigurationUpdate-IEs>
+                        <id>49</id>
+                        <criticality><reject/></criticality>
+                        <value>
+                            <TransactionID>1234</TransactionID>
+                        </value>
+                    </E2nodeConfigurationUpdate-IEs>
+                    <E2nodeConfigurationUpdate-IEs>
                         <id>50</id>
                         <criticality><reject/></criticality>
                         <value>

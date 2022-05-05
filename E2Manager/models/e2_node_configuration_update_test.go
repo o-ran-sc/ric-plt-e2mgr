@@ -44,31 +44,33 @@ func TestParseE2NodeConfigurationUpdateSuccessAdditionOnly(t *testing.T) {
 	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateOnlyAdditionXmlPath)
 	assert.NotEqual(t, nil, configurationUpdate, "xml is not parsed correctly")
 	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
-	assert.Equal(t, 1, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
-	assert.Equal(t, 1, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
-	assert.Equal(t, false, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
-	assert.Equal(t, true, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
-	assert.Equal(t, true, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
+	assert.Equal(t, 2, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
+
+	additionIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[1]
+	assert.Equal(t, 1, len(additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
+	assert.Equal(t, false, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
+	assert.Equal(t, true, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
+	assert.Equal(t, true, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
 }
 
 func TestParseE2NodeConfigurationUpdateSuccess(t *testing.T) {
 	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
 	assert.NotEqual(t, nil, configurationUpdate, "xml is not parsed correctly")
 	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
-	assert.Equal(t, 3, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
+	assert.Equal(t, 4, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
 
-	assert.Equal(t, 7, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
-	assert.Equal(t, false, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
-	assert.Equal(t, true, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
-	assert.Equal(t, true, configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
+	additionIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[1]
+	assert.Equal(t, 7, len(additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
+	assert.Equal(t, false, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
+	assert.Equal(t, true, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
 
-	updateIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[1]
+	updateIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[2]
 	assert.Equal(t, 7, len(updateIE.Value.E2nodeComponentConfigUpdateList.ProtocolIESingleContainer))
 	assert.Equal(t, false, updateIE.Value.E2nodeComponentConfigUpdateList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigUpdateItem.E2nodeComponentInterfaceType.Ng == nil)
 	assert.Equal(t, true, updateIE.Value.E2nodeComponentConfigUpdateList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigUpdateItem.E2nodeComponentInterfaceType.E1 == nil)
 	assert.Equal(t, true, updateIE.Value.E2nodeComponentConfigUpdateList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigUpdateItem.E2nodeComponentInterfaceType.E1 == nil)
 
-	removalIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[2]
+	removalIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[3]
 	assert.Equal(t, 7, len(removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer))
 	assert.Equal(t, false, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.Ng == nil)
 	assert.Equal(t, true, removalIE.Value.E2nodeComponentConfigRemovalList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigRemovalItem.E2nodeComponentInterfaceType.E1 == nil)
@@ -109,4 +111,9 @@ func TestExtractDeleteConfigList(t *testing.T) {
 	removalList2 := configurationRemoval2.ExtractConfigDeletionList()
 
 	assert.Equal(t, 0, len(removalList2), "Removal List is not matching")
+}
+
+func TestGetTxID(t *testing.T) {
+	configuration1 := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateXmlPath)
+	assert.Equal(t, "1234", configuration1.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[0].Value.TransactionID)
 }
