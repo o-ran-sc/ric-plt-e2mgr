@@ -20,13 +20,17 @@ package models
 
 import (
 	"encoding/xml"
+	"math/rand"
+	"strconv"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
 type RanFunctionIdItem struct {
-	Text                  string `xml:",chardata"`
-	RanFunctionId         uint32 `xml:"ranFunctionID"`
-	RanFunctionRevision   uint32 `xml:"ranFunctionRevision"`
+	Text                string `xml:",chardata"`
+	RanFunctionId       uint32 `xml:"ranFunctionID"`
+	RanFunctionRevision uint32 `xml:"ranFunctionRevision"`
 }
 
 type RicServiceQueryProtocolIESingleContainer struct {
@@ -37,8 +41,8 @@ type RicServiceQueryProtocolIESingleContainer struct {
 		Reject string `xml:"reject"`
 	} `xml:"criticality"`
 	Value struct {
-		Text               string          `xml:",chardata"`
-		RanFunctionIdItem  RanFunctionIdItem `xml:"RANfunctionID-Item"`
+		Text              string            `xml:",chardata"`
+		RanFunctionIdItem RanFunctionIdItem `xml:"RANfunctionID-Item"`
 	} `xml:"value"`
 }
 
@@ -49,19 +53,25 @@ type RICServiceQueryIEs struct {
 		Text   string `xml:",chardata"`
 		Reject string `xml:"reject"`
 	} `xml:"criticality"`
-	Value struct {
-		Text   string `xml:",chardata"`
-		RANFunctionIdList struct {
-			Text string `xml:",chardata"`
-			ProtocolIESingleContainer []RicServiceQueryProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
-		} `xml:"RANfunctionsID-List"`
-	} `xml:"value"`
+	Value interface{} `xml:"value"`
+}
+
+type RICServiceQueryRANFunctionIdList struct {
+	Text              string `xml:",chardata"`
+	RANFunctionIdList struct {
+		Text                      string                                     `xml:",chardata"`
+		ProtocolIESingleContainer []RicServiceQueryProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
+	} `xml:"RANfunctionsID-List"`
+}
+type RICServiceQueryTransactionID struct {
+	Text          string `xml:",chardata"`
+	TransactionID string `xml:"TransactionID"`
 }
 
 type RICServiceQuery struct {
-	Text    string   `xml:",chardata"`
+	Text        string `xml:",chardata"`
 	ProtocolIEs struct {
-		Text              string `xml:",chardata"`
+		Text               string               `xml:",chardata"`
 		RICServiceQueryIEs []RICServiceQueryIEs `xml:"RICserviceQuery-IEs"`
 	} `xml:"protocolIEs"`
 }
@@ -74,38 +84,68 @@ type InitiatingMessage struct {
 		Ignore string `xml:"ignore"`
 	} `xml:"criticality"`
 	Value struct {
-		Text           string         `xml:",chardata"`
+		Text            string          `xml:",chardata"`
 		RICServiceQuery RICServiceQuery `xml:"RICserviceQuery"`
 	} `xml:"value"`
 }
 
 type RicServiceQueryE2APPDU struct {
-	XMLName xml.Name `xml:"E2AP-PDU"`
-	Text              string `xml:",chardata"`
+	XMLName           xml.Name          `xml:"E2AP-PDU"`
+	Text              string            `xml:",chardata"`
 	InitiatingMessage InitiatingMessage `xml:"initiatingMessage"`
 }
 
-
-type RICServiceQueryMessage struct{
-	XMLName xml.Name `xml:"RICserviceQueryMessage"`
-	Text    string   `xml:",chardata"`
-	E2APPDU RicServiceQueryE2APPDU  `xml:"E2AP-PDU"`
+type RICServiceQueryMessage struct {
+	XMLName xml.Name               `xml:"RICserviceQueryMessage"`
+	Text    string                 `xml:",chardata"`
+	E2APPDU RicServiceQueryE2APPDU `xml:"E2AP-PDU"`
 }
 
 func NewRicServiceQueryMessage(ranFunctions []*entities.RanFunction) RICServiceQueryMessage {
-	initiatingMessage := InitiatingMessage{}
-	initiatingMessage.ProcedureCode = "6"
-	initiatingMessage.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs = make([]RICServiceQueryIEs,1)
-	initiatingMessage.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Id = "9"
-	protocolIESingleContainer := make([]RicServiceQueryProtocolIESingleContainer,len(ranFunctions))
+	rand.Seed(time.Now().Unix())
+
+	txIE := RICServiceQueryIEs{
+		Id: ProtocolIE_ID_id_TransactionID,
+		Value: RICServiceQueryTransactionID{
+			TransactionID: strconv.FormatUint(rand.Uint64(), 10),
+		},
+	}
+
+	protocolIESingleContainer := make([]RicServiceQueryProtocolIESingleContainer, len(ranFunctions))
 	for i := 0; i < len(ranFunctions); i++ {
-		protocolIESingleContainer[i].Id = "6"
+		protocolIESingleContainer[i].Id = ProtocolIE_ID_id_RANfunctionID_Item
 		protocolIESingleContainer[i].Value.RanFunctionIdItem.RanFunctionId = ranFunctions[i].RanFunctionId
 		protocolIESingleContainer[i].Value.RanFunctionIdItem.RanFunctionRevision = ranFunctions[i].RanFunctionRevision
 	}
-	initiatingMessage.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Value.RANFunctionIdList.ProtocolIESingleContainer = protocolIESingleContainer
 
-	return RICServiceQueryMessage{E2APPDU:RicServiceQueryE2APPDU{InitiatingMessage:initiatingMessage}}
+	funcListIE := RICServiceQueryIEs{
+		Id: "9",
+		Value: RICServiceQueryRANFunctionIdList{
+			RANFunctionIdList: struct {
+				Text                      string                                     `xml:",chardata"`
+				ProtocolIESingleContainer []RicServiceQueryProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
+			}{
+				ProtocolIESingleContainer: protocolIESingleContainer,
+			},
+		},
+	}
+
+	initiatingMessage := InitiatingMessage{
+		ProcedureCode: InitiatingMessage_value_PR_RICserviceQuery,
+		Value: struct {
+			Text            string          `xml:",chardata"`
+			RICServiceQuery RICServiceQuery `xml:"RICserviceQuery"`
+		}{
+			RICServiceQuery: RICServiceQuery{
+				ProtocolIEs: struct {
+					Text               string               `xml:",chardata"`
+					RICServiceQueryIEs []RICServiceQueryIEs `xml:"RICserviceQuery-IEs"`
+				}{
+					RICServiceQueryIEs: []RICServiceQueryIEs{txIE, funcListIE},
+				},
+			},
+		},
+	}
+
+	return RICServiceQueryMessage{E2APPDU: RicServiceQueryE2APPDU{InitiatingMessage: initiatingMessage}}
 }
-
-

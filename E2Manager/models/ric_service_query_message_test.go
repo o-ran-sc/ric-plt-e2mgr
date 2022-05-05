@@ -23,9 +23,10 @@ import (
 	"e2mgr/models"
 	"e2mgr/utils"
 	"encoding/xml"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func getTestRicServiceQueryRanFunctions(t *testing.T) []*entities.RanFunction {
@@ -47,7 +48,15 @@ func TestRicServiceQueryMessageSuccess(t *testing.T) {
 
 	serviceQuery := models.NewRicServiceQueryMessage(ranFunctionList)
 	initMsg := serviceQuery.E2APPDU.InitiatingMessage
-	assert.Equal(t, "6", initMsg.ProcedureCode)
-	assert.Equal(t, "9", initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Id)
-	assert.Equal(t, 3, len(initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Value.RANFunctionIdList.ProtocolIESingleContainer))
+	assert.Equal(t, models.InitiatingMessage_value_PR_RICserviceQuery, initMsg.ProcedureCode)
+	assert.Equal(t, models.ProtocolIE_ID_id_TransactionID, initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Id)
+	assert.Equal(t, models.ProtocolIE_ID_id_RANfunctionsAccepted, initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[1].Id)
+	assert.Equal(t, 3, len(initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[1].Value.(models.RICServiceQueryRANFunctionIdList).RANFunctionIdList.ProtocolIESingleContainer))
+}
+
+func TestTransactionIdServiceQuery(t *testing.T) {
+	ranFunctionList := getTestRicServiceQueryRanFunctions(t)
+	serviceQuery := models.NewRicServiceQueryMessage(ranFunctionList)
+	txIE := serviceQuery.E2APPDU.InitiatingMessage.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Value.(models.RICServiceQueryTransactionID)
+	assert.NotEmpty(t, txIE.TransactionID, "transaction ID should not be empty")
 }
