@@ -26,4 +26,5 @@ const (
 
 const (
 	SuccessfulOutcome_value_PR_RICserviceUpdateAcknowledge = "3"
+	InitiatingMessage_value_PR_RICserviceQuery             = "10"
 )
