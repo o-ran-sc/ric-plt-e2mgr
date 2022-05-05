@@ -62,6 +62,7 @@ type E2nodeConfigurationUpdateIE struct {
 	} `xml:"criticality"`
 	Value struct {
 		Text                              string                            `xml:",chardata"`
+		TransactionID                     string                            `xml:"TransactionID"`
 		E2nodeComponentConfigAdditionList E2nodeComponentConfigAdditionList `xml:"E2nodeComponentConfigAddition-List"`
 		E2nodeComponentConfigUpdateList   E2nodeComponentConfigUpdateList   `xml:"E2nodeComponentConfigUpdate-List"`
 		E2nodeComponentConfigRemovalList  E2nodeComponentConfigRemovalList  `xml:"E2nodeComponentConfigRemoval-List"`
