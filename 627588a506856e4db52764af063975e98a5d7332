@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "117c28e9_4c2b0a41",
+        "filename": "E2Manager/models/ric_service_query_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-06T05:44:27Z",
+      "side": 1,
+      "message": "ID / Procedure codes could use the constants for more readability.",
+      "revId": "627588a506856e4db52764af063975e98a5d7332",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "801c6a6a_cc4513f1",
+        "filename": "E2Manager/models/ric_service_query_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-06T05:44:27Z",
+      "side": 1,
+      "message": "ID / Procedure codes could use the constants for more readability.",
+      "revId": "627588a506856e4db52764af063975e98a5d7332",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "32232311_8d1677a3",
+        "filename": "E2Manager/models/ric_service_query_message.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-06T05:44:27Z",
+      "side": 1,
+      "message": "ID / Procedure codes could use the constants for more readability.",
+      "revId": "627588a506856e4db52764af063975e98a5d7332",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0eaec9d8_0efd24aa",
+        "filename": "E2Manager/models/ric_service_query_message_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-06T05:44:27Z",
+      "side": 1,
+      "message": "The constants could be used for both SRC and Test codes for readability.",
+      "revId": "627588a506856e4db52764af063975e98a5d7332",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
