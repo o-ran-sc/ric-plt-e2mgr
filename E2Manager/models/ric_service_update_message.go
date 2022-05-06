@@ -69,6 +69,7 @@ type RICServiceUpdateIEs struct {
 	} `xml:"criticality"`
 	Value struct {
 		Text             string `xml:",chardata"`
+		TransactionID    string `xml:"TransactionID"`
 		RANfunctionsList struct {
 			Text                                      string                                      `xml:",chardata"`
 			RANfunctionsItemProtocolIESingleContainer []RANfunctionsItemProtocolIESingleContainer `xml:"ProtocolIE-SingleContainer"`
@@ -113,11 +114,11 @@ type RICServiceUpdateMessage struct {
 
 func (m *RICServiceUpdateE2APPDU) ExtractRanFunctionsList() []*entities.RanFunction {
 	serviceUpdateRequestIes := m.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs
-	if len(serviceUpdateRequestIes) < 2 {
+	if len(serviceUpdateRequestIes) < 3 {
 		return nil
 	}
 
-	ranFunctionsListContainer := serviceUpdateRequestIes[1].Value.RANfunctionsList.RANfunctionsItemProtocolIESingleContainer
+	ranFunctionsListContainer := serviceUpdateRequestIes[2].Value.RANfunctionsList.RANfunctionsItemProtocolIESingleContainer
 	funcs := make([]*entities.RanFunction, len(ranFunctionsListContainer))
 	for i := 0; i < len(funcs); i++ {
 		ranFunctionItem := ranFunctionsListContainer[i].Value.RANfunctionItem
