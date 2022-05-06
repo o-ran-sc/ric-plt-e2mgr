@@ -104,7 +104,7 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 		return
 	}
 
-	updateAck := models.NewServiceUpdateAck(ackFunctionIds)
+	updateAck := models.NewServiceUpdateAck(ackFunctionIds, ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs[0].Value.TransactionID)
 	err = h.sendUpdateAck(updateAck, nodebInfo, request)
 	if err != nil {
 		h.logger.Errorf("#RicServiceUpdate.Handle - failed to send RIC_SERVICE_UPDATE_ACK message to RMR: %s", err)
