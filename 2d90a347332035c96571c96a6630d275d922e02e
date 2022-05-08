@@ -33,6 +33,24 @@
       "message": "Is there any logs to be added to indicate x2 interface not supported ? or will it be fixed?",
       "revId": "2d90a347332035c96571c96a6630d275d922e02e",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e47af648_0c52f35c",
+        "filename": "E2Manager/models/e2_node_configuration_update.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-08T16:48:34Z",
+      "side": 1,
+      "message": "Logger is not available in model struct. please suggest",
+      "parentUuid": "773c873c_cff17008",
+      "revId": "2d90a347332035c96571c96a6630d275d922e02e",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
