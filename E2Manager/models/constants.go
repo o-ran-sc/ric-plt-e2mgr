@@ -19,11 +19,17 @@
 package models
 
 const (
-	ProtocolIE_ID_id_RANfunctionID_Item            = "6"
-	ProtocolIE_ID_id_RANfunctionsAccepted          = "9"
-	ProtocolIE_ID_id_TransactionID                 = "49"
-	ProtocolIE_ID_id_E2nodeComponentConfigAddition = "50"
-	ProtocolIE_ID_id_E2nodeComponentConfigRemoval  = "54"
+	ProtocolIE_ID_id_RANfunctionID_Item                    = "6"
+	ProtocolIE_ID_id_RANfunctionsAccepted                  = "9"
+	ProtocolIE_ID_id_E2nodeComponentConfigUpdateAck        = "35"
+	ProtocolIE_ID_id_E2nodeComponentConfigUpdateAck_Item   = "36"
+	ProtocolIE_ID_id_TransactionID                         = "49"
+	ProtocolIE_ID_id_E2nodeComponentConfigAddition         = "50"
+	ProtocolIE_ID_id_E2nodeComponentConfigAdditionAck      = "52"
+	ProtocolIE_ID_id_E2nodeComponentConfigAdditionAck_Item = "53"
+	ProtocolIE_ID_id_E2nodeComponentConfigRemoval          = "54"
+	ProtocolIE_ID_id_E2nodeComponentConfigRemovalAck       = "56"
+	ProtocolIE_ID_id_E2nodeComponentConfigRemovalAck_Item  = "57"
 )
 
 const (
