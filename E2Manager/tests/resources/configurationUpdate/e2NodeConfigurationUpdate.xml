@@ -337,7 +337,7 @@
                                             <e2nodeComponentInterfaceType><e1/></e2nodeComponentInterfaceType>
                                             <e2nodeComponentID>
                                                 <e2nodeComponentInterfaceTypeE1>
-                                                    <gNB-CU-CP-ID>1234</gNB-CU-CP-ID>
+                                                    <gNB-CU-CP-ID>100</gNB-CU-CP-ID>
                                                 </e2nodeComponentInterfaceTypeE1>
                                             </e2nodeComponentID>
                                         </E2nodeComponentConfigRemoval-Item>
@@ -351,7 +351,7 @@
                                             <e2nodeComponentInterfaceType><f1/></e2nodeComponentInterfaceType>
                                             <e2nodeComponentID>
                                                 <e2nodeComponentInterfaceTypeF1>
-                                                    <gNB-DU-ID>2345</gNB-DU-ID>
+                                                    <gNB-DU-ID>100</gNB-DU-ID>
                                                 </e2nodeComponentInterfaceTypeF1>
                                             </e2nodeComponentID>
                                         </E2nodeComponentConfigRemoval-Item>
@@ -365,7 +365,7 @@
                                             <e2nodeComponentInterfaceType><w1/></e2nodeComponentInterfaceType>
                                             <e2nodeComponentID>
                                                 <e2nodeComponentInterfaceTypeW1>
-                                                    <ng-eNB-DU-ID>3456</ng-eNB-DU-ID>
+                                                    <ng-eNB-DU-ID>121</ng-eNB-DU-ID>
                                                 </e2nodeComponentInterfaceTypeW1>
                                             </e2nodeComponentID>
                                         </E2nodeComponentConfigRemoval-Item>

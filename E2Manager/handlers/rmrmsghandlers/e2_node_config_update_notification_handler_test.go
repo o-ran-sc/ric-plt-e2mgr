@@ -33,8 +33,9 @@ import (
 )
 
 const (
-	E2nodeConfigUpdateXmlPath             = "../../tests/resources/configurationUpdate/e2NodeConfigurationUpdate.xml"
-	E2nodeConfigUpdateOnlyAdditionXmlPath = "../../tests/resources/configurationUpdate/e2NodeConfigurationUpdateOnlyAddition.xml"
+	E2nodeConfigUpdateXmlPath                      = "../../tests/resources/configurationUpdate/e2NodeConfigurationUpdate.xml"
+	E2nodeConfigUpdateOnlyAdditionXmlPath          = "../../tests/resources/configurationUpdate/e2NodeConfigurationUpdateOnlyAddition.xml"
+	E2nodeConfigUpdateOnlyAdditionAndUpdateXmlPath = "../../tests/resources/configurationUpdate/e2NodeConfigurationUpdateAdditionAndUpdateOnly.xml"
 )
 
 func initE2nodeConfigMocks(t *testing.T) (*E2nodeConfigUpdateNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock) {
@@ -89,8 +90,8 @@ func TestE2nodeConfigUpdatetParseFail(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestHandleAddConfig(t *testing.T) {
-	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateXmlPath)
+func TestHandleAddAndUpdateConfig(t *testing.T) {
+	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateOnlyAdditionAndUpdateXmlPath)
 
 	handler, readerMock, writerMock, _ := initE2nodeConfigMocks(t)
 	var nodebInfo = &entities.NodebInfo{
@@ -115,6 +116,34 @@ func TestHandleAddConfig(t *testing.T) {
 	assert.Equal(t, "nginterf", nodebInfo.GetGnb().NodeConfigs[0].GetE2NodeComponentInterfaceTypeNG().AmfName)
 	assert.Equal(t, "72 65 71 70 61 72 73", string(nodebInfo.GetGnb().NodeConfigs[0].E2NodeComponentRequestPart))
 	assert.Equal(t, "72 65 73 70 61 72 73", string(nodebInfo.GetGnb().NodeConfigs[0].E2NodeComponentResponsePart))
+
+	writerMock.AssertExpectations(t)
+	readerMock.AssertExpectations(t)
+}
+
+func TestHandleAddandDeleteConfig(t *testing.T) {
+	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateXmlPath)
+
+	handler, readerMock, writerMock, _ := initE2nodeConfigMocks(t)
+	var nodebInfo = &entities.NodebInfo{
+		RanName:                      gnbNodebRanName,
+		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
+		ConnectionStatus:             entities.ConnectionStatus_DISCONNECTED,
+		NodeType:                     entities.Node_GNB,
+		Configuration: &entities.NodebInfo_Gnb{
+			Gnb: &entities.Gnb{},
+		},
+	}
+	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
+	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+
+	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2NodeConfigUpdateXml...)}
+
+	handler.Handle(notificationRequest)
+
+	t.Logf("len of nodeconfig : %d", len(nodebInfo.GetGnb().NodeConfigs))
+
+	assert.Equal(t, 0, len(nodebInfo.GetGnb().NodeConfigs))
 
 	writerMock.AssertExpectations(t)
 	readerMock.AssertExpectations(t)
