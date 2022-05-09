@@ -74,6 +74,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 func (e *E2nodeConfigUpdateNotificationHandler) updateE2nodeConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
 	e.handleAddConfig(e2nodeConfig, nodebInfo)
 	e.handleUpdateConfig(e2nodeConfig, nodebInfo)
+	e.handleDeleteConfig(e2nodeConfig, nodebInfo)
 	e.rNibDataService.UpdateNodebInfoAndPublish(nodebInfo)
 }
 
@@ -155,6 +156,50 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleUpdateConfig(e2nodeConfig 
 
 		}
 	}
+}
+
+func (e *E2nodeConfigUpdateNotificationHandler) handleDeleteConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
+	deleteList := e2nodeConfig.ExtractConfigDeletionList()
+
+	shouldBeRemoved := []*entities.E2NodeComponentConfig{}
+	for _, u := range deleteList {
+		if nodebInfo.GetNodeType() == entities.Node_ENB {
+			for _, v := range nodebInfo.GetEnb().NodeConfigs {
+				if e.compareConfigIDs(u, *v) {
+					shouldBeRemoved = append(shouldBeRemoved, v)
+					break
+				}
+			}
+		}
+
+		if nodebInfo.GetNodeType() == entities.Node_GNB {
+			for _, v := range nodebInfo.GetGnb().NodeConfigs {
+				if e.compareConfigIDs(u, *v) {
+					shouldBeRemoved = append(shouldBeRemoved, v)
+					break
+				}
+			}
+		}
+	}
+
+	if nodebInfo.GetNodeType() == entities.Node_GNB {
+		for _, item := range shouldBeRemoved {
+			nodebInfo.GetGnb().NodeConfigs = removeItem(nodebInfo.GetGnb().NodeConfigs, item)
+		}
+	} else {
+		for _, item := range shouldBeRemoved {
+			nodebInfo.GetEnb().NodeConfigs = removeItem(nodebInfo.GetEnb().NodeConfigs, item)
+		}
+	}
+}
+
+func removeItem(s []*entities.E2NodeComponentConfig, item *entities.E2NodeComponentConfig) []*entities.E2NodeComponentConfig {
+	for index, val := range s {
+		if val == item {
+			return append(s[:index], s[index+1:]...)
+		}
+	}
+	return s
 }
 
 func (e *E2nodeConfigUpdateNotificationHandler) parseE2NodeConfigurationUpdate(payload []byte) (*models.E2nodeConfigurationUpdateMessage, error) {
