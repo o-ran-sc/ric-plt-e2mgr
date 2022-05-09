@@ -74,6 +74,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 func (e *E2nodeConfigUpdateNotificationHandler) updateE2nodeConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
 	e.handleAddConfig(e2nodeConfig, nodebInfo)
 	e.handleUpdateConfig(e2nodeConfig, nodebInfo)
+	e.handleDeleteConfig(e2nodeConfig, nodebInfo)
 	e.rNibDataService.UpdateNodebInfoAndPublish(nodebInfo)
 }
 
@@ -155,6 +156,37 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleUpdateConfig(e2nodeConfig 
 
 		}
 	}
+}
+
+func (e *E2nodeConfigUpdateNotificationHandler) handleDeleteConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
+	deleteList := e2nodeConfig.ExtractConfigDeletionList()
+
+	for _, u := range deleteList {
+		if nodebInfo.GetNodeType() == entities.Node_ENB {
+			for i, v := range nodebInfo.GetEnb().NodeConfigs {
+				if e.compareConfigIDs(u, *v) {
+					nodebInfo.GetEnb().NodeConfigs = removeIndex(nodebInfo.GetEnb().GetNodeConfigs(), i)
+					break
+				}
+			}
+		}
+
+		if nodebInfo.GetNodeType() == entities.Node_GNB {
+			for i, v := range nodebInfo.GetGnb().NodeConfigs {
+				if e.compareConfigIDs(u, *v) {
+					nodebInfo.GetGnb().NodeConfigs = removeIndex(nodebInfo.GetGnb().GetNodeConfigs(), i)
+					break
+				}
+			}
+		}
+	}
+}
+
+func removeIndex(s []*entities.E2NodeComponentConfig, index int) []*entities.E2NodeComponentConfig {
+	if index < len(s) {
+		return append(s[:index], s[index+1:]...)
+	}
+	return s
 }
 
 func (e *E2nodeConfigUpdateNotificationHandler) parseE2NodeConfigurationUpdate(payload []byte) (*models.E2nodeConfigurationUpdateMessage, error) {
