@@ -22,6 +22,7 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/mocks"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/tests"
 	"e2mgr/utils"
@@ -62,7 +63,7 @@ func initE2nodeConfigMocks(t *testing.T) (*E2nodeConfigUpdateNotificationHandler
 
 func TestE2nodeConfigUpdatetNotificationHandler(t *testing.T) {
 	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateOnlyAdditionXmlPath)
-	handler, readerMock, writerMock, _ := initE2nodeConfigMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock := initE2nodeConfigMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -74,6 +75,8 @@ func TestE2nodeConfigUpdatetNotificationHandler(t *testing.T) {
 	}
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var errEmpty error
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(&rmrCgo.MBuf{}, errEmpty)
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2NodeConfigUpdateXml...)}
 	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
@@ -93,7 +96,7 @@ func TestE2nodeConfigUpdatetParseFail(t *testing.T) {
 func TestHandleAddAndUpdateConfig(t *testing.T) {
 	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateOnlyAdditionAndUpdateXmlPath)
 
-	handler, readerMock, writerMock, _ := initE2nodeConfigMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock := initE2nodeConfigMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -105,6 +108,8 @@ func TestHandleAddAndUpdateConfig(t *testing.T) {
 	}
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var errEmpty error
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(&rmrCgo.MBuf{}, errEmpty)
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2NodeConfigUpdateXml...)}
 
@@ -124,7 +129,7 @@ func TestHandleAddAndUpdateConfig(t *testing.T) {
 func TestHandleAddandDeleteConfig(t *testing.T) {
 	e2NodeConfigUpdateXml := utils.ReadXmlFile(t, E2nodeConfigUpdateXmlPath)
 
-	handler, readerMock, writerMock, _ := initE2nodeConfigMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock := initE2nodeConfigMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -136,6 +141,8 @@ func TestHandleAddandDeleteConfig(t *testing.T) {
 	}
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var errEmpty error
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(&rmrCgo.MBuf{}, errEmpty)
 
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2NodeConfigUpdateXml...)}
 
