@@ -21,6 +21,7 @@ package rmrmsghandlers
 import (
 	"e2mgr/logger"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"e2mgr/utils"
@@ -69,6 +70,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 		return
 	}
 	e.updateE2nodeConfig(e2NodeConfig, nodebInfo)
+	e.handleSuccessfulResponse(e2NodeConfig, request, nodebInfo)
 }
 
 func (e *E2nodeConfigUpdateNotificationHandler) updateE2nodeConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
@@ -199,4 +201,18 @@ func (e *E2nodeConfigUpdateNotificationHandler) parseE2NodeConfigurationUpdate(p
 	}
 	e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - Unmarshalling is successful %v", e2nodeConfig.E2APPDU.InitiatingMessage.ProcedureCode)
 	return &e2nodeConfig, nil
+}
+
+func (e *E2nodeConfigUpdateNotificationHandler) handleSuccessfulResponse(e2NodeConfigUpdate *models.E2nodeConfigurationUpdateMessage, request *models.NotificationRequest, nodebInfo *entities.NodebInfo) error {
+	e2nodeConfigUpdateResp := models.NewE2nodeConfigurationUpdateSuccessResponseMessage(e2NodeConfigUpdate)
+	payLoad, err := xml.Marshal(e2nodeConfigUpdateResp)
+	if err != nil {
+		e.logger.Errorf("#E2nodeConfigUpdateNotificationHandler.sendUpdateAck - Error marshalling RIC_SERVICE_UPDATE_ACK. Payload: %s", payLoad)
+	}
+
+	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad, toReplaceTags)
+	e.logger.Infof("#E2nodeConfigUpdateNotificationHandler.sendUpdateAck - Sending RIC_SERVICE_UPDATE_ACK to RAN name: %s with payload %s", nodebInfo.RanName, payLoad)
+	msg := models.NewRmrMessage(rmrCgo.RIC_SERVICE_UPDATE_ACK, nodebInfo.RanName, payLoad, request.TransactionId, request.GetMsgSrc())
+	err = e.rmrSender.Send(msg)
+	return err
 }
