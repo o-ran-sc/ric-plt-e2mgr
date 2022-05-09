@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "df5481bb_9ffa1dda",
+        "filename": "E2Manager/models/e2_node_configuration_update_ack.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-09T04:50:46Z",
+      "side": 1,
+      "message": "All the ID (with magic number) could be replaced with Readable Strings",
+      "revId": "3396ea701ded53195764b3efe2ef0f7e6c04328d",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e6b76c61_bb6ae9e2",
+        "filename": "E2Manager/models/e2_node_configuration_update_ack.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-09T04:50:46Z",
+      "side": 1,
+      "message": "Procedure code could be replaced with Readable Constant.",
+      "revId": "3396ea701ded53195764b3efe2ef0f7e6c04328d",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
