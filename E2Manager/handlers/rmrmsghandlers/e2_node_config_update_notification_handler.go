@@ -73,6 +73,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 
 func (e *E2nodeConfigUpdateNotificationHandler) updateE2nodeConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
 	e.handleAddConfig(e2nodeConfig, nodebInfo)
+	e.handleUpdateConfig(e2nodeConfig, nodebInfo)
 	e.rNibDataService.UpdateNodebInfoAndPublish(nodebInfo)
 }
 
@@ -118,6 +119,41 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleAddConfig(e2nodeConfig *mo
 
 	} else {
 		nodebInfo.GetGnb().NodeConfigs = append(result, nodebInfo.GetGnb().NodeConfigs...)
+	}
+}
+
+func (e *E2nodeConfigUpdateNotificationHandler) handleUpdateConfig(e2nodeConfig *models.E2nodeConfigurationUpdateMessage, nodebInfo *entities.NodebInfo) {
+	updateList := e2nodeConfig.ExtractConfigUpdateList()
+	if nodebInfo.GetNodeType() == entities.Node_GNB {
+		for i := 0; i < len(updateList); i++ {
+			u := updateList[i]
+			if nodebInfo.GetNodeType() == entities.Node_GNB {
+				for j := 0; j < len(nodebInfo.GetGnb().NodeConfigs); j++ {
+					if e.compareConfigIDs(u, *nodebInfo.GetGnb().NodeConfigs[j]) {
+						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - item at position [%d] should be updated", i)
+						nodebInfo.GetGnb().NodeConfigs[i] = &u
+						break
+					} else {
+						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - dint match")
+					}
+				}
+			}
+		}
+	} else {
+		for i := 0; i < len(updateList); i++ {
+			u := updateList[i]
+			if nodebInfo.GetNodeType() == entities.Node_ENB {
+				for j := 0; j < len(nodebInfo.GetEnb().NodeConfigs); j++ {
+					v := nodebInfo.GetEnb().NodeConfigs[j]
+					if e.compareConfigIDs(u, *v) {
+						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - item at position [%d] should be updated", i)
+						nodebInfo.GetEnb().NodeConfigs[i] = &u
+						break
+					}
+				}
+			}
+
+		}
 	}
 }
 
