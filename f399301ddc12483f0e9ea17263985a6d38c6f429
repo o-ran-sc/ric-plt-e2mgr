@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69dc77cc_5e883b1a",
+        "filename": "E2Manager/handlers/rmrmsghandlers/e2_node_config_update_notification_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1001314
+      },
+      "writtenOn": "2022-05-10T05:46:39Z",
+      "side": 1,
+      "message": "Is this append to remove the items? Same comment is applicable where ever remove operation is used.",
+      "revId": "f399301ddc12483f0e9ea17263985a6d38c6f429",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
