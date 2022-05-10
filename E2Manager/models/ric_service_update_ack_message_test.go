@@ -21,8 +21,9 @@ package models_test
 
 import (
 	"e2mgr/models"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRicServiceUpdateAckMessageSuccess(t *testing.T) {
@@ -33,20 +34,20 @@ func TestRicServiceUpdateAckMessageSuccess(t *testing.T) {
 		item2,
 	}
 
-	serviceUpdateAck := models.NewServiceUpdateAck(serviceupdateAckFunctionIds)
-	ies := serviceUpdateAck.InitiatingMessage.(models.RicServiceUpdateAckSuccessfulOutcome).Value.RICserviceUpdateAcknowledge.ProtocolIEs.RICserviceUpdateAcknowledgeIEs
-	assert.Equal(t, "9", ies[0].ID)
-	assert.Equal(t, "6", ies[0].Value.RANfunctionsIDList.ProtocolIESingleContainer[0].Id)
-	assert.Equal(t, "6", ies[0].Value.RANfunctionsIDList.ProtocolIESingleContainer[1].Id)
-	assert.Equal(t, item1, ies[0].Value.RANfunctionsIDList.ProtocolIESingleContainer[0].Value.RANfunctionIDItem)
-	assert.Equal(t, item2, ies[0].Value.RANfunctionsIDList.ProtocolIESingleContainer[1].Value.RANfunctionIDItem)
+	serviceUpdateAck := models.NewServiceUpdateAck(serviceupdateAckFunctionIds, "1234")
+	ies := serviceUpdateAck.SuccessfulOutcome.(models.RicServiceUpdateAckSuccessfulOutcome).Value.RICserviceUpdateAcknowledge.ProtocolIEs.RICserviceUpdateAcknowledgeIEs
+	assert.Equal(t, models.ProtocolIE_ID_id_RANfunctionsAccepted, ies[1].ID)
+	assert.Equal(t, models.ProtocolIE_ID_id_RANfunctionID_Item, ies[1].Value.(models.RICserviceUpdateAcknowledgeRANfunctionsList).RANfunctionsIDList.ProtocolIESingleContainer[0].Id)
+	assert.Equal(t, models.ProtocolIE_ID_id_RANfunctionID_Item, ies[1].Value.(models.RICserviceUpdateAcknowledgeRANfunctionsList).RANfunctionsIDList.ProtocolIESingleContainer[1].Id)
+	assert.Equal(t, item1, ies[1].Value.(models.RICserviceUpdateAcknowledgeRANfunctionsList).RANfunctionsIDList.ProtocolIESingleContainer[0].Value.RANfunctionIDItem)
+	assert.Equal(t, item2, ies[1].Value.(models.RICserviceUpdateAcknowledgeRANfunctionsList).RANfunctionsIDList.ProtocolIESingleContainer[1].Value.RANfunctionIDItem)
+
+	txIE := serviceUpdateAck.SuccessfulOutcome.(models.RicServiceUpdateAckSuccessfulOutcome).Value.RICserviceUpdateAcknowledge.ProtocolIEs.RICserviceUpdateAcknowledgeIEs[0]
+	assert.Equal(t, models.ProtocolIE_ID_id_TransactionID, txIE.ID)
+	assert.Equal(t, "1234", txIE.Value.(models.RICserviceUpdateAcknowledgeTransactionID).TransactionID)
 }
 
 func TestRicServiceUpdateAckMessageNoRanFunctionIdItemsSuccess(t *testing.T) {
-	successfulOutcome := models.RicServiceUpdateAckSuccessfulOutcome{}
-	successfulOutcome.ProcedureCode = "7"
-
-	expectedAck := models.RicServiceUpdateAckE2APPDU{InitiatingMessage: successfulOutcome}
-	serviceUpdateAck := models.NewServiceUpdateAck(nil)
-	assert.Equal(t, expectedAck, serviceUpdateAck)
+	serviceUpdateAck := models.NewServiceUpdateAck(nil, "1234")
+	assert.Equal(t, 2, len(serviceUpdateAck.SuccessfulOutcome.(models.RicServiceUpdateAckSuccessfulOutcome).Value.RICserviceUpdateAcknowledge.ProtocolIEs.RICserviceUpdateAcknowledgeIEs), "Trasaction ID is mandatory IE")
 }
