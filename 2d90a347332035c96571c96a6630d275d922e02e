@@ -18,6 +18,24 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "a506a88f_42d479dc",
+        "filename": "E2Manager/models/e2_node_configuration_update.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-10T18:54:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4b765c2_71382be3",
+      "revId": "2d90a347332035c96571c96a6630d275d922e02e",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "773c873c_cff17008",
