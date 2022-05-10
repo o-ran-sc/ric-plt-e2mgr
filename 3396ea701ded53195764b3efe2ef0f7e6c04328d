@@ -18,6 +18,24 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "20b37bdb_3d69fe82",
+        "filename": "E2Manager/models/e2_node_configuration_update_ack.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-10T18:54:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "df5481bb_9ffa1dda",
+      "revId": "3396ea701ded53195764b3efe2ef0f7e6c04328d",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "e6b76c61_bb6ae9e2",
@@ -31,6 +49,24 @@
       "writtenOn": "2022-05-09T04:50:46Z",
       "side": 1,
       "message": "Procedure code could be replaced with Readable Constant.",
+      "revId": "3396ea701ded53195764b3efe2ef0f7e6c04328d",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "abef3da0_55713080",
+        "filename": "E2Manager/models/e2_node_configuration_update_ack.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-10T18:54:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6b76c61_bb6ae9e2",
       "revId": "3396ea701ded53195764b3efe2ef0f7e6c04328d",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
