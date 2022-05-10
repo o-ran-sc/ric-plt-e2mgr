@@ -6,6 +6,13 @@
             <RICserviceUpdate>
                 <protocolIEs>
                     <RICserviceUpdate-IEs>
+                        <id>49</id>
+                        <criticality><reject/></criticality>
+                        <value>
+                            <TransactionID>1234</TransactionID>
+                        </value>
+                    </RICserviceUpdate-IEs>
+                    <RICserviceUpdate-IEs>
                         <id>11</id>
                         <criticality><reject/></criticality>
                         <value>

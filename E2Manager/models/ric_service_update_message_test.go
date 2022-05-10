@@ -58,3 +58,8 @@ func TestRicServiceUpdateMessageWithOID(t *testing.T) {
 	assert.Equal(t, uint32(2), ranFunctions[0].RanFunctionRevision)
 	assert.Equal(t, "OID20", ranFunctions[0].RanFunctionOid)
 }
+
+func TestRICServiceUpdateMessageTxId(t *testing.T) {
+	serviceUpdate := getTestRicServiceUpdate(t, "../tests/resources/serviceUpdate/RicServiceUpdate_AddedFunction_With_OID.xml")
+	assert.Equal(t, "1234", serviceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs[0].Value.TransactionID)
+}
