@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7510239c_abcb954d",
+        "filename": "E2Manager/handlers/rmrmsghandlers/ric_service_update_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-11T11:20:44Z",
+      "side": 0,
+      "message": "Removed invalid UT, as service update ack has mandatory\n`RICserviceUpdateAcknowledgeRANfunctionsList` with minimum\none ProtocolIESingleContainer.",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 1
+      },
+      "revId": "c2a0f92c83f295c4d92277611fa17ac2b7638bc9",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
