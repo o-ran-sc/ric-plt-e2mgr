@@ -131,7 +131,7 @@ func NewRicServiceQueryMessage(ranFunctions []*entities.RanFunction) RICServiceQ
 	}
 
 	initiatingMessage := InitiatingMessage{
-		ProcedureCode: InitiatingMessage_value_PR_RICserviceQuery,
+		ProcedureCode: ProcedureCode_id_RICserviceQuery,
 		Value: struct {
 			Text            string          `xml:",chardata"`
 			RICServiceQuery RICServiceQuery `xml:"RICserviceQuery"`

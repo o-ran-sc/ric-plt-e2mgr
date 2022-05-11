@@ -121,7 +121,7 @@ func NewServiceUpdateAck(ricServiceUpdate []RicServiceAckRANFunctionIDItem, txId
 	}
 
 	successfulOutcome := RicServiceUpdateAckSuccessfulOutcome{
-		ProcedureCode: SuccessfulOutcome_value_PR_RICserviceUpdateAcknowledge,
+		ProcedureCode: ProcedureCode_id_RICserviceUpdate,
 		Value: struct {
 			Text                        string                      `xml:",chardata"`
 			RICserviceUpdateAcknowledge RICserviceUpdateAcknowledge `xml:"RICserviceUpdateAcknowledge"`

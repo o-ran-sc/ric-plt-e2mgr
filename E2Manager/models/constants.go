@@ -33,7 +33,7 @@ const (
 )
 
 const (
-	SuccessfulOutcome_value_PR_RICserviceUpdateAcknowledge = "3"
-	InitiatingMessage_value_PR_RICserviceQuery             = "10"
-	ProcedureCode_id_E2nodeConfigurationUpdate             = "10"
+	ProcedureCode_id_RICserviceQuery           = "6"
+	ProcedureCode_id_E2nodeConfigurationUpdate = "10"
+	ProcedureCode_id_RICserviceUpdate          = "7"
 )
