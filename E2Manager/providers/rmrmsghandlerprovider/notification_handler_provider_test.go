@@ -98,6 +98,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_X2_RESET_RESP, rmrmsghandlers.NewX2ResetResponseHandler(logger, rnibDataService, ranStatusChangeManager, converters.NewX2ResetResponseExtractor(logger))},
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
 		{rmrCgo.RIC_SERVICE_UPDATE, rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager)},
+		{rmrCgo.RIC_E2NODE_CONFIG_UPDATE, rmrmsghandlers.NewE2nodeConfigUpdateNotificationHandler(logger, rnibDataService, rmrSender)},
 	}
 
 	for _, tc := range testCases {
