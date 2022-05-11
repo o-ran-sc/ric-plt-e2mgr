@@ -48,7 +48,7 @@ func TestRicServiceQueryMessageSuccess(t *testing.T) {
 
 	serviceQuery := models.NewRicServiceQueryMessage(ranFunctionList)
 	initMsg := serviceQuery.E2APPDU.InitiatingMessage
-	assert.Equal(t, models.InitiatingMessage_value_PR_RICserviceQuery, initMsg.ProcedureCode)
+	assert.Equal(t, models.ProcedureCode_id_RICserviceQuery, initMsg.ProcedureCode)
 	assert.Equal(t, models.ProtocolIE_ID_id_TransactionID, initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[0].Id)
 	assert.Equal(t, models.ProtocolIE_ID_id_RANfunctionsAccepted, initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[1].Id)
 	assert.Equal(t, 3, len(initMsg.Value.RICServiceQuery.ProtocolIEs.RICServiceQueryIEs[1].Value.(models.RICServiceQueryRANFunctionIdList).RANFunctionIdList.ProtocolIESingleContainer))

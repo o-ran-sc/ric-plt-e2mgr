@@ -29,11 +29,12 @@ import (
 	"e2mgr/utils"
 	"encoding/xml"
 	"fmt"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 const (
@@ -45,11 +46,11 @@ const (
 	RicServiceUpdateModifiedPath    = "../../tests/resources/serviceUpdate/RicServiceUpdate_ModifiedFunction.xml"
 	RicServiceUpdateDeletePath      = "../../tests/resources/serviceUpdate/RicServiceUpdate_DeleteFunction.xml"
 	RicServiceUpdateAddedPath       = "../../tests/resources/serviceUpdate/RicServiceUpdate_AddedFunction.xml"
-	RicServiceUpdateEmptyPath		= "../../tests/resources/serviceUpdate/RicServiceUpdate_Empty.xml"
+	RicServiceUpdateEmptyPath       = "../../tests/resources/serviceUpdate/RicServiceUpdate_Empty.xml"
 	RicServiceUpdateAckModifiedPath = "../../tests/resources/serviceUpdateAck/RicServiceUpdateAck_ModifiedFunction.xml"
 	RicServiceUpdateAckAddedPath    = "../../tests/resources/serviceUpdateAck/RicServiceUpdateAck_AddedFunction.xml"
 	RicServiceUpdateAckDeletePath   = "../../tests/resources/serviceUpdateAck/RicServiceUpdateAck_DeleteFunction.xml"
-	RicServiceUpdateAckEmptyPath	= "../../tests/resources/serviceUpdateAck/RicServiceUpdateAck_Empty.xml"
+	RicServiceUpdateAckEmptyPath    = "../../tests/resources/serviceUpdateAck/RicServiceUpdateAck_Empty.xml"
 )
 
 func initRicServiceUpdateHandler(t *testing.T) (*RicServiceUpdateHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.RanListManagerMock) {
@@ -58,7 +59,7 @@ func initRicServiceUpdateHandler(t *testing.T) (*RicServiceUpdateHandler, *mocks
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,
 		RnibWriter: configuration.RnibWriterConfig{
-			StateChangeMessageChannel: StateChangeMessageChannel,
+			StateChangeMessageChannel:     StateChangeMessageChannel,
 			RanManipulationMessageChannel: RanManipulationMessageChannel,
 		},
 		GlobalRicId: struct {
@@ -66,8 +67,8 @@ func initRicServiceUpdateHandler(t *testing.T) (*RicServiceUpdateHandler, *mocks
 			Mcc   string
 			Mnc   string
 		}{
-			Mcc: "337",
-			Mnc: "94",
+			Mcc:   "337",
+			Mnc:   "94",
 			RicId: "AACCE",
 		}}
 	rmrMessengerMock := &mocks.RmrMessengerMock{}
@@ -80,44 +81,22 @@ func initRicServiceUpdateHandler(t *testing.T) (*RicServiceUpdateHandler, *mocks
 	return handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock
 }
 
-
-func TestRICServiceUpdateModifiedFuncSuccess(t *testing.T){
+func TestRICServiceUpdateModifiedFuncSuccess(t *testing.T) {
 	testServiceUpdateSuccess(t, RicServiceUpdateModifiedPath, RicServiceUpdateAckModifiedPath)
 }
 
-func TestRICServiceUpdateAddedFuncSuccess(t *testing.T){
+func TestRICServiceUpdateAddedFuncSuccess(t *testing.T) {
 
 	testServiceUpdateSuccess(t, RicServiceUpdateAddedPath, RicServiceUpdateAckAddedPath)
 }
 
-func TestRICServiceUpdateDeleteFuncSuccess(t *testing.T){
+func TestRICServiceUpdateDeleteFuncSuccess(t *testing.T) {
 	testServiceUpdateSuccess(t, RicServiceUpdateDeletePath, RicServiceUpdateAckDeletePath)
 }
 
-func TestRICServiceUpdateEmptySuccess(t *testing.T){
+func TestRICServiceUpdateRnibFailure(t *testing.T) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateEmptyPath)
-	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
-	nb1:= createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
-	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
-	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
-	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
-	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
-	ricServiceAckMsg := createRicServiceQueryAckRMRMbuf(t,RicServiceUpdateAckEmptyPath, notificationRequest )
-	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
-	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
-	rmrMessengerMock.On("SendMsg",ricServiceAckMsg,true).Return(&rmrCgo.MBuf{}, nil)
-
-	handler.Handle(notificationRequest)
-	writerMock.AssertExpectations(t)
-	rmrMessengerMock.AssertNumberOfCalls(t,"SendMsg", 1)
-	readerMock.AssertExpectations(t)
-	ranListManagerMock.AssertExpectations(t)
-}
-
-func TestRICServiceUpdateRnibFailure(t *testing.T){
-	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
 	readerMock.On("GetNodeb", serviceUpdateRANName).Return(&entities.NodebInfo{}, common.NewInternalError(fmt.Errorf("internal error")))
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
@@ -129,9 +108,9 @@ func TestRICServiceUpdateRnibFailure(t *testing.T){
 	ranListManagerMock.AssertExpectations(t)
 }
 
-func TestRICServiceUpdateRnibNotFound(t *testing.T){
+func TestRICServiceUpdateRnibNotFound(t *testing.T) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateModifiedPath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, RicServiceUpdateModifiedPath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
 	readerMock.On("GetNodeb", serviceUpdateRANName).Return(&entities.NodebInfo{}, common.NewResourceNotFoundError("nodeb not found"))
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
@@ -143,11 +122,11 @@ func TestRICServiceUpdateRnibNotFound(t *testing.T){
 	ranListManagerMock.AssertExpectations(t)
 }
 
-func TestRICServiceUpdateNodeBInfoFailure(t *testing.T){
+func TestRICServiceUpdateNodeBInfoFailure(t *testing.T) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
-	nb1:= createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
+	nb1 := createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
 	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(common.NewInternalError(fmt.Errorf("internal error")))
@@ -159,51 +138,51 @@ func TestRICServiceUpdateNodeBInfoFailure(t *testing.T){
 	ranListManagerMock.AssertExpectations(t)
 }
 
-func TestSendRICServiceUpdateAckFailure(t *testing.T){
+func TestSendRICServiceUpdateAckFailure(t *testing.T) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateModifiedPath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, RicServiceUpdateModifiedPath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
-	nb1:= createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
+	nb1 := createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
 	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
-	ricServiceAckMsg := createRicServiceQueryAckRMRMbuf(t,RicServiceUpdateAckModifiedPath, notificationRequest )
-	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
+	ricServiceAckMsg := createRicServiceQueryAckRMRMbuf(t, RicServiceUpdateAckModifiedPath, notificationRequest)
+	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived", nb1.RanName).Return(oldnbIdentity, newnbIdentity)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
-	rmrMessengerMock.On("SendMsg",ricServiceAckMsg,true).Return(&rmrCgo.MBuf{}, fmt.Errorf("rmr send failure"))
-	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
+	rmrMessengerMock.On("SendMsg", ricServiceAckMsg, true).Return(&rmrCgo.MBuf{}, fmt.Errorf("rmr send failure"))
+	ranListManagerMock.On("UpdateNbIdentities", nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(nil)
 
 	handler.Handle(notificationRequest)
 	writerMock.AssertExpectations(t)
-	rmrMessengerMock.AssertNumberOfCalls(t,"SendMsg", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 	readerMock.AssertExpectations(t)
 	ranListManagerMock.AssertExpectations(t)
 }
 
-func TestRICServiceUpdateUpdateNbIdentitiesFailure(t *testing.T){
+func TestRICServiceUpdateUpdateNbIdentitiesFailure(t *testing.T) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, RicServiceUpdateDeletePath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
-	nb1:= createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
+	nb1 := createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
 	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName, Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
-	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
-	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(common.NewInternalError(fmt.Errorf("internal error")))
+	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived", nb1.RanName).Return(oldnbIdentity, newnbIdentity)
+	ranListManagerMock.On("UpdateNbIdentities", nb1.NodeType, []*entities.NbIdentity{oldnbIdentity}, []*entities.NbIdentity{newnbIdentity}).Return(common.NewInternalError(fmt.Errorf("internal error")))
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
 
 	handler.Handle(notificationRequest)
 	writerMock.AssertExpectations(t)
-	rmrMessengerMock.AssertNumberOfCalls(t,"SendMsg", 0)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 0)
 	readerMock.AssertExpectations(t)
 	ranListManagerMock.AssertExpectations(t)
 }
 
 func TestRICServiceUpdateParseRequest_PipFailure(t *testing.T) {
 	xmlGnb := utils.ReadXmlFile(t, RICServiceUpdate_E2SetupReqPath)
-	handler, _, _, _, _:= initRicServiceUpdateHandler(t)
+	handler, _, _, _, _ := initRicServiceUpdateHandler(t)
 	prefBytes := []byte(serviceUpdateE2tInstanceAddress)
 	ricServiceUpdate, err := handler.parseSetupRequest(append(prefBytes, xmlGnb...))
 	assert.Nil(t, ricServiceUpdate)
@@ -220,31 +199,31 @@ func TestRICServiceUppdateParseRequest_UnmarshalFailure(t *testing.T) {
 	assert.EqualError(t, err, "#RicServiceUpdateHandler.parseSetupRequest - Error unmarshalling RIC SERVICE UPDATE payload: 31302e302e302e32373a393939397c010203")
 }
 
-func testServiceUpdateSuccess(t *testing.T, servicepdatePath string, serviceUpdateAckPath string){
+func testServiceUpdateSuccess(t *testing.T, servicepdatePath string, serviceUpdateAckPath string) {
 	handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock := initRicServiceUpdateHandler(t)
-	xmlserviceUpdate  := utils.ReadXmlFile(t, servicepdatePath)
+	xmlserviceUpdate := utils.ReadXmlFile(t, servicepdatePath)
 	xmlserviceUpdate = utils.CleanXML(xmlserviceUpdate)
-	nb1:= createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
+	nb1 := createNbInfo(t, serviceUpdateRANName, entities.ConnectionStatus_CONNECTED)
 	oldnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	newnbIdentity := &entities.NbIdentity{InventoryName: nb1.RanName, ConnectionStatus: nb1.ConnectionStatus}
 	readerMock.On("GetNodeb", nb1.RanName).Return(nb1, nil)
 	notificationRequest := &models.NotificationRequest{RanName: serviceUpdateRANName,
 		Payload: append([]byte(serviceUpdateE2SetupMsgPrefix), xmlserviceUpdate...)}
-	ricServiceAckMsg := createRicServiceQueryAckRMRMbuf(t,serviceUpdateAckPath, notificationRequest )
-	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived",nb1.RanName).Return(oldnbIdentity, newnbIdentity)
-	ranListManagerMock.On("UpdateNbIdentities",nb1.NodeType, []*entities.NbIdentity{oldnbIdentity},
+	ricServiceAckMsg := createRicServiceQueryAckRMRMbuf(t, serviceUpdateAckPath, notificationRequest)
+	ranListManagerMock.On("UpdateHealthcheckTimeStampReceived", nb1.RanName).Return(oldnbIdentity, newnbIdentity)
+	ranListManagerMock.On("UpdateNbIdentities", nb1.NodeType, []*entities.NbIdentity{oldnbIdentity},
 		[]*entities.NbIdentity{newnbIdentity}).Return(nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
-	rmrMessengerMock.On("SendMsg",ricServiceAckMsg,true).Return(&rmrCgo.MBuf{}, nil)
+	rmrMessengerMock.On("SendMsg", ricServiceAckMsg, true).Return(&rmrCgo.MBuf{}, nil)
 
 	handler.Handle(notificationRequest)
 	writerMock.AssertExpectations(t)
-	rmrMessengerMock.AssertNumberOfCalls(t,"SendMsg", 1)
+	rmrMessengerMock.AssertNumberOfCalls(t, "SendMsg", 1)
 	readerMock.AssertExpectations(t)
 	ranListManagerMock.AssertExpectations(t)
 }
 
-func createRicServiceQueryAckRMRMbuf(t *testing.T,  xmlFile string, req *models.NotificationRequest) *rmrCgo.MBuf{
+func createRicServiceQueryAckRMRMbuf(t *testing.T, xmlFile string, req *models.NotificationRequest) *rmrCgo.MBuf {
 	ricServiceQueryAckXml := utils.ReadXmlFile(t, xmlFile)
 	ricServiceQueryAckXml = utils.CleanXML(ricServiceQueryAckXml)
 	payLoad := utils.NormalizeXml(ricServiceQueryAckXml)
@@ -256,7 +235,7 @@ func createRicServiceQueryAckRMRMbuf(t *testing.T,  xmlFile string, req *models.
 	return rmrCgo.NewMBuf(rmrMessage.MsgType, len(rmrMessage.Payload), rmrMessage.RanName, &rmrMessage.Payload, &rmrMessage.XAction, rmrMessage.GetMsgSrc())
 }
 
-func createNbInfo(t *testing.T, RanName string,  connectionStatus entities.ConnectionStatus) *entities.NodebInfo {
+func createNbInfo(t *testing.T, RanName string, connectionStatus entities.ConnectionStatus) *entities.NodebInfo {
 	xmlgnb := utils.ReadXmlFile(t, RICServiceUpdate_E2SetupReqPath)
 	xmlgnb = utils.CleanXML(xmlgnb)
 	payload := append([]byte(serviceUpdateE2SetupMsgPrefix), xmlgnb...)
@@ -272,7 +251,7 @@ func createNbInfo(t *testing.T, RanName string,  connectionStatus entities.Conne
 		RanName:                      RanName,
 		SetupFromNetwork:             true,
 		NodeType:                     entities.Node_GNB,
-		ConnectionStatus: 			  connectionStatus,
+		ConnectionStatus:             connectionStatus,
 		Configuration: &entities.NodebInfo_Gnb{
 			Gnb: &entities.Gnb{
 				GnbType:      entities.GnbType_GNB,
@@ -286,4 +265,3 @@ func createNbInfo(t *testing.T, RanName string,  connectionStatus entities.Conne
 	}
 	return nodeb
 }
-
