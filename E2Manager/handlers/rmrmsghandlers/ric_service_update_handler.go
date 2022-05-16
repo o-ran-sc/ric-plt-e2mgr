@@ -89,7 +89,7 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 	h.logger.Infof("#RicServiceUpdateHandler.Handle - RIC_SERVICE_UPDATE has been parsed successfully %+v", ricServiceUpdate)
 
 	ackFunctionIds := h.updateFunctions(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs, nodebInfo)
-	if len(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs) != 0 {
+	if len(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs) > 1 {
 		err = h.rNibDataService.UpdateNodebInfoAndPublish(nodebInfo)
 		if err != nil {
 			h.logger.Errorf("#RicServiceUpdateHandler.Handle - RAN name: %s - Failed at UpdateNodebInfoAndPublish. error: %s", nodebInfo.RanName, err)
@@ -104,7 +104,7 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 		return
 	}
 
-	updateAck := models.NewServiceUpdateAck(ackFunctionIds)
+	updateAck := models.NewServiceUpdateAck(ackFunctionIds, ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs[0].Value.TransactionID)
 	err = h.sendUpdateAck(updateAck, nodebInfo, request)
 	if err != nil {
 		h.logger.Errorf("#RicServiceUpdate.Handle - failed to send RIC_SERVICE_UPDATE_ACK message to RMR: %s", err)
