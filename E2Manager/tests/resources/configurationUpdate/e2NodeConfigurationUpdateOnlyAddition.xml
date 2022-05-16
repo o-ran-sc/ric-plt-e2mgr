@@ -1,42 +1,18 @@
 <E2AP-PDU>
     <initiatingMessage>
-        <procedureCode>1</procedureCode>
-        <criticality>
-            <reject/>
-        </criticality>
+        <procedureCode>10</procedureCode>
+        <criticality><reject/></criticality>
         <value>
-            <E2setupRequest>
+            <E2nodeConfigurationUpdate>
                 <protocolIEs>
-                    <E2setupRequestIEs>
+                    <E2nodeConfigurationUpdate-IEs>
                         <id>49</id>
-                        <criticality>
-                            <reject/>
-                        </criticality>
+                        <criticality><reject/></criticality>
                         <value>
-                            <TransactionID>1</TransactionID>
+                            <TransactionID>1234</TransactionID>
                         </value>
-                    </E2setupRequestIEs>
-                    <E2setupRequestIEs>
-                        <id>3</id>
-                        <criticality>
-                            <reject/>
-                        </criticality>
-                        <value>
-                            <GlobalE2node-ID>
-                                <gNB>
-                                    <global-gNB-ID>
-                                        <plmn-id>13 F1 84</plmn-id>
-                                        <gnb-id>
-                                            <gnb-ID>
-                                                00000000000000010000001000000001
-                                            </gnb-ID>
-                                        </gnb-id>
-                                    </global-gNB-ID>
-                                </gNB>
-                            </GlobalE2node-ID>
-                        </value>
-                    </E2setupRequestIEs>
-                    <E2setupRequestIEs>
+                    </E2nodeConfigurationUpdate-IEs>
+                    <E2nodeConfigurationUpdate-IEs>
                         <id>50</id>
                         <criticality><reject/></criticality>
                         <value>
@@ -46,7 +22,7 @@
                                     <criticality><reject/></criticality>
                                     <value>
                                         <E2nodeComponentConfigAddition-Item>
-                                            <e2nodeComponentInterfaceType><ng/></e2nodeComponentInterfaceType>
+                                            <e2nodeComponentInterfaceType><ng></ng></e2nodeComponentInterfaceType>
                                             <e2nodeComponentID>
                                                 <e2nodeComponentInterfaceTypeNG>
                                                     <amf-name>nginterf</amf-name>
@@ -61,9 +37,9 @@
                                 </ProtocolIE-SingleContainer>
                             </E2nodeComponentConfigAddition-List>
                         </value>
-                    </E2setupRequestIEs>
+                    </E2nodeConfigurationUpdate-IEs>
                 </protocolIEs>
-            </E2setupRequest>
+            </E2nodeConfigurationUpdate>
         </value>
     </initiatingMessage>
 </E2AP-PDU>
