@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "92346e78_b5bae9a5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2022-05-17T17:24:32Z",
+      "side": 1,
+      "message": "Commit and review history can be tracked here : https://gerrit.o-ran-sc.org/r/gitweb?p\u003dric-plt%2Fe2mgr.git;a\u003dshortlog;h\u003drefs%2Fheads%2Fe2ap-v02.00",
+      "revId": "0f06f71ca88aeedf1239fdc0f3f4cb7fa0ab9823",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
