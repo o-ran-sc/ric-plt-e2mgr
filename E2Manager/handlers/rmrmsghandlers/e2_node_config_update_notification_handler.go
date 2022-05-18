@@ -56,7 +56,8 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 		e.logger.Errorf(err.Error())
 		return
 	}
-	e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - RIC_E2_Node_Config_Update parsed successfully")
+
+	e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - RIC_E2_Node_Config_Update parsed successfully %+v", e2NodeConfig)
 
 	nodebInfo, err := e.rNibDataService.GetNodeb(request.RanName)
 
@@ -211,8 +212,8 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleSuccessfulResponse(e2NodeC
 	}
 
 	payLoad = utils.ReplaceEmptyTagsWithSelfClosing(payLoad, toReplaceTags)
-	e.logger.Infof("#E2nodeConfigUpdateNotificationHandler.sendUpdateAck - Sending RIC_SERVICE_UPDATE_ACK to RAN name: %s with payload %s", nodebInfo.RanName, payLoad)
-	msg := models.NewRmrMessage(rmrCgo.RIC_SERVICE_UPDATE_ACK, nodebInfo.RanName, payLoad, request.TransactionId, request.GetMsgSrc())
+	e.logger.Infof("#E2nodeConfigUpdateNotificationHandler.sendUpdateAck - Sending RIC_E2nodeConfigUpdate_ACK to RAN name: %s with payload %s", nodebInfo.RanName, payLoad)
+	msg := models.NewRmrMessage(rmrCgo.RIC_E2NODE_CONFIG_UPDATE_ACK, nodebInfo.RanName, payLoad, request.TransactionId, request.GetMsgSrc())
 	err = e.rmrSender.Send(msg)
 	return err
 }
