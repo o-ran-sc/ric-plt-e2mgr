@@ -24,11 +24,13 @@ import (
 	"e2mgr/logger"
 	"e2mgr/mocks"
 	"e2mgr/services"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/stretchr/testify/mock"
 )
 
 const EventChannelForTest = "RAN_CONNECTION_STATUS_CHANGE"
@@ -59,9 +61,9 @@ func TestChangeStatusSuccessNewRan(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_UNKNOWN_CONNECTION_STATUS}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
-	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
 	assert.Nil(t, err)
 	writerMock.AssertExpectations(t)
@@ -75,7 +77,7 @@ func TestChangeStatusSuccessEventNone1(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	assert.Nil(t, err)
@@ -90,7 +92,7 @@ func TestChangeStatusSuccessEventNone2(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	assert.Nil(t, err)
@@ -105,9 +107,9 @@ func TestChangeStatusSuccessEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
-	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
 	assert.Nil(t, err)
 	writerMock.AssertExpectations(t)
@@ -121,9 +123,9 @@ func TestChangeStatusSuccessEventDisconnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+DISCONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, RanName+"_"+DISCONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
-	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_DISCONNECTED)
 	assert.Nil(t, err)
 	writerMock.AssertExpectations(t)
@@ -137,7 +139,7 @@ func TestChangeStatusRnibErrorEventNone(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	assert.NotNil(t, err)
 	writerMock.AssertExpectations(t)
@@ -151,7 +153,7 @@ func TestChangeStatusRnibErrorEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(common.NewInternalError(errors.New("Error")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, RanName+"_"+CONNECTED_RAW_EVENT).Return(common.NewInternalError(errors.New("Error")))
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
 	assert.NotNil(t, err)
 	writerMock.AssertExpectations(t)
@@ -165,7 +167,7 @@ func TestChangeStatusRanListManagerError(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_SHUTTING_DOWN}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), ranName, updatedNodebInfo.GetConnectionStatus()).Return(common.NewInternalError(errors.New("Error")))
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_SHUT_DOWN)
 	assert.Nil(t, err)
@@ -180,9 +182,9 @@ func TestChangeStatusRanAlarmServiceErrorEventConnected(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED}
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, RanName+"_"+CONNECTED_RAW_EVENT).Return(nil)
 	ranListManagerMock.On("UpdateNbIdentityConnectionStatus", updatedNodebInfo.GetNodeType(), RanName, updatedNodebInfo.GetConnectionStatus()).Return(nil)
-	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
 	_, err := ranConnectStatusChangeManager.ChangeStatus(origNodebInfo, entities.ConnectionStatus_CONNECTED)
 	assert.Nil(t, err)
 	writerMock.AssertExpectations(t)

@@ -33,19 +33,21 @@ import (
 	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"testing"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/mock"
-	"io/ioutil"
-	"net/http"
-	"testing"
 )
 
 const (
-	e2tInitPayload = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
+	e2tInitPayload     = "{\"address\":\"10.0.2.15\", \"fqdn\":\"\"}"
 	e2tInstanceAddress = "10.0.2.15"
-	podName = "podNAme_test"
+	podName            = "podNAme_test"
 )
 
 func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.E2TInstancesManagerMock, *mocks.RoutingManagerClientMock) {
@@ -65,7 +67,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, E2TermInitNotifica
 
 	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := &mocks.RanAlarmServiceMock{}
-	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManagerMock, routingManagerClientMock, ranConnectStatusChangeManager)
 
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
@@ -90,7 +92,7 @@ func initRanLostConnectionTestWithRealE2tInstanceManager(t *testing.T) (*logger.
 	e2tInstancesManager := managers.NewE2TInstancesManager(rnibDataService, logger)
 	ranListManager := managers.NewRanListManager(logger, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
-	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	handler := NewE2TermInitNotificationHandler(logger, ranDisconnectionManager, e2tInstancesManager, routingManagerClient)
@@ -175,7 +177,7 @@ func TestE2TermInitNewE2TInstance__RoutingManagerError(t *testing.T) {
 func TestE2TermInitExistingE2TInstanceNoAssociatedRans(t *testing.T) {
 	_, handler, _, _, e2tInstancesManagerMock, routingManagerClientMock := initRanLostConnectionTest(t)
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
-        var rtmgrErr error
+	var rtmgrErr error
 	e2tInstancesManagerMock.On("ResetKeepAliveTimestamp", e2tInstanceAddress).Return(nil)
 	routingManagerClientMock.On("AddE2TInstance", e2tInstanceAddress).Return(rtmgrErr, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
@@ -199,7 +201,7 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test_DISCONNECTED").Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -208,7 +210,8 @@ func TestE2TermInitHandlerSuccessOneRan(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
 
 	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+	updatedNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -243,7 +246,7 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test_DISCONNECTED").Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -252,7 +255,8 @@ func TestE2TermInitHandlerSuccessOneRan_RoutingManagerError(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
 
 	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+	updatedNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -286,7 +290,7 @@ func TestE2TermInitHandlerSuccessOneRanShuttingdown(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{RanName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -309,7 +313,8 @@ func TestE2TermInitHandlerSuccessOneRan_ToBeDeleted(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTING, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
-	writerMock.On("UpdateNodebInfo", argNodeb).Return(rnibErr)
+	argNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.State = entities.ToBeDeleted
@@ -345,12 +350,13 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(firstRan, rnibErr).Return(disconnectedFirstRan, rnibErr)
 
 	var updatedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfo", updatedFirstRan).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity1}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var updatedDisconnectedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedDisconnectedFirstRan).Return(rnibErr)
+	updatedDisconnectedFirstRan.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	//Second RAN
 	var secondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_CONNECTED, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -358,12 +364,14 @@ func TestE2TermInitHandlerSuccessTwoRans(t *testing.T) {
 	readerMock.On("GetNodeb", test2).Return(secondRan, rnibErr).Return(disconnectedSecondRan, rnibErr)
 
 	var updatedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfo", updatedSecondRan).Return(rnibErr)
+	updatedSecondRan.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	newNbIdentity2 := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId2", NbId: "nbId2"}}
 	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity2}, []*entities.NbIdentity{newNbIdentity2}).Return(nil)
 
 	var updatedDisconnectedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedDisconnectedSecondRan).Return(rnibErr)
+	updatedDisconnectedSecondRan.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -402,12 +410,13 @@ func TestE2TermInitHandlerSuccessTwoRansSecondRanShutdown(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(firstRan, rnibErr).Return(disconnectedFirstRan, rnibErr)
 
 	var updatedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfo", updatedFirstRan).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", updatedFirstRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
 
 	var updatedDisconnectedFirstRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedDisconnectedFirstRan).Return(rnibErr)
+	updatedDisconnectedFirstRan.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	//Second RAN
 	var secondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_SHUT_DOWN, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
@@ -453,10 +462,11 @@ func TestE2TermInitHandlerSuccessTwoRansFirstNotFoundFailure(t *testing.T) {
 	readerMock.On("GetNodeb", test2).Return(secondRan, rnibErr).Return(disconnectedSecondRan, rnibErr)
 
 	var updatedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfo", updatedSecondRan).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	var updatedDisconnectedSecondRan = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: test2, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedDisconnectedSecondRan).Return(rnibErr)
+	updatedDisconnectedSecondRan.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: test2, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", updatedSecondRan.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -507,7 +517,7 @@ func TestE2TermInitHandlerSuccessZeroRans(t *testing.T) {
 	_, handler, _, writerMock, e2tInstancesManagerMock, routingManagerClientMock := initRanLostConnectionTest(t)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
-        var rtmgrErr error
+	var rtmgrErr error
 	e2tInstancesManagerMock.On("ResetKeepAliveTimestamp", e2tInstanceAddress).Return(nil)
 	routingManagerClientMock.On("AddE2TInstance", e2tInstanceAddress).Return(rtmgrErr, nil)
 	e2tInstancesManagerMock.On("GetE2TInstance", e2tInstanceAddress).Return(e2tInstance, nil)
@@ -541,13 +551,15 @@ func TestE2TermInitHandlerOneRanNoRanInNbIdentityMap(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+	argNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test_DISCONNECTED").Return(nil)
 
 	var disconnectedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
 
 	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+	updatedNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -583,7 +595,7 @@ func TestE2TermInitHandlerOneRanUpdateNbIdentitiesFailure(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(initialNodeb, rnibErr)
 
 	var argNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: "10.0.2.15"}
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", argNodeb, "test_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test_DISCONNECTED").Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: RanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", argNodeb.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(common.NewInternalError(fmt.Errorf("internal error")))
@@ -592,7 +604,8 @@ func TestE2TermInitHandlerOneRanUpdateNbIdentitiesFailure(t *testing.T) {
 	readerMock.On("GetNodeb", RanName).Return(disconnectedNodeb, rnibErr)
 
 	var updatedNodeb = &entities.NodebInfo{ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, RanName: RanName, AssociatedE2TInstanceAddress: ""}
-	writerMock.On("UpdateNodebInfo", updatedNodeb).Return(rnibErr)
+	updatedNodeb.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 
 	e2tInstance := entities.NewE2TInstance(e2tInstanceAddress, podName)
 	e2tInstance.AssociatedRanList = append(e2tInstance.AssociatedRanList, RanName)
@@ -612,6 +625,7 @@ func TestE2TermInitHandlerOneRanUpdateNbIdentitiesFailure(t *testing.T) {
 	writerMock.AssertNumberOfCalls(t, "SaveE2TInstance", 1)
 	httpClientMock.AssertNumberOfCalls(t, "Post", 1)
 }
+
 // TODO: extract to test_utils
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {
 	rmrMessenger := rmrCgo.RmrMessenger(rmrMessengerMock)

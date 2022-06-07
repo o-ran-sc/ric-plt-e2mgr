@@ -28,11 +28,13 @@ import (
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
 	"e2mgr/tests"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/stretchr/testify/mock"
 )
 
 const ranName = "test"
@@ -54,7 +56,7 @@ func initRanLostConnectionTest(t *testing.T) (*logger.Logger, *mocks.RmrMessenge
 	routingManagerClient := clients.NewRoutingManagerClient(logger, config, httpClient)
 	ranListManager := NewRanListManager(logger, rnibDataService)
 	ranAlarmService := services.NewRanAlarmService(logger, config)
-	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(logger, rnibDataService,ranListManager, ranAlarmService)
+	ranConnectStatusChangeManager := NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
 	ranDisconnectionManager := NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	return logger, rmrMessengerMock, readerMock, writerMock, ranDisconnectionManager, httpClient
@@ -91,7 +93,7 @@ func TestShuttingdownRan(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	err := ranDisconnectionManager.DisconnectRan(ranName)
 	assert.Nil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
@@ -106,7 +108,7 @@ func TestShuttingDownRanUpdateNodebInfoFailure(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_SHUT_DOWN
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
 	err := ranDisconnectionManager.DisconnectRan(ranName)
 	assert.NotNil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
@@ -121,7 +123,7 @@ func TestConnectingRanUpdateNodebInfoFailure(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo := *origNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(common.NewInternalError(errors.New("Error")))
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(common.NewInternalError(errors.New("Error")))
 	err := ranDisconnectionManager.DisconnectRan(ranName)
 	assert.NotNil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
@@ -136,14 +138,14 @@ func TestConnectingRanDisconnectSucceeds(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
-	e2tInstanceToSave := * e2tInstance
+	e2tInstanceToSave := *e2tInstance
 	e2tInstanceToSave.AssociatedRanList = []string{}
 	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
 	mockHttpClient(httpClient, clients.DissociateRanE2TInstanceApiSuffix, true)
@@ -161,14 +163,14 @@ func TestConnectingRanDissociateFailsRmError(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: E2TAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", E2TAddress).Return(e2tInstance, nil)
-	e2tInstanceToSave := * e2tInstance
+	e2tInstanceToSave := *e2tInstance
 	e2tInstanceToSave.AssociatedRanList = []string{}
 	writerMock.On("SaveE2TInstance", &e2tInstanceToSave).Return(nil)
 	mockHttpClient(httpClient, clients.DissociateRanE2TInstanceApiSuffix, false)
@@ -186,18 +188,18 @@ func TestConnectingRanDissociateFailsDbError(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, common.NewInternalError(errors.New("Error")))
 	err := ranDisconnectionManager.DisconnectRan(ranName)
 	assert.NotNil(t, err)
 	readerMock.AssertCalled(t, "GetNodeb", ranName)
 	writerMock.AssertNumberOfCalls(t, "UpdateNodebInfo", 2)
-	writerMock.AssertNotCalled(t, "SaveE2TInstance", )
+	writerMock.AssertNotCalled(t, "SaveE2TInstance")
 }
 
 func initRmrSender(rmrMessengerMock *mocks.RmrMessengerMock, log *logger.Logger) *rmrsender.RmrSender {

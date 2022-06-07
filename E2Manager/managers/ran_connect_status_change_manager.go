@@ -22,6 +22,8 @@ package managers
 import (
 	"e2mgr/logger"
 	"e2mgr/services"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
@@ -61,7 +63,9 @@ func (m *RanConnectStatusChangeManager) ChangeStatus(nodebInfo *entities.NodebIn
 	isConnectivityEvent := event != NONE_RAW_EVENT
 
 	// only after determining event we set next status
-	nodebInfo.ConnectionStatus = nextStatus;
+	nodebInfo.ConnectionStatus = nextStatus
+	// filling the timeStamp for the last Connection Status update
+	nodebInfo.StatusUpdateTimeStamp = uint64(time.Now().UnixNano())
 	if !isConnectivityEvent {
 		err := m.updateNodebInfo(nodebInfo)
 		if err != nil {

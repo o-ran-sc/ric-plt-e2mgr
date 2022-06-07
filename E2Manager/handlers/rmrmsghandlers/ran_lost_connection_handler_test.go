@@ -28,10 +28,12 @@ import (
 	"e2mgr/models"
 	"e2mgr/services"
 	"encoding/json"
-	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
+	"github.com/stretchr/testify/mock"
 )
 
 const (
@@ -44,7 +46,7 @@ func setupLostConnectionHandlerTest(isSuccessfulHttpPost bool) (*RanLostConnecti
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,
-		RnibWriter: configuration.RnibWriterConfig {
+		RnibWriter: configuration.RnibWriterConfig{
 			StateChangeMessageChannel: StateChangeMessageChannel,
 		},
 	}
@@ -88,11 +90,11 @@ func TestLostConnectionHandlerConnectingRanSuccess(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
 	e2tInstanceToSave := *e2tInstance
@@ -120,11 +122,11 @@ func TestLostConnectionHandlerConnectedRanSuccess(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo1, ranName+"_DISCONNECTED").Return(rnibErr)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, ranName+"_DISCONNECTED").Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
 	e2tInstanceToSave := *e2tInstance
@@ -147,11 +149,11 @@ func TestLostConnectionHandlerRmDissociateFailure(t *testing.T) {
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo1).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	updatedNodebInfo2 := *origNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = ""
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(rnibErr)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	e2tInstance := &entities.E2TInstance{Address: e2tAddress, AssociatedRanList: []string{ranName}}
 	readerMock.On("GetE2TInstance", e2tAddress).Return(e2tInstance, nil)
 	e2tInstanceToSave := *e2tInstance

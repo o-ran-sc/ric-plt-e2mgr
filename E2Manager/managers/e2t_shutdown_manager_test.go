@@ -30,11 +30,13 @@ import (
 	"e2mgr/services"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"io/ioutil"
+
 	//"k8s.io/apimachinery/pkg/runtime"
 	//"k8s.io/client-go/kubernetes/fake"
 	"net/http"
@@ -77,7 +79,9 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	e2tInstance3 := entities.NewE2TInstance(E2TAddress3, PodName)
 	e2tInstance3.State = entities.Active
 	e2tInstance3.AssociatedRanList = []string{"test4"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
@@ -101,32 +105,32 @@ func TestShutdownSuccess1OutOf3Instances(t *testing.T) {
 	/*** nodeb 1 ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 2 ***/
 	nodeb2connected := *nodeb2
 	nodeb2connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2connected).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	nodeb2NotAssociated := *nodeb2
 	nodeb2NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb2NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 5 ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb5NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb5NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -142,7 +146,9 @@ func TestShutdownSuccess1InstanceWithoutRans(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	data := models.NewRoutingManagerDeleteRequestModel(E2TAddress, nil, nil)
 	marshaled, _ := json.Marshal(data)
@@ -168,7 +174,9 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
@@ -188,22 +196,22 @@ func TestShutdownSuccess1Instance2Rans(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 2 disconnected ***/
 	nodeb2new := *nodeb2
 	nodeb2new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2new).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	nodeb2NotAssociated := *nodeb2
 	nodeb2NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb2NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -235,7 +243,9 @@ func TestShutdownFailureMarkInstanceAsToBeDeleted(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2", "test5"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(e2managererrors.NewRnibDbError())
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(e2managererrors.NewRnibDbError())
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -257,7 +267,9 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	e2tInstance3 := entities.NewE2TInstance(E2TAddress3, PodName)
 	e2tInstance3.State = entities.Active
 	e2tInstance3.AssociatedRanList = []string{"test4"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
@@ -281,32 +293,32 @@ func TestShutdownFailureRoutingManagerError(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 2 shutting down ***/
 	nodeb2connected := *nodeb2
 	nodeb2connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2connected).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	nodeb2NotAssociated := *nodeb2
 	nodeb2NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb2NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 5 connected ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb5NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb5NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -322,19 +334,21 @@ func TestShutdownFailureInClearNodebsAssociation(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(common.NewInternalError(fmt.Errorf("for tests")))
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(common.NewInternalError(fmt.Errorf("for tests")))
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -350,14 +364,16 @@ func TestShutdownFailureInClearNodebsAssociation_UpdateConnectionStatus(t *testi
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(common.NewInternalError(fmt.Errorf("for tests")))
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -373,7 +389,9 @@ func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
@@ -382,12 +400,12 @@ func TestShutdownResourceNotFoundErrorInGetNodeb(t *testing.T) {
 
 	nodeb1new := *nodeb1
 	nodeb1new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1new, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -403,7 +421,9 @@ func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
 	e2tInstance1 := entities.NewE2TInstance(E2TAddress, PodName)
 	e2tInstance1.State = entities.Active
 	e2tInstance1.AssociatedRanList = []string{"test1", "test2"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	var nodeb1 *entities.NodebInfo
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, common.NewInternalError(fmt.Errorf("for testing")))
@@ -422,12 +442,12 @@ func TestShutdownResourceGeneralErrorInGetNodeb(t *testing.T) {
 
 	nodeb2new := *nodeb2
 	nodeb2new.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2new).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	nodeb2NotAssociated := *nodeb2
 	nodeb2NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb2NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
@@ -450,7 +470,9 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	e2tInstance3 := entities.NewE2TInstance(E2TAddress3, PodName)
 	e2tInstance3.State = entities.Active
 	e2tInstance3.AssociatedRanList = []string{"test4"}
-	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool { return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted })).Return(nil)
+	writerMock.On("SaveE2TInstance", mock.MatchedBy(func(e2tInstance *entities.E2TInstance) bool {
+		return e2tInstance.Address == E2TAddress && e2tInstance.State == entities.ToBeDeleted
+	})).Return(nil)
 
 	nodeb1 := &entities.NodebInfo{RanName: "test1", AssociatedE2TInstanceAddress: E2TAddress, ConnectionStatus: entities.ConnectionStatus_CONNECTED, E2ApplicationProtocol: entities.E2ApplicationProtocol_X2_SETUP_REQUEST}
 	readerMock.On("GetNodeb", "test1").Return(nodeb1, nil)
@@ -470,32 +492,32 @@ func TestShutdownFailureInRemoveE2TInstance(t *testing.T) {
 	/*** nodeb 1 connected ***/
 	nodeb1connected := *nodeb1
 	nodeb1connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb1connected, "test1_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test1_DISCONNECTED").Return(nil)
 
 	nodeb1NotAssociated := *nodeb1
 	nodeb1NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb1NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb1NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 2 shutting down ***/
 	nodeb2connected := *nodeb2
 	nodeb2connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2connected).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	nodeb2NotAssociated := *nodeb2
 	nodeb2NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb2NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb2NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	/*** nodeb 5 connected ***/
 	nodeb5connected := *nodeb5
 	nodeb5connected.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &nodeb5connected, "test5_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, "test5_DISCONNECTED").Return(nil)
 
 	nodeb5NotAssociated := *nodeb5
 	nodeb5NotAssociated.AssociatedE2TInstanceAddress = ""
 	nodeb5NotAssociated.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &nodeb5NotAssociated).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	err := shutdownManager.Shutdown(e2tInstance1)
 
