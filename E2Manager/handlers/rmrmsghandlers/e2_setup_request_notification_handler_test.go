@@ -380,7 +380,7 @@ func TestE2SetupRequestNotificationHandler_HandleNewRanRoutingManagerError(t *te
 	updatedNodebInfo := *nodebInfo
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(errors.New("association error"))
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	writerMock.On("UpdateNbIdentities", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	var errEmpty error
 	mbuf := getMbuf(gnbNodebRanName, rmrCgo.RIC_E2_SETUP_FAILURE, E2SetupFailureResponseWithTransportCause, notificationRequest)
@@ -419,12 +419,12 @@ func testE2SetupRequestNotificationHandler_HandleNewRanSuccess(t *testing.T, xml
 	writerMock.On("AddNbIdentity", nodeType, nbIdentity).Return(nil)
 	updatedNodebInfo := *expectedNodebInfo
 	updatedNodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &updatedNodebInfo, ranName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, ranName+"_CONNECTED").Return(nil)
 	routingManagerClientMock.On("AssociateRanToE2TInstance", e2tInstanceFullAddress, mock.Anything).Return(nil)
 	updatedNodebInfo2 := *expectedNodebInfo
 	updatedNodebInfo2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	updatedNodebInfo2.AssociatedE2TInstanceAddress = e2tInstanceFullAddress
-	writerMock.On("UpdateNodebInfo", &updatedNodebInfo2).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: ranName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: expectedNodebInfo.GlobalNbId}
 	writerMock.On("UpdateNbIdentities", updatedNodebInfo2.GetNodeType(), []*entities.NbIdentity{nbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -572,7 +572,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingConnectedEnbSuccess(t *
 	enbToUpdate.SetupFromNetwork = true
 	newNbIdentity := &entities.NbIdentity{InventoryName: enbNodebRanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", enbToUpdate.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
-	writerMock.On("UpdateNodebInfo", enbToUpdate).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", e2tInstanceFullAddress, []string{enbNodebRanName}).Return(nil)
 	var errEmpty error
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, errEmpty)
@@ -613,7 +613,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedEnbSuccess(
 	enbToUpdate2 := *enbToUpdate
 	enbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	enbToUpdate2.SetupFromNetwork = true
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &enbToUpdate2, enbNodebRanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, enbNodebRanName+"_CONNECTED").Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: enbNodebRanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", enbToUpdate.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -622,7 +622,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedEnbSuccess(
 	enbToUpdate3.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	enbToUpdate3.SetupFromNetwork = true
 	enbToUpdate3.AssociatedE2TInstanceAddress = e2tInstanceFullAddress
-	writerMock.On("UpdateNodebInfo", &enbToUpdate3).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	e2tInstancesManagerMock.On("AddRansToInstance", e2tInstanceFullAddress, []string{enbNodebRanName}).Return(nil)
 	var errEmpty error
 	rmrMessengerMock.On("SendMsg", mock.Anything, true).Return(&rmrCgo.MBuf{}, errEmpty)
@@ -665,9 +665,9 @@ func testE2SetupRequestNotificationHandler_HandleExistingConnectedGnbSuccess(t *
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(e2SetupMsgPrefix), xmlGnb...)}
 	gnbToUpdate := getExpectedNodebForExistingRan(nodebInfo, notificationRequest.Payload)
 	gnbToUpdate.SetupFromNetwork = true
-	writerMock.On("UpdateNodebInfo", gnbToUpdate).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 	if withFunctions {
-		writerMock.On("UpdateNodebInfoAndPublish", gnbToUpdate).Return(nil)
+		writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
 	}
 	newNbIdentity := &entities.NbIdentity{InventoryName: gnbNodebRanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", gnbToUpdate.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -723,7 +723,7 @@ func TestE2SetupRequestNotificationHandler_HandleExistingConnectedGnbRoutingMana
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_DISCONNECTED
 	gnbToUpdate2.SetupFromNetwork = true
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &gnbToUpdate2, gnbNodebRanName+"_DISCONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, gnbNodebRanName+"_DISCONNECTED").Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: gnbNodebRanName, ConnectionStatus: entities.ConnectionStatus_DISCONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", gnbToUpdate2.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)
@@ -792,12 +792,12 @@ func TestE2SetupRequestNotificationHandler_HandleExistingDisconnectedGnbSuccess(
 	gnbToUpdate2 := *gnbToUpdate
 	gnbToUpdate2.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	gnbToUpdate2.SetupFromNetwork = true
-	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", &gnbToUpdate2, gnbNodebRanName+"_CONNECTED").Return(nil)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, gnbNodebRanName+"_CONNECTED").Return(nil)
 	gnbToUpdate3 := *gnbToUpdate
 	gnbToUpdate3.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	gnbToUpdate3.SetupFromNetwork = true
 	gnbToUpdate3.AssociatedE2TInstanceAddress = e2tInstanceFullAddress
-	writerMock.On("UpdateNodebInfo", &gnbToUpdate3).Return(nil)
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(nil)
 
 	newNbIdentity := &entities.NbIdentity{InventoryName: gnbNodebRanName, ConnectionStatus: entities.ConnectionStatus_CONNECTED, GlobalNbId: &entities.GlobalNbId{PlmnId: "plmnId1", NbId: "nbId1"}}
 	writerMock.On("UpdateNbIdentities", gnbToUpdate3.GetNodeType(), []*entities.NbIdentity{oldNbIdentity}, []*entities.NbIdentity{newNbIdentity}).Return(nil)

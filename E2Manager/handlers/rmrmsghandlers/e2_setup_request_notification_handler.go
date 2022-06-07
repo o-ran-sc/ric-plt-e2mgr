@@ -36,13 +36,17 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
+const cleanUpDurationNanoSec uint64 = 10000000000 // cleanUpDuration = 10sec (value in nanoSecond=10000000000)
+
 var (
 	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention", "request-id-unknown",
+		"unspecified", "message-not-compatible-with-receiver-state", "control-processing-overload",
 		"v60s", "v20s", "v10s", "v5s", "v2s", "v1s", "ng", "xn", "e1", "f1", "w1", "s1", "x2", "success", "failure"}
 	gnbTypesMap = map[string]entities.GnbType{
 		"gnb":    entities.GnbType_GNB,
@@ -142,6 +146,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 		functionsModified, err = h.handleExistingRan(ranName, nodebInfo, setupRequest)
 
 		if err != nil {
+			h.fillCauseAndSendUnsuccessfulResponse(nodebInfo, request, setupRequest)
 			return
 		}
 	}
@@ -214,7 +219,15 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 }
 
 func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) (bool, error) {
-	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_SHUTTING_DOWN {
+	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_DISCONNECTED {
+		delta_in_nano := uint64(time.Now().UnixNano()) - nodebInfo.StatusUpdateTimeStamp
+		//The duration from last Disconnection for which a new request is to be rejected (currently 10 sec)
+		if delta_in_nano < cleanUpDurationNanoSec {
+			h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity disconnection in progress", ranName, nodebInfo.ConnectionStatus)
+			return false, errors.New("nodeB entity disconnection in progress")
+		}
+		h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in disconnected state", ranName, nodebInfo.ConnectionStatus)
+	} else if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_SHUTTING_DOWN {
 		h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity in incorrect state", ranName, nodebInfo.ConnectionStatus)
 		return false, errors.New("nodeB entity in incorrect state")
 	}
@@ -411,5 +424,12 @@ func (h *E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setu
 	return &entities.NbIdentity{
 		InventoryName: ranName,
 		GlobalNbId:    h.buildGlobalNbId(setupRequest),
+	}
+}
+
+func (h *E2SetupRequestNotificationHandler) fillCauseAndSendUnsuccessfulResponse(nodebInfo *entities.NodebInfo, request *models.NotificationRequest, setupRequest *models.E2SetupRequestMessage) {
+	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_DISCONNECTED {
+		cause := models.Cause{Misc: &models.CauseMisc{ControlProcessingOverload: &struct{}{}}}
+		h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause, setupRequest)
 	}
 }
