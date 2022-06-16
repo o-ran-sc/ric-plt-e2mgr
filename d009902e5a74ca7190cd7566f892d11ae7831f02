@@ -89,6 +89,30 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0c4d7eee_96e414a8",
+        "filename": "E2Manager/handlers/httpmsghandlers/delete_all_request_handler_test.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2022-06-16T09:44:32Z",
+      "side": 1,
+      "message": "Dhiraj will enhance this UT next week as per the discussion here, but in order to merge this would like to mark this for now as resolved. \n\nBug report to keep track of this: https://jira.o-ran-sc.org/browse/RIC-921",
+      "parentUuid": "08bd3b62_41068563",
+      "range": {
+        "startLine": 292,
+        "startChar": 34,
+        "endLine": 292,
+        "endChar": 47
+      },
+      "revId": "d009902e5a74ca7190cd7566f892d11ae7831f02",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "321ad79d_ffc527fa",
