@@ -30,6 +30,7 @@ import (
 const (
 	e2NodeConfigurationUpdateOnlyAdditionXmlPath = "../tests/resources/configurationUpdate/e2NodeConfigurationUpdateOnlyAddition.xml"
 	e2NodeConfigurationUpdateXmlPath             = "../tests/resources/configurationUpdate/e2NodeConfigurationUpdate.xml"
+	e2NodeConfigurationUpdateE1XmlPath           = "../tests/resources/configurationUpdate/e2NodeConfigurationUpdate_addition_e1.xml"
 )
 
 func getTestE2NodeConfigurationUpdateMessage(t *testing.T, reqXmlPath string) *models.E2nodeConfigurationUpdateMessage {
@@ -51,6 +52,17 @@ func TestParseE2NodeConfigurationUpdateSuccessAdditionOnly(t *testing.T) {
 	assert.Equal(t, false, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.Ng == nil)
 	assert.Equal(t, true, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
 	assert.Equal(t, true, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
+}
+
+func TestParseE2NodeConfigurationUpdateE1(t *testing.T) {
+	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateE1XmlPath)
+	assert.NotEqual(t, nil, configurationUpdate, "xml is not parsed correctly")
+	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, configurationUpdate.E2APPDU.InitiatingMessage.ProcedureCode)
+	assert.Equal(t, 2, len(configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs))
+
+	additionIE := configurationUpdate.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs[1]
+	assert.Equal(t, 1, len(additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer))
+	assert.Equal(t, false, additionIE.Value.E2nodeComponentConfigAdditionList.ProtocolIESingleContainer[0].Value.E2nodeComponentConfigAdditionItem.E2nodeComponentInterfaceType.E1 == nil)
 }
 
 func TestParseE2NodeConfigurationUpdateSuccess(t *testing.T) {
