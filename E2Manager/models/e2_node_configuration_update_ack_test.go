@@ -83,3 +83,20 @@ func TestNewE2nodeConfigurationUpdateSuccessResponseE1(t *testing.T) {
 	assert.Equal(t, models.ProtocolIE_ID_id_E2nodeComponentConfigAdditionAck, additionIE.ID)
 	assert.Equal(t, 1, len(additionIE.Value.(models.E2nodeComponentConfigAdditionAckList).E2nodeComponentConfigAdditionAckList.ProtocolIESingleContainer))
 }
+
+func TestNewE2nodeConfigurationUpdateSuccessResponseF1(t *testing.T) {
+	configurationUpdate := getTestE2NodeConfigurationUpdateMessage(t, e2NodeConfigurationUpdateF1XmlPath)
+	ack := models.NewE2nodeConfigurationUpdateSuccessResponseMessage(configurationUpdate)
+	successOutcome := ack.Outcome.(models.E2nodeConfigurationUpdateAcknowledgeSuccessfulOutcome)
+
+	assert.Equal(t, models.ProcedureCode_id_E2nodeConfigurationUpdate, successOutcome.ProcedureCode)
+	assert.Equal(t, 2, len(successOutcome.Value.E2nodeConfigurationUpdateAcknowledge.ProtocolIEs.E2nodeConfigurationUpdateAcknowledgeIEs))
+
+	txIE := successOutcome.Value.E2nodeConfigurationUpdateAcknowledge.ProtocolIEs.E2nodeConfigurationUpdateAcknowledgeIEs[0]
+	assert.Equal(t, models.ProtocolIE_ID_id_TransactionID, txIE.ID)
+	assert.Equal(t, "1234", txIE.Value.(models.E2nodeConfigurationUpdateAcknowledgeTransID).TransactionID)
+
+	additionIE := successOutcome.Value.E2nodeConfigurationUpdateAcknowledge.ProtocolIEs.E2nodeConfigurationUpdateAcknowledgeIEs[1]
+	assert.Equal(t, models.ProtocolIE_ID_id_E2nodeComponentConfigAdditionAck, additionIE.ID)
+	assert.Equal(t, 1, len(additionIE.Value.(models.E2nodeComponentConfigAdditionAckList).E2nodeComponentConfigAdditionAckList.ProtocolIESingleContainer))
+}
