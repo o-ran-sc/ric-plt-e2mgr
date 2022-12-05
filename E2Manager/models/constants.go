@@ -30,10 +30,12 @@ const (
 	ProtocolIE_ID_id_E2nodeComponentConfigRemoval          = "54"
 	ProtocolIE_ID_id_E2nodeComponentConfigRemovalAck       = "56"
 	ProtocolIE_ID_id_E2nodeComponentConfigRemovalAck_Item  = "57"
+	ProtocolIE_ID_id_Cause                                 = "1"
 )
 
 const (
 	ProcedureCode_id_RICserviceQuery           = "6"
 	ProcedureCode_id_E2nodeConfigurationUpdate = "10"
 	ProcedureCode_id_RICserviceUpdate          = "7"
+	ProcedureCode_id_Reset                     = "3"
 )

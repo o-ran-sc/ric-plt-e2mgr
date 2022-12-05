@@ -1,0 +1,36 @@
+<E2AP-PDU>
+    <initiatingMessage>
+        <procedureCode>3</procedureCode>
+        <criticality>
+            <reject/>
+        </criticality>
+        <value>
+            <ResetRequest>
+                <protocolIEs>
+                    <ResetRequestIEs>
+                        <id>49</id>
+                        <criticality>
+                            <ignore />
+                        </criticality>
+                        <value>
+                            <TransactionID>1</TransactionID>
+                        </value>
+                    </ResetRequestIEs>
+                    <ResetRequestIEs>
+                        <id>1</id>
+                        <criticality>
+                            <ignore />
+                        </criticality>
+                        <value>
+                            <Cause>
+                                <e2Node>
+                                    <e2node-component-unknown/>
+                                </e2Node>
+                            </Cause>
+                        </value>
+                    </ResetRequestIEs>
+                </protocolIEs>
+            </ResetRequest>
+        </value>
+    </initiatingMessage>
+</E2AP-PDU>
