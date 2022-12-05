@@ -1,0 +1,19 @@
+<E2AP-PDU>
+    <successfulOutcome>
+        <procedureCode>3</procedureCode>
+        <criticality><ignore/></criticality>
+        <value>
+            <ResetResponse>
+                <protocolIEs>
+                    <ResetResponseIEs>
+                        <id>49</id>
+                        <criticality><ignore/></criticality>
+                        <value>
+                            <TransactionID>1</TransactionID>
+                        </value>
+                    </ResetResponseIEs>
+                </protocolIEs>
+            </ResetResponse>
+        </value>
+    </successfulOutcome>
+</E2AP-PDU>
