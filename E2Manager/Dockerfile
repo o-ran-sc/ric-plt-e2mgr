@@ -20,7 +20,7 @@
 #   platform project (RICP).
 #
 
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as ubuntu
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.1.0 as ubuntu
 
 WORKDIR /opt/E2Manager
 COPY . .
