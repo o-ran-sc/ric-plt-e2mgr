@@ -364,13 +364,19 @@ func convertToE2NodeConfig(list *E2NodeConfigList, i int, outcome int) E2NodeCon
 		}
 	} else if list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentType.XN != nil {
 		ifXn := E2NodeIFTypeXN{}
-		ifXn.GlobalNgENBID.GNB.PLMNID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.PLMNID
-		ifXn.GlobalNgENBID.GNB.GnbID.GnbID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.GnbID.GnbID
-		ifXn.GlobalNgENBID.NGENB.PLMNID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID
-		ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDMacro = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDMacro
-		ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro
-		ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro
-
+		if gnbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID; gnbid != nil {
+			ifXn.GlobalNGRANNodeID.GlobalgNBID = &GNB{PLMNID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID.PLMNID, GnbID: GnbID{GnbID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID.GnbID.GnbID}}
+		} else if ngenb := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID; ngenb != nil {
+			if ngenbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdMacro; ngenbid != "" && len(ngenbid) == 20 {
+				ifXn.GlobalNGRANNodeID.GlobalngeNBID = &NgeNBID{PLMNID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID, EnbID: &EnbID_Xn{EnbIdMacro: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdMacro}}
+			} else if ngenbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdShortMacro; ngenbid != "" && len(ngenbid) == 18 {
+				ifXn.GlobalNGRANNodeID.GlobalngeNBID = &NgeNBID{PLMNID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID, EnbID: &EnbID_Xn{EnbIdShortMacro: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdShortMacro}}
+			} else if ngenbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdLongMacro; ngenbid != "" && len(ngenbid) == 21 {
+				ifXn.GlobalNGRANNodeID.GlobalngeNBID = &NgeNBID{PLMNID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID, EnbID: &EnbID_Xn{EnbIdLongMacro: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdLongMacro}}
+			}
+		} else {
+			//not valid
+		}
 		id.Value.E2NodeConfigUpdateAckItem.E2nodeComponentID.Value = ifXn
 	} else if list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentType.E1 != nil {
 		id.Value.E2NodeConfigUpdateAckItem.E2nodeComponentID.Value = E2NodeIFTypeE1{
@@ -390,15 +396,21 @@ func convertToE2NodeConfig(list *E2NodeConfigList, i int, outcome int) E2NodeCon
 		}
 	} else if list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentType.X2 != nil {
 		ifX2 := E2NodeIFTypeX2{}
-		ifX2.GlobalENBID.PLMNIdentity = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity
-		ifX2.GlobalENBID.ENBID.MacroENBID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroENBID
-		ifX2.GlobalENBID.ENBID.HomeENBID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeENBID
-		ifX2.GlobalENBID.ENBID.ShortMacroENBID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroENBID
-		ifX2.GlobalENBID.ENBID.LongMacroENBID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroENBID
-
-		ifX2.GlobalEnGNBID.PLMNIdentity = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.PLMNIdentity
-		ifX2.GlobalEnGNBID.GNBID.GNBID = list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.GNBID.GNBID
-
+		if gnbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID; gnbid != nil {
+			ifX2.GlobalenGNBID = &GlobalenGNBID{PLMNIdentity: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID.PLMNIdentity, GNBID: GNBID{GNBID: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID.GNBID.GNBID}}
+		} else if enb := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID; enb != nil {
+			if enbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroEnbId; enbid != "" && len(enbid) == 20 {
+				ifX2.GlobalENBID = &GlobalENBID{PLMNIdentity: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity, ENBID: &ENBID_X2{MacroEnbId: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroEnbId}}
+			} else if enbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeEnbId; enbid != "" && len(enbid) == 28 {
+				ifX2.GlobalENBID = &GlobalENBID{PLMNIdentity: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity, ENBID: &ENBID_X2{HomeEnbId: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeEnbId}}
+			} else if enbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroEnbId; enbid != "" && len(enbid) == 18 {
+				ifX2.GlobalENBID = &GlobalENBID{PLMNIdentity: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity, ENBID: &ENBID_X2{ShortMacroEnbId: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroEnbId}}
+			} else if enbid := list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroEnbId; enbid != "" && len(enbid) == 21 {
+				ifX2.GlobalENBID = &GlobalENBID{PLMNIdentity: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity, ENBID: &ENBID_X2{LongMacroEnbId: list.ProtocolIESingleContainer[i].Value.E2nodeConfigAdditionItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroEnbId}}
+			}
+		} else {
+			//not valid
+		}
 		id.Value.E2NodeConfigUpdateAckItem.E2nodeComponentID.Value = ifX2
 	}
 
