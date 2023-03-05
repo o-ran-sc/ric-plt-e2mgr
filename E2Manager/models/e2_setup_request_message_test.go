@@ -29,11 +29,19 @@ import (
 )
 
 const (
-	e2SetupReqGnbSetupRequestXmlPath        = "../tests/resources/setupRequest/setupRequest_gnb.xml"
-	e2SetupReqEnGnbSetupRequestXmlPath      = "../tests/resources/setupRequest/setupRequest_en-gNB.xml"
-	e2SetupReqEnbSetupRequestXmlPath        = "../tests/resources/setupRequest/setupRequest_enb.xml"
-	e2SetupReqNgEnbSetupRequestXmlPath      = "../tests/resources/setupRequest/setupRequest_ng-eNB.xml"
-	e2SetupReqGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb.xml"
+	e2SetupReqGnbSetupRequestXmlPath                      = "../tests/resources/setupRequest/setupRequest_gnb.xml"
+	e2SetupReqEnGnbSetupRequestXmlPath                    = "../tests/resources/setupRequest/setupRequest_en-gNB.xml"
+	e2SetupReqEnbSetupRequestXmlPath                      = "../tests/resources/setupRequest/setupRequest_enb.xml"
+	e2SetupReqNgEnbSetupRequestXmlPath                    = "../tests/resources/setupRequest/setupRequest_ng-eNB.xml"
+	e2SetupReqGnbSetupRequestWithOIDXmlPath               = "../tests/resources/setupRequest/setupRequest_with_oid_gnb.xml"
+	e2SetupReqE1InterfaceGnbSetupRequestWithOIDXmlPath    = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_e1.xml"
+	e2SetupReqF1InterfaceGnbSetupRequestWithOIDXmlPath    = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_f1.xml"
+	e2SetupReqW1InterfaceGnbSetupRequestWithOIDXmlPath    = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_w1.xml"
+	e2SetupReqS1InterfaceGnbSetupRequestWithOIDXmlPath    = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_s1.xml"
+	e2SetupReqXngnbInterfaceGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_xngnb.xml"
+	e2SetupReqXnenbInterfaceGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_xnenb.xml"
+	e2SetupReqX2gnbInterfaceGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_x2gnb.xml"
+	e2SetupReqX2enbInterfaceGnbSetupRequestWithOIDXmlPath = "../tests/resources/setupRequest/setupRequest_with_oid_gnb_inttype_x2enb.xml"
 )
 
 func getTestE2SetupRequest(t *testing.T, reqXmlPath string) *models.E2SetupRequestMessage {
@@ -139,4 +147,84 @@ func TestGetNbIdFromNgEnbRequestSuccess(t *testing.T) {
 
 	nbID := setupRequest.GetNbId()
 	assert.Equal(t, "101010101010101010", nbID)
+}
+
+func TestExtractE2nodeIntTypeE1ConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqE1InterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 2, len(e2nodeConfigs))
+
+	assert.NotEqual(t, 1, int(e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeE1().GetGNBCuCpId()))
+	assert.NotEqual(t, 2, int(e2nodeConfigs[1].GetE2NodeComponentInterfaceTypeE1().GetGNBCuCpId()))
+
+}
+
+func TestExtractE2nodeIntTypeF1ConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqF1InterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 2, len(e2nodeConfigs))
+
+	assert.NotEqual(t, 1, int(e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeF1().GetGNBDuId()))
+	assert.NotEqual(t, 2, int(e2nodeConfigs[1].GetE2NodeComponentInterfaceTypeF1().GetGNBDuId()))
+
+}
+
+func TestExtractE2nodeIntTypeW1ConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqW1InterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 2, len(e2nodeConfigs))
+
+	assert.NotEqual(t, 1, int(e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeW1().GetNgenbDuId()))
+	assert.NotEqual(t, 2, int(e2nodeConfigs[1].GetE2NodeComponentInterfaceTypeW1().GetNgenbDuId()))
+
+}
+
+func TestExtractE2nodeIntTypeS1ConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqS1InterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 2, len(e2nodeConfigs))
+
+	assert.NotEqual(t, "e1interf1", e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeS1().GetMmeName())
+	assert.NotEqual(t, "e1interf2", e2nodeConfigs[1].GetE2NodeComponentInterfaceTypeS1().GetMmeName())
+
+}
+
+func TestExtractE2nodeIntTypeXngnbConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqXngnbInterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 1, len(e2nodeConfigs))
+
+	assert.NotEqual(t, "101010101010101010", (e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeXn().GetGlobalGnbId().GetGnbId()))
+}
+
+func TestExtractE2nodeIntTypeXnenbConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqXnenbInterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 1, len(e2nodeConfigs))
+
+	assert.NotEqual(t, "101010101010101010", (e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeXn().GetGlobalNgenbId().GetEnbId()))
+}
+
+func TestExtractE2nodeIntTypeX2gnbConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqX2gnbInterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 1, len(e2nodeConfigs))
+
+	assert.NotEqual(t, "101010101010101010", (e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeX2().GetGlobalEngnbId().GetGnbId()))
+}
+
+func TestExtractE2nodeIntTypeX2enbConfigFail(t *testing.T) {
+	setupRequest := getTestE2SetupRequest(t, e2SetupReqX2enbInterfaceGnbSetupRequestWithOIDXmlPath)
+	e2nodeConfigs := setupRequest.ExtractE2NodeConfigList()
+
+	assert.Equal(t, 1, len(e2nodeConfigs))
+
+	assert.NotEqual(t, "101010101010101010", (e2nodeConfigs[0].GetE2NodeComponentInterfaceTypeX2().GetGlobalEnbId().GetEnbId()))
 }

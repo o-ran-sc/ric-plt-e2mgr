@@ -30,8 +30,16 @@ import (
 )
 
 const (
-	e2SetupRespGnbSetupRequestXmlPath   = "../tests/resources/setupRequest/setupRequest_gnb.xml"
-	e2SetupRespEnGnbSetupRequestXmlPath = "../tests/resources/setupRequest/setupRequest_gnb_without_functions.xml"
+	e2SetupRespGnbSetupRequestXmlPath             = "../tests/resources/setupRequest/setupRequest_gnb.xml"
+	e2SetupRespEnGnbSetupRequestXmlPath           = "../tests/resources/setupRequest/setupRequest_gnb_without_functions.xml"
+	e2SetupRespGnbSetupRequestIntTypeF1XmlPath    = "../tests/resources/setupRequest/setupRequest_gnb_inttype_f1.xml"
+	e2SetupRespGnbSetupRequestIntTypeE1XmlPath    = "../tests/resources/setupRequest/setupRequest_gnb_inttype_e1.xml"
+	e2SetupRespGnbSetupRequestIntTypeW1XmlPath    = "../tests/resources/setupRequest/setupRequest_gnb_inttype_w1.xml"
+	e2SetupRespGnbSetupRequestIntTypeS1XmlPath    = "../tests/resources/setupRequest/setupRequest_gnb_inttype_s1.xml"
+	e2SetupRespGnbSetupRequestIntTypeXngnbXmlPath = "../tests/resources/setupRequest/setupRequest_gnb_inttype_xngnb.xml"
+	e2SetupRespGnbSetupRequestIntTypeXnenbXmlPath = "../tests/resources/setupRequest/setupRequest_gnb_inttype_xnenb.xml"
+	e2SetupRespGnbSetupRequestIntTypeX2gnbXmlPath = "../tests/resources/setupRequest/setupRequest_gnb_inttype_x2gnb.xml"
+	e2SetupRespGnbSetupRequestIntTypeX2enbXmlPath = "../tests/resources/setupRequest/setupRequest_gnb_inttype_x2enb.xml"
 )
 
 func getE2SetupRespTestE2SetupRequest(t *testing.T, reqXmlPath string) *models.E2SetupRequestMessage {
@@ -77,4 +85,108 @@ func TestNewE2SetupFailureResponseMessageSuccess(t *testing.T) {
 	respIEs := resp.E2APPDU.Outcome.(models.UnsuccessfulOutcome).Value.E2setupFailure.ProtocolIEs.E2setupFailureIEs
 	assert.Equal(t, models.CauseID, respIEs[1].ID)
 	assert.Equal(t, cause, respIEs[1].Value.Value.(models.Cause))
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeF1Success(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeF1XmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeS1Success(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeS1XmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeE1Success(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeE1XmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeW1Success(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeW1XmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeXngnbSuccess(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeXngnbXmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeXnenbSuccess(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeXnenbXmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeX2gnbSuccess(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeX2gnbXmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
+}
+
+func TestNewE2SetupSuccessResponseMessageIntTypeX2enbSuccess(t *testing.T) {
+	plmn := "23F749"
+	ricNearRtId := "10101010110011001110"
+	setupRequest := getE2SetupRespTestE2SetupRequest(t, e2SetupRespGnbSetupRequestIntTypeX2enbXmlPath)
+
+	resp := models.NewE2SetupSuccessResponseMessage(plmn, ricNearRtId, setupRequest)
+	respIEs := resp.E2APPDU.Outcome.(models.SuccessfulOutcome).Value.E2setupResponse.ProtocolIEs.E2setupResponseIEs
+	assert.Equal(t, models.GlobalRicID, respIEs[1].ID)
+	assert.Equal(t, plmn, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.PLMNIdentity)
+	assert.Equal(t, ricNearRtId, respIEs[1].Value.(models.GlobalRICID).GlobalRICID.RicID)
+	assert.Equal(t, models.RanFunctionsAcceptedID, respIEs[2].ID)
 }

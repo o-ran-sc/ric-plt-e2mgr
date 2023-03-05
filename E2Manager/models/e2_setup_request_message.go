@@ -216,29 +216,36 @@ type E2NodeIFTypeNG struct {
 }
 
 type E2NodeIFTypeXN struct {
-	XMLName       xml.Name `xml:"e2nodeComponentInterfaceTypeXn"`
-	Text          string   `xml:",chardata"`
-	GlobalNgENBID struct {
-		Text string `xml:",chardata"`
-		GNB  struct {
-			Text   string `xml:",chardata"`
-			PLMNID string `xml:"plmn-id"`
-			GnbID  struct {
-				Text  string `xml:",chardata"`
-				GnbID string `xml:"gnb-ID"`
-			} `xml:"gnb-id"`
-		} `xml:"gNB"`
-		NGENB struct {
-			Text   string `xml:",chardata"`
-			PLMNID string `xml:"plmn-id"`
-			GnbID  struct {
-				Text            string `xml:",chardata"`
-				ENBIDMacro      string `xml:"enb-ID-macro"`
-				ENBIDShortMacro string `xml:"enb-ID-shortmacro"`
-				ENBIDLongMacro  string `xml:"enb-ID-longmacro"`
-			} `xml:"gnb-id"`
-		} `xml:"ng-eNB"`
+	XMLName           xml.Name `xml:"e2nodeComponentInterfaceTypeXn"`
+	Text              string   `xml:",chardata"`
+	GlobalNGRANNodeID struct {
+		Text          string   `xml:",chardata"`
+		GlobalgNBID   *GNB     `xml:"gNB,omitempty"`
+		GlobalngeNBID *NgeNBID `xml:"ng-eNB,omitempty"`
 	} `xml:"global-NG-RAN-Node-ID"`
+}
+
+type GNB struct {
+	Text   string `xml:",chardata"`
+	PLMNID string `xml:"plmn-id"`
+	GnbID  GnbID  `xml:"gnb-id"`
+}
+type GnbID struct {
+	Text  string `xml:",chardata"`
+	GnbID string `xml:"gnb-ID"`
+}
+
+type NgeNBID struct {
+	Text   string    `xml:",chardata"`
+	PLMNID string    `xml:"plmn-id"`
+	EnbID  *EnbID_Xn `xml:"enb-id"`
+}
+
+type EnbID_Xn struct {
+	Text            string `xml:",chardata"`
+	EnbIdMacro      string `xml:"enb-ID-macro,omitempty"`
+	EnbIdShortMacro string `xml:"enb-ID-shortmacro,omitempty"`
+	EnbIdLongMacro  string `xml:"enb-ID-longmacro,omitempty"`
 }
 
 type E2NodeIFTypeE1 struct {
@@ -264,29 +271,33 @@ type E2NodeIFTypeS1 struct {
 	Text    string   `xml:",chardata"`
 	MMENAME string   `xml:"mme-name"`
 }
-
 type E2NodeIFTypeX2 struct {
-	XMLName     xml.Name `xml:"e2nodeComponentInterfaceTypeX2"`
-	Text        string   `xml:",chardata"`
-	GlobalENBID struct {
-		Text         string `xml:",chardata"`
-		PLMNIdentity string `xml:"pLMN-Identity"`
-		ENBID        struct {
-			Text            string `xml:",chardata"`
-			MacroENBID      string `xml:"macro-eNB-ID"`
-			HomeENBID       string `xml:"home-eNB-ID"`
-			ShortMacroENBID string `xml:"short-Macro-eNB-ID"`
-			LongMacroENBID  string `xml:"long-Macro-eNB-ID"`
-		} `xml:"eNB-ID"`
-	} `xml:"global-eNB-ID"`
-	GlobalEnGNBID struct {
-		Text         string `xml:",chardata"`
-		PLMNIdentity string `xml:"pLMN-Identity"`
-		GNBID        struct {
-			Text  string `xml:",chardata"`
-			GNBID string `xml:"gNB-ID"`
-		} `xml:"gNB-ID"`
-	} `xml:"global-en-gNB-ID"`
+	XMLName       xml.Name       `xml:"e2nodeComponentInterfaceTypeX2"`
+	Text          string         `xml:",chardata"`
+	GlobalENBID   *GlobalENBID   `xml:"global-eNB-ID,omitempty"`
+	GlobalenGNBID *GlobalenGNBID `xml:"global-en-gNB-ID,omitempty"`
+}
+type GlobalENBID struct {
+	Text         string    `xml:",chardata"`
+	PLMNIdentity string    `xml:"pLMN-Identity"`
+	ENBID        *ENBID_X2 `xml:"eNB-ID"`
+}
+type ENBID_X2 struct {
+	Text            string `xml:",chardata"`
+	MacroEnbId      string `xml:"macro-eNB-ID,omitempty"`
+	HomeEnbId       string `xml:"home-eNB-ID,omitempty"`
+	ShortMacroEnbId string `xml:"short-Macro-eNB-ID,omitempty"`
+	LongMacroEnbId  string `xml:"long-Macro-eNB-ID,omitempty"`
+}
+type GlobalenGNBID struct {
+	Text         string `xml:",chardata"`
+	PLMNIdentity string `xml:"pLMN-Identity"`
+	GNBID        GNBID  `xml:"gNB-ID"`
+}
+
+type GNBID struct {
+	Text  string `xml:",chardata"`
+	GNBID string `xml:"gNB-ID"`
 }
 
 func (m *E2SetupRequestMessage) ExtractRanFunctionsList() []*entities.RanFunction {
@@ -401,46 +412,163 @@ func (m *E2SetupRequestMessage) ExtractE2NodeConfigList() []*entities.E2NodeComp
 					},
 				},
 			}
-		}
-		/*else if e2NodeConfigItem.E2nodeComponentType.XN != nil {
-			funcs[i] = &entities.E2NodeComponentConfig{
-				E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
-				E2NodeComponentRequestPart: e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
-				E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
-				E2NodeComponentID:		&entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeNG{
-					E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
-						GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalNgenbId{
-							GlobalNgenbId:&entities.GlobalNGENBID{
-								PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID,
-								EnbId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.GnbID.GnbID,
-							},
-						},
-						GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalGnbId{
-							GlobalGnbId:&entities.GlobalGNBID{
-								PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID,
-								EnbId: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.GNB.GnbID.GnbID,
+		} else if e2NodeConfigItem.E2nodeComponentType.XN != nil {
+			if gnbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID; gnbid != nil {
+				e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
+					E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+					E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeXn{
+						E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
+							GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalGnbId{
+								GlobalGnbId: &entities.GlobalGNBID{
+									PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID.PLMNID,
+									GnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalgNBID.GnbID.GnbID,
+									GnbType:      1,
+								},
 							},
 						},
 					},
-				},
+				}
+
+			} else if ngenb := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID; ngenb != nil {
+				if ngenbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdMacro; ngenbid != "" && len(ngenbid) == 20 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeXn{
+							E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
+								GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalNgenbId{
+									GlobalNgenbId: &entities.GlobalNGENBID{
+										PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID,
+										EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdMacro,
+										EnbType:      1,
+									},
+								},
+							},
+						},
+					}
+				} else if ngenbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdShortMacro; ngenbid != "" && len(ngenbid) == 18 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeXn{
+							E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
+								GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalNgenbId{
+									GlobalNgenbId: &entities.GlobalNGENBID{
+										PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID,
+										EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdShortMacro,
+										EnbType:      3,
+									},
+								},
+							},
+						},
+					}
+				} else if ngenbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdLongMacro; ngenbid != "" && len(ngenbid) == 21 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_xn,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeXn{
+							E2NodeComponentInterfaceTypeXn: &entities.E2NodeComponentInterfaceXn{
+								GlobalNgRanNodeId: &entities.E2NodeComponentInterfaceXn_GlobalNgenbId{
+									GlobalNgenbId: &entities.GlobalNGENBID{
+										PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.PLMNID,
+										EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNGRANNodeID.GlobalngeNBID.EnbID.EnbIdLongMacro,
+										EnbType:      4,
+									},
+								},
+							},
+						},
+					}
+				}
+			} else {
+				//not valid
 			}
-			ifXn.GlobalNgENBID.NGENB.PLMNID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.PLMNID
-			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDMacro
-			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDShortMacro
-			ifXn.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeXN.GlobalNgENBID.NGENB.GnbID.ENBIDLongMacro
-
-		}*/
-		/*else if e2NodeConfigItem.E2nodeComponentType.X2 != nil {
-			ifX2 := E2NodeIFTypeX2 {}
-			ifX2.GlobalENBID.PLMNIdentity = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity
-			ifX2.GlobalENBID.ENBID.MacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroENBID
-			ifX2.GlobalENBID.ENBID.HomeENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeENBID
-			ifX2.GlobalENBID.ENBID.ShortMacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroENBID
-			ifX2.GlobalENBID.ENBID.LongMacroENBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroENBID
-
-			ifX2.GlobalEnGNBID.PLMNIdentity = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.PLMNIdentity
-			ifX2.GlobalEnGNBID.GNBID.GNBID = e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalEnGNBID.GNBID.GNBID
-		}*/
+		} else if e2NodeConfigItem.E2nodeComponentType.X2 != nil {
+			if gnbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID; gnbid != nil {
+				e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+					E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_x2,
+					E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+					E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+					E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeX2{
+						E2NodeComponentInterfaceTypeX2: &entities.E2NodeComponentInterfaceX2{
+							GlobalEngnbId: &entities.GlobalENGNBID{
+								PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID.PLMNIdentity,
+								GnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalenGNBID.GNBID.GNBID,
+								GnbType:      1,
+							},
+						},
+					},
+				}
+			} else if enb := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID; enb != nil {
+				if enbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroEnbId; enbid != "" && len(enbid) == 20 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_x2,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeX2{
+							E2NodeComponentInterfaceTypeX2: &entities.E2NodeComponentInterfaceX2{
+								GlobalEnbId: &entities.GlobalENBID{
+									PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity,
+									EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.MacroEnbId,
+									EnbType:      1,
+								},
+							},
+						},
+					}
+				} else if enbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeEnbId; enbid != "" && len(enbid) == 28 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_x2,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeX2{
+							E2NodeComponentInterfaceTypeX2: &entities.E2NodeComponentInterfaceX2{
+								GlobalEnbId: &entities.GlobalENBID{
+									PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity,
+									EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.HomeEnbId,
+									EnbType:      2,
+								},
+							},
+						},
+					}
+				} else if enbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroEnbId; enbid != "" && len(enbid) == 18 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_x2,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeX2{
+							E2NodeComponentInterfaceTypeX2: &entities.E2NodeComponentInterfaceX2{
+								GlobalEnbId: &entities.GlobalENBID{
+									PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity,
+									EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.ShortMacroEnbId,
+									EnbType:      3,
+								},
+							},
+						},
+					}
+				} else if enbid := e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroEnbId; enbid != "" && len(enbid) == 21 {
+					e2nodeComponentConfigs[i] = &entities.E2NodeComponentConfig{
+						E2NodeComponentInterfaceType: entities.E2NodeComponentInterfaceType_x2,
+						E2NodeComponentRequestPart:   e2NodeConfigItem.E2nodeConfiguration.E2NodeRequestPart,
+						E2NodeComponentResponsePart:  e2NodeConfigItem.E2nodeConfiguration.E2NodeResponsePart,
+						E2NodeComponentID: &entities.E2NodeComponentConfig_E2NodeComponentInterfaceTypeX2{
+							E2NodeComponentInterfaceTypeX2: &entities.E2NodeComponentInterfaceX2{
+								GlobalEnbId: &entities.GlobalENBID{
+									PlmnIdentity: e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.PLMNIdentity,
+									EnbId:        e2NodeConfigItem.E2nodeComponentID.E2NodeIFTypeX2.GlobalENBID.ENBID.LongMacroEnbId,
+									EnbType:      4,
+								},
+							},
+						},
+					}
+				}
+			} else {
+				//not valid
+			}
+		} //end of x2
 	}
 	return e2nodeComponentConfigs
 }
