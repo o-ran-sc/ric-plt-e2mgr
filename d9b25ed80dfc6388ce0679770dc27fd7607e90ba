@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7f8a3232_c0cb973a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2023-03-06T05:18:15Z",
+      "side": 1,
+      "message": "Could also add a test case. This is  a large change in terms of lines of code and we should add test cases as per general guidelines for near-RT RIC (see RC-4 in https://wiki.o-ran-sc.org/display/RICP/Release+criteria+checklist+template).",
+      "revId": "d9b25ed80dfc6388ce0679770dc27fd7607e90ba",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
