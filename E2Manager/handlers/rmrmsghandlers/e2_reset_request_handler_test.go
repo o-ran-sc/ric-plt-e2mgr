@@ -25,9 +25,10 @@ import (
 	"e2mgr/services"
 	"e2mgr/tests"
 	"e2mgr/utils"
+	"testing"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 const (
@@ -45,7 +46,7 @@ func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
-	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService)
+	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config)
 	return handler, readerMock, writerMock
 }
 

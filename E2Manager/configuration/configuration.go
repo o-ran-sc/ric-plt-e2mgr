@@ -22,8 +22,9 @@ package configuration
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/viper"
 	"strconv"
+
+	"github.com/spf13/viper"
 )
 
 type RnibWriterConfig struct {
@@ -53,6 +54,7 @@ type Configuration struct {
 	KeepAliveResponseTimeoutMs   int
 	KeepAliveDelayMs             int
 	E2TInstanceDeletionTimeoutMs int
+	E2ResetTimeOutSec            int
 	GlobalRicId                  struct {
 		RicId string
 		Mcc   string
@@ -85,6 +87,7 @@ func ParseConfiguration() *Configuration {
 	config.KeepAliveResponseTimeoutMs = viper.GetInt("keepAliveResponseTimeoutMs")
 	config.KeepAliveDelayMs = viper.GetInt("KeepAliveDelayMs")
 	config.E2TInstanceDeletionTimeoutMs = viper.GetInt("e2tInstanceDeletionTimeoutMs")
+	config.E2ResetTimeOutSec = viper.GetInt("e2ResetTimeOutSec")
 	config.populateGlobalRicIdConfig(viper.Sub("globalRicId"))
 	config.populateRnibWriterConfig(viper.Sub("rnibWriter"))
 	return &config
@@ -229,7 +232,7 @@ func validateRicId(ricId string) error {
 func (c *Configuration) String() string {
 	return fmt.Sprintf("{logging.logLevel: %s, http.port: %d, rmr: { port: %d, maxMsgSize: %d}, routingManager.baseUrl: %s, "+
 		"notificationResponseBuffer: %d, bigRedButtonTimeoutSec: %d, maxRnibConnectionAttempts: %d, "+
-		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d, "+
+		"rnibRetryIntervalMs: %d, keepAliveResponseTimeoutMs: %d, keepAliveDelayMs: %d, e2tInstanceDeletionTimeoutMs: %d,e2ResetTimeOutSec: %d,"+
 		"globalRicId: { ricId: %s, mcc: %s, mnc: %s}, rnibWriter: { stateChangeMessageChannel: %s, ranManipulationChannel: %s}",
 		c.Logging.LogLevel,
 		c.Http.Port,
@@ -243,6 +246,7 @@ func (c *Configuration) String() string {
 		c.KeepAliveResponseTimeoutMs,
 		c.KeepAliveDelayMs,
 		c.E2TInstanceDeletionTimeoutMs,
+		c.E2ResetTimeOutSec,
 		c.GlobalRicId.RicId,
 		c.GlobalRicId.Mcc,
 		c.GlobalRicId.Mnc,

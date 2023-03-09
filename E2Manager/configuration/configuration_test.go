@@ -20,11 +20,12 @@
 package configuration
 
 import (
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestParseConfigurationSuccess(t *testing.T) {
@@ -38,6 +39,7 @@ func TestParseConfigurationSuccess(t *testing.T) {
 	assert.Equal(t, 4500, config.KeepAliveResponseTimeoutMs)
 	assert.Equal(t, 1500, config.KeepAliveDelayMs)
 	assert.Equal(t, 15000, config.E2TInstanceDeletionTimeoutMs)
+	assert.Equal(t, 10, config.E2ResetTimeOutSec)
 	assert.NotNil(t, config.GlobalRicId)
 	assert.Equal(t, "AACCE", config.GlobalRicId.RicId)
 	assert.Equal(t, "310", config.GlobalRicId.Mcc)
@@ -239,7 +241,7 @@ func TestRnibWriterConfigNotFoundFailure(t *testing.T) {
 		"logging":        map[string]interface{}{"logLevel": "info"},
 		"http":           map[string]interface{}{"port": 3800},
 		"routingManager": map[string]interface{}{"baseUrl": "http://localhost:8080/ric/v1/handles/"},
-		"globalRicId": map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AACCE"},
+		"globalRicId":    map[string]interface{}{"mcc": 327, "mnc": 94, "ricId": "AACCE"},
 	}
 	buf, err := yaml.Marshal(yamlMap)
 	if err != nil {
