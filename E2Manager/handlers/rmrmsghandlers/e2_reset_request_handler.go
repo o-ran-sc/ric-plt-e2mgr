@@ -19,10 +19,13 @@
 package rmrmsghandlers
 
 import (
+	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/models"
 	"e2mgr/services"
 	"e2mgr/utils"
+	"time"
+
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
@@ -31,12 +34,14 @@ const E2ResetRequestLogInfoElapsedTime = "#E2ResetRequestNotificationHandler.Han
 type E2ResetRequestNotificationHandler struct {
 	logger          *logger.Logger
 	rnibDataService services.RNibDataService
+	config          *configuration.Configuration
 }
 
-func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService) *E2ResetRequestNotificationHandler {
+func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration) *E2ResetRequestNotificationHandler {
 	return &E2ResetRequestNotificationHandler{
 		logger:          logger,
 		rnibDataService: rnibDataService,
+		config:          config,
 	}
 }
 
@@ -66,6 +71,19 @@ func (e *E2ResetRequestNotificationHandler) Handle(request *models.NotificationR
 	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - nodeB entity under reset state. RanName %s, ConnectionStatus %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
 
 	e.logger.Infof(E2ResetRequestLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
+
+	e.waitfortimertimeout(request)
+
+	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+
+	err = e.rnibDataService.UpdateNodebInfoAndPublish(nodebInfo)
+
+	if err != nil {
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
+	}
+
+	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - nodeB entity connected state. RanName %s, ConnectionStatus %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
+
 }
 
 func (e *E2ResetRequestNotificationHandler) getNodebInfo(ranName string) (*entities.NodebInfo, error) {
@@ -76,4 +94,16 @@ func (e *E2ResetRequestNotificationHandler) getNodebInfo(ranName string) (*entit
 		return nil, err
 	}
 	return nodebInfo, err
+}
+
+func (e *E2ResetRequestNotificationHandler) waitfortimertimeout(request *models.NotificationRequest) {
+	timeout := e.config.E2ResetTimeOutSec
+	for {
+		timeElapsed := utils.ElapsedTime(request.StartTime)
+		e.logger.Infof(E2ResetRequestLogInfoElapsedTime, utils.ElapsedTime(request.StartTime))
+		if int(timeElapsed) > timeout {
+			break
+		}
+		time.Sleep(time.Duration(timeout/100) * time.Millisecond)
+	}
 }
