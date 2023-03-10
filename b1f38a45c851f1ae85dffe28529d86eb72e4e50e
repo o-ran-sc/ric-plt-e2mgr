@@ -52,6 +52,24 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "a20f71c9_8fd6c5d0",
+        "filename": "E2Manager/configuration/configuration.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2023-03-10T11:54:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5a26d9c_7c22f3c1",
+      "revId": "b1f38a45c851f1ae85dffe28529d86eb72e4e50e",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d5784370_7dc24066",
