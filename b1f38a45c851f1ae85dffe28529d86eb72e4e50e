@@ -16,6 +16,23 @@
       "message": "Kindly review and merge.",
       "revId": "b1f38a45c851f1ae85dffe28529d86eb72e4e50e",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f5a26d9c_7c22f3c1",
+        "filename": "E2Manager/configuration/configuration.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2023-03-10T09:13:06Z",
+      "side": 1,
+      "message": "could you add a couple of sentences into comments on what the timer defines. I understand we don\u0027t have this for the other parameters either. But it would be good to generally have this. I didn\u0027t get the idea of the counter from its name only.",
+      "revId": "b1f38a45c851f1ae85dffe28529d86eb72e4e50e",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
