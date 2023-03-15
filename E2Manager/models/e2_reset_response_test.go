@@ -34,7 +34,7 @@ const (
 func getResetResponseMessage(t *testing.T, xmlPath string) *models.E2ResetResponseMessage {
 	resetResponse := utils.ReadXmlFile(t, xmlPath)
 	resetResponseMsg := &models.E2ResetResponseMessage{}
-	err := xml.Unmarshal(utils.NormalizeXml(resetResponse), &resetResponseMsg.E2APPDU)
+	err := xml.Unmarshal(utils.NormalizeXml(resetResponse), &resetResponseMsg.E2ApPdu)
 	assert.Nil(t, err)
 	return resetResponseMsg
 }
@@ -42,10 +42,10 @@ func getResetResponseMessage(t *testing.T, xmlPath string) *models.E2ResetRespon
 func TestParseResetResponse(t *testing.T) {
 	rr := getResetResponseMessage(t, ResetResponseXMLPath)
 	assert.NotEqual(t, nil, rr, "xml is not parsed correctly")
-	assert.Equal(t, models.ProcedureCode_id_Reset, rr.E2APPDU.SuccessfulOutcome.ProcedureCode)
-	assert.Equal(t, 1, len(rr.E2APPDU.SuccessfulOutcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs))
+	assert.Equal(t, models.ProcedureCode_id_Reset, rr.E2ApPdu.SuccessfulOutcome.ProcedureCode)
+	assert.Equal(t, 1, len(rr.E2ApPdu.SuccessfulOutcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs))
 
-	txid := rr.E2APPDU.SuccessfulOutcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[0]
+	txid := rr.E2ApPdu.SuccessfulOutcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[0]
 
 	assert.Equal(t, models.ProtocolIE_ID_id_TransactionID, txid.ID)
 }
