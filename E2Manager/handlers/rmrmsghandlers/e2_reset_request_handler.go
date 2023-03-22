@@ -22,8 +22,11 @@ import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
 	"e2mgr/models"
+	"e2mgr/rmrCgo"
 	"e2mgr/services"
+	"e2mgr/services/rmrsender"
 	"e2mgr/utils"
+	"encoding/xml"
 	"time"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -31,17 +34,23 @@ import (
 
 const E2ResetRequestLogInfoElapsedTime = "#E2ResetRequestNotificationHandler.Handle - Summary: elapsed time for receiving and handling reset request message from E2 terminator: %f ms"
 
+var (
+	resetRequestEmptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "protocolIEs", "procedureCode", "ResetResponse", "ResetResponseIEs", "id", "criticality", "TransactionID"}
+)
+
 type E2ResetRequestNotificationHandler struct {
 	logger          *logger.Logger
 	rnibDataService services.RNibDataService
 	config          *configuration.Configuration
+	rmrSender       *rmrsender.RmrSender
 }
 
-func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration) *E2ResetRequestNotificationHandler {
+func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration, rmrSender *rmrsender.RmrSender) *E2ResetRequestNotificationHandler {
 	return &E2ResetRequestNotificationHandler{
 		logger:          logger,
 		rnibDataService: rnibDataService,
 		config:          config,
+		rmrSender:       rmrSender,
 	}
 }
 
@@ -74,6 +83,15 @@ func (e *E2ResetRequestNotificationHandler) Handle(request *models.NotificationR
 
 	e.waitfortimertimeout(request)
 
+	ranName := request.RanName
+	resetRequest, err := e.parseE2ResetMessage(request.Payload)
+	if err != nil {
+		e.logger.Errorf(err.Error())
+		return
+	}
+	e.logger.Infof("#E2ResetRequestNotificationHandler.Handle - RIC_RESET_REQUEST has been parsed successfully %+v", resetRequest)
+	e.handleSuccessfulResponse(ranName, request, resetRequest)
+
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 
 	err = e.rnibDataService.UpdateNodebInfoAndPublish(nodebInfo)
@@ -105,5 +123,39 @@ func (e *E2ResetRequestNotificationHandler) waitfortimertimeout(request *models.
 			break
 		}
 		time.Sleep(time.Duration(timeout/100) * time.Millisecond)
+	}
+}
+
+func (e *E2ResetRequestNotificationHandler) parseE2ResetMessage(payload []byte) (*models.E2ResetRequestMessage, error) {
+	e2resetMessage := models.E2ResetRequestMessage{}
+	err := xml.Unmarshal(utils.NormalizeXml(payload), &(e2resetMessage.E2APPDU))
+
+	if err != nil {
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - error in parsing request message: %+v", err)
+		return nil, err
+	}
+	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Unmarshalling is successful %v", e2resetMessage.E2APPDU.InitiatingMessage.ProcedureCode)
+	return &e2resetMessage, nil
+}
+
+func (h *E2ResetRequestNotificationHandler) handleSuccessfulResponse(ranName string, req *models.NotificationRequest, resetRequest *models.E2ResetRequestMessage) {
+
+	successResponse := models.NewE2ResetResponseMessage(resetRequest)
+	h.logger.Debugf("#E2ResetRequestNotificationHandler.handleSuccessfulResponse - E2_RESET_RESPONSE has been built successfully %+v", successResponse)
+
+	responsePayload, err := xml.Marshal(&successResponse.E2ApPdu)
+	if err != nil {
+		h.logger.Warnf("#E2ResetRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - Error marshalling RIC_E2_RESET_RESP. Payload: %s", ranName, responsePayload)
+	}
+
+	responsePayload = utils.ReplaceEmptyTagsWithSelfClosing(responsePayload, resetRequestEmptyTagsToReplaceToSelfClosingTags)
+
+	h.logger.Infof("#E2ResetRequestNotificationHandler.handleSuccessfulResponse - payload: %s", responsePayload)
+
+	msg := models.NewRmrMessage(rmrCgo.RIC_E2_RESET_RESP, ranName, responsePayload, req.TransactionId, req.GetMsgSrc())
+	h.logger.Infof("#E2ResetRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - RIC_E2_RESET_RESP message has been built successfully. Message: %x", ranName, msg)
+	err = h.rmrSender.Send(msg)
+	if err != nil {
+		h.logger.Errorf("#E2ResetRequestNotificationHandler.handleSuccessfulResponse - RAN name: %s - Error sending e2 success response %+v", ranName, msg)
 	}
 }
