@@ -16,6 +16,23 @@
       "message": "Kindly review and merge",
       "revId": "dfab6106dfacddf117e27dc9241923eb9302f373",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5bf516b8_cc3d7d12",
+        "filename": "E2Manager/handlers/rmrmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-03-30T10:51:47Z",
+      "side": 1,
+      "message": "Error is not logged",
+      "revId": "dfab6106dfacddf117e27dc9241923eb9302f373",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
