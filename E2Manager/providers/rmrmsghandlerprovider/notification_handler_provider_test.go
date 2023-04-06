@@ -42,7 +42,7 @@ import (
  * Verify support for known providers.
  */
 
-func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, services.RNibDataService, *rmrsender.RmrSender, managers.IE2TInstancesManager, clients.IRoutingManagerClient, *managers.E2TAssociationManager, managers.IRanConnectStatusChangeManager, managers.RanListManager) {
+func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, services.RNibDataService, *rmrsender.RmrSender, managers.IE2TInstancesManager, clients.IRoutingManagerClient, *managers.E2TAssociationManager, managers.IRanConnectStatusChangeManager, managers.RanListManager, *managers.RanResetManager) {
 	logger := initLog(t)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3, RnibWriter: configuration.RnibWriterConfig{StateChangeMessageChannel: "RAN_CONNECTION_STATUS_CHANGE", RanManipulationMessageChannel: "RAN_MANIPULATION"}}
 
@@ -58,13 +58,13 @@ func initTestCase(t *testing.T) (*logger.Logger, *configuration.Configuration, s
 	ranAlarmService := services.NewRanAlarmService(logger, config)
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	e2tAssociationManager := managers.NewE2TAssociationManager(logger, rnibDataService, e2tInstancesManager, routingManagerClient, ranConnectStatusChangeManager)
-
-	return logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager
+	ranResetManager := managers.NewRanResetManager(logger, rnibDataService, ranConnectStatusChangeManager)
+	return logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager, ranResetManager
 }
 
 func TestGetNotificationHandlerSuccess(t *testing.T) {
 
-	logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager := initTestCase(t)
+	logger, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager, ranResetManager := initTestCase(t)
 
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
@@ -99,7 +99,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
 		{rmrCgo.RIC_SERVICE_UPDATE, rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager)},
 		{rmrCgo.RIC_E2NODE_CONFIG_UPDATE, rmrmsghandlers.NewE2nodeConfigUpdateNotificationHandler(logger, rnibDataService, rmrSender)},
-		{rmrCgo.RIC_E2_RESET_REQ, rmrmsghandlers.NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender)},
+		{rmrCgo.RIC_E2_RESET_REQ, rmrmsghandlers.NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager)},
 	}
 
 	for _, tc := range testCases {
