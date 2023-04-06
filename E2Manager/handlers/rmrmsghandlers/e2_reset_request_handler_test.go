@@ -20,18 +20,16 @@ package rmrmsghandlers
 
 import (
 	"e2mgr/configuration"
+	"e2mgr/managers"
 	"e2mgr/mocks"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
-
-	// "e2mgr/rmrCgo"
 	"e2mgr/services"
 	"e2mgr/tests"
 	"e2mgr/utils"
 	"testing"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
-	// "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -53,7 +51,11 @@ func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
-	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender)
+	ranListManager := managers.NewRanListManager(logger, rnibDataService)
+	ranAlarmService := &mocks.RanAlarmServiceMock{}
+	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
+	ranResetManager := managers.NewRanResetManager(logger, rnibDataService, ranConnectStatusChangeManager)
+	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager)
 	return handler, readerMock, writerMock, rmrMessengerMock
 }
 
@@ -71,6 +73,8 @@ func TestE2ResettNotificationHandler(t *testing.T) {
 	}
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var rnibErr error
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	var errEmpty error
 	rmrMessage := &rmrCgo.MBuf{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
@@ -78,7 +82,8 @@ func TestE2ResettNotificationHandler(t *testing.T) {
 	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
 	writerMock.AssertExpectations(t)
-	rmrMessengerMock.AssertNotCalled(t, "SendMsg")
+	rmrMessengerMock.AssertCalled(t, "SendMsg", mock.Anything, true)
+
 }
 
 func TestE2ResettNotificationHandler_UpdateStatus_Connected(t *testing.T) {
@@ -95,6 +100,37 @@ func TestE2ResettNotificationHandler_UpdateStatus_Connected(t *testing.T) {
 	}
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var rnibErr error
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
+	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
+	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
+
+	var errEmpty error
+	rmrMessage := &rmrCgo.MBuf{}
+	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2ResetXml...)}
+	handler.Handle(notificationRequest)
+	readerMock.AssertCalled(t, "GetNodeb", mock.Anything)
+	writerMock.AssertCalled(t, "UpdateNodebInfoAndPublish", mock.Anything)
+	readerMock.AssertCalled(t, "GetNodeb", mock.Anything)
+}
+
+func TestE2ResettNotificationHandler_Successful_Reset_Response(t *testing.T) {
+	e2ResetXml := utils.ReadXmlFile(t, E2ResetXmlPath)
+	handler, readerMock, writerMock, rmrMessengerMock := initE2ResetMocks(t)
+	var nodebInfo = &entities.NodebInfo{
+		RanName:                      gnbNodebRanName,
+		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
+		ConnectionStatus:             entities.ConnectionStatus_DISCONNECTED,
+		NodeType:                     entities.Node_GNB,
+		Configuration: &entities.NodebInfo_Gnb{
+			Gnb: &entities.Gnb{},
+		},
+	}
+	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
+	writerMock.On("UpdateNodebInfoAndPublish", mock.Anything).Return(nil)
+	var rnibErr error
+	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
 	readerMock.On("GetNodeb", gnbNodebRanName).Return(nodebInfo, nil)
 

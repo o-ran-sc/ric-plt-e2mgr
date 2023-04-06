@@ -21,6 +21,7 @@ package rmrmsghandlers
 import (
 	"e2mgr/configuration"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/rmrCgo"
 	"e2mgr/services"
@@ -43,14 +44,16 @@ type E2ResetRequestNotificationHandler struct {
 	rnibDataService services.RNibDataService
 	config          *configuration.Configuration
 	rmrSender       *rmrsender.RmrSender
+	ranResetManager *managers.RanResetManager
 }
 
-func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration, rmrSender *rmrsender.RmrSender) *E2ResetRequestNotificationHandler {
+func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration, rmrSender *rmrsender.RmrSender, ranResetManager *managers.RanResetManager) *E2ResetRequestNotificationHandler {
 	return &E2ResetRequestNotificationHandler{
 		logger:          logger,
 		rnibDataService: rnibDataService,
 		config:          config,
 		rmrSender:       rmrSender,
+		ranResetManager: ranResetManager,
 	}
 }
 
@@ -71,7 +74,21 @@ func (e *E2ResetRequestNotificationHandler) Handle(request *models.NotificationR
 
 	nodebInfo.ConnectionStatus = entities.ConnectionStatus_UNDER_RESET
 
-	err = e.rnibDataService.UpdateNodebInfoAndPublish(nodebInfo)
+	ranName := request.RanName
+	isResetDone, err := e.ranResetManager.ResetRan(ranName)
+	if err != nil {
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update and notify connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
+	} else {
+		if isResetDone {
+			nodebInfoupdated, err1 := e.getNodebInfo(request.RanName)
+			if err1 != nil {
+				e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to get updated nodeB entity. RanName: %s. Error: %s", request.RanName, err1.Error())
+			}
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Done Successfully ran: %s , Connection status updated : %s", ranName, nodebInfoupdated.ConnectionStatus)
+		} else {
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Failed")
+		}
+	}
 
 	if err != nil {
 		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
@@ -83,7 +100,6 @@ func (e *E2ResetRequestNotificationHandler) Handle(request *models.NotificationR
 
 	e.waitfortimertimeout(request)
 
-	ranName := request.RanName
 	resetRequest, err := e.parseE2ResetMessage(request.Payload)
 	if err != nil {
 		e.logger.Errorf(err.Error())
