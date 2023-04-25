@@ -130,7 +130,8 @@ func initRmr(port string, maxMsgSize int, flags int, log *logger.Logger) {
 }*/
 
 func initLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	log, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#rmr_c_go_api_test.initLog - failed to initialize logger, error: %s", err)
 	}

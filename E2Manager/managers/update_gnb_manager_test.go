@@ -11,7 +11,8 @@ import (
         "gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 func initUpdateGnbManagerTest(t *testing.T) (*UpdateGnbManager, *logger.Logger, services.RNibDataService, *NodebValidator) {
-        logger, err := logger.InitLogger(logger.DebugLevel)
+        DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
         if err != nil {
                 t.Errorf("#... - failed to initialize logger, error: %s", err)
         }

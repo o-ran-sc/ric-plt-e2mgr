@@ -35,7 +35,8 @@ import (
  */
 
 func TestUnpackX2apSetupResponse(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, _ := logger.InitLogger(DebugLevel)
 
 	wantPduAsStr := `SuccessfulOutcome ::= {
             procedureCode: 6
@@ -108,7 +109,8 @@ func TestUnpackX2apSetupResponse(t *testing.T) {
 /*unpacking error*/
 
 func TestUnpackX2apSetupResponseUnpackError(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	logger, _ := logger.InitLogger(InfoLevel)
 
 	wantError := "unpacking error: #src/asn1codec_utils.c.unpack_pdu_aux - Failed to decode E2AP-PDU (consumed 0), error = 0 Success"
 	//--------------------2006002a

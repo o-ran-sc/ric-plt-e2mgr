@@ -38,7 +38,8 @@ import (
 )
 
 func initRanSetupManagerTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibWriterMock, *RanSetupManager) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
@@ -211,7 +212,8 @@ func TestExecuteSetupUnsupportedProtocol(t *testing.T) {
 }
 
 func initLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	log, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("#initLog test - failed to initialize logger, error: %s", err)
 	}

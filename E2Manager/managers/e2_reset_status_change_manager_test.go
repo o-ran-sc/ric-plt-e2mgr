@@ -31,7 +31,8 @@ import (
 )
 
 func initE2ResetStatusChangeTest(t *testing.T) (*logger.Logger, *mocks.RmrMessengerMock, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *RanResetManager) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}

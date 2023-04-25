@@ -39,7 +39,8 @@ const E2TAddress2 = "10.10.2.16:9800"
 const PodName = "som_ pod_name"
 
 func initE2TInstancesManagerTest(t *testing.T) (*mocks.RnibReaderMock, *mocks.RnibWriterMock, *E2TInstancesManager) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}
