@@ -13,7 +13,8 @@ import (
 )
 
 func setupUpdateNodebRequestHandlerTest(t *testing.T) ( *UpdateNodebRequestHandler,  *mocks.RnibReaderMock, *mocks.RnibWriterMock){
-        logger, err := logger.InitLogger(logger.DebugLevel)
+        DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
         if err != nil {
                 t.Errorf("#... - failed to initialize logger, error: %s", err)
         }

@@ -42,7 +42,8 @@ const (
 )
 
 func setupLostConnectionHandlerTest(isSuccessfulHttpPost bool) (*RanLostConnectionHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.HttpClientMock) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	logger, _ := logger.InitLogger(InfoLevel)
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
 		MaxRnibConnectionAttempts: 3,

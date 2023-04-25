@@ -44,7 +44,8 @@ var rmrService *rmr.Service
 
 func main() {
 
-	logLevel, _ := logger.LogLevelTokenToLevel("info")
+	//logLevel, _ := logger.LogLevelTokenToLevel("info")
+        logLevel := int8(1)
 	logger, err := logger.InitLogger(logLevel)
 	if err != nil {
 		fmt.Printf("#app.main - failed to initialize logger, error: %s", err)

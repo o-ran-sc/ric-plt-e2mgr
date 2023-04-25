@@ -21,167 +21,55 @@
 package logger
 
 import (
-	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"strings"
+	mdclog "gerrit.o-ran-sc.org/r/com/golog"
 	"time"
 )
 
 type Logger struct {
-	Logger     *zap.Logger
+	logger *mdclog.MdcLogger
 }
 
-// Copied from zap logger
-//
-// A Level is a logging priority. Higher levels are more important.
-type LogLevel int8
-
-const (
-	// DebugLevel logs are typically voluminous, and are usually disabled in
-	// production.
-	DebugLevel LogLevel = iota - 1
-	// InfoLevel is the default logging priority.
-	InfoLevel
-	// WarnLevel logs are more important than Info, but don't need individual
-	// human review.
-	WarnLevel
-	// ErrorLevel logs are high-priority. If an application is running smoothly,
-	// it shouldn't generate any error-level logs.
-	ErrorLevel
-	// DPanicLevel logs are particularly important errors. In development the
-	// logger panics after writing the message.
-	DPanicLevel
-	// PanicLevel logs a message, then panics.
-	PanicLevel
-	// FatalLevel logs a message, then calls os.Exit(1).
-	FatalLevel
-
-	_minLevel = DebugLevel
-	_maxLevel = FatalLevel
-)
-
-var logLevelTokenToLevel = map[string] LogLevel {
-	"debug" : DebugLevel,
-	"info": InfoLevel,
-	"warn": WarnLevel,
-	"error": ErrorLevel,
-	"dpanic": DPanicLevel,
-	"panic": PanicLevel,
-	"fatal": FatalLevel,
+func InitLogger(loglevel int8 ) (*Logger, error) {
+       name := "e2mgr"
+       log ,err:= NewLogger(name)
+       return log,err
 }
 
-func LogLevelTokenToLevel(level string) (LogLevel, bool) {
-	if level, ok := logLevelTokenToLevel[strings.TrimSpace(strings.ToLower(level))];ok {
-		return level, true
-	}
-	return _maxLevel+1, false
+func NewLogger(name string) (*Logger, error) {
+	l,err:= mdclog.InitLogger(name)
+	return &Logger{
+		logger: l,
+	},err
 }
 
-func InitLogger(requested LogLevel) (*Logger, error) {
-	var logger *zap.Logger
-	var err error
-	switch requested {
-	case DebugLevel:
-		logger, err = initLoggerByLevel(zapcore.DebugLevel)
-	case InfoLevel:
-		logger, err = initLoggerByLevel(zapcore.InfoLevel)
-	case WarnLevel:
-		logger, err = initLoggerByLevel(zapcore.WarnLevel)
-	case ErrorLevel:
-		logger, err = initLoggerByLevel(zapcore.ErrorLevel)
-	case DPanicLevel:
-		logger, err = initLoggerByLevel(zapcore.DPanicLevel)
-	case PanicLevel:
-		logger, err = initLoggerByLevel(zapcore.PanicLevel)
-	case FatalLevel:
-		logger, err = initLoggerByLevel(zapcore.FatalLevel)
-	default:
-		err = fmt.Errorf("Invalid logging Level :%d",requested)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &Logger{Logger:logger}, nil
-
-}
-func(l *Logger)Sync() error {
-	l.Debugf("#logger.Sync - Going to flush buffered log")
-	return l.Logger.Sync()
+func (l *Logger) SetFormat(logMonitor int) {
+    l.logger.Mdclog_format_initialize(logMonitor)
 }
 
-func (l *Logger)Infof(formatMsg string, a ...interface{})  {
-	if l.InfoEnabled() {
-		msg := fmt.Sprintf(formatMsg, a...)
-		l.Logger.Info(msg, zap.Any("mdc", l.getTimeStampMdc()))
-	}
+func (l *Logger) SetLevel(level int) {
+	l.logger.LevelSet(mdclog.Level(level))
 }
 
-func (l *Logger)Debugf(formatMsg string, a ...interface{})  {
-	if l.DebugEnabled(){
-		msg := fmt.Sprintf(formatMsg, a...)
-		l.Logger.Debug(msg, zap.Any("mdc", l.getTimeStampMdc()))
-	}
+func (l *Logger) SetMdc(key string, value string) {
+	l.logger.MdcAdd(key, value)
 }
 
-func (l *Logger)Errorf(formatMsg string, a ...interface{})  {
-	msg := fmt.Sprintf(formatMsg, a...)
-	l.Logger.Error(msg, zap.Any("mdc", l.getTimeStampMdc()))
+func (l *Logger) Errorf(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format(time.RFC3339))
+	l.logger.Error(pattern, args...)
 }
 
-func (l *Logger)Warnf(formatMsg string, a ...interface{})  {
-	msg := fmt.Sprintf(formatMsg, a...)
-	l.Logger.Warn(msg, zap.Any("mdc", l.getTimeStampMdc()))
+func (l *Logger) Warnf(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format(time.RFC3339))
+	l.logger.Warning(pattern, args...)
 }
 
-func (l *Logger) getTimeStampMdc() map[string]string {
-	timeStr := time.Now().Format("2006-01-02 15:04:05.000")
-	mdc := map[string]string{"time": timeStr}
-	return mdc
+func (l *Logger) Infof(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format(time.RFC3339))
+	l.logger.Info(pattern, args...)
 }
 
-func (l *Logger)InfoEnabled()bool{
-	return l.Logger.Core().Enabled(zap.InfoLevel)
+func (l *Logger) Debugf(pattern string, args ...interface{}) {
+	l.SetMdc("time", time.Now().Format(time.RFC3339))
+	l.logger.Debug(pattern, args...)
 }
-
-func (l *Logger)DebugEnabled()bool{
-	return l.Logger.Core().Enabled(zap.DebugLevel)
-}
-
-func (l *Logger)DPanicf(formatMsg string, a ...interface{})  {
-	msg := fmt.Sprintf(formatMsg, a...)
-	l.Logger.DPanic(msg, zap.Any("mdc", l.getTimeStampMdc()))
-}
-
-func initLoggerByLevel(l zapcore.Level) (*zap.Logger, error) {
-	cfg := zap.Config{
-		Encoding:         "json",
-		Level:            zap.NewAtomicLevelAt(l),
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "msg",
-
-			LevelKey:    "crit",
-			EncodeLevel: zapcore.CapitalLevelEncoder,
-
-			TimeKey:    "ts",
-			EncodeTime: epochMillisIntegerTimeEncoder,
-
-			CallerKey: "id",
-			EncodeCaller: e2ManagerCallerEncoder,
-		},
-	}
-	return cfg.Build()
-}
-
-func e2ManagerCallerEncoder(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString("E2Manager")
-}
-
-func epochMillisIntegerTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	nanos := t.UnixNano()
-	millis := int64(nanos) / int64(time.Millisecond)
-	enc.AppendInt64(millis)
-}
-
