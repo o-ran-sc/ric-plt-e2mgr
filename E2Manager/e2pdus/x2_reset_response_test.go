@@ -29,7 +29,8 @@ import (
 )
 
 func TestPrepareX2ResetResponsePDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	_,err := logger.InitLogger(InfoLevel)
 	if err!=nil{
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -47,7 +48,8 @@ func TestPrepareX2ResetResponsePDU(t *testing.T) {
 }
 
 func TestPrepareX2ResetResponsePDUFailure(t *testing.T) {
-	_, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}

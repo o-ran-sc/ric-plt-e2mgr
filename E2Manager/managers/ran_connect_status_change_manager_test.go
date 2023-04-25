@@ -36,7 +36,8 @@ import (
 const EventChannelForTest = "RAN_CONNECTION_STATUS_CHANGE"
 
 func initRanConnectStatusChangeManagerTest(t *testing.T) (*mocks.RnibWriterMock, *mocks.RanListManagerMock, *mocks.RanAlarmServiceMock, *RanConnectStatusChangeManager) {
-	log, err := logger.InitLogger(logger.DebugLevel)
+	Debug := int8(4)
+	log, err := logger.InitLogger(Debug)
 	if err != nil {
 		t.Errorf("#... - failed to initialize log, error: %s", err)
 	}
