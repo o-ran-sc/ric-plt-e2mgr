@@ -32,7 +32,8 @@ import (
 )
 
 func initRanStatusChangeManagerTest(t *testing.T) (*logger.Logger, *mocks.RmrMessengerMock, *rmrsender.RmrSender) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Fatalf("#initStatusChangeManagerTest - failed to initialize logger, error: %s", err)
 	}
