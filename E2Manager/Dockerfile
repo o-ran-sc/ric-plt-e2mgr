@@ -57,4 +57,5 @@ ENV LD_LIBRARY_PATH=/usr/local/lib \
 ENV RMR_SEED_RT=router.txt
 ENV RMR_VCTL_FILE=/tmp/rmr.verbose
 EXPOSE 3800
-CMD ["sh", "-c", "./main  -port=$port"]
+CMD ["sh", "-c", "./main  -port=$port -f /etc/config/log-level.yaml"]
+

@@ -10,8 +10,8 @@ import (
 
 
 func RanAlarmServiceTest(t *testing.T) (RanAlarmService, *logger.Logger, *configuration.Configuration) {
-
-    logger, err := logger.InitLogger(logger.DebugLevel)
+    DebugLevel := int8(4)
+    logger, err := logger.InitLogger(DebugLevel)
         if err != nil {
                 t.Errorf("#... - failed to initialize logger, error: %s", err)
         }

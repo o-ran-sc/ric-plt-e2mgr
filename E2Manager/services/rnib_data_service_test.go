@@ -37,7 +37,8 @@ func setupRnibDataServiceTest(t *testing.T) (*rNibDataService, *mocks.RnibReader
 }
 
 func setupRnibDataServiceTestWithMaxAttempts(t *testing.T, maxAttempts int) (*rNibDataService, *mocks.RnibReaderMock, *mocks.RnibWriterMock) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}

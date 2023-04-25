@@ -79,7 +79,8 @@ type setupResponseTestContext struct {
 }
 
 func NewSetupResponseTestContext(manager managers.ISetupResponseManager) *setupResponseTestContext {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	logger, _ := logger.InitLogger(InfoLevel)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	readerMock := &mocks.RnibReaderMock{}
 	writerMock := &mocks.RnibWriterMock{}

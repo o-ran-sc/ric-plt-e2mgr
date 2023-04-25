@@ -248,7 +248,8 @@ func TestDissociateAllRans_RoutingManager_400(t *testing.T) {
 
 // TODO: extract to test_utils
 func initLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.InfoLevel)
+        level := int8(1)
+	log, err := logger.InitLogger(level)
 	if err != nil {
 		t.Errorf("#delete_all_request_handler_test.TestHandleSuccessFlow - failed to initialize logger, error: %s", err)
 	}

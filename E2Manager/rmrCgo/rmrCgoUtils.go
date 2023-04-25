@@ -105,9 +105,9 @@ func (ctx *Context) getAllocatedCRmrMBuf(logger *logger.Logger, mBuf *MBuf, maxM
 //TODO: change to assert or return error
 func (ctx *Context) checkContextInitialized() {
 	if ctx.RmrCtx == nil {
-		if ctx.Logger != nil {
+		/*if ctx.Logger != nil {
 			ctx.Logger.DPanicf("#rmrCgoUtils.checkContextInitialized - The RMR router has not been initialized")
-		}
+		}*/
 		panic("#rmrCgoUtils.checkContextInitialized - The RMR router has not been initialized. To initialize router please call Init() method")
 	}
 }
