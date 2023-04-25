@@ -36,7 +36,8 @@ import (
 )
 
 func initE2TKeepAliveTest(t *testing.T) (*mocks.RmrMessengerMock, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.E2TShutdownManagerMock, *E2TKeepAliveWorker) {
-	logger, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	logger, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#... - failed to initialize logger, error: %s", err)
 	}

@@ -41,7 +41,8 @@ func TestNewE2RequestMessage(t *testing.T){
 }
 
 func TestGetMessageAsBytes(t *testing.T){
-	log, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	log, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("#nodeb_controller_test.TestHandleRequestSuccess - failed to initialize logger, error: %s", err)
 	}
