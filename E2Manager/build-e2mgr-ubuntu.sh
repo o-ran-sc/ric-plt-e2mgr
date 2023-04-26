@@ -73,7 +73,7 @@ export GODEBUG=cgocheck=2,clobberfree=1,gcstoptheworld=2,allocfreetrace=0
 export RMR_SEED_RT=$(pwd)/router_test.txt
 # writes to coverage.txt by default
 # SonarCloud accepts the text format
-go-acc $(go list ./... | grep -vE '(/mocks|/tests|/e2managererrors|/enums)' )
+go-acc -- -v $(go list ./... | grep -vE '(/mocks|/tests|/e2managererrors|/enums)' )
 
 # TODO: drop rewrite of path prefix when SonarScanner is extended
 # rewrite the module name to a directory name in the coverage report
