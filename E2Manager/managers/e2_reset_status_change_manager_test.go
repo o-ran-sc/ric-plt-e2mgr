@@ -54,6 +54,7 @@ func TestE2ResetStatusChangeSucceeds(t *testing.T) {
 	origNodebInfo := &entities.NodebInfo{RanName: ranName, GlobalNbId: &entities.GlobalNbId{PlmnId: "xxx", NbId: "yyy"}, ConnectionStatus: entities.ConnectionStatus_CONNECTING}
 	var rnibErr error
 	readerMock.On("GetNodeb", ranName).Return(origNodebInfo, rnibErr)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
 	updatedNodebInfo1 := *origNodebInfo
 	updatedNodebInfo1.ConnectionStatus = entities.ConnectionStatus_UNDER_RESET
 	writerMock.On("UpdateNodebInfo", mock.Anything).Return(rnibErr)

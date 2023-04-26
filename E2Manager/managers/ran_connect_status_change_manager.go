@@ -30,6 +30,7 @@ import (
 const (
 	CONNECTED_RAW_EVENT    = "CONNECTED"
 	DISCONNECTED_RAW_EVENT = "DISCONNECTED"
+	UNDER_RESET_RAW_EVENT  = "UNDER_RESET"
 	NONE_RAW_EVENT         = "NONE"
 )
 
@@ -134,6 +135,8 @@ func (m *RanConnectStatusChangeManager) setEvent(nodebInfo *entities.NodebInfo, 
 		event = nodebInfo.RanName + "_" + CONNECTED_RAW_EVENT
 	} else if currentConnectionStatus == entities.ConnectionStatus_CONNECTED && nextState != entities.ConnectionStatus_CONNECTED {
 		event = nodebInfo.RanName + "_" + DISCONNECTED_RAW_EVENT
+	} else if nextState == entities.ConnectionStatus_UNDER_RESET {
+		event = nodebInfo.RanName + "_" + UNDER_RESET_RAW_EVENT
 	} else {
 		event = NONE_RAW_EVENT
 	}

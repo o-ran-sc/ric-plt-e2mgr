@@ -37,7 +37,7 @@ const (
 	E2ResetXmlPath = "../../tests/resources/reset/reset-request.xml"
 )
 
-func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock) {
+func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.RnibReaderMock, *mocks.RnibWriterMock, *mocks.RmrMessengerMock, *mocks.RanAlarmServiceMock) {
 	logger := tests.InitLog(t)
 	config := &configuration.Configuration{
 		RnibRetryIntervalMs:       10,
@@ -56,12 +56,12 @@ func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	ranResetManager := managers.NewRanResetManager(logger, rnibDataService, ranConnectStatusChangeManager)
 	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager)
-	return handler, readerMock, writerMock, rmrMessengerMock
+	return handler, readerMock, writerMock, rmrMessengerMock, ranAlarmService
 }
 
 func TestE2ResettNotificationHandler(t *testing.T) {
 	e2ResetXml := utils.ReadXmlFile(t, E2ResetXmlPath)
-	handler, readerMock, writerMock, rmrMessengerMock := initE2ResetMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock, ranAlarmServiceMock := initE2ResetMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -78,6 +78,8 @@ func TestE2ResettNotificationHandler(t *testing.T) {
 	var errEmpty error
 	rmrMessage := &rmrCgo.MBuf{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2ResetXml...)}
 	handler.Handle(notificationRequest)
 	readerMock.AssertExpectations(t)
@@ -88,7 +90,7 @@ func TestE2ResettNotificationHandler(t *testing.T) {
 
 func TestE2ResettNotificationHandler_UpdateStatus_Connected(t *testing.T) {
 	e2ResetXml := utils.ReadXmlFile(t, E2ResetXmlPath)
-	handler, readerMock, writerMock, rmrMessengerMock := initE2ResetMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock, ranAlarmServiceMock := initE2ResetMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -108,6 +110,8 @@ func TestE2ResettNotificationHandler_UpdateStatus_Connected(t *testing.T) {
 	var errEmpty error
 	rmrMessage := &rmrCgo.MBuf{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2ResetXml...)}
 	handler.Handle(notificationRequest)
 	readerMock.AssertCalled(t, "GetNodeb", mock.Anything)
@@ -117,7 +121,7 @@ func TestE2ResettNotificationHandler_UpdateStatus_Connected(t *testing.T) {
 
 func TestE2ResettNotificationHandler_Successful_Reset_Response(t *testing.T) {
 	e2ResetXml := utils.ReadXmlFile(t, E2ResetXmlPath)
-	handler, readerMock, writerMock, rmrMessengerMock := initE2ResetMocks(t)
+	handler, readerMock, writerMock, rmrMessengerMock, ranAlarmServiceMock := initE2ResetMocks(t)
 	var nodebInfo = &entities.NodebInfo{
 		RanName:                      gnbNodebRanName,
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
@@ -137,6 +141,8 @@ func TestE2ResettNotificationHandler_Successful_Reset_Response(t *testing.T) {
 	var errEmpty error
 	rmrMessage := &rmrCgo.MBuf{}
 	rmrMessengerMock.On("SendMsg", mock.Anything, mock.Anything).Return(rmrMessage, errEmpty)
+	writerMock.On("UpdateNodebInfoOnConnectionStatusInversion", mock.Anything, mock.Anything).Return(nil)
+	ranAlarmServiceMock.On("SetConnectivityChangeAlarm", mock.Anything).Return(nil)
 	notificationRequest := &models.NotificationRequest{RanName: gnbNodebRanName, Payload: append([]byte(""), e2ResetXml...)}
 	handler.Handle(notificationRequest)
 	readerMock.AssertCalled(t, "GetNodeb", mock.Anything)
