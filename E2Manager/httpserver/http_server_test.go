@@ -226,7 +226,8 @@ func TestRouteDeleteEnb(t *testing.T) {
 }
 
 func initLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	log, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("#initLog test - failed to initialize logger, error: %s", err)
 	}

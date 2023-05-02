@@ -31,7 +31,8 @@ import (
 )
 
 func TestPrepareEndcConfigurationUpdateFailurePDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_,err := logger.InitLogger(InfoLevel)
 	if err!=nil{
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -49,7 +50,8 @@ func TestPrepareEndcConfigurationUpdateFailurePDU(t *testing.T) {
 }
 
 func TestPrepareEndcConfigurationUpdateFailurePDUFailure(t *testing.T) {
-	_, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -66,7 +68,8 @@ func TestPrepareEndcConfigurationUpdateFailurePDUFailure(t *testing.T) {
 }
 
 func TestPrepareX2EnbConfigurationUpdateFailurePDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	_,err := logger.InitLogger(InfoLevel)
 	if err!=nil{
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -84,7 +87,8 @@ func TestPrepareX2EnbConfigurationUpdateFailurePDU(t *testing.T) {
 }
 
 func TestPrepareX2EnbConfigurationUpdateFailurePDUFailure(t *testing.T) {
-	_, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -101,7 +105,8 @@ func TestPrepareX2EnbConfigurationUpdateFailurePDUFailure(t *testing.T) {
 }
 
 func TestPrepareEndcConfigurationUpdateAckPDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	_,err := logger.InitLogger(InfoLevel)
 	if err!=nil{
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -119,7 +124,8 @@ func TestPrepareEndcConfigurationUpdateAckPDU(t *testing.T) {
 }
 
 func TestPrepareEndcConfigurationUpdateAckPDUFailure(t *testing.T) {
-	_, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	_, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -136,7 +142,8 @@ func TestPrepareEndcConfigurationUpdateAckPDUFailure(t *testing.T) {
 }
 
 func TestPrepareX2EnbConfigurationUpdateAckPDU(t *testing.T) {
-	_,err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_,err := logger.InitLogger(InfoLevel)
 	if err!=nil{
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}
@@ -154,7 +161,8 @@ func TestPrepareX2EnbConfigurationUpdateAckPDU(t *testing.T) {
 }
 
 func TestPrepareX2EnbConfigurationUpdateAckPDUFailure(t *testing.T) {
-	_, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel:= int8(3)
+	_, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("failed to initialize logger, error: %s", err)
 	}

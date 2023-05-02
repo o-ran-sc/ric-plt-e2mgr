@@ -154,7 +154,8 @@ func TestRmrSenderWhSendFailure(t *testing.T) {
 
 // TODO: extract to test_utils
 func initLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	log, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Fatalf("#initLog - failed to initialize logger, error: %s", err)
 	}

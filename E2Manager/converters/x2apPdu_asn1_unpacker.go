@@ -72,10 +72,10 @@ func UnpackX2apPdu(logger *logger.Logger, allocationBufferSize int, packedBuffer
 		return nil, errors.New(fmt.Sprintf("unpacking error: %s", C.GoString(&errBuf[0])))
 	}
 
-	if logger.DebugEnabled() {
+	//if logger.DebugEnabled() {
 		C.asn1_pdu_printer(pdu, C.size_t(len(errBuf)), &errBuf[0])
-		logger.Debugf("#x2apPdu_asn1_unpacker.UnpackX2apPdu - PDU: %v  packed size:%d", C.GoString(&errBuf[0]), packedBufferSize)
-	}
+		//logger.Debugf("#x2apPdu_asn1_unpacker.UnpackX2apPdu - PDU: %v  packed size:%d", C.GoString(&errBuf[0]), packedBufferSize)
+	//}
 
 	return pdu, nil
 }
@@ -89,11 +89,11 @@ func UnpackX2apPduAndRefine(logger *logger.Logger, allocationBufferSize int, pac
 	defer C.delete_pdu(pdu)
 
 	var refinedResponse = ""
-	if logger.DebugEnabled() {
+	//if logger.DebugEnabled() {
 		buf := make([]C.char, 16*maxMessageBufferSize)
 		C.asn1_pdu_printer(pdu, C.size_t(len(buf)), &buf[0])
 		refinedResponse  = C.GoString(&buf[0])
-	}
+	//}
 
 	return &X2PduRefinedResponse{PduPrint: refinedResponse}, nil
 }

@@ -31,7 +31,8 @@ import (
 )
 
 func InitLog(t *testing.T) *logger.Logger {
-	log, err := logger.InitLogger(logger.InfoLevel)
+        InfoLevel := int8(1)
+	log, err := logger.InitLogger(InfoLevel)
 	if err != nil {
 		t.Errorf("#test.utils.InitLog - failed to initialize logger, error: %s", err)
 	}

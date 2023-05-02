@@ -35,7 +35,8 @@ Test permutations of x2 setup response to protobuf enb
 */
 
 func TestUnpackEndcX2SetupFailureResponseAndExtract(t *testing.T) {
-	logger, _ := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+        logger, _ := logger.InitLogger(InfoLevel)
 
 	var testCases = []struct {
 		response  string

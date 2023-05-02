@@ -37,7 +37,8 @@ import (
 )
 
 func TestListenAndHandle(t *testing.T) {
-	log, err := logger.InitLogger(logger.DebugLevel)
+	DebugLevel := int8(4)
+	log, err := logger.InitLogger(DebugLevel)
 	if err != nil {
 		t.Errorf("#rmr_service_test.TestListenAndHandle - failed to initialize logger, error: %s", err)
 	}

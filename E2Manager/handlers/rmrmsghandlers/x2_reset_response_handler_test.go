@@ -44,7 +44,8 @@ const (
 )
 
 func initX2ResetResponseHandlerTest(t *testing.T) (X2ResetResponseHandler, *mocks.RnibReaderMock, *mocks.RmrMessengerMock) {
-	log, err := logger.InitLogger(logger.InfoLevel)
+	InfoLevel := int8(3)
+	log, err := logger.InitLogger(InfoLevel)
 	config := &configuration.Configuration{RnibRetryIntervalMs: 10, MaxRnibConnectionAttempts: 3}
 	if err != nil {
 		t.Errorf("#initX2ResetResponseHandlerTest - failed to initialize logger, error: %s", err)
