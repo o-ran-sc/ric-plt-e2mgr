@@ -40,20 +40,22 @@ var (
 )
 
 type E2ResetRequestNotificationHandler struct {
-	logger          *logger.Logger
-	rnibDataService services.RNibDataService
-	config          *configuration.Configuration
-	rmrSender       *rmrsender.RmrSender
-	ranResetManager *managers.RanResetManager
+	logger                            *logger.Logger
+	rnibDataService                   services.RNibDataService
+	config                            *configuration.Configuration
+	rmrSender                         *rmrsender.RmrSender
+	ranResetManager                   *managers.RanResetManager
+	changeStatusToConnectedRanManager *managers.ChangeStatusToConnectedRanManager
 }
 
-func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration, rmrSender *rmrsender.RmrSender, ranResetManager *managers.RanResetManager) *E2ResetRequestNotificationHandler {
+func NewE2ResetRequestNotificationHandler(logger *logger.Logger, rnibDataService services.RNibDataService, config *configuration.Configuration, rmrSender *rmrsender.RmrSender, ranResetManager *managers.RanResetManager, changeStatusToConnectedRanManager *managers.ChangeStatusToConnectedRanManager) *E2ResetRequestNotificationHandler {
 	return &E2ResetRequestNotificationHandler{
-		logger:          logger,
-		rnibDataService: rnibDataService,
-		config:          config,
-		rmrSender:       rmrSender,
-		ranResetManager: ranResetManager,
+		logger:                            logger,
+		rnibDataService:                   rnibDataService,
+		config:                            config,
+		rmrSender:                         rmrSender,
+		ranResetManager:                   ranResetManager,
+		changeStatusToConnectedRanManager: changeStatusToConnectedRanManager,
 	}
 }
 
@@ -108,12 +110,19 @@ func (e *E2ResetRequestNotificationHandler) Handle(request *models.NotificationR
 	e.logger.Infof("#E2ResetRequestNotificationHandler.Handle - RIC_RESET_REQUEST has been parsed successfully %+v", resetRequest)
 	e.handleSuccessfulResponse(ranName, request, resetRequest)
 
-	nodebInfo.ConnectionStatus = entities.ConnectionStatus_CONNECTED
-
-	err = e.rnibDataService.UpdateNodebInfoAndPublish(nodebInfo)
-
+	isConnectedStatus, err := e.changeStatusToConnectedRanManager.ChangeStatusToConnectedRan(ranName)
 	if err != nil {
-		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update and notify connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
+	} else {
+		if isConnectedStatus {
+			nodebInfoupdated, err1 := e.getNodebInfo(request.RanName)
+			if err1 != nil {
+				e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to get updated nodeB entity. RanName: %s. Error: %s", request.RanName, err1.Error())
+			}
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Connection status Set Successfully ran: %s , Connection status updated : %s", ranName, nodebInfoupdated.ConnectionStatus)
+		} else {
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Connection status Setting Failed")
+		}
 	}
 
 	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - nodeB entity connected state. RanName %s, ConnectionStatus %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
