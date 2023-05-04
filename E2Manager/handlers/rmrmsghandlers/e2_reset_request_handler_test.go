@@ -55,7 +55,8 @@ func initE2ResetMocks(t *testing.T) (*E2ResetRequestNotificationHandler, *mocks.
 	ranAlarmService := &mocks.RanAlarmServiceMock{}
 	ranConnectStatusChangeManager := managers.NewRanConnectStatusChangeManager(logger, rnibDataService, ranListManager, ranAlarmService)
 	ranResetManager := managers.NewRanResetManager(logger, rnibDataService, ranConnectStatusChangeManager)
-	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager)
+	changeStatusToConnectedRanManager := managers.NewChangeStatusToConnectedRanManager(logger, rnibDataService, ranConnectStatusChangeManager)
+	handler := NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager, changeStatusToConnectedRanManager)
 	return handler, readerMock, writerMock, rmrMessengerMock, ranAlarmService
 }
 
