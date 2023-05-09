@@ -68,6 +68,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 	ranDisconnectionManager := managers.NewRanDisconnectionManager(logger, configuration.ParseConfiguration(), rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager)
 	ranStatusChangeManager := managers.NewRanStatusChangeManager(logger, rmrSender)
 	ranResetManager := managers.NewRanResetManager(logger, rnibDataService, ranConnectStatusChangeManager)
+	changeStatusToConnectedRanManager := managers.NewChangeStatusToConnectedRanManager(logger, rnibDataService, ranConnectStatusChangeManager)
 
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
 	x2SetupResponseManager := managers.NewX2SetupResponseManager(x2SetupResponseConverter)
@@ -99,7 +100,7 @@ func TestGetNotificationHandlerSuccess(t *testing.T) {
 		{rmrCgo.RIC_X2_RESET, rmrmsghandlers.NewX2ResetRequestNotificationHandler(logger, rnibDataService, ranStatusChangeManager, rmrSender)},
 		{rmrCgo.RIC_SERVICE_UPDATE, rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager)},
 		{rmrCgo.RIC_E2NODE_CONFIG_UPDATE, rmrmsghandlers.NewE2nodeConfigUpdateNotificationHandler(logger, rnibDataService, rmrSender)},
-		{rmrCgo.RIC_E2_RESET_REQ, rmrmsghandlers.NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager)},
+		{rmrCgo.RIC_E2_RESET_REQ, rmrmsghandlers.NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetManager, changeStatusToConnectedRanManager)},
 	}
 
 	for _, tc := range testCases {
