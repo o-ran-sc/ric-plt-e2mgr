@@ -21,6 +21,7 @@ package httpmsghandlers
 import (
 	"e2mgr/e2managererrors"
 	"e2mgr/logger"
+	"e2mgr/managers"
 	"e2mgr/models"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
@@ -33,13 +34,15 @@ type E2ResetRequestHandler struct {
 	rNibDataService services.RNibDataService
 	rmrSender       *rmrsender.RmrSender
 	logger          *logger.Logger
+	ranResetManager *managers.RanResetManager
 }
 
-func NewE2ResetRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService) *E2ResetRequestHandler {
+func NewE2ResetRequestHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranResetManager *managers.RanResetManager) *E2ResetRequestHandler {
 	return &E2ResetRequestHandler{
 		rNibDataService: rNibDataService,
 		rmrSender:       rmrSender,
 		logger:          logger,
+		ranResetManager: ranResetManager,
 	}
 }
 
@@ -58,6 +61,21 @@ func (e *E2ResetRequestHandler) Handle(request models.Request) (models.IResponse
 
 	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - nodeB entity retrieved. RanName %s, ConnectionStatus %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
 
+	ranName := resetRequest.RanName
+	isResetDone, err := e.ranResetManager.ResetRan(ranName)
+	if err != nil {
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update and notify connection status of nodeB entity. RanName: %s. Error: %s", request.RanName, err.Error())
+	} else {
+		if isResetDone {
+			nodebInfoupdated, err1 := e.getNodebInfo(resetRequest.RanName)
+			if err1 != nil {
+				e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to get updated nodeB entity. RanName: %s. Error: %s", request.RanName, err1.Error())
+			}
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Done Successfully ran: %s , Connection status updated : %s", ranName, nodebInfoupdated.ConnectionStatus)
+		} else {
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Failed")
+		}
+	}
 	return nil, nil
 }
 
