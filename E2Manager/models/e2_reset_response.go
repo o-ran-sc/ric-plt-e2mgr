@@ -77,15 +77,15 @@ type ResetResponseIEsValue struct {
 
 func NewE2ResetResponseMessage(request *E2ResetRequestMessage) E2ResetResponseMessage {
 	outcome := successfulOutcome{}
-	outcome.ProcedureCode = request.E2APPDU.InitiatingMessage.ProcedureCode
-	e2ResetRequestIes := request.E2APPDU.InitiatingMessage.Value.ResetRequest.ProtocolIEs.ResetRequestIEs
+	outcome.ProcedureCode = string(request.E2ApPDU.InitiatingMessage.ProcedureCode)
+	e2ResetRequestIes := request.E2ApPDU.InitiatingMessage.Value.E2ResetRequest.ProtocolIes.ResetRequestIEs
 	numOfIes := len(e2ResetRequestIes)
 
 	outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs = make([]ResetResponseIEs, numOfIes)
 	for ieCount := 0; ieCount < numOfIes; ieCount++ {
-		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].ID = request.E2APPDU.InitiatingMessage.Value.ResetRequest.ProtocolIEs.ResetRequestIEs[ieCount].ID
-		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].Criticality.Ignore = request.E2APPDU.InitiatingMessage.Value.ResetRequest.ProtocolIEs.ResetRequestIEs[ieCount].Criticality.Ignore
-		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].Value.TransactionID = request.E2APPDU.InitiatingMessage.Value.ResetRequest.ProtocolIEs.ResetRequestIEs[ieCount].Value.TransactionID
+		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].ID = string(request.E2ApPDU.InitiatingMessage.Value.E2ResetRequest.ProtocolIes.ResetRequestIEs[ieCount].ID)
+		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].Criticality.Ignore = request.E2ApPDU.InitiatingMessage.Value.E2ResetRequest.ProtocolIes.ResetRequestIEs[ieCount].Criticality.Ignore
+		outcome.Value.ResetResponse.ProtocolIEs.ResetResponseIEs[ieCount].Value.TransactionID = string(*(request.E2ApPDU.InitiatingMessage.Value.E2ResetRequest.ProtocolIes.ResetRequestIEs[ieCount].Value.TransactionID))
 	}
 	return E2ResetResponseMessage{E2ApPdu: E2ApPdu{SuccessfulOutcome: outcome}}
 }
