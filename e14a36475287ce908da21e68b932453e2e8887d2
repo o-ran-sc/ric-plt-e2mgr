@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "be9d8397_9f7f8790",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-29T12:13:44Z",
+      "side": 1,
+      "message": "should return err to caller",
+      "range": {
+        "startLine": 66,
+        "startChar": 1,
+        "endLine": 66,
+        "endChar": 16
+      },
+      "revId": "e14a36475287ce908da21e68b932453e2e8887d2",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
