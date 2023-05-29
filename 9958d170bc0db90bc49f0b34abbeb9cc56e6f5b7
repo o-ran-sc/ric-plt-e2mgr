@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "502de96e_ee198964",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-29T10:45:21Z",
+      "side": 1,
+      "message": "returned nil response",
+      "range": {
+        "startLine": 61,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 11
+      },
+      "revId": "9958d170bc0db90bc49f0b34abbeb9cc56e6f5b7",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d613de2f_5a7dbf0b",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-29T10:45:21Z",
+      "side": 1,
+      "message": "should return nil instead of err",
+      "range": {
+        "startLine": 71,
+        "startChar": 19,
+        "endLine": 71,
+        "endChar": 22
+      },
+      "revId": "9958d170bc0db90bc49f0b34abbeb9cc56e6f5b7",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
