@@ -25,6 +25,7 @@ import (
 	"e2mgr/models"
 	"e2mgr/services"
 	"e2mgr/services/rmrsender"
+	"fmt"
 
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
@@ -60,6 +61,27 @@ func (e *E2ResetRequestHandler) Handle(request models.Request) error {
 	}
 
 	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - nodeB entity retrieved. RanName %s, ConnectionStatus %s", nodebInfo.RanName, nodebInfo.ConnectionStatus)
+
+	ranName := resetRequest.RanName
+	// TODO: remove isResetDone
+	isResetDone, err := e.ranResetManager.ResetRan(ranName)
+	if err != nil {
+		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to update and notify connection status of nodeB entity. RanName: %s. Error: %s", resetRequest.RanName, err.Error())
+		return err
+	} else {
+		if isResetDone {
+			nodebInfoupdated, err1 := e.getNodebInfo(resetRequest.RanName)
+			if err1 != nil {
+				e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - failed to get updated nodeB entity. RanName: %s. Error: %s", resetRequest.RanName, err1.Error())
+				return err1
+			}
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Done Successfully ran: %s , Connection status updated : %s", ranName, nodebInfoupdated.ConnectionStatus)
+		} else {
+			e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Reset Failed")
+			errmsg := fmt.Errorf("#E2ResetRequestHandler.Handle - Reset Failed")
+			return errmsg
+		}
+	}
 
 	return nil
 }
