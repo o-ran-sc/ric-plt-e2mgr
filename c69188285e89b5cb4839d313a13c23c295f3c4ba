@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "73a8b6ac_2d97a601",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T06:07:40Z",
+      "side": 1,
+      "message": "TODO should be in capital.",
+      "range": {
+        "startLine": 85,
+        "startChar": 3,
+        "endLine": 85,
+        "endChar": 7
+      },
+      "revId": "c69188285e89b5cb4839d313a13c23c295f3c4ba",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c4688b0e_be248fab",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T06:07:40Z",
+      "side": 1,
+      "message": "remove sleep and implement non blocking API invocation in further patch",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 29
+      },
+      "revId": "c69188285e89b5cb4839d313a13c23c295f3c4ba",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4c5f93c0_cab8b552",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T06:07:40Z",
+      "side": 1,
+      "message": "return failed errror.",
+      "range": {
+        "startLine": 101,
+        "startChar": 3,
+        "endLine": 101,
+        "endChar": 86
+      },
+      "revId": "c69188285e89b5cb4839d313a13c23c295f3c4ba",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
