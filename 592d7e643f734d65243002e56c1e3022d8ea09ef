@@ -24,6 +24,30 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "8fab08b0_600f9973",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T09:10:50Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "10ee11c7_e9c7ee77",
+      "range": {
+        "startLine": 65,
+        "startChar": 1,
+        "endLine": 65,
+        "endChar": 17
+      },
+      "revId": "592d7e643f734d65243002e56c1e3022d8ea09ef",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "181e4b75_c01db675",
@@ -37,6 +61,30 @@
       "writtenOn": "2023-05-31T05:53:55Z",
       "side": 1,
       "message": "return reset failed error",
+      "range": {
+        "startLine": 78,
+        "startChar": 3,
+        "endLine": 78,
+        "endChar": 78
+      },
+      "revId": "592d7e643f734d65243002e56c1e3022d8ea09ef",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e6358102_b171f15f",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T09:10:50Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "181e4b75_c01db675",
       "range": {
         "startLine": 78,
         "startChar": 3,
