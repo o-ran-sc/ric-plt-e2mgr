@@ -153,13 +153,13 @@ func (e *E2ResetRequestNotificationHandler) waitfortimertimeout(request *models.
 
 func (e *E2ResetRequestNotificationHandler) parseE2ResetMessage(payload []byte) (*models.E2ResetRequestMessage, error) {
 	e2resetMessage := models.E2ResetRequestMessage{}
-	err := xml.Unmarshal(utils.NormalizeXml(payload), &(e2resetMessage.E2APPDU))
+	err := xml.Unmarshal(utils.NormalizeXml(payload), &(e2resetMessage.E2ApPDU))
 
 	if err != nil {
 		e.logger.Errorf("#E2ResetRequestNotificationHandler.Handle - error in parsing request message: %+v", err)
 		return nil, err
 	}
-	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Unmarshalling is successful %v", e2resetMessage.E2APPDU.InitiatingMessage.ProcedureCode)
+	e.logger.Debugf("#E2ResetRequestNotificationHandler.Handle - Unmarshalling is successful %v", e2resetMessage.E2ApPDU.InitiatingMessage.ProcedureCode)
 	return &e2resetMessage, nil
 }
 

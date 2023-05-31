@@ -18,47 +18,49 @@
 
 package models
 
-import (
-	"encoding/xml"
-)
-
 type E2ResetRequestMessage struct {
-	XMLName xml.Name `xml:"E2ResetRequestMessage"`
-	Text    string   `xml:",chardata"`
-	E2APPDU struct {
-		XMLName           xml.Name `xml:"E2AP-PDU"`
-		Text              string   `xml:",chardata"`
-		InitiatingMessage struct {
-			Text          string `xml:",chardata"`
-			ProcedureCode string `xml:"procedureCode"`
-			Criticality   struct {
-				Text   string `xml:",chardata"`
-				Reject string `xml:"reject"`
-			} `xml:"criticality"`
-			Value struct {
-				Text         string `xml:",chardata"`
-				ResetRequest struct {
-					Text        string `xml:",chardata"`
-					ProtocolIEs struct {
-						Text            string `xml:",chardata"`
-						ResetRequestIEs []struct {
-							Text        string `xml:",chardata"`
-							ID          string `xml:"id"`
-							Criticality struct {
-								Text   string `xml:",chardata"`
-								Ignore string `xml:"ignore"`
-							} `xml:"criticality"`
-							Value struct {
-								Text          string            `xml:",chardata"`
-								TransactionID string            `xml:"TransactionID"`
-								Cause         CauseResetRequest `xml:"Cause"`
-							} `xml:"value"`
-						} `xml:"ResetRequestIEs"`
-					} `xml:"protocolIEs"`
-				} `xml:"ResetRequest"`
-			} `xml:"value"`
-		} `xml:"initiatingMessage"`
-	} `xml:"E2AP-PDU"`
+	E2ApPDU E2ApPDU `xml:"E2AP-PDU"`
+}
+
+type E2ApPDU struct {
+	InitiatingMessage InitiatingMessageY `xml:"initiatingMessage"`
+}
+
+type InitiatingMessageY struct {
+	ProcedureCode int64                        `xml:"procedureCode"`
+	Criticality   InitiatingMessageCriticality `xml:"criticality"`
+	Value         InitiatingMessageValue       `xml:"value"`
+}
+
+type InitiatingMessageCriticality struct {
+	Reject string `xml:"reject"`
+}
+
+type InitiatingMessageValue struct {
+	E2ResetRequest E2ResetRequest `xml:"ResetRequest"`
+}
+
+type E2ResetRequest struct {
+	ProtocolIes ProtocolIes `xml:"protocolIEs"`
+}
+
+type ProtocolIes struct {
+	ResetRequestIEs []ResetRequestIEs `xml:"ResetRequestIEs"`
+}
+
+type ResetRequestIEs struct {
+	ID          int64                   `xml:"id"`
+	Criticality ResetRequestCriticality `xml:"criticality"`
+	Value       ResetRequestValue       `xml:"value"`
+}
+
+type ResetRequestCriticality struct {
+	Ignore string `xml:"ignore"`
+}
+
+type ResetRequestValue struct {
+	TransactionID *int64             `xml:"TransactionID"`
+	Cause         *CauseResetRequest `xml:"Cause"`
 }
 
 type CauseResetRequest struct {
