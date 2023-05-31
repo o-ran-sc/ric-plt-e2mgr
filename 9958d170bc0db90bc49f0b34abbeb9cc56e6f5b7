@@ -24,6 +24,30 @@
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f43e0014_7d004caf",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T09:32:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "502de96e_ee198964",
+      "range": {
+        "startLine": 61,
+        "startChar": 8,
+        "endLine": 61,
+        "endChar": 11
+      },
+      "revId": "9958d170bc0db90bc49f0b34abbeb9cc56e6f5b7",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d613de2f_5a7dbf0b",
@@ -61,6 +85,30 @@
       "side": 1,
       "message": "could you check this",
       "parentUuid": "d613de2f_5a7dbf0b",
+      "range": {
+        "startLine": 71,
+        "startChar": 19,
+        "endLine": 71,
+        "endChar": 22
+      },
+      "revId": "9958d170bc0db90bc49f0b34abbeb9cc56e6f5b7",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fb2089ac_11037dc1",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 4
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T09:32:45Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4d559517_33b37314",
       "range": {
         "startLine": 71,
         "startChar": 19,
