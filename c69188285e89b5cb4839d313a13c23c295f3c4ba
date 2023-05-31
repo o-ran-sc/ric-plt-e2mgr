@@ -68,6 +68,30 @@
       },
       "revId": "c69188285e89b5cb4839d313a13c23c295f3c4ba",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "439fb46c_866408a2",
+        "filename": "E2Manager/handlers/httpmsghandlers/e2_reset_request_handler.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000475
+      },
+      "writtenOn": "2023-05-31T09:34:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4c5f93c0_cab8b552",
+      "range": {
+        "startLine": 101,
+        "startChar": 3,
+        "endLine": 101,
+        "endChar": 86
+      },
+      "revId": "c69188285e89b5cb4839d313a13c23c295f3c4ba",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
