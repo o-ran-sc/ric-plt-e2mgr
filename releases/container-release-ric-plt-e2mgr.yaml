@@ -1,10 +1,10 @@
 ---
 distribution_type: container
-container_release_tag: 6.0.1
+container_release_tag: 6.0.2
 container_pull_registry: nexus3.o-ran-sc.org:10004
 container_push_registry: nexus3.o-ran-sc.org:10002
 project: ric-plt/e2mgr
-ref: 901061622d0e36739e5803d1423c1e1da8d627ab
+ref: 101f63e0f02afc5293a2cba6ed8909af2ad94b39
 containers:
     - name: ric-plt-e2mgr
-      version: 6.0.1
+      version: 6.0.2
