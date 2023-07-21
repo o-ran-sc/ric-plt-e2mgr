@@ -34,10 +34,10 @@ repositories:
     - ric-plt/e2mgr
 committers:
     - <<: *oran_ric_plt_e2mgr_ptl
-    - name: 'Dhiraj Verma'
-      email: 'dhiraj.verma@nokia.com'
+    - name: 'Sangama Gunasekaran'
+      email: 'sangama.gunasekaran@nokia.com'
       company: 'nokia'
-      id: 'dhirajverma'
+      id: 'maheshgu'
       timezone: 'Unknown/Unknown'
     - name: 'Ritun Muni'
       email: 'ritun.muni@nokia.com'
@@ -88,3 +88,7 @@ tsc:
         - type: 'Promotion'
           name: 'Naman Gupta'
           link: 'https://lists.o-ran-sc.org/g/toc/message/435#Ritun#Subhash#Thoralf'
+        - type: 'Removal'
+          name: 'Dhiraj Verma'
+        - type: 'Promotion'
+          name: 'Sangama Gunasekaran'
