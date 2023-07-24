@@ -1,0 +1,9 @@
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Verified+1: Thoralf Czichy <thoralf.czichy@nokia.com>
+Code-Review+2: Thoralf Czichy <thoralf.czichy@nokia.com>
+Verified+1: Ritun  Muni <ritun.muni@nokia.com>
+Submitted-by: Thoralf Czichy <thoralf.czichy@nokia.com>
+Submitted-at: Mon, 24 Jul 2023 08:49:00 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/e2mgr/+/11519
+Project: ric-plt/e2mgr
+Branch: refs/heads/master
