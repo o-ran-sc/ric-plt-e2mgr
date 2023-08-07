@@ -1,6 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
+// Copyright 2023 Capgemini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -201,7 +202,7 @@ func getUpdateEnbCellsSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, s
 	}
 
 	nodebNameKey, _ := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
-	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId)
+	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId,nodebInfo.CuUpId,nodebInfo.DuId)
 	setExpected := []interface{}{nodebNameKey, nodebInfoData, nodebIdKey, nodebInfoData}
 
 	for _, cell := range servedCells {
@@ -229,7 +230,7 @@ func getUpdateGnbCellsSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, s
 	}
 
 	nodebNameKey, _ := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
-	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId)
+	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId,nodebInfo.CuUpId,nodebInfo.DuId)
 	setExpected := []interface{}{nodebNameKey, nodebInfoData, nodebIdKey, nodebInfoData}
 
 	for _, v := range servedNrCells {
@@ -1178,7 +1179,7 @@ func getUpdateEnbSetExpected(t *testing.T, nodebInfo *entities.NodebInfo, served
 	}
 
 	nodebNameKey, _ := common.ValidateAndBuildNodeBNameKey(nodebInfo.RanName)
-	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId)
+	nodebIdKey, _ := common.ValidateAndBuildNodeBIdKey(nodebInfo.NodeType.String(), nodebInfo.GlobalNbId.PlmnId, nodebInfo.GlobalNbId.NbId,nodebInfo.CuUpId,nodebInfo.DuId)
 	setExpected := []interface{}{nodebNameKey, nodebInfoData, nodebIdKey, nodebInfoData}
 
 	for _, v := range servedCells {

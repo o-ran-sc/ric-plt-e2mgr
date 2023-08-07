@@ -1,6 +1,7 @@
 //
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
+// Copyright 2023 Capgemini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,7 +154,7 @@ func (w *rNibWriterInstance) SaveNodeb(nodebInfo *entities.NodebInfo) error {
 
 	if nodebInfo.GlobalNbId != nil {
 
-		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId(),nodebInfo.GetCuUpId(),nodebInfo.GetDuId())
 		if rNibErr != nil {
 			return rNibErr
 		}
@@ -202,7 +203,7 @@ func (w *rNibWriterInstance) AddEnb(nodebInfo *entities.NodebInfo) error {
 
 	if nodebInfo.GlobalNbId != nil {
 
-		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+		key, rNibErr = common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId(),nodebInfo.GetCuUpId(),nodebInfo.GetDuId())
 		if rNibErr != nil {
 			return rNibErr
 		}
@@ -323,7 +324,7 @@ func buildUpdateNodebInfoPairs(nodebInfo *entities.NodebInfo) ([]interface{}, er
 		return []interface{}{}, rNibErr
 	}
 
-	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId(),nodebInfo.GetCuUpId(),nodebInfo.GetDuId())
 
 	data, err := proto.Marshal(nodebInfo)
 
@@ -351,7 +352,7 @@ func (w *rNibWriterInstance) buildRemoveEnbKeys(nodebInfo *entities.NodebInfo) (
 
 	keys = append(keys, nodebNameKey)
 
-	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId())
+	nodebIdKey, buildNodebIdKeyError := common.ValidateAndBuildNodeBIdKey(nodebInfo.GetNodeType().String(), nodebInfo.GlobalNbId.GetPlmnId(), nodebInfo.GlobalNbId.GetNbId(),nodebInfo.GetCuUpId(),nodebInfo.GetDuId())
 
 	if buildNodebIdKeyError == nil {
 		keys = append(keys, nodebIdKey)

@@ -2,6 +2,7 @@
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
 // Copyright (c) 2020 Samsung Electronics Co., Ltd. All Rights Reserved.
+// Copyright 2023 Capgemini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -385,6 +386,18 @@ func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAd
 	}
 	nodebInfo.GetGnb().NodeConfigs = e2NodeConfig
 
+	if nodebInfo.NodeType == entities.Node_GNB {
+		h.logger.Debugf("#E2SetupRequestNotificationHandler buildNodebInfo - entities.Node_GNB %d", entities.Node_GNB)
+
+		gnbNodetype := h.setGnbNodeType(request)
+		h.logger.Debugf("#E2SetupRequestNotificationHandler buildNodebInfo -gnbNodetype %s", gnbNodetype)
+		nodebInfo.GnbNodeType = gnbNodetype
+		nodebInfo.CuUpId = request.GetCuupId()
+		nodebInfo.DuId = request.GetDuId()
+		h.logger.Debugf("#E2SetupRequestNotificationHandler buildNodebInfo -cuupid%s", request.GetCuupId())
+		h.logger.Debugf("#E2SetupRequestNotificationHandler buildNodebInfo -duid %s", request.GetDuId())
+	}
+
 	ranFuncs := request.ExtractRanFunctionsList()
 
 	if ranFuncs != nil {
@@ -392,6 +405,18 @@ func (h *E2SetupRequestNotificationHandler) buildNodebInfo(ranName string, e2tAd
 	}
 
 	return nodebInfo, nil
+}
+
+func (h *E2SetupRequestNotificationHandler) setGnbNodeType(setupRequest *models.E2SetupRequestMessage) string {
+	gnbNodetype := "gNB_CU_UP"
+	if setupRequest.GetCuupId() != "" && setupRequest.GetCuupId() != "0" && setupRequest.GetDuId() != "" && setupRequest.GetDuId() != "0" {
+		gnbNodetype = "gNB_CU_UP"
+	} else if setupRequest.GetCuupId() != "" && setupRequest.GetCuupId() != "0" {
+		gnbNodetype = "gNB_CU_UP"
+	} else if setupRequest.GetDuId() != "" && setupRequest.GetDuId() != "0" {
+		gnbNodetype = "gNB_DU"
+	}
+	return gnbNodetype
 }
 
 func (h *E2SetupRequestNotificationHandler) setNodeTypeAndConfiguration(nodebInfo *entities.NodebInfo) error {
