@@ -2,6 +2,7 @@
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
 // Copyright (c) 2022 Samsung Electronics Co., Ltd. All Rights Reserved.
+// Copyright 2023 Capgemini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +38,8 @@ type Gnb struct {
 			GnbID string `xml:"gnb-ID"`
 		} `xml:"gnb-id"`
 	} `xml:"global-gNB-ID"`
+	GNBCUUPID string `xml:"gNB-CU-UP-ID"`
+	GNBDUID   string `xml:"gNB-DU-ID"`
 }
 
 type EnGnb struct {
@@ -602,6 +605,23 @@ func (m *E2SetupRequestMessage) GetPlmnId() string {
 		return m.trimSpaces(id)
 	}
 	if id := globalE2NodeId.NgENB.GlobalNgENBID.PlmnID; id != "" {
+		return m.trimSpaces(id)
+	}
+	return ""
+}
+
+func (m *E2SetupRequestMessage) GetCuupId() string {
+	globalE2NodeId := m.getGlobalE2NodeId()
+	if id := globalE2NodeId.GNB.GNBCUUPID; id != "" {
+		return m.trimSpaces(id)
+	}
+	return ""
+
+}
+
+func (m *E2SetupRequestMessage) GetDuId() string {
+	globalE2NodeId := m.getGlobalE2NodeId()
+	if id := globalE2NodeId.GNB.GNBDUID; id != "" {
 		return m.trimSpaces(id)
 	}
 	return ""

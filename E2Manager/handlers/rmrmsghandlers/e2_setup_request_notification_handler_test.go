@@ -2,6 +2,7 @@
 // Copyright 2019 AT&T Intellectual Property
 // Copyright 2019 Nokia
 // Copyright (c) 2022 Samsung Electronics Co., Ltd. All Rights Reserved.
+// Copyright 2023 Capgemini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -459,12 +460,21 @@ func getExpectedGnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 	pipInd := bytes.IndexByte(payload, '|')
 	setupRequest := &models.E2SetupRequestMessage{}
 	_ = xml.Unmarshal(utils.NormalizeXml(payload[pipInd+1:]), &setupRequest.E2APPDU)
+	gnbNodetype := "gNB_CU_UP"
+	if setupRequest.GetCuupId() != "" && setupRequest.GetCuupId() != "0" && setupRequest.GetDuId() != "" && setupRequest.GetDuId() != "0" {
+		gnbNodetype = "gNB_CU_UP"
+	} else if setupRequest.GetCuupId() != "" && setupRequest.GetCuupId() != "0" {
+		gnbNodetype = "gNB_CU_UP"
+	} else if setupRequest.GetDuId() != "" && setupRequest.GetDuId() != "0" {
+		gnbNodetype = "gNB_DU"
+	}
 
 	nodeb := &entities.NodebInfo{
 		AssociatedE2TInstanceAddress: e2tInstanceFullAddress,
 		RanName:                      gnbNodebRanName,
 		SetupFromNetwork:             true,
 		NodeType:                     entities.Node_GNB,
+		GnbNodeType:                  gnbNodetype,
 		Configuration: &entities.NodebInfo_Gnb{
 			Gnb: &entities.Gnb{
 				GnbType:      entities.GnbType_GNB,
@@ -476,6 +486,8 @@ func getExpectedGnbNodebForNewRan(payload []byte) *entities.NodebInfo {
 			PlmnId: setupRequest.GetPlmnId(),
 			NbId:   setupRequest.GetNbId(),
 		},
+		CuUpId:  setupRequest.GetCuupId(),
+		DuId:    setupRequest.GetDuId(),
 	}
 
 	return nodeb
