@@ -111,6 +111,30 @@
       },
       "revId": "716975f52f9ec4c3502c6fcb26642576514316cf",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "45c6e394_8dddd70f",
+        "filename": "E2Manager/handlers/rmrmsghandlers/e2_setup_request_notification_handler.go",
+        "patchSetId": 3
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1000108
+      },
+      "writtenOn": "2023-08-08T14:04:05Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "b17ace87_078a0034",
+      "range": {
+        "startLine": 413,
+        "startChar": 17,
+        "endLine": 413,
+        "endChar": 26
+      },
+      "revId": "716975f52f9ec4c3502c6fcb26642576514316cf",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ]
 }
