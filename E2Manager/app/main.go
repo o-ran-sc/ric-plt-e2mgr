@@ -185,4 +185,5 @@ func main() {
 	_ = httpserver.Run(Log, config.Http.Port, rootController, nodebController, e2tController, symptomController)
 	//fmt.Println("loadconfig called at last")
 	//loadConfig()
+
 }
