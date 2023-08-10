@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "281c8519_1158f693",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002076
+      },
+      "writtenOn": "2023-08-10T13:27:28Z",
+      "side": 1,
+      "message": "Build failed due to changes in nodeb-rnib is not merged.\nPlease review the changes done for e2mgr",
+      "revId": "633fb65105e8ef5f255426b5d9c47674c237ee23",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    }
+  ]
+}
