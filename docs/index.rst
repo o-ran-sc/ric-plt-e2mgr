@@ -16,3 +16,4 @@ Welcome to O-RAN SC ric-plt/e2mgr Documentation
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
