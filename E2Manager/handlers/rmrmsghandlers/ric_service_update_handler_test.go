@@ -35,6 +35,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"e2mgr/managers"
 )
 
 const (
@@ -77,7 +78,8 @@ func initRicServiceUpdateHandler(t *testing.T) (*RicServiceUpdateHandler, *mocks
 	writerMock := &mocks.RnibWriterMock{}
 	rnibDataService := services.NewRnibDataService(logger, config, readerMock, writerMock)
 	ranListManagerMock := &mocks.RanListManagerMock{}
-	handler := NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManagerMock)
+	RicServiceUpdateManager := managers.NewRicServiceUpdateManager(logger, rnibDataService)
+	handler := NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManagerMock, RicServiceUpdateManager)
 	return handler, readerMock, writerMock, rmrMessengerMock, ranListManagerMock
 }
 

@@ -35,12 +35,12 @@ import (
 	"e2mgr/services/rmrreceiver"
 	"e2mgr/services/rmrsender"
 	//"fmt"
-        "flag"
+    "flag"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/common"
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/reader"
-	"gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
-        "github.com/spf13/viper"
-        "github.com/fsnotify/fsnotify"
+    "gerrit.o-ran-sc.org/r/ric-plt/sdlgo"
+    "github.com/spf13/viper"
+    "github.com/fsnotify/fsnotify"
 	"os"
 	"strconv"
 )
@@ -141,6 +141,7 @@ func main() {
 	rnibDataService := services.NewRnibDataService(Log, config, reader.GetNewRNibReader(sdl), rNibWriter.GetRNibWriter(sdl, config.RnibWriter))
 
 	ranListManager := managers.NewRanListManager(Log, rnibDataService)
+	RicServiceUpdateManager := managers.NewRicServiceUpdateManager(Log, rnibDataService)
 
 	err = ranListManager.InitNbIdentityMap()
 
@@ -160,7 +161,7 @@ func main() {
 	e2tShutdownManager := managers.NewE2TShutdownManager(Log, config, rnibDataService, e2tInstancesManager, e2tAssociationManager, ranConnectStatusChangeManager)
 	e2tKeepAliveWorker := managers.NewE2TKeepAliveWorker(Log, rmrSender, e2tInstancesManager, e2tShutdownManager, config)
 	rmrNotificationHandlerProvider := rmrmsghandlerprovider.NewNotificationHandlerProvider()
-	rmrNotificationHandlerProvider.Init(Log, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager)
+	rmrNotificationHandlerProvider.Init(Log, config, rnibDataService, rmrSender, e2tInstancesManager, routingManagerClient, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager, RicServiceUpdateManager)
 
 	notificationManager := notificationmanager.NewNotificationManager(Log, rmrNotificationHandlerProvider)
 	rmrReceiver := rmrreceiver.NewRmrReceiver(Log, rmrMessenger, notificationManager)

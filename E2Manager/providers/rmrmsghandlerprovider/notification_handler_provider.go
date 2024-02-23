@@ -61,7 +61,7 @@ func (provider *NotificationHandlerProvider) Register(msgType int, handler rmrms
 func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config *configuration.Configuration,
 	rnibDataService services.RNibDataService, rmrSender *rmrsender.RmrSender, e2tInstancesManager managers.IE2TInstancesManager,
 	routingManagerClient clients.IRoutingManagerClient, e2tAssociationManager *managers.E2TAssociationManager,
-	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, ranListManager managers.RanListManager) {
+	ranConnectStatusChangeManager managers.IRanConnectStatusChangeManager, ranListManager managers.RanListManager,RicServiceUpdateManager managers.IRicServiceUpdateManager) {
 
 	// Init converters
 	x2SetupResponseConverter := converters.NewX2SetupResponseConverter(logger)
@@ -95,9 +95,10 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	e2TermInitNotificationHandler := rmrmsghandlers.NewE2TermInitNotificationHandler(logger, ranReconnectionManager, e2tInstancesManager, routingManagerClient)
 	e2TKeepAliveResponseHandler := rmrmsghandlers.NewE2TKeepAliveResponseHandler(logger, rnibDataService, e2tInstancesManager)
 	e2SetupRequestNotificationHandler := rmrmsghandlers.NewE2SetupRequestNotificationHandler(logger, config, e2tInstancesManager, rmrSender, rnibDataService, e2tAssociationManager, ranConnectStatusChangeManager, ranListManager)
-	ricServiceUpdateHandler := rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager)
+	ricServiceUpdateHandler := rmrmsghandlers.NewRicServiceUpdateHandler(logger, rmrSender, rnibDataService, ranListManager, RicServiceUpdateManager)
 	ricE2nodeConfigUpdateHandler := rmrmsghandlers.NewE2nodeConfigUpdateNotificationHandler(logger, rnibDataService, rmrSender)
 	e2ResetRequestNotificationHandler := rmrmsghandlers.NewE2ResetRequestNotificationHandler(logger, rnibDataService, config, rmrSender, ranResetChangeManager, changeStatusToConnectedRanManager)
+	errorIndicationNotificationHandler := rmrmsghandlers.ErrorIndicationNotificationHandler(logger, ranReconnectionManager, RicServiceUpdateManager)
 
 	provider.Register(rmrCgo.RIC_X2_SETUP_RESP, x2SetupResponseHandler)
 	provider.Register(rmrCgo.RIC_X2_SETUP_FAILURE, x2SetupFailureResponseHandler)
@@ -115,4 +116,5 @@ func (provider *NotificationHandlerProvider) Init(logger *logger.Logger, config 
 	provider.Register(rmrCgo.RIC_SERVICE_UPDATE, ricServiceUpdateHandler)
 	provider.Register(rmrCgo.RIC_E2NODE_CONFIG_UPDATE, ricE2nodeConfigUpdateHandler)
 	provider.Register(rmrCgo.RIC_E2_RESET_REQ, e2ResetRequestNotificationHandler)
+	provider.Register(rmrCgo.RIC_E2_RIC_ERROR_INDICATION, errorIndicationNotificationHandler)
 }

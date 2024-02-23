@@ -76,6 +76,10 @@ func (ctx *Context) SendMsg(msg *MBuf, printLogs bool) (*MBuf, error) {
 
 	currCMBuf := C.rmr_send_msg(ctx.RmrCtx, allocatedCMBuf)
 	defer C.rmr_free_msg(currCMBuf)
+	if currCMBuf == nil {
+		errorMessage := fmt.Sprintf("#rmrCgoApi.SendMsg - currCMBuf is empty hence return from message")
+		return nil, errors.New(errorMessage)
+	}
 
 	state = currCMBuf.state
 

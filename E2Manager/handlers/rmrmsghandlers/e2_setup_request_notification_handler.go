@@ -90,6 +90,7 @@ func NewE2SetupRequestNotificationHandler(logger *logger.Logger, config *configu
 
 func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationRequest) {
 	ranName := request.RanName
+	models.UpdateProcedureType(ranName, models.E2SetupProcedureNotInitiated)
 	h.logger.Infof("#E2SetupRequestNotificationHandler.Handle - RAN name: %s - received E2_SETUP_REQUEST. Payload: %x", ranName, request.Payload)
 
 	generalConfiguration, err := h.rNibDataService.GetGeneralConfiguration()
@@ -113,6 +114,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 	if !generalConfiguration.EnableRic {
 		cause := models.Cause{Misc: &models.CauseMisc{OmIntervention: &struct{}{}}}
 		h.handleUnsuccessfulResponse(ranName, request, cause, setupRequest)
+		models.UpdateProcedureType(ranName, models.E2SetupProcedureFailure)
 		return
 	}
 
@@ -138,6 +140,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 			if _, ok := err.(*e2managererrors.UnknownSetupRequestRanNameError); ok {
 				cause := models.Cause{RicRequest: &models.CauseRic{RequestIdUnknown: &struct{}{}}}
 				h.handleUnsuccessfulResponse(ranName, request, cause, setupRequest)
+				models.UpdateProcedureType(ranName, models.E2SetupProcedureFailure)
 			}
 			return
 		}
@@ -148,9 +151,11 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 		if err != nil {
 			h.fillCauseAndSendUnsuccessfulResponse(nodebInfo, request, setupRequest)
+			models.UpdateProcedureType(ranName, models.E2SetupProcedureFailure)
 			return
 		}
 	}
+	models.UpdateProcedureType(ranName, models.E2SetupProcedureOngoing)
 
 	ranStatusChangePublished, err := h.e2tAssociationManager.AssociateRan(e2tIpAddress, nodebInfo)
 
@@ -165,6 +170,7 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 
 			cause := models.Cause{Transport: &models.CauseTransport{TransportResourceUnavailable: &struct{}{}}}
 			h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause, setupRequest)
+			models.UpdateProcedureType(ranName, models.E2SetupProcedureFailure)
 		}
 		return
 	}
@@ -174,6 +180,8 @@ func (h *E2SetupRequestNotificationHandler) Handle(request *models.NotificationR
 	}
 
 	h.handleSuccessfulResponse(ranName, request, setupRequest)
+	models.UpdateProcedureType(ranName, models.E2SetupProcedureCompleted)
+	h.logger.Debugf("#E2SetupRequestNotificationHandler.Handle - updating the enum value to e2setup request completed")
 }
 
 func (h *E2SetupRequestNotificationHandler) handleUpdateAndPublishNodebInfo(functionsModified bool, ranStatusChangePublished bool, nodebInfo *entities.NodebInfo) error {
@@ -459,8 +467,10 @@ func (h *E2SetupRequestNotificationHandler) buildNbIdentity(ranName string, setu
 }
 
 func (h *E2SetupRequestNotificationHandler) fillCauseAndSendUnsuccessfulResponse(nodebInfo *entities.NodebInfo, request *models.NotificationRequest, setupRequest *models.E2SetupRequestMessage) {
+	ranName := request.RanName
 	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_DISCONNECTED {
 		cause := models.Cause{Misc: &models.CauseMisc{ControlProcessingOverload: &struct{}{}}}
 		h.handleUnsuccessfulResponse(nodebInfo.RanName, request, cause, setupRequest)
+		models.UpdateProcedureType(ranName, models.E2SetupProcedureFailure)
 	}
 }

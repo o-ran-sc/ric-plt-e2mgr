@@ -63,6 +63,9 @@ func (ctx *Context) getAllocatedCRmrMBuf(logger *logger.Logger, mBuf *MBuf, maxM
 	var meidBuf[RMR_MAX_MEID_LEN]byte
 
 	cMBuf = C.rmr_alloc_msg(ctx.RmrCtx, C.int(maxMsgSize))
+	if cMBuf == nil {
+		return nil
+	}
 	cMBuf.mtype = C.int(mBuf.MType)
 	cMBuf.len = C.int(mBuf.Len)
 

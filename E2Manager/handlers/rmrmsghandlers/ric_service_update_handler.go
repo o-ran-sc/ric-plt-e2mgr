@@ -55,14 +55,16 @@ type RicServiceUpdateHandler struct {
 	rmrSender       *rmrsender.RmrSender
 	rNibDataService services.RNibDataService
 	ranListManager  managers.RanListManager
+	RicServiceUpdateManager managers.IRicServiceUpdateManager
 }
 
-func NewRicServiceUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranListManager managers.RanListManager) *RicServiceUpdateHandler {
+func NewRicServiceUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranListManager managers.RanListManager,RicServiceUpdateManager managers.IRicServiceUpdateManager) *RicServiceUpdateHandler {
 	return &RicServiceUpdateHandler{
 		logger:          logger,
 		rmrSender:       rmrSender,
 		rNibDataService: rNibDataService,
 		ranListManager:  ranListManager,
+		RicServiceUpdateManager: RicServiceUpdateManager,
 	}
 }
 
@@ -87,6 +89,8 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 		return
 	}
 	h.logger.Infof("#RicServiceUpdateHandler.Handle - RIC_SERVICE_UPDATE has been parsed successfully %+v", ricServiceUpdate)
+	h.RicServiceUpdateManager.StoreExistingRanFunctions(ranName)
+	h.logger.Infof("#RicServiceUpdate.Handle - Getting the ranFunctions before we do the RIC ServiceUpdate handling")
 
 	ackFunctionIds := h.updateFunctions(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs, nodebInfo)
 	if len(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs) > 1 {
@@ -112,6 +116,8 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 	}
 
 	h.logger.Infof("#RicServiceUpdate.Handle - Completed successfully")
+	models.UpdateProcedureType(ranName, models.RicServiceUpdateCompleted)
+	h.logger.Debugf("#RicServiceUpdateHandler.Handle  - updating the enum value to RicServiceUpdateCompleted completed")
 }
 
 func (h *RicServiceUpdateHandler) sendUpdateAck(updateAck models.RicServiceUpdateAckE2APPDU, nodebInfo *entities.NodebInfo, request *models.NotificationRequest) error {
