@@ -57,6 +57,11 @@ func (e *E2nodeConfigUpdateNotificationHandler) Handle(request *models.Notificat
 		return
 	}
 
+	if len(e2NodeConfig.E2APPDU.InitiatingMessage.Value.E2nodeConfigurationUpdate.ProtocolIEs.E2nodeConfigurationUpdateIEs) == 0 {
+		e.logger.Errorf("#E2nodeConfigUpdateNotificationHandler.Handle - E2nodeConfigurationUpdateIEs is empty")
+		return
+	}
+
 	e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - RIC_E2_Node_Config_Update parsed successfully %+v", e2NodeConfig)
 
 	nodebInfo, err := e.rNibDataService.GetNodeb(request.RanName)
