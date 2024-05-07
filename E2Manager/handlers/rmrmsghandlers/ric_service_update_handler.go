@@ -51,19 +51,19 @@ type functionDetails struct {
 }
 
 type RicServiceUpdateHandler struct {
-	logger          *logger.Logger
-	rmrSender       *rmrsender.RmrSender
-	rNibDataService services.RNibDataService
-	ranListManager  managers.RanListManager
+	logger                  *logger.Logger
+	rmrSender               *rmrsender.RmrSender
+	rNibDataService         services.RNibDataService
+	ranListManager          managers.RanListManager
 	RicServiceUpdateManager managers.IRicServiceUpdateManager
 }
 
-func NewRicServiceUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranListManager managers.RanListManager,RicServiceUpdateManager managers.IRicServiceUpdateManager) *RicServiceUpdateHandler {
+func NewRicServiceUpdateHandler(logger *logger.Logger, rmrSender *rmrsender.RmrSender, rNibDataService services.RNibDataService, ranListManager managers.RanListManager, RicServiceUpdateManager managers.IRicServiceUpdateManager) *RicServiceUpdateHandler {
 	return &RicServiceUpdateHandler{
-		logger:          logger,
-		rmrSender:       rmrSender,
-		rNibDataService: rNibDataService,
-		ranListManager:  ranListManager,
+		logger:                  logger,
+		rmrSender:               rmrSender,
+		rNibDataService:         rNibDataService,
+		ranListManager:          ranListManager,
 		RicServiceUpdateManager: RicServiceUpdateManager,
 	}
 }
@@ -91,6 +91,11 @@ func (h *RicServiceUpdateHandler) Handle(request *models.NotificationRequest) {
 	h.logger.Infof("#RicServiceUpdateHandler.Handle - RIC_SERVICE_UPDATE has been parsed successfully %+v", ricServiceUpdate)
 	h.RicServiceUpdateManager.StoreExistingRanFunctions(ranName)
 	h.logger.Infof("#RicServiceUpdate.Handle - Getting the ranFunctions before we do the RIC ServiceUpdate handling")
+
+	if len(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs) == 0 {
+		h.logger.Errorf("#RicServiceUpdateHandler.Handle - RAN name: %s - RICServiceUpdateIEs empty", ranName)
+		return
+	}
 
 	ackFunctionIds := h.updateFunctions(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs, nodebInfo)
 	if len(ricServiceUpdate.E2APPDU.InitiatingMessage.Value.RICServiceUpdate.ProtocolIEs.RICServiceUpdateIEs) > 1 {
