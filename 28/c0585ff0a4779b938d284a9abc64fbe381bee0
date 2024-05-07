@@ -1,0 +1,10 @@
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Code-Review+1: Abdul Wahid W <abdulwahid.w@nokia.com>
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Code-Review+2: Aditya Verma <aditya.3.verma@nokia.com>
+Verified+1: Aditya Verma <aditya.3.verma@nokia.com>
+Submitted-by: Aditya Verma <aditya.3.verma@nokia.com>
+Submitted-at: Tue, 07 May 2024 16:39:32 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/e2mgr/+/12629
+Project: ric-plt/e2mgr
+Branch: refs/heads/master
