@@ -43,7 +43,7 @@ import (
 	"gerrit.o-ran-sc.org/r/ric-plt/nodeb-rnib.git/entities"
 )
 
-const cleanUpDurationNanoSec uint64 = 10000000000 // cleanUpDuration = 10sec (value in nanoSecond=10000000000)
+const cleanUpDurationNanoSec uint64 = 5000000000 // cleanUpDuration = 5 sec (value in nanoSecond=5000000000)
 
 var (
 	emptyTagsToReplaceToSelfClosingTags = []string{"reject", "ignore", "transport-resource-unavailable", "om-intervention", "request-id-unknown",
@@ -230,7 +230,7 @@ func (h *E2SetupRequestNotificationHandler) handleNewRan(ranName string, e2tIpAd
 func (h *E2SetupRequestNotificationHandler) handleExistingRan(ranName string, nodebInfo *entities.NodebInfo, setupRequest *models.E2SetupRequestMessage) (bool, error) {
 	if nodebInfo.GetConnectionStatus() == entities.ConnectionStatus_DISCONNECTED {
 		delta_in_nano := uint64(time.Now().UnixNano()) - nodebInfo.StatusUpdateTimeStamp
-		//The duration from last Disconnection for which a new request is to be rejected (currently 10 sec)
+		//The duration from last Disconnection for which a new request is to be rejected (currently 5 sec)
 		if delta_in_nano < cleanUpDurationNanoSec {
 			h.logger.Errorf("#E2SetupRequestNotificationHandler.Handle - RAN name: %s, connection status: %s - nodeB entity disconnection in progress", ranName, nodebInfo.ConnectionStatus)
 			return false, errors.New("nodeB entity disconnection in progress")
