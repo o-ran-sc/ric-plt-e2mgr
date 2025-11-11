@@ -20,7 +20,7 @@
 #   platform project (RICP).
 #
 
-FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu20-c-go:1.0.0 as ubuntu
+FROM nexus3.o-ran-sc.org:10002/o-ran-sc/bldr-ubuntu22-c-go:1.0.0 as ubuntu
 
 WORKDIR /opt/E2Manager
 COPY . .
@@ -34,10 +34,20 @@ RUN apt update && apt install --reinstall -y \
   && \
   update-ca-certificates
 
+ARG GOVERSION="1.22.5"
+RUN wget -nv https://dl.google.com/go/go${GOVERSION}.linux-amd64.tar.gz \
+     && tar -xf go${GOVERSION}.linux-amd64.tar.gz \
+     && mv go /opt/go/${GOVERSION} \
+     && rm -f go*.gz
+
+
+ENV DEFAULTPATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=$DEFAULTPATH:/usr/local/go/bin:/opt/go/${GOVERSION}/bin:/root/go/bin
+
 RUN bash build-e2mgr-ubuntu.sh
 
 # Build deployable container
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y \
   net-tools \
