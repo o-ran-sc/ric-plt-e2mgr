@@ -1,0 +1,9 @@
+Verified+1: ORAN Required GHA <releng+oran.required.gha@linuxfoundation.org>
+Verified+1: Abdul Wahid W <abdulwahid.w@nokia.com>
+Verified+1: ORAN Jobbuilder <releng+oran-jobbuilder@linuxfoundation.org>
+Code-Review+2: Abdul Wahid W <abdulwahid.w@nokia.com>
+Submitted-by: Abdul Wahid W <abdulwahid.w@nokia.com>
+Submitted-at: Tue, 11 Nov 2025 13:02:05 +0000
+Reviewed-on: https://gerrit.o-ran-sc.org/r/c/ric-plt/e2mgr/+/15244
+Project: ric-plt/e2mgr
+Branch: refs/heads/master
