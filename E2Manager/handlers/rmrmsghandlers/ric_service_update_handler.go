@@ -216,8 +216,12 @@ func (h *RicServiceUpdateHandler) getFunctionDetails(ricServiceUpdateIE models.R
 func (h *RicServiceUpdateHandler) getFunctionsAddedModifiedHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails, error) {
 	functionChange := ricServiceUpdateIE.ID
 	ranFunctionsIEList := ricServiceUpdateIE.Value.RANfunctionsList.RANfunctionsItemProtocolIESingleContainer
+	const MaxRanFunctions = 256
 	if len(ranFunctionsIEList) == 0 {
 		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - function change type is %v but Functions list is empty", functionChange))
+	}
+	if len(ranFunctionsIEList) > MaxRanFunctions {
+		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - Functions list size %d exceeds maximum %d", len(ranFunctionsIEList), MaxRanFunctions))
 	}
 
 	functionDetailsList := make([]functionDetails, len(ranFunctionsIEList))
@@ -232,8 +236,12 @@ func (h *RicServiceUpdateHandler) getFunctionsAddedModifiedHandler(ricServiceUpd
 func (h *RicServiceUpdateHandler) getFunctionsDeleteHandler(ricServiceUpdateIE models.RICServiceUpdateIEs) ([]functionDetails, error) {
 	functionChange := ricServiceUpdateIE.ID
 	ranFunctionIdIEsList := ricServiceUpdateIE.Value.RANfunctionsIDList.RANfunctionsItemIDProtocolIESingleContainer
+	const MaxRanFunctions = 256
 	if len(ranFunctionIdIEsList) == 0 {
 		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - function change type is %v but FunctionIds list is empty", functionChange))
+	}
+	if len(ranFunctionIdIEsList) > MaxRanFunctions {
+		return nil, common.NewInternalError(fmt.Errorf("#RicServiceUpdate.getFunctionDetails - FunctionIds list size %d exceeds maximum %d", len(ranFunctionIdIEsList), MaxRanFunctions))
 	}
 
 	functionDetailsList := make([]functionDetails, len(ranFunctionIdIEsList))

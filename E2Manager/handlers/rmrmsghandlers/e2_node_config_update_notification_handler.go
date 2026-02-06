@@ -140,7 +140,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleUpdateConfig(e2nodeConfig 
 				for j := 0; j < len(nodebInfo.GetGnb().NodeConfigs); j++ {
 					if e.compareConfigIDs(u, *nodebInfo.GetGnb().NodeConfigs[j]) {
 						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - item at position [%d] should be updated", i)
-						nodebInfo.GetGnb().NodeConfigs[i] = &u
+						nodebInfo.GetGnb().NodeConfigs[j] = &u
 						break
 					} else {
 						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - dint match")
@@ -156,7 +156,7 @@ func (e *E2nodeConfigUpdateNotificationHandler) handleUpdateConfig(e2nodeConfig 
 					v := nodebInfo.GetEnb().NodeConfigs[j]
 					if e.compareConfigIDs(u, *v) {
 						e.logger.Debugf("#E2nodeConfigUpdateNotificationHandler.Handle - item at position [%d] should be updated", i)
-						nodebInfo.GetEnb().NodeConfigs[i] = &u
+						nodebInfo.GetEnb().NodeConfigs[j] = &u
 						break
 					}
 				}
