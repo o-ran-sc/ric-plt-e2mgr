@@ -13,6 +13,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.5.1
+	golang.org/x/time v0.14.0
 	gopkg.in/yaml.v2 v2.3.0
 )
 
@@ -40,4 +41,6 @@ replace gerrit.o-ran-sc.org/r/ric-plt/sdlgo => gerrit.o-ran-sc.org/r/ric-plt/sdl
 
 replace gerrit.o-ran-sc.org/r/com/golog => gerrit.o-ran-sc.org/r/com/golog.git v0.0.2
 
-go 1.22
+go 1.24.0
+
+toolchain go1.24.6
