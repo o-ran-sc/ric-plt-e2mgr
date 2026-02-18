@@ -16,6 +16,23 @@
       "message": "re-merge",
       "revId": "69e847fc3e4a66e3f8aea652624da98054d2bdb0",
       "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5a3445ac_f8657f74",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000275
+      },
+      "writtenOn": "2026-02-18T16:58:30Z",
+      "side": 1,
+      "message": "remerge",
+      "revId": "69e847fc3e4a66e3f8aea652624da98054d2bdb0",
+      "serverId": "84e4e190-e623-4c37-9eda-58b1937c1b53"
     }
   ],
   "submitRequirementResults": [
